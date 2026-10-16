@@ -11,7 +11,7 @@ A private, self-hosted knowledge system: store, organize, search, version and sh
 
 ## Status
 
-Version 0.1, in progress: the Windows application shell only (main window, tray icon, settings, log window, update check, installer, portable zip). No notes yet: see [docs/ROADMAP.md](docs/ROADMAP.md).
+Version 0.1, in progress: the Windows application (main window, tray icon, hotkey, settings, log window, update check, installer, portable zip) and a first knowledge base: nodes and links, typed in one box, stored encrypted in a folder. No notes yet: see [docs/ROADMAP.md](docs/ROADMAP.md).
 
 ## Install
 
@@ -28,7 +28,30 @@ Upgrade: run a newer setup over the old one. Uninstall: *Settings > Apps*. Your 
 ## Usage
 
 - **Main window.** Opens at start. Closing it hides it: kofrenot keeps running in the notification area. Starting kofrenot again shows the running copy.
+- **Hotkey.** Ctrl+Alt+K shows the main window from any program (Settings > General to change it).
 - **Tray icon.** Click: show the main window. Menu: Show, Settings, Log window (ticked while it is open: a click shows or closes it), Quit.
+
+### Database
+A database is a folder: on this computer, on a file share, or in a folder a sync tool copies between computers. Choose it in Settings > Database.
+
+- An **empty folder** becomes a new database: kofrenot asks a pass phrase twice. Everything in it is encrypted with that pass phrase: **if it is lost, the database cannot be read**.
+- A **database folder** asks for its pass phrase at start, unless *Remember pass phrase on this computer* was ticked (kept by Windows for your account; Settings > Database > *Forget* removes it).
+- A folder holding other files is refused.
+- Several computers or copies can add to the same database at once; what the others add appears without a restart.
+
+### Input box
+Type in the box at the top of the main window:
+
+| You type | Enter adds |
+| --- | --- |
+| `Dune` | the node *Dune* |
+| `Dune relates to Frank Herbert` (or `related to`) | a link between *Dune* and *Frank Herbert*, and either node that does not exist yet |
+
+- While you type, the nodes whose name has a word starting with the text are listed; a node matched exactly shows its links. Case, accents and extra spaces are ignored.
+- The line under the box says what Enter will add.
+- A node name that exists already asks for confirmation. A link that exists already is not added again.
+- Nodes with the same name are marked `¹`, `²`, ... When one side of a link matches several, **Up/Down** picks one (the oldest first), **Tab** switches to the other side.
+- **Esc** clears the box, then hides the window.
 
 ## Settings
 
@@ -36,6 +59,8 @@ Gear button in the main window, or tray menu > Settings. A dialog over the main 
 
 | Tab | Options |
 | --- | --- |
+| General | Hotkey that shows kofrenot (click the box, then press the new shortcut; *Default*: Ctrl+Alt+K) |
+| Database | Database folder (*Choose...*, *Explore to*), whether it is open; the remembered pass phrase (*Forget*) |
 | Appearance | Theme: follow Windows (default), light or dark |
 | Logging | Detailed (debug) logging; open the log window |
 | About | Version, website, report an issue, changelog; update check (once a day, on by default; a dot on the gear button and on the tab when a newer release exists); kofrenot's files, each with *Show in folder* |
@@ -49,9 +74,13 @@ Everything stays on your computer, in `%LOCALAPPDATA%\kofrenot` (a portable copy
 | `settings.json` | Settings |
 | `windows.json` | Where each window was left |
 | `updates.json` | Last update check |
+| `keys.json` | Remembered pass phrases (the database keys, protected by Windows for your account) |
+| `cache\` | One encrypted snapshot per database opened here, so it opens fast. Safe to delete |
 | `logs\kofrenot.log` | Log, at most 3 files of 1 MB, oldest deleted |
 
-kofrenot logs start/stop, every action you trigger (settings change, links opened) and errors.
+Your databases are in the folders you chose, not here.
+
+kofrenot logs start/stop, every action you trigger (settings change, links opened, nodes added) and errors, never the names you type or your pass phrase.
 
 **Log window**: tray menu > *Log window*, or Settings > Logging (it opens in front of Settings and stays open after Settings is closed). Live view of the last 1000 entries, level and text filters, Copy, Clear (window only), Open log folder.
 

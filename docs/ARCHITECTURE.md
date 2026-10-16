@@ -4,14 +4,19 @@
 
 ```
 kofrenot.App   (WPF, Windows only)
-│  main window, settings window, log window, changelog window, tray icon
-│  adapters: SerilogFileLog, SingleInstance, NativeWindows + WindowPlacer (window positions), GitHubReleaseFeed
+│  main window (input box), settings window, pass phrase dialog, log window, changelog window, tray icon
+│  DatabaseSession (opens, watches and adds to the database)
+│  adapters: SerilogFileLog, SingleInstance, NativeWindows + WindowPlacer (window positions), GitHubReleaseFeed,
+│            DpapiProtector, GlobalHotkey, DatabaseWatcher
 │
-│  implements ▼  IReleaseFeed · ILog
+│  implements ▼  IReleaseFeed · ILog · ISecretProtector
 │
 kofrenot.Core  (no Windows dependency, fully unit-tested on any OS)
+   Graph: KnowledgeGraph · Node · Link · TypeCatalog · Change
+   Storage: Database · DatabaseFolder · SecretBox · KeyVault · SnapshotStore · KeyMemory
+   Input: InputParser · GraphSearch · AddPlanner
    AppFiles · AppVersion · Changelog · ProjectLinks
-   SettingsStore · SettingsCatalog
+   SettingsStore · SettingsCatalog · Hotkey
    PlacementRules · PlacementStore
    UpdateChecker · UpdateStore · Release
    ILog · RingLog · CompositeLog · FilteredLog
@@ -26,18 +31,21 @@ One namespace per folder (`Kofrenot.Core.Settings`, `Kofrenot.UI.Views`, ...). T
 
 | `kofrenot.Core` | Content |
 | --- | --- |
-| *(root)* | `AppVersion`; `AppFiles` (where every file of kofrenot is: the only place their names are written, listed in Settings > About; `AppFiles.For` picks the data folder, see [Portable copy](#portable-copy)); `Changelog` (reads the text shown by Settings > About); `ProjectLinks` (website, issues, releases) |
-| `Settings/` | `SettingsStore` (`settings.json`: theme, debug logging, update check), `SettingsCatalog` (the entries of the Settings window, their tabs, and the search that finds them) |
+| *(root)* | `AppVersion`; `AppFiles` (where every file of kofrenot is, including `keys.json` and the snapshots in `cache\`: the only place their names are written, listed in Settings > About; `AppFiles.For` picks the data folder, see [Portable copy](#portable-copy)); `Changelog` (reads the text shown by Settings > About); `ProjectLinks` (website, issues, releases) |
+| `Settings/` | `SettingsStore` (`settings.json`: theme, debug logging, update check, database folder, hotkey), `Hotkey`, `SettingsCatalog` (the entries of the Settings window, their tabs, and the search that finds them) |
+| `Graph/` | `Node`, `Link`, `NodeType`, `LinkType`, `TypeCatalog` (built-in types and aliases), `NameKey` (the form names are compared in), `Change` (`NodeAdded`, `LinkAdded`), `KnowledgeGraph` (in-memory state, built by applying changes) |
+| `Storage/` | `SecretBox` (AES-GCM seal / open), `KeyVault` (KDF, wrap / unwrap the master key), `ChangeCodec` (change ⇄ sealed JSON), `DatabaseHeader`, `DatabaseFolder` (layout, inspect, create), `SnapshotStore`, `Database` (open, append, refresh), `AtomicFile` (write as `.tmp`, then rename), `KeyMemory` (remembered master keys, `keys.json`), `ISecretProtector` |
+| `Input/` | `InputParser` (text → `NodeRequest` / `LinkRequest`), `GraphSearch` (`SearchHit`), `AddPlanner` (`AddPlan`: `NodePlan`, `LinkPlan`, `PlannedSide`) |
 | `Logging/` | `ILog` (with `NullLog`), `LogEntry`, `RingLog`, `CompositeLog`, `FilteredLog` |
 | `Placement/` | Window positions: `WindowPlacement`, `PlacementRules`, `PlacementStore` (see [Window positions](#window-positions)) |
 | `Updates/` | The daily update check, see [Updates](#updates): `UpdateChecker`, `Release`, `IReleaseFeed`, `UpdateStore` |
 
 | `kofrenot.App` | Content |
 | --- | --- |
-| *(root)* | `App.xaml`: startup and wiring |
-| `Views/` | Windows: `MainWindow`, `SettingsWindow` (tabs Appearance, Logging, About), `LogWindow`, `ChangelogWindow` (Settings > About > *Show changelog*); `MessageDialog` (messages in the app's theme, instead of the Windows `MessageBox`); `AppTheme` |
+| *(root)* | `App.xaml`: startup and wiring; `DatabaseSession` (the open database: create, unlock, watch, add, forget the remembered key) |
+| `Views/` | Windows: `MainWindow` (input box), `InputPresenter` (its preview and result rows), `SettingsWindow` (tabs General, Database, Appearance, Logging, About), `PassphraseDialog`, `LogWindow`, `ChangelogWindow` (Settings > About > *Show changelog*); `MessageDialog` (messages and questions in the app's theme, instead of the Windows `MessageBox`); `AppTheme` |
 | `Tray/` | `TrayIcon` |
-| `Platform/` | Implementations of the `Core` interfaces (`GitHubReleaseFeed`), `SingleInstance`, and window placement (`NativeWindows`, `WindowPlacer`) |
+| `Platform/` | Implementations of the `Core` interfaces (`GitHubReleaseFeed`, `DpapiProtector`), `SingleInstance`, `GlobalHotkey` (`RegisterHotKey`), `DatabaseWatcher` (`FileSystemWatcher`), and window placement (`NativeWindows`, `WindowPlacer`) |
 | `Logging/` | `LogHub`, `SerilogFileLog` |
 | `Assets/` | `kofrenot.ico` (drawn by `build/make_icon.py`) |
 
@@ -50,7 +58,7 @@ One namespace per folder (`Kofrenot.Core.Settings`, `Kofrenot.UI.Views`, ...). T
 | `coverlet.msbuild` | Tests | Coverage of `Core`, build fails below 95 % lines |
 | `dotnet-reportgenerator-globaltool` | Local tool (`.config/dotnet-tools.json`) | HTML coverage report (`build.cmd`) |
 
-The update check uses .NET's own `HttpClient` (`GitHubReleaseFeed` in App): kofrenot's only network access so far.
+The update check uses .NET's own `HttpClient` (`GitHubReleaseFeed` in App): kofrenot's only network access so far. Encryption uses .NET's own `AesGcm` and `Rfc2898DeriveBytes` (Core), and `ProtectedData` (DPAPI, part of the Windows desktop framework, App): no package.
 
 Shared build settings and the version are in `Directory.Build.props`; output goes to `artifacts/`. Builds are deterministic and `DeterministicSourcePaths` replaces the local repo path with `/_/` in DLLs, their embedded debug info (`DebugType=embedded`: no `.pdb` files) and Source Link data, so no local path (or user name) ships. The installer is built with [Inno Setup](https://jrsoftware.org/isinfo.php) (`build/installer.cmd`, `build/installer/kofrenot.iss`), a tool installed on the PC, not a package.
 
@@ -68,12 +76,16 @@ Publishing is self-contained, so the PC needs no .NET runtime (installing one ne
 App.OnStartup
  ├─ SingleInstance.TryClaim ── another copy runs? ─► ask it to show its window, exit
  ├─ AppFiles.For ─► SettingsStore ─► AppTheme ─► LogHub
+ ├─ DatabaseSession (KeyMemory + DpapiProtector)
  ├─ MainWindow (+ WindowPlacer "Main") ─► UpdateChecker (background, once a day)
+ ├─ GlobalHotkey (Ctrl+Alt+K by default) ─► MainWindow shown
  ├─ TrayIcon: Show · Settings · Log window · Quit
- └─ MainWindow shown
+ ├─ MainWindow shown
+ └─ once idle: DatabaseSession.Open ─► remembered key, or PassphraseDialog (create / unlock) ─► Database.Open + DatabaseWatcher
 ```
 
-- Closing the main window hides it; kofrenot keeps running in the notification area until *Quit* (`ShutdownMode=OnExplicitShutdown`).
+- Closing the main window (or Esc with an empty input box) hides it; kofrenot keeps running in the notification area until *Quit* (`ShutdownMode=OnExplicitShutdown`).
+- A hotkey another program already uses is not registered: logged as a warning at start, refused in Settings > General (the previous one stays).
 - Settings is a modal dialog over the main window. The log window can be opened in front of it and stays open after it closes.
 
 ## Portable copy
@@ -95,10 +107,12 @@ App.OnStartup
 - `PlacementRules.KeepVisible` does the same for a window on screen. `WindowPlacer.KeepOnScreen` applies it each time a window is shown and after a scaling change (`DpiChanged`). It checks the visible frame (without the invisible resize borders), so a window snapped to an edge is left alone.
 - `App` reads the monitors and window rectangles through Win32 (`NativeWindows`); WinForms' `Screen` is not used, so WinForms stays limited to the tray.
 - A maximized window keeps its normal size, to be restored to it.
+- The log window also keeps its column widths (`WindowPlacement.Columns`, given to `WindowPlacer.Attach`); saved widths are dropped if the number of columns changed.
+- Opened from Settings, the log window comes in front and stays usable while Settings is open, without being always on top.
 - What is restored depends on the window (`RestoreMode`): the main and log windows their position and size, Settings its size only: as a dialog, it opens centered on the main window (`PlacementRules.CenterOn`).
 
 ## Database
-*Planned for 0.1, not implemented yet* ([ROADMAP.md](ROADMAP.md#01)). Model and principles: [GOAL.md](GOAL.md#data-model).
+Model and principles: [GOAL.md](GOAL.md#data-model).
 
 ### Folder
 
@@ -112,8 +126,9 @@ App.OnStartup
 
 - **Only added, never modified.** A change file is written as `*.tmp` then renamed, so a reader or the sync tool never sees half a file. `.tmp` files are ignored.
 - **Folders by the id's first two characters**, so no folder holds too many files.
-- An unreadable file (corrupt, wrong key) is skipped and logged as a warning; the others still load.
+- An unreadable file (corrupt, wrong key, still being copied) is skipped and logged once as a warning, then tried again at each refresh; the others still load. Other files (`desktop.ini`, ...) are ignored.
 - A header `format` newer than the app's: the database is not opened.
+- `DatabaseFolder.Inspect`: a new database is only created in an empty (or missing) folder; a folder holding other files is refused, so nothing of the user's is mixed with it.
 
 ### Encryption
 
@@ -129,7 +144,7 @@ change file = "KFC1" · nonce · ciphertext · tag
 - Built into .NET (`Rfc2898DeriveBytes`, `AesGcm`): no package.
 - A wrong pass phrase fails to unwrap the master key (GCM tag), so no extra check value is needed.
 - Changing the pass phrase (later) rewrites the header only.
-- *Remember pass phrase* stores the master key, protected by DPAPI for the current Windows user, in the local data folder, per database id. `Core` sees it through `ISecretProtector`; `App` implements it with `CryptProtectData` (P/Invoke, no package).
+- *Remember pass phrase* stores the master key (not the pass phrase: it opens at once and survives a pass phrase change), protected by DPAPI for the current Windows user, in `keys.json` in the local data folder, per database id (`KeyMemory`). `Core` sees DPAPI through `ISecretProtector`; `App` implements it with `ProtectedData` (`DpapiProtector`).
 - The key, the pass phrase and names are never logged.
 
 ### Change content
@@ -145,6 +160,7 @@ UTF-8 JSON before encryption:
 - Changes are applied in `at` order (then id) to an in-memory graph. Search and preview work on it only.
 - A type unknown to this version is kept and shown by its id.
 - Duplicate nodes (same type and normalized name) are all kept and marked; duplicate links (same type and nodes, either direction when symmetric) count as one.
+- `Database` is not thread-safe: `App` uses it from the UI thread.
 - **Live refresh**: `App` watches the folder (`FileSystemWatcher`) and calls `Refresh`, which reads only the new files. It also refreshes when the main window is shown, as watchers can miss events on file shares.
 
 ### Local snapshot
@@ -159,7 +175,7 @@ start ─► snapshot (local) ─► graph + ids of the changes it holds
       save snapshot (after loading, and after each refresh or addition that changed it)
 ```
 
-- Stored in the local data folder, never in the database folder: `cache\<database id>.kfs` (`AppFiles`). It belongs to one device, so it never has to be synced or merged.
+- Stored in the local data folder, never in the database folder: `cache\<database id>.kfs` (`AppFiles`, `Database.SnapshotOf`). It belongs to one device, so it never has to be synced or merged.
 - Encrypted with the master key like a change file (`KFS1` · nonce · ciphertext · tag, AAD = database id), so it reveals nothing more than the database.
 - Written as `*.tmp`, then renamed. It is only a cache: deleting it costs one full read.
 - A change file that arrives late, older than changes already applied, is fine: in 0.1 changes only add, so their order does not change the result.
@@ -177,16 +193,11 @@ text ──InputParser──► NodeRequest(name) | LinkRequest(left, type, righ
      AddPlan: nodes to create, link to create, duplicates to confirm ──► Database.Append
 ```
 
-- Names are normalized for comparison only: trimmed, spaces collapsed, lower case, accents removed. The name is stored as typed (trimmed).
+- Names are compared by `NameKey`: lower case, accents removed, spaces collapsed. They are stored as typed, trimmed, with single spaces.
+- A link phrase counts after at least one word; with nothing after it, the link is still being typed (`LinkProblem.SecondNodeMissing`).
+- `GraphSearch`: exact names first, then names starting with the text, then the others, alphabetically; at most 20. Homonyms are listed oldest first, marked `¹`, `²`, ... (`SearchHit.Mark`).
+- `AddPlanner` builds the `AddPlan` shown as preview: the nodes to create, the link, and `NeedsConfirmation` when a node of that name exists. An existing link is not added again (`LinkProblem.AlreadyLinked`). A side matching several nodes uses the chosen one (`leftChoice`, `rightChoice`, the oldest by default). A link from a node to itself is refused.
 - A name containing a link alias cannot be entered (no quoting).
-
-### Folders (planned)
-
-| `kofrenot.Core` | Content |
-| --- | --- |
-| `Graph/` | `Node`, `Link`, `NodeType`, `LinkType`, `TypeCatalog` (built-in types and aliases), `Graph` (in-memory state) |
-| `Storage/` | `DatabaseHeader`, `KeyVault` (KDF, wrap / unwrap), `ChangeCodec` (encrypt / decrypt, JSON), `SnapshotStore`, `Database` (open, create, append, refresh), `ISecretProtector` |
-| `Input/` | `NameKey` (normalization), `InputParser`, `GraphSearch`, `AddPlan` |
 
 ## Logging
 - `Core` writes through `ILog` (`log.Info(category, message)`); only `App` knows Serilog.
