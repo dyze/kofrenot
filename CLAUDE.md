@@ -14,7 +14,7 @@ A private, self-hosted knowledge system: store, organize, search, version and sh
 - Windows access goes behind an interface defined in `Core` and implemented in `App`.
 - All domain logic (notes, files, metadata, search, versioning, sharing, sync) lives in `Core`, so it can be reused by a later server or another client.
 - Metadata is always available locally; content may be fetched on demand. Do not design anything that needs the network to browse or search metadata.
-- Storage format, sync protocol, server and encryption choices are open (`docs/GOAL.md#open-questions`): ask before deciding one.
+- Storage, sync, conflicts and encryption are decided (`docs/GOAL.md#decisions`): ask before changing them. The rest (`docs/GOAL.md#open-questions`) is open: ask before deciding one.
 
 ## Dependencies
 Only those listed in `docs/ARCHITECTURE.md#stack`. Ask before adding one.
@@ -38,7 +38,7 @@ Only those listed in `docs/ARCHITECTURE.md#stack`. Ask before adding one.
 - **Do it well.** Prefer the clean, simple solution over the quick hack.
 - **Ask before** adding a dependency, changing the architecture, doing a large refactor, or touching anything listed as a non-goal.
 - **Tests.** Every change in `Core` comes with xUnit tests.
-- **Build honesty.** Claude's workspace has no .NET SDK, so it cannot build or run tests. Never claim the code builds; ask the owner to run `build.cmd` and report errors.
+- **Build honesty.** Claude builds and runs the tests itself (the .NET SDK is installed) and reports the real result, errors and coverage included. Never claim the code builds without having run it.
 - **Docs.** One home per fact:
   - user-facing behavior → `README.md`
   - version scope → `docs/ROADMAP.md` (planned features)
@@ -64,7 +64,7 @@ Only those listed in `docs/ARCHITECTURE.md#stack`. Ask before adding one.
 * Remove dead code.
 * Avoid long modules. Move large, monolithic classes or methods into separate `.cs` files or helper classes to keep individual files concise and maintainable.
 * Avoid redundant code.
-* Validate with the owner's `build.cmd` run (see Build honesty).
+* Validate with a build and test run (see Build honesty).
 * Maintain Core library sub-systems code coverage target of **>=95%** (line coverage, enforced by `build.cmd`).
 * Reduce build warnings.
 
@@ -75,4 +75,4 @@ Only those listed in `docs/ARCHITECTURE.md#stack`. Ask before adding one.
 - No AI attribution in commit messages or PR descriptions (no `Co-Authored-By: Claude …`, no "Generated with Claude Code").
 
 ## Definition of done
-Code is written, tests cover the new `Core` behavior, docs are updated, and the owner has run `build.cmd` successfully.
+Code is written, tests cover the new `Core` behavior, docs are updated, and the build and tests pass (`build.cmd`).
