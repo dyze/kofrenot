@@ -18,6 +18,20 @@ public partial class MessageDialog : Window
     public static void Inform(Window owner, string message) =>
         new MessageDialog(owner, message).ShowDialog();
 
+    /// <summary>Asks a question: true when the user chose <paramref name="yes"/>.</summary>
+    public static bool Confirm(Window owner, string message, string yes, string no = "Cancel")
+    {
+        var dialog = new MessageDialog(owner, message);
+        dialog.OkButton.Content = yes;
+        dialog.OkButton.IsCancel = false;
+        dialog.CancelButton.Content = no;
+        dialog.CancelButton.IsCancel = true;
+        dialog.CancelButton.Visibility = Visibility.Visible;
+        return dialog.ShowDialog() == true;
+    }
+
+    private void OkButton_Click(object sender, RoutedEventArgs e) => DialogResult = true;
+
     private void Window_SourceInitialized(object? sender, EventArgs e) =>
         NativeWindows.RemoveMinimizeMaximizeButtons(new WindowInteropHelper(this).Handle);
 }

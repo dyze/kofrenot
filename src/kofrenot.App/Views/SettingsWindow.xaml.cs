@@ -39,15 +39,21 @@ public partial class SettingsWindow : Window
     private readonly ILog _log;
     private readonly Action<Window> _openLog;
     private readonly UpdateChecker _updates;
+    private readonly DatabaseSession _session;
+    private readonly Func<Hotkey, bool> _applyHotkey;
     private string _changelogPath = string.Empty;
     private bool _loading;
 
+    /// <param name="session">The database: its folder can be changed here, and its remembered pass phrase forgotten.</param>
+    /// <param name="applyHotkey">Registers a new hotkey; false when another program uses it (the old one then stays).</param>
     /// <param name="openLog">Opens the log window in front of this dialog.</param>
     public SettingsWindow(
         SettingsStore settings,
         LogHub logHub,
         AppFiles files,
         UpdateChecker updates,
+        DatabaseSession session,
+        Func<Hotkey, bool> applyHotkey,
         Action<Window> openLog)
     {
         _settings = settings;
@@ -55,7 +61,10 @@ public partial class SettingsWindow : Window
         _log = logHub.Filter;
         _openLog = openLog;
         _updates = updates;
+        _session = session;
+        _applyHotkey = applyHotkey;
         InitializeComponent();
+        ShowDatabase();
 
         ThemeComboBox.ItemsSource = ThemeOptions;
         ShowAbout(files);
@@ -222,6 +231,7 @@ public partial class SettingsWindow : Window
     {
         _loading = true;
         DebugLoggingCheckBox.IsChecked = _settings.DebugLogging;
+        HotkeyBox.Text = _settings.Hotkey.ToString();
         ThemeComboBox.SelectedItem = ThemeOptions.First(option => option.Value == _settings.Theme);
         _loading = false;
     }
@@ -415,6 +425,150 @@ public partial class SettingsWindow : Window
     {
         _log.Info("Action", "Show changelog");
         ChangelogWindow.Show(this, Changelog.Read(_changelogPath));
+    }
+
+    /// <summary>The key pressed with its modifiers becomes the hotkey, when it can be one.</summary>
+    private void HotkeyBox_PreviewKeyDown(object sender, KeyEventArgs e)
+    {
+        // Alt combinations arrive as the System key.
+        var key = e.Key == Key.System ? e.SystemKey : e.Key;
+        if (key == Key.Tab || key == Key.Escape)
+        {
+            return;
+        }
+
+        e.Handled = true;
+        if (Hotkey.TryParse($"{ModifiersOf(Keyboard.Modifiers)}+{KeyName(key)}", out var hotkey))
+        {
+            ApplyHotkey(hotkey);
+        }
+        else if (KeyName(key) is not null)
+        {
+            HotkeyStatusText.Text = "Use Ctrl, Alt or Win with a letter, a digit or F1 to F24.";
+        }
+    }
+
+    private void HotkeyDefaultButton_Click(object sender, RoutedEventArgs e) => ApplyHotkey(Hotkey.Default);
+
+    private void ApplyHotkey(Hotkey hotkey)
+    {
+        if (hotkey == _settings.Hotkey)
+        {
+            HotkeyStatusText.Text = string.Empty;
+            return;
+        }
+
+        if (!_applyHotkey(hotkey))
+        {
+            _log.Warn("Settings", $"Hotkey {hotkey} is used by another program");
+            HotkeyStatusText.Text = $"{hotkey} is used by another program: {_settings.Hotkey} is kept.";
+            return;
+        }
+
+        try
+        {
+            _settings.SetHotkey(hotkey);
+            _log.Info("Settings", $"Hotkey: {hotkey}");
+            HotkeyBox.Text = hotkey.ToString();
+            HotkeyStatusText.Text = string.Empty;
+        }
+        catch (Exception ex) when (ex is UnauthorizedAccessException or IOException)
+        {
+            _log.Error("Settings", "Cannot change the hotkey", ex);
+            ShowMessage(ex.Message);
+        }
+    }
+
+    private static string ModifiersOf(ModifierKeys modifiers) =>
+        string.Join('+', new[] { (ModifierKeys.Control, "Ctrl"), (ModifierKeys.Alt, "Alt"), (ModifierKeys.Shift, "Shift"), (ModifierKeys.Windows, "Win") }
+            .Where(modifier => modifiers.HasFlag(modifier.Item1))
+            .Select(modifier => modifier.Item2));
+
+    /// <summary>The name <see cref="Hotkey"/> reads for a WPF key, or null for a key it cannot use.</summary>
+    private static string? KeyName(Key key) => key switch
+    {
+        >= Key.A and <= Key.Z => key.ToString(),
+        >= Key.D0 and <= Key.D9 => ((char)('0' + (key - Key.D0))).ToString(),
+        >= Key.NumPad0 and <= Key.NumPad9 => ((char)('0' + (key - Key.NumPad0))).ToString(),
+        >= Key.F1 and <= Key.F24 => key.ToString(),
+        _ => null,
+    };
+
+    /// <summary>The Database tab: the folder, whether the database is open, and its remembered pass phrase.</summary>
+    private void ShowDatabase()
+    {
+        DatabaseFolderBox.Text = _session.Folder ?? string.Empty;
+        ExploreDatabaseButton.IsEnabled = _session.Folder is not null;
+        DatabaseStatusText.Text = (_session.Folder, _session.Current) switch
+        {
+            (null, _) => "None chosen yet. An empty folder becomes a new database; a folder holding a kofrenot database opens it.",
+            (_, null) => "Locked: the pass phrase was not given.",
+            (_, { } database) => $"Open: {database.Graph.Nodes.Count} nodes, {database.Graph.Links.Count} links.",
+        };
+
+        var remembered = _session.IsRemembered;
+        RememberedText.Text = remembered ? "The pass phrase is remembered on this computer." : "The pass phrase is not remembered.";
+        ForgetButton.IsEnabled = remembered;
+    }
+
+    private void ChooseDatabaseButton_Click(object sender, RoutedEventArgs e)
+    {
+        var dialog = new Microsoft.Win32.OpenFolderDialog { Title = "Database folder" };
+        if (_session.Folder is { } folder && Directory.Exists(folder))
+        {
+            dialog.InitialDirectory = folder;
+        }
+
+        if (dialog.ShowDialog(this) != true || dialog.FolderName == _session.Folder)
+        {
+            return;
+        }
+
+        try
+        {
+            _session.SwitchTo(this, dialog.FolderName);
+        }
+        catch (Exception ex) when (ex is UnauthorizedAccessException or IOException)
+        {
+            _log.Error("Settings", "Cannot change the database folder", ex);
+            ShowMessage(ex.Message);
+        }
+
+        ShowDatabase();
+    }
+
+    private void ExploreDatabaseButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (_session.Folder is not { } folder)
+        {
+            return;
+        }
+
+        try
+        {
+            Process.Start(new ProcessStartInfo("explorer.exe", $"\"{folder}\""));
+            _log.Info("Action", $"Explore to the database folder: {folder}");
+        }
+        catch (Exception ex) when (ex is System.ComponentModel.Win32Exception or IOException)
+        {
+            _log.Error("Action", $"Cannot open {folder}", ex);
+            ShowMessage(ex.Message);
+        }
+    }
+
+    private void ForgetButton_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            _session.Forget();
+        }
+        catch (Exception ex) when (ex is UnauthorizedAccessException or IOException)
+        {
+            _log.Error("Settings", "Cannot forget the pass phrase", ex);
+            ShowMessage(ex.Message);
+        }
+
+        ShowDatabase();
     }
 
     private void ShowMessage(string message) => MessageDialog.Inform(this, message);

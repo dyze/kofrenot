@@ -9,7 +9,8 @@
         ShowInTaskbar="False"
         WindowStartupLocation="CenterOwner"
         SourceInitialized="Window_SourceInitialized">
-  <!-- A message box in the app's theme (the Windows one ignores it). Enter and Esc close it. -->
+  <!-- A message box in the app's theme (the Windows one ignores it). Enter and Esc close it;
+       as a question, Enter answers yes and Esc no. -->
   <Grid Margin="20,18,20,16">
     <Grid.RowDefinitions>
       <RowDefinition Height="Auto" />
@@ -18,14 +19,23 @@
 
     <TextBlock x:Name="MessageText" VerticalAlignment="Center" TextWrapping="Wrap" />
 
-    <Button x:Name="OkButton"
-            Grid.Row="1"
-            MinWidth="90"
-            Margin="0,20,0,0"
-            Padding="12,4"
-            HorizontalAlignment="Right"
-            Content="OK"
-            IsDefault="True"
-            IsCancel="True" />
+    <StackPanel Grid.Row="1"
+                Margin="0,20,0,0"
+                HorizontalAlignment="Right"
+                Orientation="Horizontal">
+      <Button x:Name="OkButton"
+              MinWidth="90"
+              Padding="12,4"
+              Content="OK"
+              IsDefault="True"
+              IsCancel="True"
+              Click="OkButton_Click" />
+      <Button x:Name="CancelButton"
+              MinWidth="90"
+              Margin="8,0,0,0"
+              Padding="12,4"
+              Content="Cancel"
+              Visibility="Collapsed" />
+    </StackPanel>
   </Grid>
 </Window>

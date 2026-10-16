@@ -4,6 +4,7 @@ using Kofrenot.Core;
 using Kofrenot.Core.Logging;
 using Kofrenot.Core.Placement;
 using Kofrenot.Core.Settings;
+using Kofrenot.Core.Storage;
 using Kofrenot.Core.Updates;
 using Kofrenot.UI.Logging;
 using Kofrenot.UI.Platform;
@@ -19,6 +20,8 @@ public partial class App : Application
     private MainWindow? _window;
     private LogWindow? _logWindow;
     private TrayIcon? _tray;
+    private DatabaseSession? _session;
+    private GlobalHotkey? _hotkey;
 
     // Set at startup; a closed window cannot be shown again, so each opening creates a new one.
     private Func<LogWindow>? _createLogWindow;
@@ -59,23 +62,35 @@ public partial class App : Application
         var placer = new WindowPlacer(new PlacementStore(files.WindowPositions), log);
         var updates = new UpdateChecker(new GitHubReleaseFeed(version), new UpdateStore(files.UpdateCheck), version, log: log);
         var logHub = _logHub;
+        var session = _session = new DatabaseSession(settings, files, new KeyMemory(files.RememberedKeys, new DpapiProtector(), log), log);
         _window = new MainWindow(
             settings,
             log,
             updates,
+            session,
             createSettings: () =>
             {
-                var created = new SettingsWindow(settings, logHub, files, updates, openLog: OpenLogWindow);
+                var created = new SettingsWindow(settings, logHub, files, updates, session, wanted => ApplyHotkey(wanted, settings.Hotkey), openLog: OpenLogWindow);
                 placer.Attach(created, "Settings", RestoreMode.SizeOverOwner);
                 return created;
             });
         var window = _window;
         placer.Attach(window, "Main", RestoreMode.PositionAndSize);
 
+        var hotkey = _hotkey = new GlobalHotkey(window, () =>
+        {
+            log.Debug("Action", "Hotkey pressed");
+            window.ShowFromOutside();
+        });
+        if (!hotkey.Register(settings.Hotkey))
+        {
+            log.Warn("App", $"Hotkey {settings.Hotkey} is used by another program: change it in Settings > General");
+        }
+
         _createLogWindow = () =>
         {
             var created = new LogWindow(logHub.Ring, logHub.Directory);
-            placer.Attach(created, "Log", RestoreMode.PositionAndSize);
+            placer.Attach(created, "Log", RestoreMode.PositionAndSize, created.Columns);
             return created;
         };
 
@@ -95,6 +110,21 @@ public partial class App : Application
             });
 
         window.ShowFromOutside();
+
+        // Once the window is on screen, so the pass phrase dialog has an owner to center on.
+        Dispatcher.BeginInvoke(() => session.Open(window), System.Windows.Threading.DispatcherPriority.ApplicationIdle);
+    }
+
+    /// <summary>Registers a new hotkey. One that another program already uses: <paramref name="current"/> is registered again.</summary>
+    private bool ApplyHotkey(Hotkey wanted, Hotkey current)
+    {
+        if (_hotkey is null || _hotkey.Register(wanted))
+        {
+            return _hotkey is not null;
+        }
+
+        _hotkey.Register(current);
+        return false;
     }
 
     /// <summary>The tray's Log window item: closes the log window when it is open, else opens it.</summary>
@@ -114,7 +144,7 @@ public partial class App : Application
     /// <summary>Opens the log window, or brings it to the front when it is already open.</summary>
     /// <param name="over">
     /// A modal window that stays open (Settings over the main window): the log window is shown in
-    /// front of it and usable until it closes, then it stays open on its own.
+    /// front of it and stays usable while it is open, then stays open on its own.
     /// </param>
     private void OpenLogWindow(Window? over = null)
     {
@@ -129,13 +159,7 @@ public partial class App : Application
             return;
         }
 
-        if (over is not null)
-        {
-            // In front of the dialog while it is open.
-            logWindow.Topmost = true;
-            over.Closed += (_, _) => logWindow.Topmost = false;
-        }
-
+        // In front of the dialog, but not always on top: the windows then stack as usual.
         BringToFront(logWindow);
 
         // A log window opened before Settings was disabled by it, as a modal dialog does with the others.
@@ -163,6 +187,8 @@ public partial class App : Application
     protected override void OnExit(ExitEventArgs e)
     {
         _tray?.Dispose();
+        _hotkey?.Dispose();
+        _session?.Dispose();
         _logHub?.Filter.Info("App", "kofrenot stopped");
         _logHub?.Dispose();
         _singleInstance?.Dispose();

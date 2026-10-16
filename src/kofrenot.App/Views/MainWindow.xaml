@@ -6,10 +6,14 @@
         Width="1000" Height="680"
         MinWidth="640" MinHeight="420"
         WindowStartupLocation="CenterScreen"
-        Closing="Window_Closing">
-  <!-- The main window. Closing it hides it: kofrenot stays in the notification area until Quit. -->
+        Closing="Window_Closing"
+        PreviewKeyDown="Window_PreviewKeyDown">
+  <!-- The main window: one input box to find and add nodes and links. Closing it (or Esc) hides it:
+       kofrenot stays in the notification area until Quit. -->
   <Grid Margin="16">
     <Grid.RowDefinitions>
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="Auto" />
       <RowDefinition Height="Auto" />
       <RowDefinition Height="*" />
       <RowDefinition Height="Auto" />
@@ -41,17 +45,83 @@
                Visibility="Collapsed" />
     </Grid>
 
-    <!-- Placeholder until the first features land (see docs/ROADMAP.md). -->
-    <TextBlock Grid.Row="1"
-               HorizontalAlignment="Center"
-               VerticalAlignment="Center"
-               Opacity="0.6"
-               Text="Your notes will be here." />
+    <!-- Enter adds, Up/Down choose among homonyms, Tab switches the side of a link, Esc clears then hides. -->
+    <Grid Grid.Row="1" Margin="0,14,0,0">
+      <TextBox x:Name="InputBox"
+               Padding="8,6"
+               FontSize="18"
+               TextChanged="InputBox_TextChanged"
+               PreviewKeyDown="InputBox_PreviewKeyDown" />
+      <TextBlock x:Name="InputPlaceholder"
+                 Margin="12,0,0,0"
+                 VerticalAlignment="Center"
+                 FontSize="18"
+                 IsHitTestVisible="False"
+                 Opacity="0.5"
+                 Text="Dune relates to Frank Herbert" />
+    </Grid>
 
-    <TextBlock x:Name="VersionText"
+    <TextBlock x:Name="PreviewText"
                Grid.Row="2"
-               HorizontalAlignment="Right"
-               FontSize="11"
-               Opacity="0.6" />
+               Margin="2,8,0,0"
+               Opacity="0.8"
+               TextWrapping="Wrap" />
+
+    <!-- The nodes found, and the links of the exact matches. Not focusable: typing stays in the input box. -->
+    <ListBox x:Name="ResultsList"
+             Grid.Row="3"
+             Margin="0,10,0,0"
+             BorderThickness="0"
+             Background="Transparent"
+             Focusable="False"
+             IsHitTestVisible="False">
+      <!-- Compact rows: the theme's are sized for touch. -->
+      <ListBox.ItemContainerStyle>
+        <Style TargetType="ListBoxItem" BasedOn="{StaticResource {x:Type ListBoxItem}}">
+          <Setter Property="MinHeight" Value="0" />
+          <Setter Property="Padding" Value="6,1" />
+          <Setter Property="Margin" Value="0" />
+        </Style>
+      </ListBox.ItemContainerStyle>
+      <ListBox.ItemTemplate>
+        <DataTemplate>
+          <TextBlock x:Name="RowText" Text="{Binding Text}" />
+          <DataTemplate.Triggers>
+            <DataTrigger Binding="{Binding IsLink}" Value="True">
+              <Setter TargetName="RowText" Property="Margin" Value="24,0,0,0" />
+              <Setter TargetName="RowText" Property="Opacity" Value="0.75" />
+            </DataTrigger>
+            <DataTrigger Binding="{Binding IsChosen}" Value="True">
+              <Setter TargetName="RowText" Property="FontWeight" Value="SemiBold" />
+              <Setter TargetName="RowText" Property="Text" Value="{Binding Text, StringFormat=› {0}}" />
+            </DataTrigger>
+          </DataTemplate.Triggers>
+        </DataTemplate>
+      </ListBox.ItemTemplate>
+    </ListBox>
+
+    <!-- Instead of the input: no database chosen yet, or it is locked. -->
+    <StackPanel x:Name="StatePanel"
+                Grid.Row="1"
+                Grid.RowSpan="3"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                Visibility="Collapsed">
+      <TextBlock x:Name="StateText"
+                 MaxWidth="460"
+                 Opacity="0.8"
+                 TextAlignment="Center"
+                 TextWrapping="Wrap" />
+      <Button x:Name="StateButton"
+              Margin="0,14,0,0"
+              Padding="14,5"
+              HorizontalAlignment="Center"
+              Click="StateButton_Click" />
+    </StackPanel>
+
+    <Grid Grid.Row="4">
+      <TextBlock x:Name="DatabaseText" FontSize="11" Opacity="0.6" TextTrimming="CharacterEllipsis" Margin="0,0,160,0" />
+      <TextBlock x:Name="VersionText" HorizontalAlignment="Right" FontSize="11" Opacity="0.6" />
+    </Grid>
   </Grid>
 </Window>

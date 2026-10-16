@@ -103,6 +103,60 @@
                    Text="No setting matches."
                    Visibility="Collapsed" />
 
+        <StackPanel Tag="{x:Static settings:SettingsCatalog.GeneralTab}">
+          <TextBlock Text="{x:Static settings:SettingsCatalog.GeneralTab}" Style="{StaticResource SectionHeader}" />
+
+          <!-- Focus the box, then press the new shortcut. -->
+          <StackPanel Tag="{x:Static settings:SettingsCatalog.HotkeyId}" Margin="0,10,0,0">
+            <StackPanel Orientation="Horizontal">
+              <TextBlock Text="Hotkey that shows kofrenot" Width="190" VerticalAlignment="Center" />
+              <TextBox x:Name="HotkeyBox"
+                       Width="160"
+                       IsReadOnly="True"
+                       IsReadOnlyCaretVisible="True"
+                       ToolTip="Click, then press the new shortcut: Ctrl, Alt or Win with a letter, a digit or F1 to F24"
+                       PreviewKeyDown="HotkeyBox_PreviewKeyDown" />
+              <Button Margin="8,0,0,0" Padding="12,4" Content="Default" ToolTip="Ctrl+Alt+K" Click="HotkeyDefaultButton_Click" />
+            </StackPanel>
+            <TextBlock x:Name="HotkeyStatusText" Margin="0,6,0,0" Opacity="0.7" TextWrapping="Wrap" />
+          </StackPanel>
+        </StackPanel>
+
+        <StackPanel Tag="{x:Static settings:SettingsCatalog.DatabaseTab}">
+          <TextBlock Text="{x:Static settings:SettingsCatalog.DatabaseTab}" Style="{StaticResource SectionHeader}" />
+
+          <StackPanel Tag="{x:Static settings:SettingsCatalog.DatabaseFolderId}" Margin="0,10,0,0">
+            <TextBlock Text="Database folder" />
+            <Grid Margin="0,4,0,0">
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+              </Grid.ColumnDefinitions>
+              <TextBox x:Name="DatabaseFolderBox" IsReadOnly="True" VerticalAlignment="Center" />
+              <Button Grid.Column="1" Margin="8,0,0,0" Padding="12,4" Content="Choose..." Click="ChooseDatabaseButton_Click" />
+              <Button x:Name="ExploreDatabaseButton"
+                      Grid.Column="2"
+                      Margin="8,0,0,0"
+                      Padding="12,4"
+                      Content="Explore to"
+                      ToolTip="Opens the database folder in File Explorer"
+                      Click="ExploreDatabaseButton_Click" />
+            </Grid>
+            <TextBlock x:Name="DatabaseStatusText" Margin="0,6,0,0" Opacity="0.7" TextWrapping="Wrap" />
+          </StackPanel>
+
+          <StackPanel Tag="{x:Static settings:SettingsCatalog.RememberedPassPhraseId}" Margin="0,16,0,0" Orientation="Horizontal">
+            <TextBlock x:Name="RememberedText" VerticalAlignment="Center" />
+            <Button x:Name="ForgetButton"
+                    Margin="12,0,0,0"
+                    Padding="12,4"
+                    Content="Forget"
+                    ToolTip="The pass phrase will be asked at the next start"
+                    Click="ForgetButton_Click" />
+          </StackPanel>
+        </StackPanel>
+
         <StackPanel Tag="{x:Static settings:SettingsCatalog.AppearanceTab}">
           <TextBlock Text="{x:Static settings:SettingsCatalog.AppearanceTab}" Style="{StaticResource SectionHeader}" />
 

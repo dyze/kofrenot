@@ -1,4 +1,5 @@
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Interop;
 using System.Windows.Threading;
 using Kofrenot.Core.Logging;
@@ -20,8 +21,9 @@ public enum RestoreMode
 }
 
 /// <summary>
-/// Puts windows back where they were left (same monitor, same place) and remembers where they
-/// are when they are hidden or closed. A window without a saved position opens as its XAML says.
+/// Puts windows back where they were left (same monitor, same place, same column widths) and
+/// remembers where they are when they are hidden or closed. A window without a saved position
+/// opens as its XAML says.
 /// Each time a window is shown, or its monitor's scaling changes its size, it is moved back
 /// inside the screen if part of it is off.
 /// </summary>
@@ -39,11 +41,17 @@ public sealed class WindowPlacer
     /// <summary>
     /// Call before the window is first shown. <paramref name="name"/> is its key in windows.json.
     /// </summary>
-    public void Attach(Window window, string name, RestoreMode mode)
+    /// <param name="columns">The columns of the window's list, whose widths are kept too.</param>
+    public void Attach(Window window, string name, RestoreMode mode, GridView? columns = null)
     {
         ScreenRect? lastNormal = null;
 
         var saved = _store.Get(name);
+        if (columns is not null)
+        {
+            RestoreColumns(columns, saved?.Columns);
+        }
+
         if (mode == RestoreMode.SizeOverOwner)
         {
             window.WindowStartupLocation = WindowStartupLocation.Manual;
@@ -71,7 +79,7 @@ public sealed class WindowPlacer
         {
             if (e.NewValue is false)
             {
-                Save(window, name, lastNormal);
+                Save(window, name, lastNormal, columns);
             }
             else
             {
@@ -80,7 +88,7 @@ public sealed class WindowPlacer
             }
         };
         window.DpiChanged += (_, _) => window.Dispatcher.BeginInvoke(() => KeepOnScreen(window), DispatcherPriority.Loaded);
-        window.Closing += (_, _) => Save(window, name, lastNormal);
+        window.Closing += (_, _) => Save(window, name, lastNormal, columns);
     }
 
     /// <summary>
@@ -165,7 +173,21 @@ public sealed class WindowPlacer
         _log.Debug("Window", $"{name} restored on {saved.Monitor} at {bounds.Left},{bounds.Top} ({bounds.Width}x{bounds.Height})");
     }
 
-    private void Save(Window window, string name, ScreenRect? lastNormal)
+    /// <summary>The saved widths, when they still fit the columns (the same number, each of a usable size).</summary>
+    private static void RestoreColumns(GridView columns, IReadOnlyList<double>? widths)
+    {
+        if (widths is null || widths.Count != columns.Columns.Count || widths.Any(width => width is < 16 or > 4000))
+        {
+            return;
+        }
+
+        for (var index = 0; index < widths.Count; index++)
+        {
+            columns.Columns[index].Width = widths[index];
+        }
+    }
+
+    private void Save(Window window, string name, ScreenRect? lastNormal, GridView? columns)
     {
         var maximized = window.WindowState == WindowState.Maximized;
         var bounds = maximized ? lastNormal : NativeWindows.WindowBounds(Handle(window)) ?? lastNormal;
@@ -179,6 +201,11 @@ public sealed class WindowPlacer
         if (PlacementRules.Capture(bounds, NativeWindows.Monitors(), maximized) is not { } placement)
         {
             return;
+        }
+
+        if (columns is not null)
+        {
+            placement = placement with { Columns = columns.Columns.Select(column => Math.Round(column.ActualWidth, 1)).ToList() };
         }
 
         try

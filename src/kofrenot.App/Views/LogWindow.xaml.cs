@@ -35,6 +35,9 @@ public partial class LogWindow : Window
         Reload();
     }
 
+    /// <summary>The columns of the list, whose widths are remembered with the window's position.</summary>
+    public GridView Columns => EntriesGrid;
+
     private LogLevel MinimumLevel => LevelComboBox.SelectedIndex switch
     {
         1 => LogLevel.Info,
