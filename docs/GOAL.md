@@ -6,26 +6,46 @@ A private, self-hosted knowledge system: store, organize, search, version and sh
 ## Who it's for
 Me first: a personal tool, optimised for my own workflow. Later, others who want to host their own.
 
+## Data model
+Everything is a **node**, and nodes are joined by **links**.
+
+```
+ ┌──────────┐   relates to   ┌───────────────┐
+ │   Dune   │────────────────│ Frank Herbert │
+ └──────────┘                └───────────────┘
+   node (type: generic)        node (type: generic)
+```
+
+- A node has a type, a name and a creation date. Later types add their own properties: notes and files will be node types.
+- A link has a type and joins two nodes. A link type has a name and aliases ("relates to", "related to"); it is symmetric, or directed with an inverse name ("written by" / "wrote").
+- Types are extensible: 0.1 has one built-in node type (*generic*) and one link type (*relates to*). Later, the user defines their own types and properties.
+
 ## How it works (target)
 
 ```
- Device A (Windows client)          Self-hosted server (TBD)          Device B
- ┌──────────────────────┐          ┌──────────────────────┐         ┌──────────┐
- │ metadata: full copy  │◄── sync ─►│ metadata + content   │◄─ sync ─►│ ...      │
- │ content: on demand   │          │ versions, shares     │         └──────────┘
- └──────────────────────┘          └──────────────────────┘
-   offline: browse, search,
-   organize metadata
+ Device A (kofrenot)            Database folder               Device B (kofrenot)
+ ┌───────────────────┐       ┌──────────────────────┐       ┌───────────────────┐
+ │ full graph in     │──────►│ header + encrypted   │◄──────│ ...               │
+ │ memory, offline   │◄──────│ change files, only   │──────►│                   │
+ └───────────────────┘ file  │ ever added           │ file  └───────────────────┘
+                       access└──────────────────────┘ access
+                                  ▲ copied between devices by a separate
+                                    sync app (Dropbox-like, designed apart)
 ```
 
-Only the Windows client shell exists today (0.1): see [ROADMAP.md](ROADMAP.md).
+- A **database is a folder**: local, or on a file share. kofrenot only reads and writes files there.
+- Each change (a node or link added) is a new encrypted file, never modified afterwards, like git's objects. Several apps can write to the same database at the same time, and a sync tool never has to merge a file.
+- Only an app that has the key can read the files. The key is unlocked with a pass phrase.
+
+Details: [ARCHITECTURE.md](ARCHITECTURE.md#database).
 
 ## Principles
-- **Private and self-hosted.** The data lives on the user's own devices and server. No third-party cloud required.
-- **Secure.** Content and metadata are protected in transit and at rest; sharing is explicit.
-- **Offline first for metadata.** Every device keeps the full metadata (titles, tags, folders, versions, ...): browsing, searching and organizing work without a network.
-- **Content on demand.** A note's or file's content is fetched when opened, and can be kept offline on request.
-- **Versioned.** Changes are kept as versions that can be compared and restored.
+- **Private and self-hosted.** The data lives in the user's own folders. No third-party cloud required.
+- **Secure.** Everything in the database, names included, is encrypted; only the header (format, key parameters) is plain.
+- **Offline first.** Every device has the full database: browsing, searching and adding work without a network.
+- **Content on demand** (later). A note's or file's content is fetched when opened, and can be kept offline on request.
+- **Versioned.** Changes are kept, never overwritten.
+- **Conflicts are easy.** Files are only added, so the only conflicts are in the meaning (the same name added twice on two devices): they are shown, not resolved silently.
 - **Logic in Core.** The domain is plain .NET in `kofrenot.Core`, independent of Windows and of the UI.
 
 ## Versioning
@@ -38,6 +58,17 @@ What each version contains: [ROADMAP.md](ROADMAP.md).
 - A hosted (SaaS) service run by someone else
 - Real-time collaborative editing (several people typing in the same note at once)
 - Multi-user installs of the Windows client (the installer is per user)
+- Syncing files between devices inside kofrenot: a separate app does it
+
+## Decisions
+
+| Topic | Decision |
+| --- | --- |
+| Local storage | A folder of encrypted change files, read into memory ([ARCHITECTURE.md](ARCHITECTURE.md#database)) |
+| Sync | Outside kofrenot, by copying files. No server for now |
+| Conflicts | Concurrent duplicates are flagged, not merged |
+| Security | AES-256-GCM, random master key wrapped by a pass-phrase key (PBKDF2-SHA256); optionally remembered by Windows (DPAPI) |
+| Notes | Will be a node type |
 
 ## Open questions
 Decisions to take with the owner before the matching features:
@@ -45,13 +76,12 @@ Decisions to take with the owner before the matching features:
 | Topic | Question |
 | --- | --- |
 | Note format | Markdown files, rich text, or both? |
-| Local storage | Plain files on disk, a database (SQLite), or both (files + index)? |
-| Server | What runs it (ASP.NET Core, an existing product such as WebDAV / Git)? Where is it hosted? |
-| Sync | Protocol, conflict handling, what "on demand" means for large files |
-| Security | Encryption at rest and end-to-end? Key management, authentication |
-| Sharing | With whom (other users of the same server, public links), and at which granularity |
-| Versioning | Every save, or explicit snapshots? Retention |
-| Search | Metadata only offline; full-text on content kept offline? |
+| Server | Later: a web server (REST API) holding the same files? |
+| Content on demand | What "on demand" means for large files |
+| Sharing | With whom, and at which granularity |
+| Versioning | Show and restore history? |
+| Packs | One file per change makes many small files. Pack old changes into bigger files in the database folder, as git's packs? Who packs, when, and how does it stay safe with several apps and the sync tool? |
+| Search | Full-text on content kept offline? |
 | Clients | Windows only, or also mobile / web later? |
 
 ## Stack and architecture

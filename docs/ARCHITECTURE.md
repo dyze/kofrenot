@@ -97,12 +97,104 @@ App.OnStartup
 - A maximized window keeps its normal size, to be restored to it.
 - What is restored depends on the window (`RestoreMode`): the main and log windows their position and size, Settings its size only: as a dialog, it opens centered on the main window (`PlacementRules.CenterOn`).
 
+## Database
+*Planned for 0.1, not implemented yet* ([ROADMAP.md](ROADMAP.md#01)). Model and principles: [GOAL.md](GOAL.md#data-model).
+
+### Folder
+
+```
+<database folder>/
+  kofrenot-db.json         header, plain JSON: format, database id, KDF salt + iterations, wrapped master key
+  changes/
+    3f/3f9c…e1.kfc         one encrypted change, named by a random id, written once
+    a0/a07b…42.kfc
+```
+
+- **Only added, never modified.** A change file is written as `*.tmp` then renamed, so a reader or the sync tool never sees half a file. `.tmp` files are ignored.
+- **Folders by the id's first two characters**, so no folder holds too many files.
+- An unreadable file (corrupt, wrong key) is skipped and logged as a warning; the others still load.
+- A header `format` newer than the app's: the database is not opened.
+
+### Encryption
+
+```
+pass phrase ──PBKDF2-SHA256 (salt, 600 000 iterations)──► pass-phrase key
+                                                             │ AES-256-GCM
+master key (32 random bytes) ◄──────── unwraps ──────────────┘   (header)
+   │ AES-256-GCM, new 12-byte nonce per file, AAD = file id
+   ▼
+change file = "KFC1" · nonce · ciphertext · tag
+```
+
+- Built into .NET (`Rfc2898DeriveBytes`, `AesGcm`): no package.
+- A wrong pass phrase fails to unwrap the master key (GCM tag), so no extra check value is needed.
+- Changing the pass phrase (later) rewrites the header only.
+- *Remember pass phrase* stores the master key, protected by DPAPI for the current Windows user, in the local data folder, per database id. `Core` sees it through `ISecretProtector`; `App` implements it with `CryptProtectData` (P/Invoke, no package).
+- The key, the pass phrase and names are never logged.
+
+### Change content
+UTF-8 JSON before encryption:
+
+```json
+{ "format": 1, "at": "2026-10-16T09:12:00Z", "op": "addNode",
+  "node": { "id": "…", "type": "generic", "name": "Dune", "created": "2026-10-16T09:12:00Z" } }
+{ "format": 1, "at": "…", "op": "addLink",
+  "link": { "id": "…", "type": "relates-to", "from": "<node id>", "to": "<node id>", "created": "…" } }
+```
+
+- Changes are applied in `at` order (then id) to an in-memory graph. Search and preview work on it only.
+- A type unknown to this version is kept and shown by its id.
+- Duplicate nodes (same type and normalized name) are all kept and marked; duplicate links (same type and nodes, either direction when symmetric) count as one.
+- **Live refresh**: `App` watches the folder (`FileSystemWatcher`) and calls `Refresh`, which reads only the new files. It also refreshes when the main window is shown, as watchers can miss events on file shares.
+
+### Local snapshot
+Reading thousands of small files at each start is slow, above all on a file share. So each device reads a change file **once**, then keeps the result in a snapshot:
+
+```
+start ─► snapshot (local) ─► graph + ids of the changes it holds
+           │ missing, unreadable or other format: start from an empty graph
+           ▼
+      list changes/ (names only) ─► read the files not in the snapshot ─► apply
+           ▼
+      save snapshot (after loading, and after each refresh or addition that changed it)
+```
+
+- Stored in the local data folder, never in the database folder: `cache\<database id>.kfs` (`AppFiles`). It belongs to one device, so it never has to be synced or merged.
+- Encrypted with the master key like a change file (`KFS1` · nonce · ciphertext · tag, AAD = database id), so it reveals nothing more than the database.
+- Written as `*.tmp`, then renamed. It is only a cache: deleting it costs one full read.
+- A change file that arrives late, older than changes already applied, is fine: in 0.1 changes only add, so their order does not change the result.
+- Later, when changes modify nodes, ten edits of one node are still ten files, each read once per device; packing them into bigger files is an open question ([GOAL.md](GOAL.md#open-questions), *Packs*).
+
+### Input
+`Dune relates to Frank Herbert` → link; `Dune` → node.
+
+```
+text ──InputParser──► NodeRequest(name) | LinkRequest(left, type, right)
+           │ first alias of a link type, as whole words, with text on both sides
+           ▼
+     GraphSearch (word prefix, case- and accent-insensitive) ──► Preview
+           ▼ Enter
+     AddPlan: nodes to create, link to create, duplicates to confirm ──► Database.Append
+```
+
+- Names are normalized for comparison only: trimmed, spaces collapsed, lower case, accents removed. The name is stored as typed (trimmed).
+- A name containing a link alias cannot be entered (no quoting).
+
+### Folders (planned)
+
+| `kofrenot.Core` | Content |
+| --- | --- |
+| `Graph/` | `Node`, `Link`, `NodeType`, `LinkType`, `TypeCatalog` (built-in types and aliases), `Graph` (in-memory state) |
+| `Storage/` | `DatabaseHeader`, `KeyVault` (KDF, wrap / unwrap), `ChangeCodec` (encrypt / decrypt, JSON), `SnapshotStore`, `Database` (open, create, append, refresh), `ISecretProtector` |
+| `Input/` | `NameKey` (normalization), `InputParser`, `GraphSearch`, `AddPlan` |
+
 ## Logging
 - `Core` writes through `ILog` (`log.Info(category, message)`); only `App` knows Serilog.
 - Category: the area (`App`, `Action`, `Settings`, `Window`, `Update`, ...).
 - **Info**: every action the user triggers, start/stop. **Warning/Error**: failures. **Debug**: details.
-- Never logged: note or file content, typed search text, secrets.
+- Never logged: node names, note or file content, typed text, keys, pass phrases. Ids and counts are fine.
 - Local only: 3 files x 1 MB, plus the last 1000 entries in memory for the log window.
+- The file is never restarted: each start appends to `kofrenot.log`, and a new file begins only at 1 MB. Every entry is flushed at once, so what happened before a crash stays in the file. The log window shows the current run only.
 
 ## Versioning
 `<Version>` in `Directory.Build.props` is the only place the version is written. It is stamped into every assembly (AssemblyVersion, FileVersion, InformationalVersion), read back through `AppVersion` in `Core`, and passed to the installer by `build/installer.cmd`. Rules: [GOAL.md](GOAL.md#versioning).
