@@ -1,0 +1,49 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <!-- Only for the tray icon (System.Windows.Forms.NotifyIcon): WPF has no notification-area control. -->
+    <UseWindowsForms>true</UseWindowsForms>
+    <ApplicationIcon>Assets\kofrenot.ico</ApplicationIcon>
+    <RootNamespace>Kofrenot.UI</RootNamespace>
+    <AssemblyName>kofrenot</AssemblyName>
+  </PropertyGroup>
+
+  <!-- Publishing (build\installer.cmd, self-contained): the runtime and every managed DLL packed
+       into kofrenot.exe; WPF's native DLLs stay next to it, so nothing is unpacked at
+       start. English only: no folders of translated framework messages. -->
+  <PropertyGroup>
+    <PublishSingleFile>true</PublishSingleFile>
+    <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+  </PropertyGroup>
+
+  <!-- The WPF SDK leaves System.IO out of the implicit usings (System.Windows.Shapes.Path would clash); this project needs it. -->
+  <ItemGroup>
+    <Using Include="System.IO" />
+    <!-- Keep WinForms out of the global usings, or Application, MessageBox, KeyEventArgs... become ambiguous. -->
+    <Using Remove="System.Windows.Forms" />
+    <Using Remove="System.Drawing" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Embedded so the tray and the log window can load it. -->
+    <Resource Include="Assets\kofrenot.ico" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Shown in Settings > About, shipped by the installer and the portable zip. -->
+    <None Include="..\..\CHANGELOG.md" Link="CHANGELOG.md" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Serilog" Version="4.4.0" />
+    <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\kofrenot.Core\kofrenot.Core.csproj" />
+  </ItemGroup>
+
+</Project>

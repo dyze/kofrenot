@@ -1,0 +1,179 @@
+<Window x:Class="Kofrenot.UI.Views.SettingsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:settings="clr-namespace:Kofrenot.Core.Settings;assembly=kofrenot.Core"
+        xmlns:core="clr-namespace:Kofrenot.Core;assembly=kofrenot.Core"
+        Title="kofrenot settings"
+        Icon="/Assets/kofrenot.ico"
+        Width="720" Height="480"
+        MinWidth="560" MinHeight="380"
+        ShowInTaskbar="False"
+        WindowStartupLocation="CenterOwner"
+        SourceInitialized="Window_SourceInitialized"
+        PreviewKeyDown="Window_PreviewKeyDown">
+  <Window.Resources>
+    <Style x:Key="SectionHeader" TargetType="TextBlock">
+      <Setter Property="Margin" Value="0,16,0,0" />
+      <Setter Property="FontSize" Value="15" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
+  </Window.Resources>
+
+  <Grid Margin="16">
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="*" />
+      <RowDefinition Height="Auto" />
+    </Grid.RowDefinitions>
+
+    <!-- While it has text, the tabs are replaced by the matching settings of every tab. -->
+    <Grid>
+      <TextBox x:Name="FindBox"
+               Padding="6,4"
+               ToolTip="Find a setting (Ctrl+F). Down goes to the first setting shown"
+               TextChanged="FindBox_TextChanged"
+               PreviewKeyDown="FindBox_PreviewKeyDown" />
+      <TextBlock x:Name="FindPlaceholder"
+                 Margin="10,0,0,0"
+                 VerticalAlignment="Center"
+                 IsHitTestVisible="False"
+                 Opacity="0.5"
+                 Text="Find a setting" />
+    </Grid>
+
+    <!-- The tabs: a horizontal list, so that the sections below can also be shown all at once.
+         Tab enters it on the selected tab, Left / Right change tabs; Ctrl+Tab works from anywhere. -->
+    <ListBox x:Name="TabList"
+             Grid.Row="1"
+             Margin="0,10,0,0"
+             BorderThickness="0"
+             Background="Transparent"
+             ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+             SelectionChanged="TabList_SelectionChanged">
+      <!-- Wraps when the window is too narrow for every tab. -->
+      <ListBox.ItemsPanel>
+        <ItemsPanelTemplate>
+          <WrapPanel Orientation="Horizontal" />
+        </ItemsPanelTemplate>
+      </ListBox.ItemsPanel>
+      <ListBox.ItemContainerStyle>
+        <Style TargetType="ListBoxItem" BasedOn="{StaticResource {x:Type ListBoxItem}}">
+          <Setter Property="Padding" Value="14,6" />
+          <Setter Property="Margin" Value="0,0,4,0" />
+        </Style>
+      </ListBox.ItemContainerStyle>
+      <!-- The tab name; About gets a dot while a newer release exists (AboutMarked). -->
+      <ListBox.ItemTemplate>
+        <DataTemplate>
+          <StackPanel Orientation="Horizontal">
+            <TextBlock Text="{Binding}" />
+            <Ellipse x:Name="Mark"
+                     Width="8"
+                     Height="8"
+                     Margin="6,0,0,0"
+                     VerticalAlignment="Center"
+                     Fill="{DynamicResource SystemFillColorCautionBrush}"
+                     Visibility="Collapsed" />
+          </StackPanel>
+          <DataTemplate.Triggers>
+            <MultiDataTrigger>
+              <MultiDataTrigger.Conditions>
+                <Condition Binding="{Binding}" Value="{x:Static settings:SettingsCatalog.AboutTab}" />
+                <Condition Binding="{Binding AboutMarked, RelativeSource={RelativeSource AncestorType=Window}}" Value="True" />
+              </MultiDataTrigger.Conditions>
+              <Setter TargetName="Mark" Property="Visibility" Value="Visible" />
+            </MultiDataTrigger>
+          </DataTemplate.Triggers>
+        </DataTemplate>
+      </ListBox.ItemTemplate>
+    </ListBox>
+
+    <!-- One panel per tab (its Tag). Rows carry the id of their setting (SettingsCatalog) in their Tag. -->
+    <!-- Not a Tab stop itself: Tab goes from the tab strip straight to the first setting. -->
+    <ScrollViewer x:Name="SectionsScroller"
+                  Grid.Row="2"
+                  Margin="0,8,0,0"
+                  Focusable="False"
+                  VerticalScrollBarVisibility="Auto">
+      <StackPanel x:Name="SectionsPanel">
+        <TextBlock x:Name="NoMatchText"
+                   Margin="0,16,0,0"
+                   Opacity="0.6"
+                   Text="No setting matches."
+                   Visibility="Collapsed" />
+
+        <StackPanel Tag="{x:Static settings:SettingsCatalog.AppearanceTab}">
+          <TextBlock Text="{x:Static settings:SettingsCatalog.AppearanceTab}" Style="{StaticResource SectionHeader}" />
+
+          <StackPanel Tag="{x:Static settings:SettingsCatalog.ThemeId}"
+                      Margin="0,10,0,0"
+                      Orientation="Horizontal">
+            <TextBlock Text="Theme" Width="150" VerticalAlignment="Center" />
+            <ComboBox x:Name="ThemeComboBox"
+                      Width="160"
+                      SelectionChanged="ThemeComboBox_SelectionChanged" />
+          </StackPanel>
+        </StackPanel>
+
+        <StackPanel Tag="{x:Static settings:SettingsCatalog.LoggingTab}">
+          <TextBlock Text="{x:Static settings:SettingsCatalog.LoggingTab}" Style="{StaticResource SectionHeader}" />
+
+          <CheckBox x:Name="DebugLoggingCheckBox"
+                    Tag="{x:Static settings:SettingsCatalog.DebugLoggingId}"
+                    Margin="0,10,0,0"
+                    Content="Detailed (debug) logging"
+                    Click="DebugLoggingCheckBox_Click" />
+
+          <Button Tag="{x:Static settings:SettingsCatalog.LogWindowId}"
+                  Margin="0,10,0,0"
+                  Padding="12,4"
+                  HorizontalAlignment="Left"
+                  Content="Open log window"
+                  Click="OpenLogButton_Click" />
+        </StackPanel>
+
+        <StackPanel Tag="{x:Static settings:SettingsCatalog.AboutTab}">
+          <TextBlock Text="{x:Static settings:SettingsCatalog.AboutTab}" Style="{StaticResource SectionHeader}" />
+
+          <StackPanel Tag="{x:Static settings:SettingsCatalog.AboutId}" Margin="0,10,0,0">
+            <TextBlock x:Name="AboutVersionText" FontWeight="SemiBold" />
+            <!-- The changelog (CHANGELOG.md, next to kofrenot.exe) opens in a window of its own. -->
+            <StackPanel Margin="0,8,0,0" Orientation="Horizontal">
+              <Button Padding="12,4" Content="Website (GitHub)" ToolTip="{x:Static core:ProjectLinks.Repository}" Click="RepositoryButton_Click" />
+              <Button Margin="8,0,0,0" Padding="12,4" Content="Report an issue" ToolTip="{x:Static core:ProjectLinks.Issues}" Click="IssuesButton_Click" />
+              <Button Margin="8,0,0,0" Padding="12,4" Content="Show changelog" ToolTip="What each version changed" Click="ChangelogButton_Click" />
+            </StackPanel>
+          </StackPanel>
+
+          <!-- What the last check found (filled by ShowUpdateStatus), and the switch. -->
+          <StackPanel Tag="{x:Static settings:SettingsCatalog.UpdatesId}" Margin="0,16,0,0">
+            <TextBlock x:Name="UpdateStatusText" TextWrapping="Wrap" />
+            <CheckBox x:Name="CheckForUpdatesCheckBox"
+                      Margin="0,8,0,0"
+                      Content="Check for updates once a day"
+                      ToolTip="Asks GitHub for the latest release: kofrenot's only network access. Nothing is downloaded"
+                      Click="CheckForUpdatesCheckBox_Click" />
+          </StackPanel>
+
+          <!-- One row per file, built from AppFiles: name, path (selectable), Show in folder. -->
+          <Grid x:Name="FilesGrid"
+                Tag="{x:Static settings:SettingsCatalog.FilesId}"
+                Margin="0,16,0,0">
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="Auto" />
+              <ColumnDefinition Width="*" />
+              <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+          </Grid>
+        </StackPanel>
+      </StackPanel>
+    </ScrollViewer>
+
+    <TextBlock Grid.Row="3"
+               Margin="0,8,0,0"
+               FontSize="11"
+               Opacity="0.6"
+               Text="Changes are saved at once. Ctrl+Tab changes tab. Esc closes this window." />
+  </Grid>
+</Window>

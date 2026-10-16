@@ -1,0 +1,53 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 18
+VisualStudioVersion = 18.6.11819.183
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "kofrenot.Core", "src\kofrenot.Core\kofrenot.Core.csproj", "{D3CC4248-E49A-4897-9C31-A4733BFB9BC8}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "kofrenot.App", "src\kofrenot.App\kofrenot.App.csproj", "{090785B4-40C2-45B3-A6AD-8AA8009FA433}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "kofrenot.Core.Tests", "tests\kofrenot.Core.Tests\kofrenot.Core.Tests.csproj", "{621A24CE-BE3B-44EC-8E8D-8C3BA157481D}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "root", "root", "{75750ECB-A829-4E68-A4BB-51B3179CB97A}"
+	ProjectSection(SolutionItems) = preProject
+		build.cmd = build.cmd
+		build.sh = build.sh
+		CHANGELOG.md = CHANGELOG.md
+		CLAUDE.md = CLAUDE.md
+		LICENSE = LICENSE
+		README.md = README.md
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docs", "docs", "{B62B2E75-8A45-4D70-8887-29D332DEAAB0}"
+	ProjectSection(SolutionItems) = preProject
+		docs\ARCHITECTURE.md = docs\ARCHITECTURE.md
+		docs\GOAL.md = docs\GOAL.md
+		docs\ROADMAP.md = docs\ROADMAP.md
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{D3CC4248-E49A-4897-9C31-A4733BFB9BC8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D3CC4248-E49A-4897-9C31-A4733BFB9BC8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D3CC4248-E49A-4897-9C31-A4733BFB9BC8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D3CC4248-E49A-4897-9C31-A4733BFB9BC8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{090785B4-40C2-45B3-A6AD-8AA8009FA433}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{090785B4-40C2-45B3-A6AD-8AA8009FA433}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{090785B4-40C2-45B3-A6AD-8AA8009FA433}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{090785B4-40C2-45B3-A6AD-8AA8009FA433}.Release|Any CPU.Build.0 = Release|Any CPU
+		{621A24CE-BE3B-44EC-8E8D-8C3BA157481D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{621A24CE-BE3B-44EC-8E8D-8C3BA157481D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{621A24CE-BE3B-44EC-8E8D-8C3BA157481D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{621A24CE-BE3B-44EC-8E8D-8C3BA157481D}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {E5910507-5CE5-45D9-A4C2-86861A688B1C}
+	EndGlobalSection
+EndGlobal
