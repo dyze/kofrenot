@@ -11,9 +11,9 @@ public enum ThemeChoice
 }
 
 /// <summary>
-/// User settings persisted as JSON: the theme, whether the log records debug entries, and
-/// whether to check for updates. A missing, corrupt or partial file means defaults for whatever
-/// cannot be read.
+/// User settings persisted as JSON: the theme, whether the log records debug entries, whether
+/// to check for updates, the database folder and the hotkey. A missing, corrupt or partial file
+/// means defaults for whatever cannot be read.
 /// </summary>
 public sealed class SettingsStore
 {
@@ -29,6 +29,8 @@ public sealed class SettingsStore
             ? theme
             : ThemeChoice.System;
         CheckForUpdates = data?.CheckForUpdates ?? true;
+        DatabaseFolder = data?.DatabaseFolder is { } folder && !string.IsNullOrWhiteSpace(folder) ? folder : null;
+        Hotkey = Hotkey.TryParse(data?.Hotkey, out var hotkey) ? hotkey : Hotkey.Default;
     }
 
     /// <summary>When on, the log also records detailed (debug) entries. Off by default.</summary>
@@ -38,6 +40,12 @@ public sealed class SettingsStore
 
     /// <summary>When on, kofrenot asks GitHub once a day for a newer release. On by default.</summary>
     public bool CheckForUpdates { get; private set; }
+
+    /// <summary>The folder of the database to open, or null when none is chosen yet.</summary>
+    public string? DatabaseFolder { get; private set; }
+
+    /// <summary>The global shortcut that shows kofrenot. Ctrl+Alt+K by default.</summary>
+    public Hotkey Hotkey { get; private set; }
 
     public void SetDebugLogging(bool enabled)
     {
@@ -57,6 +65,18 @@ public sealed class SettingsStore
         Save();
     }
 
+    public void SetDatabaseFolder(string? folder)
+    {
+        DatabaseFolder = folder;
+        Save();
+    }
+
+    public void SetHotkey(Hotkey hotkey)
+    {
+        Hotkey = hotkey;
+        Save();
+    }
+
     private void Save()
     {
         var directory = Path.GetDirectoryName(_path);
@@ -65,7 +85,7 @@ public sealed class SettingsStore
             Directory.CreateDirectory(directory);
         }
 
-        var data = new SettingsData(DebugLogging, Theme.ToString(), CheckForUpdates);
+        var data = new SettingsData(DebugLogging, Theme.ToString(), CheckForUpdates, DatabaseFolder, Hotkey.ToString());
         File.WriteAllText(_path, JsonSerializer.Serialize(data));
     }
 
@@ -86,5 +106,7 @@ public sealed class SettingsStore
     internal sealed record SettingsData(
         bool? DebugLogging = null,
         string? Theme = null,
-        bool? CheckForUpdates = null);
+        bool? CheckForUpdates = null,
+        string? DatabaseFolder = null,
+        string? Hotkey = null);
 }

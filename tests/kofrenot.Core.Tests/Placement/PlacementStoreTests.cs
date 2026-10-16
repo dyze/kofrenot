@@ -48,6 +48,39 @@ public sealed class PlacementStoreTests : IDisposable
         Assert.False(File.Exists(FilePath));
     }
 
+    [Fact]
+    public void ColumnWidths_ArePersisted()
+    {
+        new PlacementStore(FilePath).Set("Log", Sample() with { Columns = [100, 64.5, 220] });
+
+        Assert.Equal([100, 64.5, 220], new PlacementStore(FilePath).Get("Log")?.Columns);
+    }
+
+    [Fact]
+    public void ThePlacement_ComparesColumnsByTheirWidths()
+    {
+        Assert.Equal(Sample() with { Columns = [100, 64] }, Sample() with { Columns = [100, 64] });
+        Assert.Equal((Sample() with { Columns = [100, 64] }).GetHashCode(), (Sample() with { Columns = [100, 64] }).GetHashCode());
+        Assert.NotEqual(Sample() with { Columns = [100, 64] }, Sample() with { Columns = [100, 65] });
+        Assert.NotEqual(Sample(), Sample() with { Columns = [100] });
+        Assert.NotEqual(Sample(), Sample() with { Maximized = true });
+        Assert.NotEqual(Sample(), new WindowPlacement(@"\\.\DISPLAY2", Sample().Bounds));
+        Assert.NotEqual(Sample(), Sample(11));
+        Assert.False(Sample().Equals(null));
+    }
+
+    [Fact]
+    public void SettingTheSameColumns_DoesNotWriteTheFile()
+    {
+        var store = new PlacementStore(FilePath);
+        store.Set("Log", Sample() with { Columns = [100, 64] });
+        File.Delete(FilePath);
+
+        store.Set("Log", Sample() with { Columns = [100, 64] });
+
+        Assert.False(File.Exists(FilePath));
+    }
+
     [Theory]
     [InlineData("{ not json")]
     [InlineData("[1, 2]")]

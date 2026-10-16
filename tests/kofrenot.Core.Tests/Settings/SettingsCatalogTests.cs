@@ -20,7 +20,7 @@ public class SettingsCatalogTests
     public void Tabs_AreInTheirDisplayOrder()
     {
         Assert.Equal(
-            new[] { SettingsCatalog.AppearanceTab, SettingsCatalog.LoggingTab, SettingsCatalog.AboutTab },
+            new[] { SettingsCatalog.GeneralTab, SettingsCatalog.DatabaseTab, SettingsCatalog.AppearanceTab, SettingsCatalog.LoggingTab, SettingsCatalog.AboutTab },
             SettingsCatalog.Tabs);
     }
 
@@ -75,6 +75,15 @@ public class SettingsCatalogTests
     {
         Assert.Equal(id, Assert.Single(SettingsCatalog.Find(query)).Id);
         Assert.Equal(SettingsCatalog.AboutTab, SettingsCatalog.All.Single(entry => entry.Id == id).Tab);
+    }
+
+    [Theory]
+    [InlineData("shortcut", SettingsCatalog.HotkeyId)]
+    [InlineData("dropbox", SettingsCatalog.DatabaseFolderId)]
+    [InlineData("password", SettingsCatalog.RememberedPassPhraseId)]
+    public void Find_FindsTheDatabaseAndHotkeySettings(string query, string id)
+    {
+        Assert.Equal(id, Assert.Single(SettingsCatalog.Find(query)).Id);
     }
 
     [Fact]

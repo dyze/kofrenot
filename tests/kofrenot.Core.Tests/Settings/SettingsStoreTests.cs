@@ -14,6 +14,43 @@ public sealed class SettingsStoreTests : IDisposable
         Assert.Equal(ThemeChoice.System, store.Theme);
         Assert.False(store.DebugLogging);
         Assert.True(store.CheckForUpdates);
+        Assert.Null(store.DatabaseFolder);
+        Assert.Equal(Hotkey.Default, store.Hotkey);
+    }
+
+    [Fact]
+    public void TheDatabaseFolder_IsPersisted_AndCanBeCleared()
+    {
+        new SettingsStore(FilePath).SetDatabaseFolder(@"D:\Sync\kofrenot");
+        Assert.Equal(@"D:\Sync\kofrenot", new SettingsStore(FilePath).DatabaseFolder);
+
+        new SettingsStore(FilePath).SetDatabaseFolder(null);
+        Assert.Null(new SettingsStore(FilePath).DatabaseFolder);
+    }
+
+    [Fact]
+    public void TheHotkey_IsPersisted()
+    {
+        var hotkey = new Hotkey(HotkeyModifiers.Win | HotkeyModifiers.Shift, "F9");
+
+        new SettingsStore(FilePath).SetHotkey(hotkey);
+
+        Assert.Equal(hotkey, new SettingsStore(FilePath).Hotkey);
+    }
+
+    [Theory]
+    [InlineData("{\"Hotkey\":\"K\"}")]
+    [InlineData("{\"Hotkey\":\"nonsense\"}")]
+    [InlineData("{\"DatabaseFolder\":\"  \"}")]
+    public void AnInvalidHotkeyOrFolder_MeansTheDefault(string json)
+    {
+        Directory.CreateDirectory(_directory);
+        File.WriteAllText(FilePath, json);
+
+        var store = new SettingsStore(FilePath);
+
+        Assert.Equal(Hotkey.Default, store.Hotkey);
+        Assert.Null(store.DatabaseFolder);
     }
 
     [Fact]
