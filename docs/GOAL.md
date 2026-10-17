@@ -67,9 +67,9 @@ What each version contains: [ROADMAP.md](ROADMAP.md).
 | --- | --- |
 | Local storage | A folder of encrypted change files, read into memory ([ARCHITECTURE.md](ARCHITECTURE.md#vault)) |
 | Sync | Outside kofrenot, by copying files. No server for now |
-| Conflicts | Concurrent duplicates and concurrent renames are flagged, not merged |
+| Conflicts | Concurrent duplicates, renames and note edits are flagged, not merged |
 | Security | AES-256-GCM, random master key wrapped by a pass-phrase key (PBKDF2-SHA256); optionally remembered by Windows (DPAPI) |
-| Notes | Will be a node type |
+| Notes | A node type; content in Markdown, each save a new version (planned for 0.2) |
 
 ## Open questions
 Decisions to take with the owner before the matching features:

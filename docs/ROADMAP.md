@@ -11,21 +11,33 @@ Scope of each planned version. Implemented features move to [CHANGELOG.md](../CH
 | 0.5     | To define | Server: vaults stored on a web server                                              |
 
 ## 0.2 (to define)
-1. Link types have **reverse** versions. "relates to" is the reverse of "related to"
+Aliases, pins and note content are new change operations: `VaultFormat.Current` becomes 2 (owner's go-ahead), so a 0.1 app refuses the vault and offers the update.
+
+1. **Directed link types with a reverse.** Built in for now; user-defined types come later. A link reads one way from each side:
+
+	| Link type  | Reverse       |
+	| ---------- | ------------- |
+	| relates to | *(symmetric)* |
+	| contains   | contained by  |
+	| is a       | has instance  |
+
+	- `Dune is a novel` and `novel has instance Dune` add the same link.
 2. Link types have **aliases**. e.g. "relates to" is equivalent to "relates" or simply "-".
 	- A screen is available and allow user to display and edit those aliases.
-3. **Notes** as a node type, with content. content is saved in a separate file. only read on demand when editing a node.
-	- For now a node is a simple multi-line text (UTF-8).
-	- User can edit the content.
-	- There are basic formatting tools.
+	- Stored in the vault, so every device shares them.
+3. **Notes** as a node type, with content in a separate file, only read on demand when the note is opened.
+	- Content is Markdown (UTF-8), edited in node details, with a toolbar for basic formatting (bold, italic, headings, lists, links).
+	- Each save is a new content version naming the one it replaces (as renames do). Two versions saved in parallel on two devices are flagged as a conflict; the user keeps one or merges by hand.
 4. **Pinned nodes.** user is able to pin nodes using node details. pinned nodes appears when search box is empty.
-5. **Recent entries.** if nothing in search box. show recent entries (open last on top). 
+	- Stored in the vault, so pins follow the user across devices.
+5. **Recent entries.** if nothing in search box. show recent entries (open last on top).
+	- Kept on each device: opening a node writes nothing to the vault.
 
 ## 0.3 (to define)
 Open: is a collection a root container, or a separate scope? How does it relate to the current vault (0.4)?
 
 1. **Collections** as a node type. Used to order nodes at top level. By default, a collection is created and all new nodes are attached to it. Current collection is shown at top of Main Window.
-	- New link type "contains"  (reverse is "contained by") needed.
+	- Uses the link type "contains" (0.2).
 2. **Containers as node type.** Used to order nodes in a tree. Useful for datasets. By default, all new nodes are attached at root.
 	- Link type "contains" used to identify the content.
 3. **Tree view.** User can enable a tree view to navigate thru containers and datasets more easily.
