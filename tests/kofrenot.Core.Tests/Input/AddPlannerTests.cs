@@ -18,6 +18,18 @@ public sealed class AddPlannerTests
         var added = Assert.IsType<NodeAdded>(Assert.Single(plan.Changes));
         Assert.Equal(new Node(added.Node.Id, "generic", "Dune", _clock.Now), added.Node);
         Assert.Equal(_clock.Now, added.At);
+        Assert.Equal([added.Node], plan.Nodes);
+    }
+
+    [Fact]
+    public void ALinkBetweenExistingNodes_InvolvesBoth()
+    {
+        var (dune, herbert) = (Add("Dune"), Add("Frank Herbert"));
+
+        var plan = PlanLink("Frank Herbert", "Dune");
+
+        Assert.Empty(plan.NewNodes);
+        Assert.Equal([herbert, dune], plan.Nodes);
     }
 
     [Fact]
@@ -57,6 +69,8 @@ public sealed class AddPlannerTests
         Assert.Same(dune, plan.Left.Chosen);
         Assert.Equal(2, plan.Changes.Count);
         Assert.Equal(["Frank Herbert"], plan.NewNodes.Select(node => node.Name));
+        Assert.Equal(["Dune", "Frank Herbert"], plan.Nodes.Select(node => node.Name));
+        Assert.Same(dune, plan.Nodes[0]);
         Assert.Equal(dune.Id, plan.Changes.OfType<LinkAdded>().Single().Link.From);
     }
 
@@ -114,6 +128,7 @@ public sealed class AddPlannerTests
         var plan = Assert.IsType<LinkPlan>(_planner.Plan(new LinkRequest("Dune", TypeCatalog.RelatesTo.Forward, "")));
 
         Assert.Equal(LinkProblem.SecondNodeMissing, plan.Problem);
+        Assert.Empty(plan.Nodes);
         Assert.Null(plan.Right);
         Assert.False(plan.CanAdd);
     }

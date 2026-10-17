@@ -12,6 +12,9 @@ public abstract record AddPlan(IReadOnlyList<Change> Changes, bool NeedsConfirma
 
     /// <summary>The nodes it adds, in the order typed.</summary>
     public IReadOnlyList<Node> NewNodes => Changes.OfType<NodeAdded>().Select(added => added.Node).ToList();
+
+    /// <summary>Every node it involves, new or existing, in the order typed; none when it adds nothing.</summary>
+    public virtual IReadOnlyList<Node> Nodes => NewNodes;
 }
 
 /// <summary>Adds the node <see cref="Name"/> of type <see cref="Type"/>; <see cref="Existing"/> are the nodes that already have its name.</summary>
@@ -47,6 +50,21 @@ public sealed record LinkPlan(
     : AddPlan(Changes, NeedsConfirmation: false)
 {
     public LinkType Type => Verb.Type;
+
+    /// <summary>Both ends: the chosen node of a side, or the node added for it.</summary>
+    public override IReadOnlyList<Node> Nodes
+    {
+        get
+        {
+            if (!CanAdd)
+            {
+                return [];
+            }
+
+            var added = new Queue<Node>(NewNodes);
+            return [Left.Chosen ?? added.Dequeue(), Right!.Chosen ?? added.Dequeue()];
+        }
+    }
 }
 
 /// <summary>

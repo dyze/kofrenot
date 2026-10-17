@@ -193,8 +193,8 @@ public partial class MainWindow : Window
     }
 
     /// <summary>
-    /// Enter: opens the creation screen for what the preview says. Once it is added, the new nodes
-    /// go first among the recent ones (the first typed on top) and the input box is cleared.
+    /// Enter: opens the creation screen for what the preview says. Once it is added, its nodes (new
+    /// or existing) go first among the recent ones, the first typed on top, and the input box is cleared.
     /// </summary>
     private bool AddInput()
     {
@@ -202,7 +202,7 @@ public partial class MainWindow : Window
             && _session.Create(this, request, _input.Choices) is { } added
             && _session.Current is { } vault)
         {
-            foreach (var node in added.NewNodes.Reverse())
+            foreach (var node in added.Nodes.Reverse())
             {
                 _recent.Opened(vault.Id, node.Id);
             }
