@@ -104,7 +104,7 @@ build.cmd     # Windows
 
 Both restore, build in Release and run the tests. Output goes to `artifacts/`. The version is set in `Directory.Build.props` only.
 
-The build fails if `Core` line coverage is below **95 %**. `build.cmd` also writes an HTML coverage report to `artifacts/coverage/report/`; `build.cmd open` opens it in the browser.
+The build fails if `Core` line coverage is below **95 %**. `build.cmd` also writes an HTML coverage report to `artifacts/coverage/report/`; `build.cmd open` opens it in the browser. Before building, `build.cmd` stops any kofrenot started from `artifacts\`, because it locks the files being rebuilt. Other copies keep running.
 ## Layout
 
 | Folder | Purpose |
