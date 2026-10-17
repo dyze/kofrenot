@@ -6,8 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.1] - 2026-10-17
+
 ### Added
-- **Application shell**, taken from coursee: a main window (placeholder content) that hides on close, a tray icon (Show, Settings, Log window, Quit), and a single running copy.
+- **Application shell**, taken from coursee: a main window that hides on close, a tray icon (Show, Settings, Log window, Quit), and a single running copy.
 - **Settings**: Appearance (light, dark or follow Windows), Logging (debug logging, log window) and About (version, links, changelog, files), with a search box.
 - **Logging**: local rolling file (3 x 1 MB) and a live log window.
 - **Window positions** remembered per monitor, and the log window's column widths.
@@ -23,4 +25,5 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **Update check** once a day against GitHub releases, switchable in About.
 - **Installer and portable zip** (`build\installer.cmd`), self-contained.
 
-[Unreleased]: https://github.com/dyze/kofrenot/commits/main
+[Unreleased]: https://github.com/dyze/kofrenot/compare/0.1...HEAD
+[0.1]: https://github.com/dyze/kofrenot/releases/tag/0.1

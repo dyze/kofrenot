@@ -4,11 +4,11 @@ Scope of each planned version. Implemented features move to [CHANGELOG.md](../CH
 
 | Version | Status      | Theme                                                                              |
 | ------- | ----------- | ---------------------------------------------------------------------------------- |
-| 0.1     | In progress | Application shell; nodes and links typed in one box, stored in an encrypted folder |
+| 0.1     | Released    | Application shell; nodes and links typed in one box, stored in an encrypted folder |
 | 0.2     | To define   | Notes as nodes                                                                     |
 
 ## 0.1
-Implemented: see `[Unreleased]` in [CHANGELOG.md](../CHANGELOG.md). Left before the release: the owner's test of the whole version.
+Released on 2026-10-17: see `[0.1]` in [CHANGELOG.md](../CHANGELOG.md).
 
 Not in 0.1: deleting, editing properties other than the name, user-defined types.
 
