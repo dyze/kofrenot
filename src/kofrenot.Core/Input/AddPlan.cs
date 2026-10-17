@@ -11,8 +11,8 @@ public abstract record AddPlan(IReadOnlyList<Change> Changes, bool NeedsConfirma
     public bool CanAdd => Changes.Count > 0;
 }
 
-/// <summary>Adds the node <see cref="Name"/>; <see cref="Existing"/> are the nodes that already have it.</summary>
-public sealed record NodePlan(string Name, IReadOnlyList<Node> Existing, IReadOnlyList<Change> Changes)
+/// <summary>Adds the node <see cref="Name"/> of type <see cref="Type"/>; <see cref="Existing"/> are the nodes that already have its name.</summary>
+public sealed record NodePlan(string Name, NodeType Type, IReadOnlyList<Node> Existing, IReadOnlyList<Change> Changes)
     : AddPlan(Changes, NeedsConfirmation: Existing.Count > 0);
 
 /// <summary>Why a link cannot be added yet.</summary>
@@ -45,9 +45,9 @@ public sealed record LinkPlan(
 
 /// <summary>
 /// One side of a link: the nodes with its name, and the one chosen (the oldest by default).
-/// No node with that name: a new one is added.
+/// No node with that name: a new one is added, of type <see cref="Type"/>.
 /// </summary>
-public sealed record PlannedSide(string Name, IReadOnlyList<Node> Candidates, int Choice)
+public sealed record PlannedSide(string Name, NodeType Type, IReadOnlyList<Node> Candidates, int Choice)
 {
     public bool IsNew => Candidates.Count == 0;
 

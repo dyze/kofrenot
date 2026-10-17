@@ -145,16 +145,65 @@ public sealed class AddPlannerTests
     }
 
     [Fact]
+    public void ANewNode_HasTheChosenType()
+    {
+        var book = new NodeType("book", "Book");
+
+        var plan = Assert.IsType<NodePlan>(_planner.Plan(new NodeRequest("Dune"), new AddChoices(LeftType: book)));
+
+        Assert.Same(book, plan.Type);
+        Assert.Equal("book", Assert.IsType<NodeAdded>(Assert.Single(plan.Changes)).Node.Type);
+    }
+
+    [Fact]
+    public void TheNewNodesOfALink_HaveTheirSidesTypes()
+    {
+        var (book, person) = (new NodeType("book", "Book"), new NodeType("person", "Person"));
+
+        var plan = Assert.IsType<LinkPlan>(_planner.Plan(
+            new LinkRequest("Dune", TypeCatalog.RelatesTo, "Frank Herbert"), new AddChoices(LeftType: book, RightType: person)));
+
+        Assert.Equal(["book", "person"], plan.Changes.OfType<NodeAdded>().Select(added => added.Node.Type));
+    }
+
+    [Fact]
+    public void ByDefault_NewNodesAreGeneric()
+    {
+        var plan = PlanLink("Dune", "Frank Herbert");
+
+        Assert.Same(TypeCatalog.Generic, plan.Left.Type);
+        Assert.Same(TypeCatalog.Generic, plan.Right!.Type);
+    }
+
+    [Fact]
+    public void ALinkOfAnotherType_BetweenLinkedNodes_CanBeAdded()
+    {
+        var types = new TypeCatalog([TypeCatalog.Generic], [TypeCatalog.RelatesTo, WrittenBy]);
+        var graph = new KnowledgeGraph(types);
+        var (dune, herbert) = (Add(graph, "Dune"), Add(graph, "Frank Herbert"));
+        graph.Add(new Link(Guid.NewGuid(), "relates-to", dune.Id, herbert.Id, _clock.Now));
+
+        var plan = Assert.IsType<LinkPlan>(new AddPlanner(graph, _clock).Plan(new LinkRequest("Dune", WrittenBy, "Frank Herbert")));
+
+        Assert.Equal(LinkProblem.None, plan.Problem);
+        Assert.Equal("written-by", plan.Changes.OfType<LinkAdded>().Single().Link.Type);
+    }
+
+    [Fact]
     public void AnUnknownRequest_IsRefused() =>
         Assert.Throws<ArgumentOutOfRangeException>(() => _planner.Plan(new OtherRequest()));
 
     private LinkPlan PlanLink(string left, string right, int leftChoice = 0, int rightChoice = 0) =>
-        Assert.IsType<LinkPlan>(_planner.Plan(new LinkRequest(left, TypeCatalog.RelatesTo, right), leftChoice, rightChoice));
+        Assert.IsType<LinkPlan>(_planner.Plan(new LinkRequest(left, TypeCatalog.RelatesTo, right), new AddChoices(leftChoice, rightChoice)));
 
-    private Node Add(string name, int minutes = 0)
+    private static readonly LinkType WrittenBy = new("written-by", ["written by"], IsSymmetric: false);
+
+    private Node Add(string name, int minutes = 0) => Add(_graph, name, minutes);
+
+    private Node Add(KnowledgeGraph graph, string name, int minutes = 0)
     {
         var node = new Node(Guid.NewGuid(), TypeCatalog.Generic.Id, name, _clock.Now.AddMinutes(minutes));
-        _graph.Add(node);
+        graph.Add(node);
         return node;
     }
 

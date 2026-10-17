@@ -9,12 +9,6 @@ Scope of each planned version. Implemented features move to [CHANGELOG.md](../CH
 
 ## 0.1
 Implemented: see `[Unreleased]` in [CHANGELOG.md](../CHANGELOG.md). Left before the release: the owner's test of the whole version.
-1. when typing it searches for occurrences
-2. enter to create: 
-	1. It displays a creation screen in which user selects node types. generic per default
-	2. User can change link type to
-	3. UI shows if data already exists
-	4. Pressing enter really creates data.
 
 Not in 0.1: renaming, deleting, editing properties, user-defined types.
 

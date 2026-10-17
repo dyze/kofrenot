@@ -7,25 +7,28 @@ public sealed class AddPlanner(KnowledgeGraph graph, TimeProvider? clock = null)
 {
     private readonly TimeProvider _clock = clock ?? TimeProvider.System;
 
-    /// <param name="leftChoice">For a link, which of the nodes named like the left side (0: the oldest).</param>
-    /// <param name="rightChoice">The same for the right side.</param>
-    public AddPlan Plan(InputRequest request, int leftChoice = 0, int rightChoice = 0) => request switch
+    /// <param name="choices">Which homonym on each side, and the type of each new node (default: the oldest, generic).</param>
+    public AddPlan Plan(InputRequest request, AddChoices? choices = null)
     {
-        NodeRequest node => PlanNode(node),
-        LinkRequest link => PlanLink(link, leftChoice, rightChoice),
-        _ => throw new ArgumentOutOfRangeException(nameof(request), request.GetType().Name, "Unknown request"),
-    };
-
-    private NodePlan PlanNode(NodeRequest request)
-    {
-        var now = _clock.GetUtcNow();
-        return new NodePlan(request.Name, graph.NodesNamed(request.Name), [Added(NewNode(request.Name, now), now)]);
+        choices ??= AddChoices.Default;
+        return request switch
+        {
+            NodeRequest node => PlanNode(node, choices.LeftType ?? TypeCatalog.Generic),
+            LinkRequest link => PlanLink(link, choices),
+            _ => throw new ArgumentOutOfRangeException(nameof(request), request.GetType().Name, "Unknown request"),
+        };
     }
 
-    private LinkPlan PlanLink(LinkRequest request, int leftChoice, int rightChoice)
+    private NodePlan PlanNode(NodeRequest request, NodeType type)
     {
-        var left = Side(request.Left, leftChoice);
-        var right = request.Right.Length == 0 ? null : Side(request.Right, rightChoice);
+        var now = _clock.GetUtcNow();
+        return new NodePlan(request.Name, type, graph.NodesNamed(request.Name), [Added(NewNode(request.Name, type, now), now)]);
+    }
+
+    private LinkPlan PlanLink(LinkRequest request, AddChoices choices)
+    {
+        var left = Side(request.Left, choices.LeftType, choices.Left);
+        var right = request.Right.Length == 0 ? null : Side(request.Right, choices.RightType, choices.Right);
         var problem = right is null ? LinkProblem.SecondNodeMissing
             : IsSameNode(left, right) ? LinkProblem.SameNode
             : LinkProblem.None;
@@ -49,10 +52,10 @@ public sealed class AddPlanner(KnowledgeGraph graph, TimeProvider? clock = null)
         return new LinkPlan(left, request.Type, right, LinkProblem.None, Existing: null, changes);
     }
 
-    private PlannedSide Side(string name, int choice)
+    private PlannedSide Side(string name, NodeType? type, int choice)
     {
         var candidates = graph.NodesNamed(name);
-        return new PlannedSide(name, candidates, Math.Clamp(choice, 0, Math.Max(0, candidates.Count - 1)));
+        return new PlannedSide(name, type ?? TypeCatalog.Generic, candidates, Math.Clamp(choice, 0, Math.Max(0, candidates.Count - 1)));
     }
 
     private static bool IsSameNode(PlannedSide left, PlannedSide right) =>
@@ -68,12 +71,12 @@ public sealed class AddPlanner(KnowledgeGraph graph, TimeProvider? clock = null)
             return chosen.Id;
         }
 
-        var node = NewNode(side.Name, now);
+        var node = NewNode(side.Name, side.Type, now);
         changes.Add(Added(node, now));
         return node.Id;
     }
 
-    private static Node NewNode(string name, DateTimeOffset now) => new(Guid.NewGuid(), TypeCatalog.Generic.Id, name, now);
+    private static Node NewNode(string name, NodeType type, DateTimeOffset now) => new(Guid.NewGuid(), type.Id, name, now);
 
     private static NodeAdded Added(Node node, DateTimeOffset now) => new(Guid.NewGuid(), now, node);
 }

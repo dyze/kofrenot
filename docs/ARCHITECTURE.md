@@ -4,8 +4,8 @@
 
 ```
 kofrenot.App   (WPF, Windows only)
-│  main window (input box), settings window, pass phrase dialog, log window, changelog window, tray icon
-│  DatabaseSession (opens, watches and adds to the database)
+│  main window (input box), creation dialog, settings window, pass phrase dialog, log window, changelog window, tray icon
+│  DatabaseSession (opens, watches and adds to the database through the creation dialog)
 │  adapters: SerilogFileLog, SingleInstance, NativeWindows + WindowPlacer (window positions), GitHubReleaseFeed,
 │            DpapiProtector, GlobalHotkey, DatabaseWatcher
 │
@@ -14,7 +14,7 @@ kofrenot.App   (WPF, Windows only)
 kofrenot.Core  (no Windows dependency, fully unit-tested on any OS)
    Graph: KnowledgeGraph · Node · Link · TypeCatalog · Change
    Storage: Database · DatabaseFolder · SecretBox · KeyVault · SnapshotStore · KeyMemory
-   Input: InputParser · GraphSearch · AddPlanner
+   Input: InputParser · GraphSearch · AddPlanner · InputPresenter · CreationForm
    AppFiles · AppVersion · Changelog · ProjectLinks
    SettingsStore · SettingsCatalog · Hotkey
    PlacementRules · PlacementStore
@@ -33,17 +33,17 @@ One namespace per folder (`Kofrenot.Core.Settings`, `Kofrenot.UI.Views`, ...). T
 | --- | --- |
 | *(root)* | `AppVersion`; `AppFiles` (where every file of kofrenot is, including `keys.json` and the snapshots in `cache\`: the only place their names are written, listed in Settings > About; `AppFiles.For` picks the data folder, see [Portable copy](#portable-copy)); `Changelog` (reads the text shown by Settings > About); `ProjectLinks` (website, issues, releases) |
 | `Settings/` | `SettingsStore` (`settings.json`: theme, debug logging, update check, database folder, hotkey), `Hotkey`, `SettingsCatalog` (the entries of the Settings window, their tabs, and the search that finds them) |
-| `Graph/` | `Node`, `Link`, `NodeType`, `LinkType`, `TypeCatalog` (built-in types and aliases), `NameKey` (the form names are compared in), `Change` (`NodeAdded`, `LinkAdded`), `KnowledgeGraph` (in-memory state, built by applying changes) |
+| `Graph/` | `Node`, `Link`, `NodeType`, `LinkType`, `TypeCatalog` (built-in node and link types, link aliases), `NameKey` (the form names are compared in), `Change` (`NodeAdded`, `LinkAdded`), `KnowledgeGraph` (in-memory state, built by applying changes) |
 | `Storage/` | `SecretBox` (AES-GCM seal / open), `KeyVault` (KDF, wrap / unwrap the master key), `ChangeCodec` (change ⇄ sealed JSON), `DatabaseHeader`, `DatabaseFolder` (layout, inspect, create), `SnapshotStore`, `Database` (open, append, refresh), `AtomicFile` (write as `.tmp`, then rename), `KeyMemory` (remembered master keys, `keys.json`), `ISecretProtector` |
-| `Input/` | `InputParser` (text → `NodeRequest` / `LinkRequest`), `GraphSearch` (`SearchHit`), `AddPlanner` (`AddPlan`: `NodePlan`, `LinkPlan`, `PlannedSide`) |
+| `Input/` | `InputParser` (text → `NodeRequest` / `LinkRequest`), `GraphSearch` (`SearchHit`), `AddPlanner` (`AddChoices` → `AddPlan`: `NodePlan`, `LinkPlan`, `PlannedSide`), `InputPresenter` (the input box: preview, result rows, homonym choices), `CreationForm` (the creation screen: types, status, what exists), `PlanText` (wording shared by both) |
 | `Logging/` | `ILog` (with `NullLog`), `LogEntry`, `RingLog`, `CompositeLog`, `FilteredLog` |
 | `Placement/` | Window positions: `WindowPlacement`, `PlacementRules`, `PlacementStore` (see [Window positions](#window-positions)) |
 | `Updates/` | The daily update check, see [Updates](#updates): `UpdateChecker`, `Release`, `IReleaseFeed`, `UpdateStore` |
 
 | `kofrenot.App` | Content |
 | --- | --- |
-| *(root)* | `App.xaml`: startup and wiring; `DatabaseSession` (the open database: create, unlock, watch, add, forget the remembered key) |
-| `Views/` | Windows: `MainWindow` (input box), `InputPresenter` (its preview and result rows), `SettingsWindow` (tabs General, Database, Appearance, Logging, About), `PassphraseDialog`, `LogWindow`, `ChangelogWindow` (Settings > About > *Show changelog*); `MessageDialog` (messages and questions in the app's theme, instead of the Windows `MessageBox`); `AppTheme` |
+| *(root)* | `App.xaml`: startup and wiring; `DatabaseSession` (the open database: create, unlock, watch, `Create` (creation dialog, then add), forget the remembered key) |
+| `Views/` | Windows: `MainWindow` (input box, shows `InputPresenter`), `CreationDialog` (shows a `CreationForm`), `SettingsWindow` (tabs General, Database, Appearance, Logging, About), `PassphraseDialog`, `LogWindow`, `ChangelogWindow` (Settings > About > *Show changelog*); `MessageDialog` (messages and questions in the app's theme, instead of the Windows `MessageBox`); `AppTheme` |
 | `Tray/` | `TrayIcon` |
 | `Platform/` | Implementations of the `Core` interfaces (`GitHubReleaseFeed`, `DpapiProtector`), `SingleInstance`, `GlobalHotkey` (`RegisterHotKey`), `DatabaseWatcher` (`FileSystemWatcher`), and window placement (`NativeWindows`, `WindowPlacer`) |
 | `Logging/` | `LogHub`, `SerilogFileLog` |
@@ -188,15 +188,21 @@ start ─► snapshot (local) ─► graph + ids of the changes it holds
 text ──InputParser──► NodeRequest(name) | LinkRequest(left, type, right)
            │ first alias of a link type, as whole words, with text on both sides
            ▼
-     GraphSearch (word prefix, case- and accent-insensitive) ──► Preview
+     GraphSearch (word prefix, case- and accent-insensitive) ──► Preview     (InputPresenter)
+           ▼ Enter: request + homonyms chosen (AddChoices)
+     CreationForm: node types, link type, what exists ──► AddPlan      (CreationDialog, modal)
            ▼ Enter
-     AddPlan: nodes to create, link to create, duplicates to confirm ──► Database.Append
+     DatabaseSession.Create ──► Database.Append
 ```
+
+- `DatabaseSession.Create(owner, request, choices)` opens the creation dialog over any window, so later features can reuse it. It returns false when cancelled or not written.
+- The dialog only shows a `CreationForm`. Each type change makes a new plan, so a different link type can turn `AlreadyLinked` into a link that can be added. Only a new node gets a type box: an existing node keeps its type.
+- The types offered come from `TypeCatalog` (only *generic* and *relates to* in 0.1).
 
 - Names are compared by `NameKey`: lower case, accents removed, spaces collapsed. They are stored as typed, trimmed, with single spaces.
 - A link phrase counts after at least one word; with nothing after it, the link is still being typed (`LinkProblem.SecondNodeMissing`).
 - `GraphSearch`: exact names first, then names starting with the text, then the others, alphabetically; at most 20. Homonyms are listed oldest first, marked `¹`, `²`, ... (`SearchHit.Mark`).
-- `AddPlanner` builds the `AddPlan` shown as preview: the nodes to create, the link, and `NeedsConfirmation` when a node of that name exists. An existing link is not added again (`LinkProblem.AlreadyLinked`). A side matching several nodes uses the chosen one (`leftChoice`, `rightChoice`, the oldest by default). A link from a node to itself is refused.
+- `AddPlanner` builds the `AddPlan` shown as preview: the nodes to create, the link, and `NeedsConfirmation` when a node of that name exists (warned about on the creation screen). An existing link is not added again (`LinkProblem.AlreadyLinked`). `AddChoices` gives, for each side, the chosen node among homonyms (the oldest by default) and the type of a new node (*generic* by default). A link from a node to itself is refused.
 - A name containing a link alias cannot be entered (no quoting).
 
 ## Logging

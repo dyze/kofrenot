@@ -42,14 +42,15 @@ A database is a folder: on this computer, on a file share, or in a folder a sync
 ### Input box
 Type in the box at the top of the main window:
 
-| You type | Enter adds |
+| You type | Enter offers to add |
 | --- | --- |
 | `Dune` | the node *Dune* |
 | `Dune relates to Frank Herbert` (or `related to`) | a link between *Dune* and *Frank Herbert*, and either node that does not exist yet |
 
 - While you type, the nodes whose name has a word starting with the text are listed; a node matched exactly shows its links. Case, accents and extra spaces are ignored.
 - The line under the box says what Enter will add.
-- A node name that exists already asks for confirmation. A link that exists already is not added again.
+- **Enter** opens the creation screen: the type of each new node (*Generic* by default), the link type, and what exists already (the nodes with that name, which side of a link is a new node). **Enter** there adds it, **Esc** goes back to the box.
+- A node name that exists already is warned about on the creation screen: adding makes another node with that name. A link that exists already cannot be added again.
 - Nodes with the same name are marked `¹`, `²`, ... When one side of a link matches several, **Up/Down** picks one (the oldest first), **Tab** switches to the other side.
 - **Esc** clears the box, then hides the window.
 

@@ -37,7 +37,7 @@ public sealed class InputParserTests
         var short_ = new LinkType("near", ["near"], IsSymmetric: true);
         var long_ = new LinkType("near-to", ["near to"], IsSymmetric: true);
 
-        var request = InputParser.Parse("Paris near to London", new TypeCatalog([short_, long_]));
+        var request = InputParser.Parse("Paris near to London", new TypeCatalog([TypeCatalog.Generic], [short_, long_]));
 
         Assert.Equal(new LinkRequest("Paris", long_, "London"), request);
     }
@@ -46,7 +46,7 @@ public sealed class InputParserTests
     public void ThePhraseNearestTheStart_Wins()
     {
         var near = new LinkType("near", ["near"], IsSymmetric: true);
-        var catalog = new TypeCatalog([TypeCatalog.RelatesTo, near]);
+        var catalog = new TypeCatalog([TypeCatalog.Generic], [TypeCatalog.RelatesTo, near]);
 
         var request = InputParser.Parse("Paris near Rome relates to Italy", catalog);
 

@@ -86,15 +86,39 @@ public sealed class DatabaseSession : IDisposable
         }
     }
 
-    /// <summary>Appends what Enter adds.</summary>
-    /// <exception cref="IOException">A change file cannot be written.</exception>
-    public void Add(AddPlan plan)
+    /// <summary>
+    /// Shows the creation screen for a request over <paramref name="owner"/>, then adds what it
+    /// says. False when no database is open, or the user cancels, or it cannot be written.
+    /// </summary>
+    /// <param name="choices">The homonyms already chosen (by the input box); the types default to generic.</param>
+    public bool Create(Window owner, InputRequest request, AddChoices? choices = null)
     {
         if (Current is not { } database)
         {
-            return;
+            return false;
         }
 
+        if (CreationDialog.Ask(owner, new CreationForm(database.Graph, request, choices)) is not { } plan)
+        {
+            _log.Info("Action", "Creation cancelled");
+            return false;
+        }
+
+        try
+        {
+            Add(database, plan);
+            return true;
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            _log.Error("Action", "Cannot add to the database", ex);
+            MessageDialog.Inform(owner, $"Cannot add to the database.\n\n{ex.Message}");
+            return false;
+        }
+    }
+
+    private void Add(Database database, AddPlan plan)
+    {
         try
         {
             foreach (var change in plan.Changes)
@@ -109,8 +133,9 @@ public sealed class DatabaseSession : IDisposable
 
         _log.Info("Action", plan switch
         {
-            LinkPlan link => $"Link added ({(link.Left.IsNew ? 1 : 0) + (link.Right?.IsNew == true ? 1 : 0)} new nodes)",
-            _ => plan.NeedsConfirmation ? "Node added (a duplicate, confirmed)" : "Node added",
+            LinkPlan link => $"Link added ({link.Type.Id}, {(link.Left.IsNew ? 1 : 0) + (link.Right?.IsNew == true ? 1 : 0)} new nodes)",
+            NodePlan node => $"Node added ({node.Type.Id}{(node.NeedsConfirmation ? ", a duplicate" : string.Empty)})",
+            _ => "Added",
         });
     }
 

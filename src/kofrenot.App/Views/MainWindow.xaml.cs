@@ -119,32 +119,15 @@ public partial class MainWindow : Window
         return changed;
     }
 
-    /// <summary>Enter: adds what the preview says, after confirmation for a duplicate node.</summary>
+    /// <summary>Enter: opens the creation screen for what the preview says; the input box is cleared once it is added.</summary>
     private bool AddInput()
     {
-        if (_input.Plan is not { CanAdd: true } plan)
+        if (_input is { Plan.CanAdd: true, Request: { } request } && _session.Create(this, request, _input.Choices))
         {
-            return true;
-        }
-
-        if (plan is NodePlan { NeedsConfirmation: true } node
-            && !MessageDialog.Confirm(this, $"“{node.Name}” exists already. Add another node with this name?", "Add"))
-        {
-            _log.Info("Action", "Duplicate node not added");
-            return true;
-        }
-
-        try
-        {
-            _session.Add(plan);
             InputBox.Clear();
         }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-        {
-            _log.Error("Action", "Cannot add to the database", ex);
-            MessageDialog.Inform(this, $"Cannot add to the database.\n\n{ex.Message}");
-        }
 
+        InputBox.Focus();
         return true;
     }
 
