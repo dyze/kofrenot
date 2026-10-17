@@ -43,6 +43,7 @@ public sealed class AddPlannerTests
         Assert.Equal(["Dune", "Frank Herbert"], nodes.Select(node => node.Name));
         var link = Assert.IsType<LinkAdded>(plan.Changes[2]).Link;
         Assert.Equal((nodes[0].Id, nodes[1].Id, "relates-to"), (link.From, link.To, link.Type));
+        Assert.Equal(nodes, plan.NewNodes);
         Assert.False(plan.NeedsConfirmation);
     }
 
@@ -55,6 +56,7 @@ public sealed class AddPlannerTests
 
         Assert.Same(dune, plan.Left.Chosen);
         Assert.Equal(2, plan.Changes.Count);
+        Assert.Equal(["Frank Herbert"], plan.NewNodes.Select(node => node.Name));
         Assert.Equal(dune.Id, plan.Changes.OfType<LinkAdded>().Single().Link.From);
     }
 

@@ -96,7 +96,7 @@ public sealed partial class CreationForm
     /// </summary>
     public IReadOnlyList<NoteToSave> NotesToSave()
     {
-        var added = Plan.Changes.OfType<NodeAdded>().Select(change => change.Node).ToList();
+        var added = Plan.NewNodes;
         var newSides = Steps.Select(step => step.Side).OfType<Side>().ToList();
         return newSides
             .Select((side, index) => (Side: side, Node: added[index]))

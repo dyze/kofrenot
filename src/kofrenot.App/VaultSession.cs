@@ -111,31 +111,32 @@ public sealed class VaultSession : IDisposable
 
     /// <summary>
     /// Shows the creation screen for a request over <paramref name="owner"/>, then adds what it
-    /// says. False when no vault is open, or the user cancels, or it cannot be written.
+    /// says. The plan added; null when no vault is open, or the user cancels, or it cannot be written.
     /// </summary>
     /// <param name="choices">The homonyms already chosen (by the input box); the types default to generic.</param>
-    public bool Create(Window owner, InputRequest request, AddChoices? choices = null)
+    public AddPlan? Create(Window owner, InputRequest request, AddChoices? choices = null)
     {
         if (Current is not { } vault)
         {
-            return false;
+            return null;
         }
 
         var form = new CreationForm(vault.Graph, request, choices);
         if (!CreationDialog.Ask(owner, form))
         {
             _log.Info("Action", "Creation cancelled");
-            return false;
+            return null;
         }
 
         var notes = form.NotesToSave();
         var withNotes = notes.Count > 0 ? $", {notes.Count} with content" : string.Empty;
-        return Append(owner, vault, form.Plan.Changes, form.Plan switch
+        var added = Append(owner, vault, form.Plan.Changes, form.Plan switch
         {
             LinkPlan link => $"Link added ({link.Type.Id}, {(link.Left.IsNew ? 1 : 0) + (link.Right?.IsNew == true ? 1 : 0)} new nodes{withNotes})",
             NodePlan node => $"Node added ({node.Type.Id}{(node.NeedsConfirmation ? ", a duplicate" : string.Empty)}{withNotes})",
             _ => "Added",
         }, notes);
+        return added ? form.Plan : null;
     }
 
     /// <summary>Renames a node. False when no vault is open, or it cannot be written (the user is told).</summary>

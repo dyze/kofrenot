@@ -57,7 +57,7 @@ Type in the box at the top of the main window:
 - **Enter** opens the creation screen, in steps: one per new node (its type, *Generic* by default, and for a *Note* its content), then for a link its two nodes and the link type. Each step starts on its type box; **Tab** goes to a note's content. **Enter** (or **Ctrl+Enter** in a note's content) goes to the next step, and on the last one adds everything at once; **Back** returns to a step. **Esc** cancels the whole creation, asking first if you typed note content.
 - A node name that exists already is warned about on the creation screen: adding makes another node with that name. A link that exists already cannot be added again.
 - Nodes with the same name are marked `¹`, `²`, ... When one side of a link matches several, **Up/Down** picks one (the oldest first), **Tab** switches to the other side.
-- While the box is empty, the **pinned** nodes are listed, then the **recent** ones (the last 10 opened on this computer, the latest first): **Down** selects one, **Enter** opens it.
+- While the box is empty, the **pinned** nodes are listed, then the **recent** ones (the last 10 opened or added on this computer, the latest first): **Down** selects one, **Enter** opens it.
 - **Esc** clears the box, then hides the window.
 
 ### Node details

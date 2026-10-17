@@ -9,6 +9,9 @@ namespace Kofrenot.Core.Input;
 public abstract record AddPlan(IReadOnlyList<Change> Changes, bool NeedsConfirmation)
 {
     public bool CanAdd => Changes.Count > 0;
+
+    /// <summary>The nodes it adds, in the order typed.</summary>
+    public IReadOnlyList<Node> NewNodes => Changes.OfType<NodeAdded>().Select(added => added.Node).ToList();
 }
 
 /// <summary>Adds the node <see cref="Name"/> of type <see cref="Type"/>; <see cref="Existing"/> are the nodes that already have its name.</summary>

@@ -192,11 +192,21 @@ public partial class MainWindow : Window
         return changed;
     }
 
-    /// <summary>Enter: opens the creation screen for what the preview says; the input box is cleared once it is added.</summary>
+    /// <summary>
+    /// Enter: opens the creation screen for what the preview says. Once it is added, the new nodes
+    /// go first among the recent ones (the first typed on top) and the input box is cleared.
+    /// </summary>
     private bool AddInput()
     {
-        if (_input is { Plan.CanAdd: true, Request: { } request } && _session.Create(this, request, _input.Choices))
+        if (_input is { Plan.CanAdd: true, Request: { } request }
+            && _session.Create(this, request, _input.Choices) is { } added
+            && _session.Current is { } vault)
         {
+            foreach (var node in added.NewNodes.Reverse())
+            {
+                _recent.Opened(vault.Id, node.Id);
+            }
+
             InputBox.Clear();
         }
 

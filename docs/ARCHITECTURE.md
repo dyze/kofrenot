@@ -245,7 +245,7 @@ current = added − removed               (RemovableChanges; a removal may arriv
 - An alias of a type this version does not know is kept, not shown.
 - `AliasPlanner` refuses an empty phrase and one in use, and warns about the node names containing it: the input box would read them as links.
 - Settings > Link types (`LinkTypesSection`) lists each type both ways, with its built-in phrases and the user's aliases (× removes). Phrases are not logged, only the link type.
-- Recent nodes (`RecentNodes`, `recent.json`) are kept on each device, never in the vault: opening a node writes nothing there. `MainWindow` records each node the details show and passes the list to `InputPresenter.Recent`, which lists the known ones not pinned.
+- Recent nodes (`RecentNodes`, `recent.json`) are kept on each device, never in the vault: opening a node writes nothing there. `MainWindow` records each node the details show, and the nodes the creation screen adds (`AddPlan.NewNodes`), and passes the list to `InputPresenter.Recent`, which lists the known ones not pinned.
 - Pins: `KnowledgeGraph.PinnedNodes` lists each pinned node once, the first pinned first; a node pinned on two devices has two pins, and `PinPlanner` unpins by removing both. `InputPresenter` lists them under a header (`ResultRow.IsHeader`) while the input box is empty.
 
 ### Notes
