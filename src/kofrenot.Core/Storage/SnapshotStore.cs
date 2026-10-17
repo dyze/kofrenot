@@ -27,7 +27,9 @@ public sealed class SnapshotStore(string path, SecretBox box, Guid vault, ILog? 
         try
         {
             var json = box.Open(Magic, File.ReadAllBytes(path), vault.ToByteArray());
-            if (JsonSerializer.Deserialize<SnapshotData>(json, ChangeCodec.Json) is { Format: Format, Changes: { } changes })
+            // The format first: an older snapshot has another shape.
+            if (JsonSerializer.Deserialize<FormatOnly>(json, ChangeCodec.Json) is { Format: Format }
+                && JsonSerializer.Deserialize<SnapshotData>(json, ChangeCodec.Json) is { Changes: { } changes })
             {
                 return changes.Select(stored => stored.Change?.ToChange(stored.Id) ?? throw new InvalidDataException("A change is empty")).ToList();
             }
@@ -61,6 +63,8 @@ public sealed class SnapshotStore(string path, SecretBox box, Guid vault, ILog? 
             _log.Warn("Vault", $"The local snapshot cannot be saved: {ex.Message}");
         }
     }
+
+    internal sealed record FormatOnly(int Format);
 
     internal sealed record SnapshotData(int Format, List<StoredChange>? Changes);
 

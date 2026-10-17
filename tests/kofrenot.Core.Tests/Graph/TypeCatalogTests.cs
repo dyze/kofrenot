@@ -37,6 +37,13 @@ public sealed class TypeCatalogTests
             TypeCatalog.BuiltIn.Verbs.Select(verb => verb.Name));
 
     [Fact]
+    public void TypesAndVerbs_AreNamedByTheirName()
+    {
+        Assert.Equal("contains", TypeCatalog.Contains.ToString());
+        Assert.Equal("contained by", TypeCatalog.Contains.Reverse!.ToString());
+    }
+
+    [Fact]
     public void AVerb_IsEqualToTheSameWayOfTheSameType()
     {
         Assert.Equal(TypeCatalog.Contains.Reverse, new LinkVerb(TypeCatalog.Contains, IsReverse: true));

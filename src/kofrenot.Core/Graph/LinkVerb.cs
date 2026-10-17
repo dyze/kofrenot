@@ -10,4 +10,7 @@ public sealed record LinkVerb(LinkType Type, bool IsReverse)
     public IReadOnlyList<string> Phrases => IsReverse ? Type.ReversePhrases! : Type.Phrases;
 
     public string Name => Phrases[0];
+
+    /// <summary>Its name, as lists show it: the generated one would loop through <see cref="Type"/>.</summary>
+    public override string ToString() => Name;
 }

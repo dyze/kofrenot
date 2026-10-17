@@ -86,6 +86,16 @@ public sealed class SnapshotStoreTests : IDisposable
     }
 
     [Fact]
+    public void ASnapshotOfKofrenot01_IsNotUsed_WithoutAWarning()
+    {
+        WriteSnapshot("{\"format\":2,\"changes\":[\"3f2504e0-4f89-11d3-9a0c-0305e82c3301\"],\"nodes\":[],\"links\":[],\"renames\":[]}");
+
+        Assert.Null(Store().Load());
+        Assert.Contains(_log.Entries, entry => entry.Level == LogLevel.Info && entry.Message.Contains("another format"));
+        Assert.DoesNotContain(_log.Entries, entry => entry.Level == LogLevel.Warning);
+    }
+
+    [Fact]
     public void ASnapshotHoldingANewerFormat_IsNotUsed()
     {
         WriteSnapshot("{\"format\":3,\"changes\":[{\"id\":\"3f2504e0-4f89-11d3-9a0c-0305e82c3301\",\"change\":{\"format\":99,\"op\":\"addNode\",\"at\":\"2026-10-16T09:12:00Z\"}}]}");

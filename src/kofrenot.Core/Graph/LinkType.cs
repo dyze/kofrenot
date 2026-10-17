@@ -22,6 +22,9 @@ public sealed record LinkType(string Id, IReadOnlyList<string> Phrases, IReadOnl
     /// <summary>The ways to read it: forward, then reverse unless it is symmetric.</summary>
     public IEnumerable<LinkVerb> Verbs => Reverse is { } reverse ? [Forward, reverse] : [Forward];
 
+    /// <summary>Its name: the generated one would loop, through <see cref="Forward"/> and back.</summary>
+    public override string ToString() => Name;
+
     public bool Equals(LinkType? other) => other is not null && other.Id == Id;
 
     public override int GetHashCode() => Id.GetHashCode(StringComparison.Ordinal);
