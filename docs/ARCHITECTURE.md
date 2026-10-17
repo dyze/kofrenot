@@ -4,7 +4,7 @@
 
 ```
 kofrenot.App   (WPF, Windows only)
-│  main window (input box), creation dialog, settings window, pass phrase dialog, log window, changelog window, tray icon
+│  main window (input box, node details), creation dialog, settings window, pass phrase dialog, log window, changelog window, tray icon
 │  VaultSession (opens, watches and adds to the vault through the creation dialog)
 │  adapters: SerilogFileLog, SingleInstance, NativeWindows + WindowPlacer (window positions), GitHubReleaseFeed, Browser,
 │            DpapiProtector, GlobalHotkey, VaultWatcher
@@ -15,6 +15,7 @@ kofrenot.Core  (no Windows dependency, fully unit-tested on any OS)
    Graph: KnowledgeGraph · Node · Link · TypeCatalog · Change
    Storage: Vault · VaultFolder · VaultFormat · SecretBox · KeyWrap · SnapshotStore · KeyMemory
    Input: InputParser · GraphSearch · AddPlanner · InputPresenter · CreationForm
+   Browse: NodeBrowser · NodeDetails
    AppFiles · AppVersion · Changelog · ProjectLinks
    SettingsStore · SettingsCatalog · Hotkey
    PlacementRules · PlacementStore
@@ -36,6 +37,7 @@ One namespace per folder (`Kofrenot.Core.Settings`, `Kofrenot.UI.Views`, ...). T
 | `Graph/` | `Node`, `Link`, `NodeType`, `LinkType`, `TypeCatalog` (built-in node and link types, link aliases), `NameKey` (the form names are compared in), `Change` (`NodeAdded`, `LinkAdded`), `KnowledgeGraph` (in-memory state, built by applying changes) |
 | `Storage/` | `VaultFormat` (+ `NewerVaultFormatException`), `SecretBox` (AES-GCM seal / open), `KeyWrap` (KDF, wrap / unwrap the master key), `ChangeCodec` (change ⇄ sealed JSON), `VaultHeader`, `VaultFolder` (layout, inspect, create), `SnapshotStore`, `Vault` (open, append, refresh), `AtomicFile` (write as `.tmp`, then rename), `KeyMemory` (remembered master keys, `keys.json`), `ISecretProtector` |
 | `Input/` | `InputParser` (text → `NodeRequest` / `LinkRequest`), `GraphSearch` (`SearchHit`), `AddPlanner` (`AddChoices` → `AddPlan`: `NodePlan`, `LinkPlan`, `PlannedSide`), `InputPresenter` (the input box: preview, result rows, homonym choices), `CreationForm` (the creation screen: types, status, what exists), `PlanText` (wording shared by both) |
+| `Browse/` | `NodeBrowser` (the details screen: trail of open nodes, at most 4, the selected link of each), `NodeDetails`, `LinkRow` |
 | `Logging/` | `ILog` (with `NullLog`), `LogEntry`, `RingLog`, `CompositeLog`, `FilteredLog` |
 | `Placement/` | Window positions: `WindowPlacement`, `PlacementRules`, `PlacementStore` (see [Window positions](#window-positions)) |
 | `Updates/` | The daily update check, see [Updates](#updates): `UpdateChecker`, `Release`, `IReleaseFeed`, `UpdateStore` |
@@ -43,7 +45,7 @@ One namespace per folder (`Kofrenot.Core.Settings`, `Kofrenot.UI.Views`, ...). T
 | `kofrenot.App` | Content |
 | --- | --- |
 | *(root)* | `App.xaml`: startup and wiring; `VaultSession` (the open vault: create, unlock, watch, `Create` (creation dialog, then add), forget the remembered key) |
-| `Views/` | Windows: `MainWindow` (input box, shows `InputPresenter`), `CreationDialog` (shows a `CreationForm`), `SettingsWindow` (tabs General, Vault, Appearance, Logging, About), `PassphraseDialog`, `LogWindow`, `ChangelogWindow` (Settings > About > *Show changelog*); `MessageDialog` (messages and questions in the app's theme, instead of the Windows `MessageBox`); `AppTheme` |
+| `Views/` | Windows: `MainWindow` (input box, shows `InputPresenter`), `NodeDetailsPanel` (in the main window, shows a `NodeBrowser`), `CreationDialog` (shows a `CreationForm`), `SettingsWindow` (tabs General, Vault, Appearance, Logging, About), `PassphraseDialog`, `LogWindow`, `ChangelogWindow` (Settings > About > *Show changelog*); `MessageDialog` (messages and questions in the app's theme, instead of the Windows `MessageBox`); `AppTheme` |
 | `Tray/` | `TrayIcon` |
 | `Platform/` | Implementations of the `Core` interfaces (`GitHubReleaseFeed`, `DpapiProtector`), `Browser` (opens web pages), `SingleInstance`, `GlobalHotkey` (`RegisterHotKey`), `VaultWatcher` (`FileSystemWatcher`), and window placement (`NativeWindows`, `WindowPlacer`) |
 | `Logging/` | `LogHub`, `SerilogFileLog` |
@@ -218,6 +220,27 @@ text ──InputParser──► NodeRequest(name) | LinkRequest(left, type, righ
 - `GraphSearch`: exact names first, then names starting with the text, then the others, alphabetically; at most 20. Homonyms are listed oldest first, marked `¹`, `²`, ... (`SearchHit.Mark`).
 - `AddPlanner` builds the `AddPlan` shown as preview: the nodes to create, the link, and `NeedsConfirmation` when a node of that name exists (warned about on the creation screen). An existing link is not added again (`LinkProblem.AlreadyLinked`). `AddChoices` gives, for each side, the chosen node among homonyms (the oldest by default) and the type of a new node (*generic* by default). A link from a node to itself is refused.
 - A name containing a link alias cannot be entered (no quoting).
+
+### Node details
+Behavior for the user: [README.md](../README.md#node-details).
+
+```
+search                                    details, level 2 of 4
+┌─────────────────────────────────── ⚙ ┐  ┌─────────────────────────────────── ⚙ ┐
+│ [ dune                             ] │  │ ⌂ Search › Dune › Frank Herbert      │
+│ Enter to see the details of “Dune”.  │  │ Frank Herbert                        │
+│ › Dune                           [›] │  │ Type      Generic                    │
+│     relates to Frank Herbert         │  │ Created   2026-10-16 09:12           │
+│   Dune Messiah                   [›] │  │ Links (2)                            │
+└──────────────────────────────────────┘  │   relates to   Dune         (greyed) │
+                                          │ › relates to   Children of Dune  [›] │
+                                          └──────────────────────────────────────┘
+```
+
+- `InputPresenter` keeps the selected row (`MoveSelection`, `SelectedRow`) while the text stays the same: a node row, or a link row (`ResultRow.From` is the node it belongs to). While a link is typed, Up/Down choose homonyms (`MoveChoice`) instead. `ResultRow.Node` is the node the row opens, and gives it its **›** button. A link row opens `From` as level 1 and `Node` as level 2 (`NodeBrowser.Open`).
+- `NodeBrowser` holds the trail: one level per node opened, each keeping its selected link, so going back shows it again. `LinkRow.CanOpen` is false at `MaxDepth` (4) and for a node already in the trail. `Details` is read from the graph each time, so a refresh shows changes from elsewhere.
+- Search rows and detail links are two lists (`MainWindow`, `NodeDetailsPanel`) sharing their size and **›** button (`Views/SharedStyles.xaml`).
+- `NodeDetailsPanel` takes the place of the search in `MainWindow` and handles Up/Down/Enter/Esc while shown. It raises `BackToSearch` when the trail is empty. The trail is closed when its vault closes.
 
 ## Logging
 - `Core` writes through `ILog` (`log.Info(category, message)`); only `App` knows Serilog.

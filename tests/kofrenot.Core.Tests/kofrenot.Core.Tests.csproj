@@ -31,6 +31,7 @@
     <Using Include="Xunit" />
     <!-- The tests cover all of Core, so every Core namespace is imported once here. -->
     <Using Include="Kofrenot.Core" />
+    <Using Include="Kofrenot.Core.Browse" />
     <Using Include="Kofrenot.Core.Graph" />
     <Using Include="Kofrenot.Core.Input" />
     <Using Include="Kofrenot.Core.Logging" />

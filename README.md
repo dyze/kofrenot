@@ -55,6 +55,11 @@ Type in the box at the top of the main window:
 - Nodes with the same name are marked `¹`, `²`, ... When one side of a link matches several, **Up/Down** picks one (the oldest first), **Tab** switches to the other side.
 - **Esc** clears the box, then hides the window.
 
+### Node details
+- In the search, **Down** selects a row and **Up/Down** move the selection, over the nodes found and their links; typing clears the selection. **Enter** then opens the details instead of adding, and so does the **›** button at the end of a row. A link row opens its other node, one level under the node it belongs to.
+- The details show the node's name, type and creation date, then its links. **Up/Down** select a link, and **Enter** or **›** opens the node at its other end, up to 4 levels deep. A node already open in the breadcrumb is greyed.
+- The breadcrumb at the top shows where you are. Click an item to go back to it; **⌂ Search** returns to the search. **Esc** goes back one level, and from the first level returns to the search as you left it.
+
 ## Settings
 
 Gear button in the main window, or tray menu > Settings. A dialog over the main window: changes are saved at once, Esc (or closing it) closes it. *Find a setting* (Ctrl+F) shows the matching settings of every tab; Ctrl+Tab changes tab.
@@ -100,7 +105,6 @@ build.cmd     # Windows
 Both restore, build in Release and run the tests. Output goes to `artifacts/`. The version is set in `Directory.Build.props` only.
 
 The build fails if `Core` line coverage is below **95 %**. `build.cmd` also writes an HTML coverage report to `artifacts/coverage/report/`; `build.cmd open` opens it in the browser.
-
 ## Layout
 
 | Folder | Purpose |

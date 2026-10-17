@@ -33,14 +33,81 @@ public sealed class InputPresenterTests
         var dune = Add("Dune");
         var herbert = Add("Frank Herbert");
         Link(dune, herbert);
-        Add("Dune Messiah");
+        var messiah = Add("Dune Messiah");
 
         _input.Update(_graph, "dune");
 
         Assert.Equal("“dune” exists already. Enter to add another one.", _input.Preview);
         Assert.Equal(
-            [new ResultRow("Dune", false, false), new ResultRow("relates to Frank Herbert", true, false), new ResultRow("Dune Messiah", false, false)],
+            [new ResultRow("Dune", false, false, dune), new ResultRow("relates to Frank Herbert", true, false, herbert, dune), new ResultRow("Dune Messiah", false, false, messiah)],
             _input.Rows);
+    }
+
+    [Fact]
+    public void DownSelectsANode_OrALink_AndEnterWouldOpenItsDetails()
+    {
+        var dune = Add("Dune");
+        var herbert = Add("Frank Herbert");
+        Link(dune, herbert);
+        var messiah = Add("Dune Messiah");
+        _input.Update(_graph, "dune");
+
+        Assert.Null(_input.SelectedRow?.Node);
+        Assert.True(_input.MoveSelection(1));
+        Assert.Same(dune, _input.SelectedRow?.Node);
+        Assert.True(_input.Rows[0].IsChosen);
+        Assert.Equal("Enter to see the details of “Dune”. Up/Down: another one.", _input.Preview);
+
+        Assert.True(_input.MoveSelection(1));
+        Assert.Equal((herbert, dune), (_input.SelectedRow?.Node, _input.SelectedRow?.From));
+        Assert.True(_input.Rows[1].IsChosen);
+        Assert.False(_input.Rows[0].IsChosen);
+        Assert.Equal("Enter to see the details of “Frank Herbert”. Up/Down: another one.", _input.Preview);
+
+        Assert.True(_input.MoveSelection(1));
+        Assert.Same(messiah, _input.SelectedRow?.Node);
+        Assert.False(_input.MoveSelection(1));
+        Assert.Same(messiah, _input.SelectedRow?.Node);
+    }
+
+    [Fact]
+    public void UpFromTheFirstNode_ClearsTheSelection()
+    {
+        Add("Dune");
+        _input.Update(_graph, "Dune");
+
+        Assert.False(_input.MoveSelection(-1));
+        _input.MoveSelection(1);
+        Assert.True(_input.MoveSelection(-1));
+
+        Assert.Null(_input.SelectedRow?.Node);
+        Assert.StartsWith("“Dune” exists already.", _input.Preview);
+    }
+
+    [Fact]
+    public void TheSelection_IsKeptForTheSameText_AndClearedByTyping()
+    {
+        var dune = Add("Dune");
+        _input.Update(_graph, "Dune");
+        _input.MoveSelection(1);
+
+        _input.Update(_graph, "Dune");
+        Assert.Same(dune, _input.SelectedRow?.Node);
+
+        _input.Update(_graph, "Dun");
+        Assert.Null(_input.SelectedRow?.Node);
+    }
+
+    [Fact]
+    public void NothingToSelect_WithoutNodesFound_OrWhileTypingALink()
+    {
+        Add("Dune");
+
+        Assert.False(_input.MoveSelection(1));
+        _input.Update(_graph, "Arrakis");
+        Assert.False(_input.MoveSelection(1));
+        _input.Update(_graph, "Dune relates to Arrakis");
+        Assert.False(_input.MoveSelection(1));
     }
 
     [Fact]
@@ -167,7 +234,7 @@ public sealed class InputPresenterTests
 
         _input.Update(_graph, "Dune");
 
-        Assert.Contains(new ResultRow("written-by Frank Herbert", true, false), _input.Rows);
+        Assert.Contains(_input.Rows, row => row is { Text: "written-by Frank Herbert", IsLink: true });
     }
 
     private Node Add(string name, int minutes = 0)

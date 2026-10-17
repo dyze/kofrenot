@@ -2,13 +2,24 @@ using Kofrenot.Core.Graph;
 
 namespace Kofrenot.Core.Input;
 
-/// <summary>A line under the input box: a node, or (indented) one of its links.</summary>
-public sealed record ResultRow(string Text, bool IsLink, bool IsChosen);
+/// <summary>
+/// A line under the input box: a node, or (indented) one of its links, coming <see cref="From"/>
+/// a node. <see cref="Node"/> is the node its details open on: the node, or the link's other end.
+/// <see cref="IsChosen"/>: the homonym chosen, or the row selected.
+/// </summary>
+public sealed record ResultRow(string Text, bool IsLink, bool IsChosen, Node? Node = null, Node? From = null)
+{
+    internal RowKey? Key => Node is null ? null : new RowKey(From?.Id, Node.Id);
+}
+
+/// <summary>Tells a row apart from the others: a node row has no <see cref="From"/>.</summary>
+internal readonly record struct RowKey(Guid? From, Guid Node);
 
 /// <summary>
 /// What the main window shows for the text of the input box: the request and the plan Enter opens
 /// in the creation screen, its preview, and the nodes found. For a link, the side being typed (Tab
-/// switches) is the one searched, and Up/Down choose among its homonyms.
+/// switches) is the one searched, and Up/Down choose among its homonyms. Otherwise Up/Down select
+/// a node or one of its links, whose details Enter opens instead.
 /// </summary>
 public sealed class InputPresenter(TypeCatalog? types = null)
 {
@@ -22,6 +33,7 @@ public sealed class InputPresenter(TypeCatalog? types = null)
     private int _leftChoice;
     private int _rightChoice;
     private bool _rightActive;
+    private RowKey? _selected;
 
     /// <summary>What the text asks for, or null when it is empty.</summary>
     public InputRequest? Request { get; private set; }
@@ -35,9 +47,20 @@ public sealed class InputPresenter(TypeCatalog? types = null)
 
     public IReadOnlyList<ResultRow> Rows { get; private set; } = [];
 
-    /// <summary>Recomputes everything for this graph and text. The choices are kept while their side keeps its name.</summary>
+    /// <summary>The row selected with Up/Down (Enter opens the details of its <see cref="ResultRow.Node"/>), or null.</summary>
+    public ResultRow? SelectedRow => _selected is null ? null : Rows.FirstOrDefault(row => row.Key == _selected);
+
+    /// <summary>
+    /// Recomputes everything for this graph and text. The choices are kept while their side keeps
+    /// its name, the selection while the text stays the same.
+    /// </summary>
     public void Update(KnowledgeGraph graph, string text)
     {
+        if (text != _text)
+        {
+            _selected = null;
+        }
+
         _graph = graph;
         _text = text;
         Request = InputParser.Parse(text, _types);
@@ -53,8 +76,43 @@ public sealed class InputPresenter(TypeCatalog? types = null)
         }
 
         Plan = Request is null ? null : new AddPlanner(graph).Plan(Request, Choices);
-        Preview = Plan is null ? Hint : PreviewOf(new PlanText(graph), Plan);
         Rows = Plan is null ? [] : RowsOf(graph, Plan);
+        if (SelectedRow is null)
+        {
+            _selected = null;
+        }
+
+        Preview = Plan is null ? Hint : PreviewOf(new PlanText(graph), Plan);
+    }
+
+    /// <summary>
+    /// Up / Down outside a link: selects the next or previous row that opens a node (a node, or one
+    /// of its links). Up from the first one
+    /// clears the selection. False when it changed nothing.
+    /// </summary>
+    public bool MoveSelection(int step)
+    {
+        if (_graph is null || Plan is not NodePlan)
+        {
+            return false;
+        }
+
+        var keys = Rows.Select(row => row.Key).OfType<RowKey>().ToList();
+        if (keys.Count == 0)
+        {
+            return false;
+        }
+
+        var index = _selected is { } selected ? keys.IndexOf(selected) + step : step > 0 ? 0 : -1;
+        RowKey? next = index < 0 ? null : keys[Math.Min(index, keys.Count - 1)];
+        if (next == _selected)
+        {
+            return false;
+        }
+
+        _selected = next;
+        Update(_graph, _text);
+        return true;
     }
 
     /// <summary>Up / Down: the previous or next homonym of the side being typed. False when there is no choice.</summary>
@@ -114,6 +172,11 @@ public sealed class InputPresenter(TypeCatalog? types = null)
 
     private string PreviewOf(PlanText text, AddPlan plan)
     {
+        if (SelectedRow?.Node is { } selected)
+        {
+            return $"Enter to see the details of “{text.NodeLabel(selected)}”. Up/Down: another one.";
+        }
+
         if (PlanText.Duplicate(plan) is { } duplicate)
         {
             return $"{duplicate} Enter to add another one.";
@@ -148,7 +211,7 @@ public sealed class InputPresenter(TypeCatalog? types = null)
         var name = plan is LinkPlan typed ? ActiveSide(typed)!.Name : ((NodePlan)plan).Name;
         foreach (var hit in GraphSearch.Find(graph, name))
         {
-            AddNode(graph, text, rows, hit.Node, chosen: false, withLinks: hit.IsExact);
+            AddNode(graph, text, rows, hit.Node, chosen: new RowKey(null, hit.Node.Id) == _selected, withLinks: hit.IsExact);
         }
 
         return rows;
@@ -156,7 +219,7 @@ public sealed class InputPresenter(TypeCatalog? types = null)
 
     private void AddNode(KnowledgeGraph graph, PlanText text, List<ResultRow> rows, Node node, bool chosen, bool withLinks)
     {
-        rows.Add(new ResultRow(text.NodeLabel(node), IsLink: false, chosen));
+        rows.Add(new ResultRow(text.NodeLabel(node), IsLink: false, chosen, node));
         if (!withLinks)
         {
             return;
@@ -165,7 +228,8 @@ public sealed class InputPresenter(TypeCatalog? types = null)
         foreach (var link in graph.LinksOf(node.Id))
         {
             var other = graph.FindNode(link.Other(node.Id))!;
-            rows.Add(new ResultRow($"{_types.LinkTypeName(link.Type)} {text.NodeLabel(other)}", IsLink: true, IsChosen: false));
+            var row = new ResultRow($"{_types.LinkTypeName(link.Type)} {text.NodeLabel(other)}", IsLink: true, IsChosen: false, other, node);
+            rows.Add(row with { IsChosen = row.Key == _selected });
         }
     }
 }

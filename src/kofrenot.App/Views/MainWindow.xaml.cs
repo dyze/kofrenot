@@ -3,6 +3,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using Kofrenot.Core;
+using Kofrenot.Core.Graph;
 using Kofrenot.Core.Input;
 using Kofrenot.Core.Logging;
 using Kofrenot.Core.Settings;
@@ -38,27 +39,40 @@ public partial class MainWindow : Window
         _createSettings = createSettings;
 
         InitializeComponent();
+        DetailsPanel.Log = log;
         VersionText.Text = $"kofrenot {AppVersion.Of(typeof(MainWindow).Assembly)}";
         ShowUpdateMark();
         _session.Changed += ShowVault;
         ShowVault();
     }
 
-    /// <summary>The input box when a vault is open; otherwise what to do to get one.</summary>
+    private bool DetailsShown => DetailsPanel.Browser.IsOpen;
+
+    /// <summary>
+    /// The search, or a node's details, when a vault is open; otherwise what to do to get one. The
+    /// details close with the vault they show.
+    /// </summary>
     private void ShowVault()
     {
         var vault = _session.Current;
-        var open = vault is not null;
-        foreach (var element in new UIElement[] { InputBox, PreviewText, ResultsList })
+        if (DetailsPanel.Browser.Graph != vault?.Graph)
         {
-            element.Visibility = open ? Visibility.Visible : Visibility.Collapsed;
+            DetailsPanel.Browser.Close();
         }
 
+        var open = vault is not null;
+        foreach (var element in new UIElement[] { InputArea, PreviewText, ResultsArea })
+        {
+            element.Visibility = open && !DetailsShown ? Visibility.Visible : Visibility.Collapsed;
+        }
+
+        DetailsPanel.Visibility = open && DetailsShown ? Visibility.Visible : Visibility.Collapsed;
         StatePanel.Visibility = open ? Visibility.Collapsed : Visibility.Visible;
         if (vault is not null)
         {
             VaultText.Text = $"{_session.Folder} · {vault.Graph.Nodes.Count} nodes · {vault.Graph.Links.Count} links";
             ShowInput();
+            DetailsPanel.Show();
             return;
         }
 
@@ -102,7 +116,10 @@ public partial class MainWindow : Window
 
     private void InputBox_TextChanged(object sender, TextChangedEventArgs e) => ShowInput();
 
-    /// <summary>Enter adds, Up/Down choose among homonyms, Tab switches the side of a link.</summary>
+    /// <summary>
+    /// Enter opens the selected node's details, or else adds; Up/Down choose among homonyms
+    /// while a link is typed, or else select a node; Tab switches the side of a link.
+    /// </summary>
     private void InputBox_PreviewKeyDown(object sender, KeyEventArgs e)
     {
         if (Keyboard.Modifiers != ModifierKeys.None)
@@ -112,12 +129,41 @@ public partial class MainWindow : Window
 
         e.Handled = e.Key switch
         {
+            Key.Enter when _input.SelectedRow is { Node: { } node } row => OpenDetails(node, row.From),
             Key.Enter => AddInput(),
-            Key.Up => Presented(_input.MoveChoice(-1)),
-            Key.Down => Presented(_input.MoveChoice(1)),
+            Key.Up => Presented(_input.MoveChoice(-1) || _input.MoveSelection(-1)),
+            Key.Down => Presented(_input.MoveChoice(1) || _input.MoveSelection(1)),
             Key.Tab => Presented(_input.SwitchSide()),
             _ => false,
         };
+    }
+
+    private void OpenResult_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is FrameworkElement { DataContext: ResultRow { Node: { } node } row })
+        {
+            OpenDetails(node, row.From);
+        }
+    }
+
+    /// <summary>Shows a node's details instead of the search; for a link row, under the node it comes from.</summary>
+    private bool OpenDetails(Node node, Node? from)
+    {
+        if (_session.Current is { } vault)
+        {
+            DetailsPanel.Open(vault.Graph, node, from);
+            ShowVault();
+            DetailsPanel.Focus();
+        }
+
+        return true;
+    }
+
+    /// <summary>Back from the details: the search, as it was left.</summary>
+    private void DetailsPanel_BackToSearch()
+    {
+        ShowVault();
+        InputBox.Focus();
     }
 
     private bool Presented(bool changed)
@@ -138,10 +184,21 @@ public partial class MainWindow : Window
         return true;
     }
 
-    /// <summary>Esc: clears the input box, then hides the window.</summary>
+    /// <summary>In the details, their keys (Esc goes back). In the search, Esc clears the input box, then hides the window.</summary>
     private void Window_PreviewKeyDown(object sender, KeyEventArgs e)
     {
-        if (e.Key != Key.Escape || Keyboard.Modifiers != ModifierKeys.None)
+        if (Keyboard.Modifiers != ModifierKeys.None)
+        {
+            return;
+        }
+
+        if (DetailsShown && DetailsPanel.IsVisible)
+        {
+            e.Handled = DetailsPanel.HandleKey(e.Key);
+            return;
+        }
+
+        if (e.Key != Key.Escape)
         {
             return;
         }
@@ -235,7 +292,11 @@ public partial class MainWindow : Window
 
         Activate();
         _session.Refresh();
-        if (_session.Current is not null)
+        if (_session.Current is not null && DetailsShown)
+        {
+            DetailsPanel.Focus();
+        }
+        else if (_session.Current is not null)
         {
             InputBox.Focus();
             InputBox.SelectAll();
