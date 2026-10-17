@@ -21,7 +21,8 @@ AppId={{15204DF4-E0F7-4459-B9B8-2F79C1CA0AB5}
 AppName={#AppName}
 AppVersion={#AppVersion}
 AppVerName={#AppName} {#AppVersion}
-AppPublisher=dyze
+; Also the setup's CompanyName; matches <Company> in Directory.Build.props.
+AppPublisher=dlabs
 VersionInfoVersion={#AppVersion}
 PrivilegesRequired=lowest
 DefaultDirName={autopf}\{#AppName}
