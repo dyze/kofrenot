@@ -31,17 +31,20 @@ public enum LinkProblem
 }
 
 /// <summary>
-/// Adds a link, and the nodes it needs that do not exist yet. <see cref="Existing"/> is the same
-/// link, when it is already there: then nothing is added.
+/// Adds a link, read as typed (<see cref="Verb"/>), and the nodes it needs that do not exist yet.
+/// <see cref="Existing"/> is the same link, when it is already there: then nothing is added.
 /// </summary>
 public sealed record LinkPlan(
     PlannedSide Left,
-    LinkType Type,
+    LinkVerb Verb,
     PlannedSide? Right,
     LinkProblem Problem,
     Link? Existing,
     IReadOnlyList<Change> Changes)
-    : AddPlan(Changes, NeedsConfirmation: false);
+    : AddPlan(Changes, NeedsConfirmation: false)
+{
+    public LinkType Type => Verb.Type;
+}
 
 /// <summary>
 /// One side of a link: the nodes with its name, and the one chosen (the oldest by default).

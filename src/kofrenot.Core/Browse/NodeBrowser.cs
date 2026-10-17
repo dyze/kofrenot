@@ -109,7 +109,7 @@ public sealed class NodeBrowser(TypeCatalog? types = null)
         var rows = links.Select((link, index) =>
         {
             var other = graph.FindNode(link.Other(node.Id))!;
-            return new LinkRow(_types.LinkTypeName(link.Type), text.NodeLabel(other), other, CanOpen(other), index == level.Selected);
+            return new LinkRow(_types.LinkName(link, node.Id), text.NodeLabel(other), other, CanOpen(other), index == level.Selected);
         });
         var names = graph.NamesOf(node.Id);
         IReadOnlyList<string> conflict = names.Count > 1 ? names.Select(version => version.Name).ToList() : [];

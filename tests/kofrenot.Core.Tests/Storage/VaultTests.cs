@@ -116,9 +116,9 @@ public sealed class VaultTests : IDisposable
     public void AChangeOfANewerFormat_StopsTheVault_OnOpeningAndOnRefresh()
     {
         var reader = Open(snapshot: false);
-        WriteChange("{\"format\":2,\"op\":\"rename\",\"at\":\"2026-10-16T09:12:00Z\"}");
+        WriteChange("{\"format\":99,\"op\":\"rename\",\"at\":\"2026-10-16T09:12:00Z\"}");
 
-        Assert.Equal(2, Assert.Throws<NewerVaultFormatException>(() => reader.Refresh()).Format);
+        Assert.Equal(99, Assert.Throws<NewerVaultFormatException>(() => reader.Refresh()).Format);
         Assert.Throws<NewerVaultFormatException>(() => Open(snapshot: false));
     }
 

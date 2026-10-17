@@ -4,7 +4,7 @@ public sealed class CreationFormTests
 {
     private static readonly NodeType Book = new("book", "Book");
     private static readonly NodeType Person = new("person", "Person");
-    private static readonly LinkType WrittenBy = new("written-by", ["written by"], IsSymmetric: false);
+    private static readonly LinkType WrittenBy = new("written-by", ["written by"], ["wrote"]);
     private static readonly TypeCatalog Types = new([TypeCatalog.Generic, Book, Person], [TypeCatalog.RelatesTo, WrittenBy]);
 
     private readonly ManualClock _clock = new();
@@ -18,7 +18,7 @@ public sealed class CreationFormTests
         Assert.False(form.IsLink);
         Assert.Equal("Add a node", form.Title);
         Assert.Same(TypeCatalog.Generic, form.LeftType);
-        Assert.Null(form.LinkType);
+        Assert.Null(form.Verb);
         Assert.Equal("Adds the node “Dune”.", form.Status);
         Assert.Null(form.Warning);
         Assert.Empty(form.Existing);
@@ -56,16 +56,16 @@ public sealed class CreationFormTests
     [Fact]
     public void ALink_GivesEachNewNodeItsType_AndCanChangeTheLinkType()
     {
-        var form = Form(new LinkRequest("Dune", TypeCatalog.RelatesTo, "Frank Herbert"));
+        var form = Form(new LinkRequest("Dune", TypeCatalog.RelatesTo.Forward, "Frank Herbert"));
 
         form.LeftType = Book;
         form.RightType = Person;
-        form.LinkType = WrittenBy;
+        form.Verb = WrittenBy.Forward;
 
         Assert.True(form.IsLink);
         Assert.Equal("Add a link", form.Title);
         Assert.Same(Person, form.RightType);
-        Assert.Same(WrittenBy, form.LinkType);
+        Assert.Equal(WrittenBy.Forward, form.Verb);
         Assert.Equal(["book", "person"], form.Plan.Changes.OfType<NodeAdded>().Select(added => added.Node.Type));
         Assert.Equal("written-by", form.Plan.Changes.OfType<LinkAdded>().Single().Link.Type);
         Assert.Equal("Adds the node “Dune”, the node “Frank Herbert”, the link “Dune written by Frank Herbert”.", form.Status);
@@ -77,7 +77,7 @@ public sealed class CreationFormTests
         Add("Dune", minutes: 1);
         var newer = Add("Dune", minutes: 2);
 
-        var form = Form(new LinkRequest("Dune", TypeCatalog.RelatesTo, "Arrakis"), new AddChoices(Left: 1));
+        var form = Form(new LinkRequest("Dune", TypeCatalog.RelatesTo.Forward, "Arrakis"), new AddChoices(Left: 1));
         form.RightType = Book;
 
         var link = Assert.IsType<LinkPlan>(form.Plan);
@@ -93,8 +93,8 @@ public sealed class CreationFormTests
         Add("Frank Herbert", minutes: 1);
         Add("Frank Herbert", minutes: 2);
 
-        var exists = Assert.IsType<LinkPlan>(Form(new LinkRequest("Dune", TypeCatalog.RelatesTo, "Frank Herbert")).Plan);
-        var form = Form(new LinkRequest("Dune", TypeCatalog.RelatesTo, "Arrakis"));
+        var exists = Assert.IsType<LinkPlan>(Form(new LinkRequest("Dune", TypeCatalog.RelatesTo.Forward, "Frank Herbert")).Plan);
+        var form = Form(new LinkRequest("Dune", TypeCatalog.RelatesTo.Forward, "Arrakis"));
         var created = Assert.IsType<LinkPlan>(form.Plan);
 
         Assert.Equal("Exists already (Book)", form.Describe(exists.Left));
@@ -107,15 +107,29 @@ public sealed class CreationFormTests
     {
         var (dune, herbert) = (Add("Dune"), Add("Frank Herbert"));
         _graph.Add(new Link(Guid.NewGuid(), WrittenBy.Id, dune.Id, herbert.Id, _clock.Now));
-        var form = Form(new LinkRequest("Dune", WrittenBy, "Frank Herbert"));
+        var form = Form(new LinkRequest("Dune", WrittenBy.Forward, "Frank Herbert"));
 
         Assert.False(form.Plan.CanAdd);
         Assert.Equal("“Dune” written by “Frank Herbert” already.", form.Status);
 
-        form.LinkType = TypeCatalog.RelatesTo;
+        form.Verb = TypeCatalog.RelatesTo.Forward;
 
         Assert.True(form.Plan.CanAdd);
         Assert.Equal("Adds the link “Dune relates to Frank Herbert”.", form.Status);
+    }
+
+    [Fact]
+    public void TheLinkType_CanBeTurnedTheOtherWay()
+    {
+        var form = Form(new LinkRequest("Dune", WrittenBy.Forward, "Frank Herbert"));
+
+        form.Verb = WrittenBy.Reverse;
+
+        var link = form.Plan.Changes.OfType<LinkAdded>().Single().Link;
+        var nodes = form.Plan.Changes.OfType<NodeAdded>().Select(added => added.Node).ToList();
+        Assert.Equal((nodes[1].Id, nodes[0].Id), (link.From, link.To));
+        Assert.Equal("Adds the node “Dune”, the node “Frank Herbert”, the link “Dune wrote Frank Herbert”.", form.Status);
+        Assert.Equal(["relates to", "written by", "wrote"], form.Types.Verbs.Select(verb => verb.Name));
     }
 
     [Fact]
@@ -123,8 +137,8 @@ public sealed class CreationFormTests
     {
         var form = Form(new NodeRequest("Dune"));
 
-        Assert.Throws<InvalidOperationException>(() => form.LinkType = WrittenBy);
-        Assert.Throws<ArgumentNullException>(() => form.LinkType = null);
+        Assert.Throws<InvalidOperationException>(() => form.Verb = WrittenBy.Forward);
+        Assert.Throws<ArgumentNullException>(() => form.Verb = null);
     }
 
     private CreationForm Form(InputRequest request, AddChoices? choices = null) => new(_graph, request, choices, Types, _clock);

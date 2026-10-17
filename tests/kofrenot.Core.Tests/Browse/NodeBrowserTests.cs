@@ -238,6 +238,19 @@ public sealed class NodeBrowserTests
         Assert.Equal("Arrakis", Assert.Single(_browser.Details!.Links).Other);
     }
 
+    [Fact]
+    public void ADirectedLink_ReadsFromTheNodeShown()
+    {
+        var (kitchen, knives) = (Add("Kitchen"), Add("Knives"));
+        Link(kitchen, knives, "contains");
+
+        _browser.Open(_graph, kitchen);
+        var fromKitchen = Assert.Single(_browser.Details!.Links).Type;
+        _browser.Open(_graph, knives);
+
+        Assert.Equal(("contains", "contained by"), (fromKitchen, Assert.Single(_browser.Details!.Links).Type));
+    }
+
     private Node Add(string name, string? type = null, int minutes = 0)
     {
         var node = new Node(Guid.NewGuid(), type ?? TypeCatalog.Generic.Id, name, Start.AddMinutes(minutes));

@@ -237,6 +237,25 @@ public sealed class InputPresenterTests
         Assert.Contains(_input.Rows, row => row is { Text: "written-by Frank Herbert", IsLink: true });
     }
 
+    [Fact]
+    public void ADirectedLink_IsListedAsItReadsFromTheNodeFound()
+    {
+        var (dune, novel) = (Add("Dune"), Add("novel"));
+        Link(dune, novel, "is-a");
+
+        _input.Update(_graph, "novel");
+
+        Assert.Contains(_input.Rows, row => row is { Text: "has instance Dune", IsLink: true });
+    }
+
+    [Fact]
+    public void AReverseLink_IsPreviewedAsTyped()
+    {
+        _input.Update(_graph, "Knives contained by Kitchen");
+
+        Assert.Equal("Enter to add the node “Knives”, the node “Kitchen”, the link “Knives contained by Kitchen”.", _input.Preview);
+    }
+
     private Node Add(string name, int minutes = 0)
     {
         var node = new Node(Guid.NewGuid(), TypeCatalog.Generic.Id, name, Start.AddMinutes(minutes));

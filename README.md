@@ -47,6 +47,10 @@ Type in the box at the top of the main window:
 | --- | --- |
 | `Dune` | the node *Dune* |
 | `Dune relates to Frank Herbert` (or `related to`) | a link between *Dune* and *Frank Herbert*, and either node that does not exist yet |
+| `Kitchen contains Knives` or `Knives contained by Kitchen` | the same link, from *Kitchen* to *Knives* |
+| `Dune is a novel` (or `is an`) or `novel has instance Dune` | the same link, from *Dune* to *novel* |
+
+*relates to* reads the same both ways. The other link types read from each side: the details of *Knives* show *contained by Kitchen*. A node name cannot contain a link phrase, so a name like *This is a test* cannot be typed.
 
 - While you type, the nodes whose name has a word starting with the text are listed; a node matched exactly shows its links. Case, accents and extra spaces are ignored.
 - The line under the box says what Enter will add.

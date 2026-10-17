@@ -46,16 +46,16 @@ public sealed class CreationForm
         set => Replan(_request, _choices with { RightType = value });
     }
 
-    /// <summary>The link's type; null for a node.</summary>
+    /// <summary>The link's type, read from left to right (one of <see cref="TypeCatalog.Verbs"/>); null for a node.</summary>
     /// <exception cref="InvalidOperationException">Set on a node request.</exception>
-    public LinkType? LinkType
+    public LinkVerb? Verb
     {
-        get => (_request as LinkRequest)?.Type;
+        get => (_request as LinkRequest)?.Verb;
         set
         {
             ArgumentNullException.ThrowIfNull(value);
             var link = _request as LinkRequest ?? throw new InvalidOperationException("A node has no link type.");
-            Replan(link with { Type = value }, _choices);
+            Replan(link with { Verb = value }, _choices);
         }
     }
 

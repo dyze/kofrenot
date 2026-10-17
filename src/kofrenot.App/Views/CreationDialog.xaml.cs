@@ -24,7 +24,7 @@ public partial class CreationDialog : Window
 
         TitleText.Text = form.Title;
         LeftTypeBox.ItemsSource = RightTypeBox.ItemsSource = form.Types.NodeTypes;
-        LinkTypeBox.ItemsSource = form.Types.LinkTypes;
+        LinkTypeBox.ItemsSource = form.Types.Verbs;
         foreach (var element in new FrameworkElement[] { LinkLabel, LinkTypeBox, RightPanel, RightTypeBox })
         {
             element.Visibility = form.IsLink ? Visibility.Visible : Visibility.Collapsed;
@@ -46,7 +46,7 @@ public partial class CreationDialog : Window
         _showing = true;
         LeftTypeBox.SelectedItem = _form.LeftType;
         RightTypeBox.SelectedItem = _form.RightType;
-        LinkTypeBox.SelectedItem = _form.LinkType;
+        LinkTypeBox.SelectedItem = _form.Verb;
 
         if (_form.Plan is LinkPlan link)
         {
@@ -85,7 +85,7 @@ public partial class CreationDialog : Window
         Choose<NodeType>(RightTypeBox, type => _form.RightType = type);
 
     private void LinkTypeBox_SelectionChanged(object sender, SelectionChangedEventArgs e) =>
-        Choose<LinkType>(LinkTypeBox, type => _form.LinkType = type);
+        Choose<LinkVerb>(LinkTypeBox, verb => _form.Verb = verb);
 
     private void Choose<T>(ComboBox box, Action<T> apply)
         where T : class

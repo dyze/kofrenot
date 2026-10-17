@@ -109,7 +109,7 @@ public sealed class AddPlannerTests
     [Fact]
     public void ALinkWithoutItsSecondNode_CannotBeAddedYet()
     {
-        var plan = Assert.IsType<LinkPlan>(_planner.Plan(new LinkRequest("Dune", TypeCatalog.RelatesTo, "")));
+        var plan = Assert.IsType<LinkPlan>(_planner.Plan(new LinkRequest("Dune", TypeCatalog.RelatesTo.Forward, "")));
 
         Assert.Equal(LinkProblem.SecondNodeMissing, plan.Problem);
         Assert.Null(plan.Right);
@@ -161,7 +161,7 @@ public sealed class AddPlannerTests
         var (book, person) = (new NodeType("book", "Book"), new NodeType("person", "Person"));
 
         var plan = Assert.IsType<LinkPlan>(_planner.Plan(
-            new LinkRequest("Dune", TypeCatalog.RelatesTo, "Frank Herbert"), new AddChoices(LeftType: book, RightType: person)));
+            new LinkRequest("Dune", TypeCatalog.RelatesTo.Forward, "Frank Herbert"), new AddChoices(LeftType: book, RightType: person)));
 
         Assert.Equal(["book", "person"], plan.Changes.OfType<NodeAdded>().Select(added => added.Node.Type));
     }
@@ -183,10 +183,36 @@ public sealed class AddPlannerTests
         var (dune, herbert) = (Add(graph, "Dune"), Add(graph, "Frank Herbert"));
         graph.Add(new Link(Guid.NewGuid(), "relates-to", dune.Id, herbert.Id, _clock.Now));
 
-        var plan = Assert.IsType<LinkPlan>(new AddPlanner(graph, _clock).Plan(new LinkRequest("Dune", WrittenBy, "Frank Herbert")));
+        var plan = Assert.IsType<LinkPlan>(new AddPlanner(graph, _clock).Plan(new LinkRequest("Dune", WrittenBy.Forward, "Frank Herbert")));
 
         Assert.Equal(LinkProblem.None, plan.Problem);
         Assert.Equal("written-by", plan.Changes.OfType<LinkAdded>().Single().Link.Type);
+    }
+
+    [Fact]
+    public void AReverseLink_GoesFromTheRightNode_ToTheLeftOne()
+    {
+        var kitchen = Add("Kitchen");
+
+        var plan = Assert.IsType<LinkPlan>(_planner.Plan(new LinkRequest("Knives", TypeCatalog.Contains.Reverse!, "Kitchen")));
+
+        var knives = plan.Changes.OfType<NodeAdded>().Single().Node;
+        var link = plan.Changes.OfType<LinkAdded>().Single().Link;
+        Assert.Equal(("contains", kitchen.Id, knives.Id), (link.Type, link.From, link.To));
+        Assert.Same(TypeCatalog.Contains, plan.Type);
+    }
+
+    [Fact]
+    public void ADirectedLink_TypedEitherWay_IsFoundAlreadyThere()
+    {
+        var (kitchen, knives) = (Add("Kitchen"), Add("Knives"));
+        _graph.Add(new Link(Guid.NewGuid(), "contains", kitchen.Id, knives.Id, _clock.Now));
+
+        var reverse = Assert.IsType<LinkPlan>(_planner.Plan(new LinkRequest("Knives", TypeCatalog.Contains.Reverse!, "Kitchen")));
+        var opposite = Assert.IsType<LinkPlan>(_planner.Plan(new LinkRequest("Knives", TypeCatalog.Contains.Forward, "Kitchen")));
+
+        Assert.Equal(LinkProblem.AlreadyLinked, reverse.Problem);
+        Assert.Equal(LinkProblem.None, opposite.Problem);
     }
 
     [Fact]
@@ -194,9 +220,9 @@ public sealed class AddPlannerTests
         Assert.Throws<ArgumentOutOfRangeException>(() => _planner.Plan(new OtherRequest()));
 
     private LinkPlan PlanLink(string left, string right, int leftChoice = 0, int rightChoice = 0) =>
-        Assert.IsType<LinkPlan>(_planner.Plan(new LinkRequest(left, TypeCatalog.RelatesTo, right), new AddChoices(leftChoice, rightChoice)));
+        Assert.IsType<LinkPlan>(_planner.Plan(new LinkRequest(left, TypeCatalog.RelatesTo.Forward, right), new AddChoices(leftChoice, rightChoice)));
 
-    private static readonly LinkType WrittenBy = new("written-by", ["written by"], IsSymmetric: false);
+    private static readonly LinkType WrittenBy = new("written-by", ["written by"], ["wrote"]);
 
     private Node Add(string name, int minutes = 0) => Add(_graph, name, minutes);
 

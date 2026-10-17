@@ -74,7 +74,7 @@ public sealed class KnowledgeGraphTests
     [Fact]
     public void ADirectedLink_IsFoundInItsDirectionOnly()
     {
-        var graph = new KnowledgeGraph(new TypeCatalog([TypeCatalog.Generic], [new LinkType("written-by", ["written by"], IsSymmetric: false)]));
+        var graph = new KnowledgeGraph(new TypeCatalog([TypeCatalog.Generic], [new LinkType("written-by", ["written by"], ["wrote"])]));
         var (dune, herbert) = (NewNode("Dune"), NewNode("Frank Herbert"));
         graph.Apply(Added(dune));
         graph.Apply(Added(herbert));

@@ -45,7 +45,7 @@ public sealed class ChangeCodecTests
 
         var json = Encoding.UTF8.GetString(_box.Open("KFC1"u8, _codec.Encode(change), id.ToByteArray()));
 
-        Assert.StartsWith("{\"format\":1,\"op\":\"addNode\",\"at\":", json);
+        Assert.StartsWith("{\"format\":2,\"op\":\"addNode\",\"at\":", json);
         Assert.Contains("\"name\":\"Dune\"", json);
         Assert.DoesNotContain("link", json);
     }
@@ -111,9 +111,19 @@ public sealed class ChangeCodecTests
     public void AChangeOfANewerFormat_AsksForANewerKofrenot()
     {
         var id = Guid.NewGuid();
-        var data = _box.Seal("KFC1"u8, Encoding.UTF8.GetBytes("{\"format\":2,\"op\":\"rename\",\"at\":\"2026-10-16T09:12:00Z\"}"), id.ToByteArray());
+        var data = _box.Seal("KFC1"u8, Encoding.UTF8.GetBytes("{\"format\":99,\"op\":\"rename\",\"at\":\"2026-10-16T09:12:00Z\"}"), id.ToByteArray());
 
-        Assert.Equal(2, Assert.Throws<NewerVaultFormatException>(() => _codec.Decode(id, data)).Format);
+        Assert.Equal(99, Assert.Throws<NewerVaultFormatException>(() => _codec.Decode(id, data)).Format);
+    }
+
+    [Fact]
+    public void AChangeOfFormat1_IsStillRead()
+    {
+        var id = Guid.NewGuid();
+        var json = "{\"format\":1,\"op\":\"addNode\",\"at\":\"2026-10-16T09:12:00Z\",\"node\":{\"id\":\"3f2504e0-4f89-11d3-9a0c-0305e82c3301\",\"type\":\"generic\",\"name\":\"Dune\",\"created\":\"2026-10-16T09:12:00Z\"}}";
+        var data = _box.Seal("KFC1"u8, Encoding.UTF8.GetBytes(json), id.ToByteArray());
+
+        Assert.Equal("Dune", Assert.IsType<NodeAdded>(_codec.Decode(id, data)).Node.Name);
     }
 
     [Fact]

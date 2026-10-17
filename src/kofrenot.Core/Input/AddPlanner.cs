@@ -32,25 +32,29 @@ public sealed class AddPlanner(KnowledgeGraph graph, TimeProvider? clock = null)
         var problem = right is null ? LinkProblem.SecondNodeMissing
             : IsSameNode(left, right) ? LinkProblem.SameNode
             : LinkProblem.None;
+        var verb = request.Verb;
         if (right is null || problem != LinkProblem.None)
         {
-            return new LinkPlan(left, request.Type, right, problem, Existing: null, Changes: []);
+            return new LinkPlan(left, verb, right, problem, Existing: null, Changes: []);
         }
 
         if (left.Chosen is { } leftNode && right.Chosen is { } rightNode
-            && graph.FindLink(request.Type.Id, leftNode.Id, rightNode.Id) is { } existing)
+            && FindLink(verb, leftNode.Id, rightNode.Id) is { } existing)
         {
-            return new LinkPlan(left, request.Type, right, LinkProblem.AlreadyLinked, existing, Changes: []);
+            return new LinkPlan(left, verb, right, LinkProblem.AlreadyLinked, existing, Changes: []);
         }
 
         var now = _clock.GetUtcNow();
         var changes = new List<Change>();
-        var from = Resolve(left, now, changes);
-        var to = Resolve(right, now, changes);
-        var link = new Link(Guid.NewGuid(), request.Type.Id, from, to, now);
-        changes.Add(new LinkAdded(Guid.NewGuid(), now, link));
-        return new LinkPlan(left, request.Type, right, LinkProblem.None, Existing: null, changes);
+        var leftId = Resolve(left, now, changes);
+        var rightId = Resolve(right, now, changes);
+        var (from, to) = verb.IsReverse ? (rightId, leftId) : (leftId, rightId);
+        changes.Add(new LinkAdded(Guid.NewGuid(), now, new Link(Guid.NewGuid(), verb.Type.Id, from, to, now)));
+        return new LinkPlan(left, verb, right, LinkProblem.None, Existing: null, changes);
     }
+
+    private Link? FindLink(LinkVerb verb, Guid left, Guid right) =>
+        verb.IsReverse ? graph.FindLink(verb.Type.Id, right, left) : graph.FindLink(verb.Type.Id, left, right);
 
     private PlannedSide Side(string name, NodeType? type, int choice)
     {

@@ -3,8 +3,8 @@ using Kofrenot.Core.Graph;
 namespace Kofrenot.Core.Input;
 
 /// <summary>
-/// Reads the text of the input box. The first phrase of a link type ("relates to", "related to"),
-/// as whole words after at least one word, makes it a link; otherwise it is a node. Words are
+/// Reads the text of the input box. The first phrase of a link type, either way ("contains",
+/// "contained by"), as whole words after at least one word, makes it a link; otherwise it is a node. Words are
 /// compared as names are (<see cref="NameKey"/>), and names come out with single spaces.
 /// </summary>
 public static class InputParser
@@ -19,8 +19,8 @@ public static class InputParser
         }
 
         var keys = words.Select(NameKey.Of).ToArray();
-        var phrases = (types ?? TypeCatalog.BuiltIn).LinkTypes
-            .SelectMany(type => type.Phrases.Select(phrase => (Type: type, Words: NameKey.Of(phrase).Split(' '))))
+        var phrases = (types ?? TypeCatalog.BuiltIn).Verbs
+            .SelectMany(verb => verb.Phrases.Select(phrase => (Verb: verb, Words: NameKey.Of(phrase).Split(' '))))
             // At one place, the longest phrase wins.
             .OrderByDescending(phrase => phrase.Words.Length)
             .ToList();
@@ -28,9 +28,9 @@ public static class InputParser
         for (var start = 1; start < words.Length; start++)
         {
             var phrase = phrases.FirstOrDefault(candidate => StartsAt(keys, start, candidate.Words));
-            if (phrase.Type is not null)
+            if (phrase.Verb is not null)
             {
-                return new LinkRequest(Join(words[..start]), phrase.Type, Join(words[(start + phrase.Words.Length)..]));
+                return new LinkRequest(Join(words[..start]), phrase.Verb, Join(words[(start + phrase.Words.Length)..]));
             }
         }
 

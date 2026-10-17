@@ -81,10 +81,10 @@ public sealed class VaultFolderTests : IDisposable
     [Fact]
     public void AHeaderOfANewerFormat_IsRefused()
     {
-        var path = WriteHeader("{\"format\":2,\"id\":\"3f2504e0-4f89-11d3-9a0c-0305e82c3301\"}");
+        var path = WriteHeader("{\"format\":99,\"id\":\"3f2504e0-4f89-11d3-9a0c-0305e82c3301\"}");
 
         var refused = Assert.Throws<NewerVaultFormatException>(() => VaultHeader.Read(path));
-        Assert.Equal(2, refused.Format);
+        Assert.Equal(99, refused.Format);
         Assert.Contains($"reads up to format {VaultFormat.Current}", refused.Message);
     }
 

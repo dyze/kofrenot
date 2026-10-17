@@ -228,7 +228,7 @@ public sealed class InputPresenter(TypeCatalog? types = null)
         foreach (var link in graph.LinksOf(node.Id))
         {
             var other = graph.FindNode(link.Other(node.Id))!;
-            var row = new ResultRow($"{_types.LinkTypeName(link.Type)} {text.NodeLabel(other)}", IsLink: true, IsChosen: false, other, node);
+            var row = new ResultRow($"{_types.LinkName(link, node.Id)} {text.NodeLabel(other)}", IsLink: true, IsChosen: false, other, node);
             rows.Add(row with { IsChosen = row.Key == _selected });
         }
     }

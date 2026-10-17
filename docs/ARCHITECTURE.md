@@ -34,7 +34,7 @@ One namespace per folder (`Kofrenot.Core.Settings`, `Kofrenot.UI.Views`, ...). T
 | --- | --- |
 | *(root)* | `AppVersion`; `AppFiles` (where every file of kofrenot is, including `keys.json` and the snapshots in `cache\`: the only place their names are written, listed in Settings > About; `AppFiles.For` picks the data folder, see [Portable copy](#portable-copy)); `Changelog` (reads the text shown by Settings > About); `ProjectLinks` (website, issues, releases) |
 | `Settings/` | `SettingsStore` (`settings.json`: theme, debug logging, update check, vault folder, hotkey), `Hotkey`, `SettingsCatalog` (the entries of the Settings window, their tabs, and the search that finds them) |
-| `Graph/` | `Node`, `Link`, `NodeType`, `LinkType`, `TypeCatalog` (built-in node and link types, link aliases), `NameKey` (the form names are compared in), `Change` (`NodeAdded`, `LinkAdded`, `NodeRenamed`), `NodeNames` + `NameVersion` (a node's current names, see [Renames](#renames)), `KnowledgeGraph` (in-memory state, built by applying changes) |
+| `Graph/` | `Node`, `Link`, `NodeType`, `LinkType`, `LinkVerb` (a link type read one way), `TypeCatalog` (built-in node and link types, link aliases; `LinkName`: how a link reads from one of its nodes), `NameKey` (the form names are compared in), `Change` (`NodeAdded`, `LinkAdded`, `NodeRenamed`), `NodeNames` + `NameVersion` (a node's current names, see [Renames](#renames)), `KnowledgeGraph` (in-memory state, built by applying changes) |
 | `Storage/` | `VaultFormat` (+ `NewerVaultFormatException`), `SecretBox` (AES-GCM seal / open), `KeyWrap` (KDF, wrap / unwrap the master key), `ChangeCodec` (change ⇄ sealed JSON), `VaultHeader`, `VaultFolder` (layout, inspect, create), `SnapshotStore`, `Vault` (open, append, refresh), `AtomicFile` (write as `.tmp`, then rename), `KeyMemory` (remembered master keys, `keys.json`), `ISecretProtector` |
 | `Input/` | `InputParser` (text → `NodeRequest` / `LinkRequest`), `GraphSearch` (`SearchHit`), `AddPlanner` (`AddChoices` → `AddPlan`: `NodePlan`, `LinkPlan`, `PlannedSide`), `InputPresenter` (the input box: preview, result rows, homonym choices), `CreationForm` (the creation screen: types, status, what exists), `PlanText` (wording shared by both), `RenamePlanner` (`RenamePlan`: a new name, its problem, homonyms) |
 | `Browse/` | `NodeBrowser` (the details screen: trail of open nodes, at most 4, the selected link of each), `NodeDetails`, `LinkRow` |
@@ -133,7 +133,12 @@ Model and principles: [GOAL.md](GOAL.md#data-model).
 - `VaultFolder.Inspect`: a new vault is only created in an empty (or missing) folder; a folder holding other files is refused, so nothing of the user's is mixed with it.
 
 ### Format
-One number for the whole vault, `VaultFormat.Current` (1 so far), written in the header and in every change file (`format`). It is not the app version: it only changes when what is written in a vault breaks.
+One number for the whole vault, `VaultFormat.Current`, written in the header and in every change file (`format`). It is not the app version: it only changes when what is written in a vault breaks.
+
+| Format | Since | Adds |
+| --- | --- | --- |
+| 1 | 0.1 | `addNode`, `addLink`, `renameNode` |
+| 2 | 0.2 | directed links (`contains`, `is-a`): a 0.1 app would read them as symmetric |
 
 | Found | This kofrenot |
 | --- | --- |
@@ -144,7 +149,7 @@ One number for the whole vault, `VaultFormat.Current` (1 so far), written in the
 
 - `NewerVaultFormatException` (a `NotSupportedException`) carries the format found. `VaultSession.NewerFormat` keeps it: the main window and Settings > Vault say to upgrade, and *Get the latest kofrenot* opens the releases page.
 - A breaking change (something an older kofrenot would misread or not read) raises `VaultFormat.Current`. The owner decides it first (`CLAUDE.md`). Changes that only add something older versions ignore safely (such as an unknown type, shown by its id) do not.
-- Not done yet: rewriting a vault in a newer format (migration). It comes with the first breaking change.
+- No migration: files are never rewritten, so a vault holds files of several formats, each read as written.
 
 ### Encryption
 
@@ -167,11 +172,11 @@ change file = "KFC1" · nonce · ciphertext · tag
 UTF-8 JSON before encryption:
 
 ```json
-{ "format": 1, "at": "2026-10-16T09:12:00Z", "op": "addNode",
+{ "format": 2, "at": "2026-10-16T09:12:00Z", "op": "addNode",
   "node": { "id": "…", "type": "generic", "name": "Dune", "created": "2026-10-16T09:12:00Z" } }
-{ "format": 1, "at": "…", "op": "addLink",
+{ "format": 2, "at": "…", "op": "addLink",
   "link": { "id": "…", "type": "relates-to", "from": "<node id>", "to": "<node id>", "created": "…" } }
-{ "format": 1, "at": "…", "op": "renameNode",
+{ "format": 2, "at": "…", "op": "renameNode",
   "rename": { "node": "<node id>", "name": "Dune (novel)", "replaces": ["<node id or rename id>", "…"] } }
 ```
 
@@ -220,8 +225,8 @@ r3 "Dune (novel)" replaces r1 + r2 ⇒ one current name again
 `Dune relates to Frank Herbert` → link; `Dune` → node.
 
 ```
-text ──InputParser──► NodeRequest(name) | LinkRequest(left, type, right)
-           │ first alias of a link type, as whole words, with text on both sides
+text ──InputParser──► NodeRequest(name) | LinkRequest(left, verb, right)
+           │ first phrase of a link type either way, as whole words, with text on both sides
            ▼
      GraphSearch (word prefix, case- and accent-insensitive) ──► Preview     (InputPresenter)
            ▼ Enter: request + homonyms chosen (AddChoices)
@@ -232,7 +237,7 @@ text ──InputParser──► NodeRequest(name) | LinkRequest(left, type, righ
 
 - `VaultSession.Create(owner, request, choices)` opens the creation dialog over any window, so later features can reuse it. It returns false when cancelled or not written.
 - The dialog only shows a `CreationForm`. Each type change makes a new plan, so a different link type can turn `AlreadyLinked` into a link that can be added. Only a new node gets a type box: an existing node keeps its type.
-- The types offered come from `TypeCatalog` (only *generic* and *relates to* in 0.1).
+- The types offered come from `TypeCatalog`: node type *generic*; link types *relates to* (symmetric), *contains* and *is a*. The creation screen offers each link type both ways (`TypeCatalog.Verbs`): a `LinkVerb` is a type read forward or reverse, and a reverse verb links from the right node to the left one.
 
 - Names are compared by `NameKey`: lower case, accents removed, spaces collapsed. They are stored as typed, trimmed, with single spaces.
 - A link phrase counts after at least one word; with nothing after it, the link is still being typed (`LinkProblem.SecondNodeMissing`).

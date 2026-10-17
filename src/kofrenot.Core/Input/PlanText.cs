@@ -20,7 +20,7 @@ internal sealed class PlanText(KnowledgeGraph graph)
         ? string.Join(", ", new[] { link.Left, link.Right! }
             .Where(side => side.IsNew)
             .Select(side => $"the node “{side.Name}”")
-            .Append($"the link “{Label(link.Left)} {link.Type.Name} {Label(link.Right!)}”"))
+            .Append($"the link “{Label(link.Left)} {link.Verb.Name} {Label(link.Right!)}”"))
         : $"the node “{((NodePlan)plan).Name}”";
 
     /// <summary>Why the link cannot be added, or null when it can.</summary>
@@ -28,7 +28,7 @@ internal sealed class PlanText(KnowledgeGraph graph)
     {
         LinkProblem.SecondNodeMissing => $"Type the node to link “{Label(link.Left)}” to.",
         LinkProblem.SameNode => "A node cannot be linked to itself.",
-        LinkProblem.AlreadyLinked => $"“{Label(link.Left)}” {link.Type.Name} “{Label(link.Right!)}” already.",
+        LinkProblem.AlreadyLinked => $"“{Label(link.Left)}” {link.Verb.Name} “{Label(link.Right!)}” already.",
         _ => null,
     };
 
