@@ -28,5 +28,7 @@ Not in 0.1: deleting, editing properties other than the name, user-defined types
 1. **Multiple vaults.** User can register several vaults on his app. Current vault is selected using a combo in main window. Selection is memorized. Each vault has his passphrase.
 2. **Dedicated hot keys.** User can assign a hot key per vault. e.g. CTRL ALT I for private vault and CTRL ALT P for personal one.
 3. **Web server.** Vaults are stored on a dedicated web server. See dedicated concept  [SERVER-CONCEPT.md](SERVER-CONCEPT.md).
-4. **pin nodes.** user is able to pin nodes using node details. pinned nodes appears when search box is empty.
-5. **recent entries.** if nothing in search box. show recent entries (open last on top). 
+4. **Pinned nodes.** user is able to pin nodes using node details. pinned nodes appears when search box is empty.
+5. **Recent entries.** if nothing in search box. show recent entries (open last on top). 
+6. **Tree view.** User can enable a tree view to navigate thru containers and datasets more easily.
+	- Standard file explore operations are handled: copy, move, delete...
