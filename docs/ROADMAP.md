@@ -37,3 +37,8 @@ Open: is a collection a root container, or a separate scope? How does it relate 
 Needs the "Sync: no server for now" decision changed ([GOAL.md](GOAL.md#decisions)).
 
 1. **Web server.** Vaults are stored on a dedicated web server. See dedicated concept  [SERVER-CONCEPT.md](SERVER-CONCEPT.md).
+
+## Later (not planned in a version yet)
+1. **Change types.** Change a node's type (e.g. a generic node into a note) and a link's type (or its direction) from the node details.
+	- A new change in the vault, naming what it replaces, as renames do: types changed on two devices before they synced are flagged as a conflict.
+	- Today the type is only chosen on the creation screen.
