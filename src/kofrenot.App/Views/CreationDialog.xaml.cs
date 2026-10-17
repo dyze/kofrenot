@@ -37,7 +37,7 @@ public partial class CreationDialog : Window
 
     private Side? StepSide => _form.Step.Side;
 
-    /// <summary>A new step: its content, then the focus (the content of a note, or Next / Add).</summary>
+    /// <summary>A new step: its content, then the focus on its first field (the type, or the link type).</summary>
     private void ShowStep()
     {
         if (StepSide is { } side)
@@ -51,13 +51,13 @@ public partial class CreationDialog : Window
 
     private void FocusStep()
     {
-        if (StepSide is { } side && _form.IsNote(side))
+        if (StepSide is null)
         {
-            ContentBox.FocusText();
+            LinkTypeBox.Focus();
         }
         else
         {
-            NextButton.Focus();
+            TypeBox.Focus();
         }
     }
 
@@ -106,7 +106,7 @@ public partial class CreationDialog : Window
     private void ShowStatus() => StatusText.Text = _form.IsLastStep
         ? _form.Status
         : StepSide is { } side && _form.IsNote(side)
-            ? "Ctrl+Enter: next step."
+            ? "Tab: write the content. Enter (Ctrl+Enter in the content): next step."
             : "Enter: next step.";
 
     private void TypeBox_SelectionChanged(object sender, SelectionChangedEventArgs e)

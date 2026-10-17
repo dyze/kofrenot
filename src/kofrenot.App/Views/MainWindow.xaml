@@ -25,7 +25,7 @@
     </Grid.RowDefinitions>
 
     <Grid>
-      <TextBlock VerticalAlignment="Center" FontSize="20" FontWeight="SemiBold" Text="kofrenot" />
+      <TextBlock VerticalAlignment="Center" Style="{StaticResource HeadingText}" Text="kofrenot" />
 
       <Button x:Name="SettingsButton"
               Width="40"
@@ -55,13 +55,13 @@
     <Grid x:Name="InputArea" Grid.Row="1" Margin="0,14,0,0">
       <TextBox x:Name="InputBox"
                Padding="8,6"
-               FontSize="18"
+               FontSize="{StaticResource BodyFontSize}"
                TextChanged="InputBox_TextChanged"
                PreviewKeyDown="InputBox_PreviewKeyDown" />
       <TextBlock x:Name="InputPlaceholder"
                  Margin="12,0,0,0"
                  VerticalAlignment="Center"
-                 FontSize="18"
+                 FontSize="{StaticResource BodyFontSize}"
                  IsHitTestVisible="False"
                  Opacity="0.5"
                  Text="Dune relates to Frank Herbert" />
@@ -77,7 +77,7 @@
          nodes under a header. › opens a node's details. Nothing is
          focusable: typing stays in the input box. -->
     <ScrollViewer x:Name="ResultsArea" Grid.Row="3" Margin="0,10,0,0" VerticalScrollBarVisibility="Auto" Focusable="False">
-      <ItemsControl x:Name="ResultsList" FontSize="{StaticResource RowFontSize}">
+      <ItemsControl x:Name="ResultsList" FontSize="{StaticResource BodyFontSize}">
         <ItemsControl.ItemTemplate>
           <DataTemplate>
             <Grid Margin="6,1">
@@ -98,7 +98,7 @@
               </DataTrigger>
               <DataTrigger Binding="{Binding IsHeader}" Value="True">
                 <Setter TargetName="RowText" Property="Margin" Value="0,8,0,2" />
-                <Setter TargetName="RowText" Property="FontSize" Value="13" />
+                <Setter TargetName="RowText" Property="FontSize" Value="{StaticResource CaptionFontSize}" />
                 <Setter TargetName="RowText" Property="FontWeight" Value="SemiBold" />
                 <Setter TargetName="RowText" Property="Opacity" Value="0.6" />
               </DataTrigger>
@@ -141,8 +141,8 @@
     </StackPanel>
 
     <Grid Grid.Row="4">
-      <TextBlock x:Name="VaultText" FontSize="11" Opacity="0.6" TextTrimming="CharacterEllipsis" Margin="0,0,160,0" />
-      <TextBlock x:Name="VersionText" HorizontalAlignment="Right" FontSize="11" Opacity="0.6" />
+      <TextBlock x:Name="VaultText" Style="{StaticResource FooterText}" Margin="0,0,160,0" />
+      <TextBlock x:Name="VersionText" HorizontalAlignment="Right" Style="{StaticResource FooterText}" />
     </Grid>
   </Grid>
 </Window>

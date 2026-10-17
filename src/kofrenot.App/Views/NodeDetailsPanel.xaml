@@ -12,7 +12,7 @@
   </UserControl.Resources>
 
   <!-- Properties and links in the size of the search rows. -->
-  <Grid TextElement.FontSize="{StaticResource RowFontSize}">
+  <Grid TextElement.FontSize="{StaticResource BodyFontSize}">
     <Grid.RowDefinitions>
       <RowDefinition Height="Auto" />
       <RowDefinition Height="Auto" />
@@ -23,7 +23,7 @@
       <RowDefinition Height="*" />
     </Grid.RowDefinitions>
 
-    <ItemsControl x:Name="Breadcrumb" FontSize="{StaticResource BreadcrumbFontSize}">
+    <ItemsControl x:Name="Breadcrumb" FontSize="{StaticResource SecondaryFontSize}">
       <ItemsControl.ItemsPanel>
         <ItemsPanelTemplate>
           <WrapPanel />
@@ -35,7 +35,7 @@
             <TextBlock x:Name="Separator" Margin="4,0" VerticalAlignment="Center" Opacity="0.5" Text="›" />
             <Button x:Name="Item"
                     Style="{StaticResource FlatButton}"
-                    FontSize="{StaticResource BreadcrumbFontSize}"
+                    FontSize="{StaticResource SecondaryFontSize}"
                     Content="{Binding Label}"
                     Click="BreadcrumbItem_Click" />
           </StackPanel>
@@ -61,8 +61,8 @@
           <ColumnDefinition Width="Auto" />
           <ColumnDefinition Width="Auto" />
         </Grid.ColumnDefinitions>
-        <TextBlock x:Name="NameText" VerticalAlignment="Center" FontSize="26" FontWeight="SemiBold" TextWrapping="Wrap" />
-        <TextBox x:Name="NameBox" FontSize="26" Visibility="Collapsed" TextChanged="NameBox_TextChanged" />
+        <TextBlock x:Name="NameText" VerticalAlignment="Center" Style="{StaticResource TitleText}" />
+        <TextBox x:Name="NameBox" FontSize="{StaticResource TitleFontSize}" Visibility="Collapsed" TextChanged="NameBox_TextChanged" />
         <Button x:Name="EditButton"
                 Grid.Column="1"
                 Margin="6,0,0,0"

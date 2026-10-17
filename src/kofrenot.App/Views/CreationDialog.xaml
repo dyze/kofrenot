@@ -4,17 +4,22 @@
         xmlns:local="clr-namespace:Kofrenot.UI.Views"
         Title="kofrenot"
         Icon="/Assets/kofrenot.ico"
-        Width="540"
+        Width="600"
         SizeToContent="Height"
         ResizeMode="NoResize"
         ShowInTaskbar="False"
         WindowStartupLocation="CenterOwner"
         SourceInitialized="Window_SourceInitialized"
         PreviewKeyDown="Window_PreviewKeyDown"
-        Closing="Window_Closing">
+        Closing="Window_Closing"
+        FontSize="{DynamicResource BodyFontSize}">
   <!-- The creation screen, in steps: each new node (its type, and its content for a note), then
        the link. Nothing is added before the last step. Enter or Ctrl+Enter: Next / Add (in the
        content, Enter adds a line); Esc cancels the whole creation. -->
+  <Window.Resources>
+    <ResourceDictionary Source="SharedStyles.xaml" />
+  </Window.Resources>
+
   <Grid Margin="20,18,20,16">
     <Grid.RowDefinitions>
       <RowDefinition Height="Auto" />
@@ -24,8 +29,8 @@
     </Grid.RowDefinitions>
 
     <Grid>
-      <TextBlock x:Name="TitleText" FontSize="18" FontWeight="SemiBold" />
-      <TextBlock x:Name="StepText" HorizontalAlignment="Right" VerticalAlignment="Center" Opacity="0.6" />
+      <TextBlock x:Name="TitleText" Style="{StaticResource HeadingText}" />
+      <TextBlock x:Name="StepText" HorizontalAlignment="Right" VerticalAlignment="Center" Style="{StaticResource SecondaryText}" />
     </Grid>
 
     <!-- A new node: its name, its type, and the content of a note. -->
@@ -36,13 +41,14 @@
           <ColumnDefinition Width="160" />
         </Grid.ColumnDefinitions>
         <StackPanel VerticalAlignment="Center">
-          <TextBlock x:Name="NodeName" FontSize="15" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
-          <TextBlock FontSize="12" Opacity="0.7" Text="New node" />
+          <TextBlock x:Name="NodeName" Style="{StaticResource TitleText}" />
+          <TextBlock Style="{StaticResource SecondaryText}" Text="New node" />
         </StackPanel>
         <ComboBox x:Name="TypeBox"
                   Grid.Column="1"
                   VerticalAlignment="Center"
                   DisplayMemberPath="Name"
+                  FontSize="{StaticResource BodyFontSize}"
                   SelectionChanged="TypeBox_SelectionChanged" />
       </Grid>
 
@@ -68,8 +74,8 @@
         <ColumnDefinition Width="160" />
       </Grid.ColumnDefinitions>
       <StackPanel Grid.ColumnSpan="2">
-        <TextBlock x:Name="LeftName" FontSize="15" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
-        <TextBlock x:Name="LeftInfo" FontSize="12" Opacity="0.7" TextWrapping="Wrap" />
+        <TextBlock x:Name="LeftName" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+        <TextBlock x:Name="LeftInfo" Style="{StaticResource SecondaryText}" />
       </StackPanel>
       <TextBlock Grid.Row="1" Margin="16,10,0,0" VerticalAlignment="Center" Opacity="0.7" Text="Link type" />
       <ComboBox x:Name="LinkTypeBox"
@@ -77,10 +83,11 @@
                 Grid.Column="1"
                 Margin="0,10,0,0"
                 DisplayMemberPath="Name"
+                FontSize="{StaticResource BodyFontSize}"
                 SelectionChanged="LinkTypeBox_SelectionChanged" />
       <StackPanel Grid.Row="2" Grid.ColumnSpan="2" Margin="0,10,0,0">
-        <TextBlock x:Name="RightName" FontSize="15" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
-        <TextBlock x:Name="RightInfo" FontSize="12" Opacity="0.7" TextWrapping="Wrap" />
+        <TextBlock x:Name="RightName" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+        <TextBlock x:Name="RightInfo" Style="{StaticResource SecondaryText}" />
       </StackPanel>
     </Grid>
 

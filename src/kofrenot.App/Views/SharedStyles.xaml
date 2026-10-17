@@ -1,12 +1,49 @@
 <ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:sys="clr-namespace:System;assembly=System.Runtime">
-  <!-- Shared by the search results and the node details, so their rows look the same. -->
+  <!-- Shared by every window, so the same kind of text has the same size everywhere.
 
-  <!-- The size of the input box: rows read as part of the search. -->
-  <sys:Double x:Key="RowFontSize">18</sys:Double>
+       Title     26  the node a screen is about (details, creation step)
+       Heading   20  a window's title, a section of Settings
+       Body      18  the content: input box, rows, properties, links, note text, creation screen
+       Secondary 16  what qualifies a line: breadcrumb, "New node", toolbar
+       Caption   13  status lines, headers of the result rows
+       Footer    11  the bottom line of a window -->
+  <sys:Double x:Key="TitleFontSize">26</sys:Double>
+  <sys:Double x:Key="HeadingFontSize">20</sys:Double>
+  <sys:Double x:Key="BodyFontSize">18</sys:Double>
+  <sys:Double x:Key="SecondaryFontSize">16</sys:Double>
+  <sys:Double x:Key="CaptionFontSize">13</sys:Double>
+  <sys:Double x:Key="FooterFontSize">11</sys:Double>
 
-  <sys:Double x:Key="BreadcrumbFontSize">16</sys:Double>
+  <Style x:Key="TitleText" TargetType="TextBlock">
+    <Setter Property="FontSize" Value="{StaticResource TitleFontSize}" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="TextWrapping" Value="Wrap" />
+  </Style>
+
+  <Style x:Key="HeadingText" TargetType="TextBlock">
+    <Setter Property="FontSize" Value="{StaticResource HeadingFontSize}" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+  </Style>
+
+  <Style x:Key="SecondaryText" TargetType="TextBlock">
+    <Setter Property="FontSize" Value="{StaticResource SecondaryFontSize}" />
+    <Setter Property="Opacity" Value="0.7" />
+    <Setter Property="TextWrapping" Value="Wrap" />
+  </Style>
+
+  <Style x:Key="CaptionText" TargetType="TextBlock">
+    <Setter Property="FontSize" Value="{StaticResource CaptionFontSize}" />
+    <Setter Property="Opacity" Value="0.7" />
+    <Setter Property="TextWrapping" Value="Wrap" />
+  </Style>
+
+  <Style x:Key="FooterText" TargetType="TextBlock">
+    <Setter Property="FontSize" Value="{StaticResource FooterFontSize}" />
+    <Setter Property="Opacity" Value="0.6" />
+    <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+  </Style>
 
   <!-- Flat, compact buttons: the theme's are sized for touch. -->
   <Style x:Key="FlatButton" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">

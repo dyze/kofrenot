@@ -46,7 +46,7 @@
         <ColumnDefinition Width="*" />
         <ColumnDefinition Width="Auto" />
       </Grid.ColumnDefinitions>
-      <TextBlock x:Name="StatusText" VerticalAlignment="Center" FontSize="12" Opacity="0.7" TextWrapping="Wrap" />
+      <TextBlock x:Name="StatusText" VerticalAlignment="Center" Style="{StaticResource CaptionText}" />
       <Button x:Name="SaveButton"
               Grid.Column="1"
               Style="{StaticResource FlatButton}"

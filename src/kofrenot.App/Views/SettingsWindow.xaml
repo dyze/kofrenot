@@ -13,11 +13,14 @@
         SourceInitialized="Window_SourceInitialized"
         PreviewKeyDown="Window_PreviewKeyDown">
   <Window.Resources>
-    <Style x:Key="SectionHeader" TargetType="TextBlock">
-      <Setter Property="Margin" Value="0,16,0,0" />
-      <Setter Property="FontSize" Value="15" />
-      <Setter Property="FontWeight" Value="SemiBold" />
-    </Style>
+    <ResourceDictionary>
+      <ResourceDictionary.MergedDictionaries>
+        <ResourceDictionary Source="SharedStyles.xaml" />
+      </ResourceDictionary.MergedDictionaries>
+      <Style x:Key="SectionHeader" TargetType="TextBlock" BasedOn="{StaticResource HeadingText}">
+        <Setter Property="Margin" Value="0,16,0,0" />
+      </Style>
+    </ResourceDictionary>
   </Window.Resources>
 
   <Grid Margin="16">
@@ -233,8 +236,7 @@
 
     <TextBlock Grid.Row="3"
                Margin="0,8,0,0"
-               FontSize="11"
-               Opacity="0.6"
+               Style="{StaticResource FooterText}"
                Text="Changes are saved at once. Ctrl+Tab changes tab. Esc closes this window." />
   </Grid>
 </Window>

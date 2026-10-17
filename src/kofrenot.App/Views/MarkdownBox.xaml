@@ -14,7 +14,7 @@
     </Grid.RowDefinitions>
 
     <!-- Not focusable: the text keeps its selection. -->
-    <StackPanel x:Name="Toolbar" Orientation="Horizontal" TextElement.FontSize="14">
+    <StackPanel x:Name="Toolbar" Orientation="Horizontal" TextElement.FontSize="{StaticResource SecondaryFontSize}">
       <Button Style="{StaticResource FlatButton}" FontWeight="Bold" Content="B" ToolTip="Bold" Click="Bold_Click" />
       <Button Style="{StaticResource FlatButton}" FontStyle="Italic" Content="I" ToolTip="Italic" Click="Italic_Click" />
       <Button Style="{StaticResource FlatButton}" Content="H" ToolTip="Heading" Click="Heading_Click" />
@@ -36,7 +36,7 @@
              VerticalScrollBarVisibility="Auto"
              VerticalContentAlignment="Top"
              FontFamily="Cascadia Mono, Consolas"
-             FontSize="14"
+             FontSize="{StaticResource BodyFontSize}"
              TextChanged="Box_TextChanged" />
   </Grid>
 </UserControl>

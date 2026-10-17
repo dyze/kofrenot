@@ -15,6 +15,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 - **Creation screen in steps**: one step per new node (its type, and for a note its content), then the link. Nothing is added before the last step; Esc cancels everything.
+- The same text has the same size in every window (one type scale: node name, window title, content, secondary text, status, footer).
 - **Vault format 2.** kofrenot 0.1 does not open a vault written by this version, and offers the update. Vaults of format 1 are read as they are.
 - The local snapshot keeps the changes themselves (snapshot format 3): every change is read again once after the update.
 
