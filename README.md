@@ -54,7 +54,7 @@ Type in the box at the top of the main window:
 
 - While you type, the nodes whose name has a word starting with the text are listed; a node matched exactly shows its links. Case, accents and extra spaces are ignored.
 - The line under the box says what Enter will add.
-- **Enter** opens the creation screen: the type of each new node (*Generic* by default), the link type, and what exists already (the nodes with that name, which side of a link is a new node). **Enter** there adds it, **Esc** goes back to the box.
+- **Enter** opens the creation screen, in steps: one per new node (its type, *Generic* by default, and for a *Note* its content), then for a link its two nodes and the link type. **Enter** (or **Ctrl+Enter** in a note's content) goes to the next step, and on the last one adds everything at once; **Back** returns to a step. **Esc** cancels the whole creation, asking first if you typed note content.
 - A node name that exists already is warned about on the creation screen: adding makes another node with that name. A link that exists already cannot be added again.
 - Nodes with the same name are marked `¹`, `²`, ... When one side of a link matches several, **Up/Down** picks one (the oldest first), **Tab** switches to the other side.
 - While the box is empty, the **pinned** nodes are listed, then the **recent** ones (the last 10 opened on this computer, the latest first): **Down** selects one, **Enter** opens it.
@@ -69,7 +69,7 @@ Type in the box at the top of the main window:
 - The **pin** button next to the name pins the node (filled pin) or unpins it. Pins are stored in the vault, so every device lists them.
 
 ### Notes
-A node of type *Note* (chosen on the creation screen) has content: Markdown text, edited under its properties in the details.
+A node of type *Note* (chosen on the creation screen) has content: Markdown text, typed on its creation step, then edited under its properties in the details.
 
 - Type in the box (**Tab** or a click gets there). The toolbar adds **bold**, *italic*, a heading, a list or a link; the text stays as typed, it is not rendered.
 - **Ctrl+S** or the save button saves, and so does leaving the note (another node, back, hiding the window). **Esc** leaves the text box.

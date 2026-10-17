@@ -1,7 +1,8 @@
 <UserControl x:Class="Kofrenot.UI.Views.NoteEditor"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-  <!-- The content of a note, in its details: Markdown, a toolbar, Ctrl+S saves (and leaving the
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:Kofrenot.UI.Views">
+  <!-- The content of a note, in its details: Markdown (MarkdownBox), Ctrl+S saves (and leaving the
        note does). Edits made on two devices before they synced show a conflict: keep one version,
        or merge them by hand and save. -->
   <UserControl.Resources>
@@ -11,32 +12,11 @@
   <Grid Margin="2,14,0,0">
     <Grid.RowDefinitions>
       <RowDefinition Height="Auto" />
-      <RowDefinition Height="Auto" />
       <RowDefinition Height="*" />
       <RowDefinition Height="Auto" />
     </Grid.RowDefinitions>
 
-    <!-- Not focusable: the text keeps its selection. -->
-    <StackPanel x:Name="Toolbar" Orientation="Horizontal" TextElement.FontSize="14">
-      <Button Style="{StaticResource FlatButton}" FontWeight="Bold" Content="B" ToolTip="Bold" Click="Bold_Click" />
-      <Button Style="{StaticResource FlatButton}" FontStyle="Italic" Content="I" ToolTip="Italic" Click="Italic_Click" />
-      <Button Style="{StaticResource FlatButton}" Content="H" ToolTip="Heading" Click="Heading_Click" />
-      <Button Style="{StaticResource FlatButton}" Content="•" ToolTip="List" Click="List_Click" />
-      <Button Style="{StaticResource FlatButton}"
-              FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
-              Content="&#xE71B;"
-              ToolTip="Link"
-              Click="Link_Click" />
-      <Button x:Name="SaveButton"
-              Margin="12,0,0,0"
-              Style="{StaticResource FlatButton}"
-              FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
-              Content="&#xE74E;"
-              ToolTip="Save (Ctrl+S)"
-              Click="Save_Click" />
-    </StackPanel>
-
-    <StackPanel x:Name="ConflictPanel" Grid.Row="1" Margin="0,4,0,0" Visibility="Collapsed">
+    <StackPanel x:Name="ConflictPanel" Margin="0,0,0,4" Visibility="Collapsed">
       <TextBlock Foreground="{DynamicResource SystemFillColorCautionBrush}"
                  TextWrapping="Wrap"
                  Text="Edited on two devices before they synced. Keep a version, or merge them below and save:" />
@@ -59,20 +39,22 @@
       </ItemsControl>
     </StackPanel>
 
-    <TextBox x:Name="Box"
-             Grid.Row="2"
-             Margin="0,6,0,0"
-             Padding="6"
-             AcceptsReturn="True"
-             AcceptsTab="True"
-             TextWrapping="Wrap"
-             VerticalScrollBarVisibility="Auto"
-             VerticalContentAlignment="Top"
-             FontFamily="Cascadia Mono, Consolas"
-             FontSize="14"
-             TextChanged="Box_TextChanged"
-             PreviewKeyDown="Box_PreviewKeyDown" />
+    <local:MarkdownBox x:Name="Box" Grid.Row="1" PreviewKeyDown="Box_PreviewKeyDown" />
 
-    <TextBlock x:Name="StatusText" Grid.Row="3" Margin="0,4,0,0" FontSize="12" Opacity="0.7" TextWrapping="Wrap" />
+    <Grid Grid.Row="2" Margin="0,4,0,0">
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="*" />
+        <ColumnDefinition Width="Auto" />
+      </Grid.ColumnDefinitions>
+      <TextBlock x:Name="StatusText" VerticalAlignment="Center" FontSize="12" Opacity="0.7" TextWrapping="Wrap" />
+      <Button x:Name="SaveButton"
+              Grid.Column="1"
+              Style="{StaticResource FlatButton}"
+              FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
+              FontSize="14"
+              Content="&#xE74E;"
+              ToolTip="Save (Ctrl+S)"
+              Click="Save_Click" />
+    </Grid>
   </Grid>
 </UserControl>

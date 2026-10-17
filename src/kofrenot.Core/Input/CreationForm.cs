@@ -3,25 +3,29 @@ using Kofrenot.Core.Graph;
 namespace Kofrenot.Core.Input;
 
 /// <summary>
-/// The creation screen: what a request adds, the types the user can still change (each new
-/// node's, and the link's), and what already exists. Every change plans again.
+/// The creation screen: what a request adds, in steps (each new node, then the link), the types
+/// the user can still change (each new node's, and the link's), the content of a new note, and
+/// what already exists. Every change plans again.
 /// </summary>
-public sealed class CreationForm
+public sealed partial class CreationForm
 {
     private readonly AddPlanner _planner;
     private readonly PlanText _text;
+    private readonly TimeProvider _clock;
     private InputRequest _request;
     private AddChoices _choices;
 
     /// <param name="choices">The homonyms chosen in the input box; the types default to generic.</param>
     public CreationForm(KnowledgeGraph graph, InputRequest request, AddChoices? choices = null, TimeProvider? clock = null)
     {
-        _planner = new AddPlanner(graph, clock);
+        _clock = clock ?? TimeProvider.System;
+        _planner = new AddPlanner(graph, _clock);
         _text = new PlanText(graph);
         _request = request;
         _choices = choices ?? AddChoices.Default;
         Types = graph.Types;
         Plan = _planner.Plan(_request, _choices);
+        Steps = StepsOf(Plan);
     }
 
     public TypeCatalog Types { get; }

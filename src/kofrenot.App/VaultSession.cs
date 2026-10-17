@@ -121,18 +121,21 @@ public sealed class VaultSession : IDisposable
             return false;
         }
 
-        if (CreationDialog.Ask(owner, new CreationForm(vault.Graph, request, choices)) is not { } plan)
+        var form = new CreationForm(vault.Graph, request, choices);
+        if (!CreationDialog.Ask(owner, form))
         {
             _log.Info("Action", "Creation cancelled");
             return false;
         }
 
-        return Append(owner, vault, plan.Changes, plan switch
+        var notes = form.NotesToSave();
+        var withNotes = notes.Count > 0 ? $", {notes.Count} with content" : string.Empty;
+        return Append(owner, vault, form.Plan.Changes, form.Plan switch
         {
-            LinkPlan link => $"Link added ({link.Type.Id}, {(link.Left.IsNew ? 1 : 0) + (link.Right?.IsNew == true ? 1 : 0)} new nodes)",
-            NodePlan node => $"Node added ({node.Type.Id}{(node.NeedsConfirmation ? ", a duplicate" : string.Empty)})",
+            LinkPlan link => $"Link added ({link.Type.Id}, {(link.Left.IsNew ? 1 : 0) + (link.Right?.IsNew == true ? 1 : 0)} new nodes{withNotes})",
+            NodePlan node => $"Node added ({node.Type.Id}{(node.NeedsConfirmation ? ", a duplicate" : string.Empty)}{withNotes})",
             _ => "Added",
-        });
+        }, notes);
     }
 
     /// <summary>Renames a node. False when no vault is open, or it cannot be written (the user is told).</summary>
@@ -148,38 +151,23 @@ public sealed class VaultSession : IDisposable
         Current is { } vault && Append(owner, vault, [change], action);
 
     /// <summary>Saves a note version with its content. False when no vault is open, or it cannot be written (the user is told).</summary>
-    public bool SaveNote(Window owner, NoteEdited version, string content)
-    {
-        if (Current is not { } vault)
-        {
-            return false;
-        }
+    public bool SaveNote(Window owner, NoteEdited version, string content) =>
+        Current is { } vault
+        && Append(owner, vault, [], version.Replaces.Count > 1 ? $"Note saved (a conflict of {version.Replaces.Count} versions resolved)" : "Note saved", [new NoteToSave(version, content)]);
 
-        try
-        {
-            vault.Save(version, content);
-            _log.Info("Action", version.Replaces.Count > 1 ? $"Note saved (a conflict of {version.Replaces.Count} versions resolved)" : "Note saved");
-            return true;
-        }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-        {
-            _log.Error("Action", "Cannot write the note to the vault", ex);
-            MessageDialog.Inform(owner, $"Cannot write the note to the vault.\n\n{ex.Message}");
-            return false;
-        }
-        finally
-        {
-            Changed?.Invoke();
-        }
-    }
-
-    private bool Append(Window owner, Vault vault, IReadOnlyList<Change> changes, string action)
+    /// <summary>Writes the changes, then the note versions (each content file, then its change).</summary>
+    private bool Append(Window owner, Vault vault, IReadOnlyList<Change> changes, string action, IReadOnlyList<NoteToSave>? notes = null)
     {
         try
         {
             foreach (var change in changes)
             {
                 vault.Append(change);
+            }
+
+            foreach (var note in notes ?? [])
+            {
+                vault.Save(note.Version, note.Content);
             }
 
             _log.Info("Action", action);

@@ -14,6 +14,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **Notes**: a node type with Markdown content, edited in its details with a toolbar (bold, italic, heading, list, link) and saved as a new version each time. Edits made on two computers before they synced are shown as a conflict, to keep one version or merge them by hand.
 
 ### Changed
+- **Creation screen in steps**: one step per new node (its type, and for a note its content), then the link. Nothing is added before the last step; Esc cancels everything.
 - **Vault format 2.** kofrenot 0.1 does not open a vault written by this version, and offers the update. Vaults of format 1 are read as they are.
 - The local snapshot keeps the changes themselves (snapshot format 3): every change is read again once after the update.
 

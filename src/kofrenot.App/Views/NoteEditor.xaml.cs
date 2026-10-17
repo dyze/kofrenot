@@ -25,9 +25,12 @@ public partial class NoteEditor : UserControl
     private Node? _node;
     private NoteState? _state;
     private Func<Guid, string?> _read = _ => null;
-    private bool _loading;
 
-    public NoteEditor() => InitializeComponent();
+    public NoteEditor()
+    {
+        InitializeComponent();
+        Box.Edited += ShowStatus;
+    }
 
     /// <summary>Writes a version with its content; false when it could not.</summary>
     public Func<NoteEdited, string, bool>? Save { get; set; }
@@ -77,11 +80,9 @@ public partial class NoteEditor : UserControl
     private void Load()
     {
         _state = new NotePlanner(_graph!).Load(_node!, _read);
-        _loading = true;
         Box.Text = _state.Text ?? string.Empty;
-        _loading = false;
-        Toolbar.IsEnabled = !_state.IsMissing;
         Box.IsReadOnly = _state.IsMissing;
+        SaveButton.IsEnabled = !_state.IsMissing;
         ConflictVersions.ItemsSource = _state.Conflict.Select(version => new ConflictChoice(version)).ToList();
         ConflictPanel.Visibility = _state.Conflict.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
         ShowStatus();
@@ -111,14 +112,6 @@ public partial class NoteEditor : UserControl
         return true;
     }
 
-    private void Box_TextChanged(object sender, TextChangedEventArgs e)
-    {
-        if (!_loading)
-        {
-            ShowStatus();
-        }
-    }
-
     private void Box_PreviewKeyDown(object sender, KeyEventArgs e)
     {
         if (e.Key == Key.S && Keyboard.Modifiers == ModifierKeys.Control)
@@ -136,28 +129,5 @@ public partial class NoteEditor : UserControl
         {
             Write(text);
         }
-    }
-
-    private void Bold_Click(object sender, RoutedEventArgs e) => Format(edit => MarkdownFormat.Emphasis(edit, "**"));
-
-    private void Italic_Click(object sender, RoutedEventArgs e) => Format(edit => MarkdownFormat.Emphasis(edit, "*"));
-
-    private void Heading_Click(object sender, RoutedEventArgs e) => Format(edit => MarkdownFormat.LinePrefix(edit, "# "));
-
-    private void List_Click(object sender, RoutedEventArgs e) => Format(edit => MarkdownFormat.LinePrefix(edit, "- "));
-
-    private void Link_Click(object sender, RoutedEventArgs e) => Format(MarkdownFormat.Link);
-
-    private void Format(Func<TextEdit, TextEdit> format)
-    {
-        if (Box.IsReadOnly)
-        {
-            return;
-        }
-
-        var edited = format(new TextEdit(Box.Text, Box.SelectionStart, Box.SelectionLength));
-        Box.Text = edited.Text;
-        Box.Select(edited.Start, edited.Length);
-        Box.Focus();
     }
 }

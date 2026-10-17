@@ -1,0 +1,42 @@
+<UserControl x:Class="Kofrenot.UI.Views.MarkdownBox"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <!-- Markdown text with its toolbar: the content of a note, in its details (NoteEditor) and on
+       the creation screen. The text is not rendered. -->
+  <UserControl.Resources>
+    <ResourceDictionary Source="SharedStyles.xaml" />
+  </UserControl.Resources>
+
+  <Grid>
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="*" />
+    </Grid.RowDefinitions>
+
+    <!-- Not focusable: the text keeps its selection. -->
+    <StackPanel x:Name="Toolbar" Orientation="Horizontal" TextElement.FontSize="14">
+      <Button Style="{StaticResource FlatButton}" FontWeight="Bold" Content="B" ToolTip="Bold" Click="Bold_Click" />
+      <Button Style="{StaticResource FlatButton}" FontStyle="Italic" Content="I" ToolTip="Italic" Click="Italic_Click" />
+      <Button Style="{StaticResource FlatButton}" Content="H" ToolTip="Heading" Click="Heading_Click" />
+      <Button Style="{StaticResource FlatButton}" Content="•" ToolTip="List" Click="List_Click" />
+      <Button Style="{StaticResource FlatButton}"
+              FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
+              Content="&#xE71B;"
+              ToolTip="Link"
+              Click="Link_Click" />
+    </StackPanel>
+
+    <TextBox x:Name="Box"
+             Grid.Row="1"
+             Margin="0,6,0,0"
+             Padding="6"
+             AcceptsReturn="True"
+             AcceptsTab="True"
+             TextWrapping="Wrap"
+             VerticalScrollBarVisibility="Auto"
+             VerticalContentAlignment="Top"
+             FontFamily="Cascadia Mono, Consolas"
+             FontSize="14"
+             TextChanged="Box_TextChanged" />
+  </Grid>
+</UserControl>

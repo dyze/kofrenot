@@ -1,5 +1,7 @@
+using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Interop;
 using Kofrenot.Core.Graph;
 using Kofrenot.Core.Input;
@@ -9,12 +11,13 @@ namespace Kofrenot.UI.Views;
 
 /// <summary>
 /// The creation screen, shown by <see cref="VaultSession.Create"/> from anywhere: a view of a
-/// <see cref="CreationForm"/>, whose type choices it passes on.
+/// <see cref="CreationForm"/>, one step at a time, whose choices it passes on.
 /// </summary>
 public partial class CreationDialog : Window
 {
     private readonly CreationForm _form;
     private bool _showing;
+    private bool _discardConfirmed;
 
     private CreationDialog(Window owner, CreationForm form)
     {
@@ -23,83 +26,167 @@ public partial class CreationDialog : Window
         _form = form;
 
         TitleText.Text = form.Title;
-        LeftTypeBox.ItemsSource = RightTypeBox.ItemsSource = form.Types.NodeTypes;
+        TypeBox.ItemsSource = form.Types.NodeTypes;
         LinkTypeBox.ItemsSource = form.Types.Verbs;
-        foreach (var element in new FrameworkElement[] { LinkLabel, LinkTypeBox, RightPanel, RightTypeBox })
+        ContentBox.Edited += ContentBox_Edited;
+        Loaded += (_, _) => ShowStep();
+    }
+
+    /// <summary>Shows the screen: true when the user added (the form then holds the plan and the notes), false when cancelled.</summary>
+    public static bool Ask(Window owner, CreationForm form) => new CreationDialog(owner, form).ShowDialog() == true;
+
+    private Side? StepSide => _form.Step.Side;
+
+    /// <summary>A new step: its content, then the focus (the content of a note, or Next / Add).</summary>
+    private void ShowStep()
+    {
+        if (StepSide is { } side)
         {
-            element.Visibility = form.IsLink ? Visibility.Visible : Visibility.Collapsed;
+            ContentBox.Text = _form.ContentOf(side);
         }
 
         ShowForm();
-        Loaded += (_, _) => AddButton.Focus();
+        FocusStep();
     }
 
-    /// <summary>Shows the screen: the plan to add, or null when cancelled.</summary>
-    public static AddPlan? Ask(Window owner, CreationForm form)
+    private void FocusStep()
     {
-        var dialog = new CreationDialog(owner, form);
-        return dialog.ShowDialog() == true ? form.Plan : null;
+        if (StepSide is { } side && _form.IsNote(side))
+        {
+            ContentBox.FocusText();
+        }
+        else
+        {
+            NextButton.Focus();
+        }
     }
 
     private void ShowForm()
     {
         _showing = true;
-        LeftTypeBox.SelectedItem = _form.LeftType;
-        RightTypeBox.SelectedItem = _form.RightType;
-        LinkTypeBox.SelectedItem = _form.Verb;
-
-        if (_form.Plan is LinkPlan link)
+        StepText.Text = _form.StepText;
+        NodePanel.Visibility = StepSide is null ? Visibility.Collapsed : Visibility.Visible;
+        LinkPanel.Visibility = StepSide is null ? Visibility.Visible : Visibility.Collapsed;
+        if (StepSide is { } side)
         {
-            ShowSide(link.Left, LeftName, LeftInfo, LeftTypeBox);
-            if (link.Right is { } right)
-            {
-                ShowSide(right, RightName, RightInfo, RightTypeBox);
-            }
+            ShowNode(side);
         }
-        else if (_form.Plan is NodePlan node)
+        else if (_form.Plan is LinkPlan link)
         {
-            LeftName.Text = node.Name;
-            LeftInfo.Text = "New node";
+            ShowSide(link.Left, LeftName, LeftInfo);
+            ShowSide(link.Right!, RightName, RightInfo);
+            LinkTypeBox.SelectedItem = _form.Verb;
         }
 
-        WarningText.Text = _form.Warning ?? string.Empty;
-        WarningText.Visibility = _form.Warning is null ? Visibility.Collapsed : Visibility.Visible;
-        ExistingList.ItemsSource = _form.Existing;
-        StatusText.Text = _form.Status;
-        AddButton.IsEnabled = _form.Plan.CanAdd;
+        ShowStatus();
+        BackButton.Visibility = _form.StepIndex > 0 ? Visibility.Visible : Visibility.Collapsed;
+        NextButton.Content = _form.IsLastStep ? "Add" : "Next";
+        NextButton.IsEnabled = !_form.IsLastStep || _form.Plan.CanAdd;
         _showing = false;
     }
 
-    // An existing node keeps its type: the box is only for a new one.
-    private void ShowSide(PlannedSide side, TextBlock name, TextBlock info, ComboBox type)
+    private void ShowNode(Side side)
     {
-        name.Text = _form.Label(side);
-        info.Text = _form.Describe(side);
-        type.Visibility = side.IsNew ? Visibility.Visible : Visibility.Hidden;
+        NodeName.Text = _form.NameOf(side);
+        TypeBox.SelectedItem = _form.TypeOf(side);
+        ContentBox.Visibility = _form.IsNote(side) ? Visibility.Visible : Visibility.Collapsed;
+
+        // Only a node request can repeat a name: a link's new nodes have names no node has.
+        WarningText.Text = _form.Warning ?? string.Empty;
+        WarningText.Visibility = _form.Warning is null ? Visibility.Collapsed : Visibility.Visible;
+        ExistingList.ItemsSource = _form.Existing;
     }
 
-    private void LeftTypeBox_SelectionChanged(object sender, SelectionChangedEventArgs e) =>
-        Choose<NodeType>(LeftTypeBox, type => _form.LeftType = type);
-
-    private void RightTypeBox_SelectionChanged(object sender, SelectionChangedEventArgs e) =>
-        Choose<NodeType>(RightTypeBox, type => _form.RightType = type);
-
-    private void LinkTypeBox_SelectionChanged(object sender, SelectionChangedEventArgs e) =>
-        Choose<LinkVerb>(LinkTypeBox, verb => _form.Verb = verb);
-
-    private void Choose<T>(ComboBox box, Action<T> apply)
-        where T : class
+    private void ShowSide(PlannedSide side, TextBlock name, TextBlock info)
     {
-        if (_showing || box.SelectedItem is not T type)
+        name.Text = _form.Label(side);
+        info.Text = side.IsNew ? $"New node ({side.Type.Name})" : _form.Describe(side);
+    }
+
+    private void ShowStatus() => StatusText.Text = _form.IsLastStep
+        ? _form.Status
+        : StepSide is { } side && _form.IsNote(side)
+            ? "Ctrl+Enter: next step."
+            : "Enter: next step.";
+
+    private void TypeBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (_showing || StepSide is not { } side || TypeBox.SelectedItem is not NodeType type)
         {
             return;
         }
 
-        apply(type);
+        _form.SetType(side, type);
         ShowForm();
     }
 
-    private void AddButton_Click(object sender, RoutedEventArgs e) => DialogResult = true;
+    private void LinkTypeBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (!_showing && LinkTypeBox.SelectedItem is LinkVerb verb)
+        {
+            _form.Verb = verb;
+            ShowForm();
+        }
+    }
+
+    private void ContentBox_Edited()
+    {
+        if (StepSide is { } side)
+        {
+            _form.SetContent(side, ContentBox.Text);
+        }
+    }
+
+    private void NextButton_Click(object sender, RoutedEventArgs e) => Next();
+
+    /// <summary>The next step, or on the last one, Add.</summary>
+    private void Next()
+    {
+        if (_form.Next())
+        {
+            ShowStep();
+        }
+        else if (_form.Plan.CanAdd)
+        {
+            DialogResult = true;
+        }
+    }
+
+    private void BackButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (_form.Back())
+        {
+            ShowStep();
+        }
+    }
+
+    private void CancelButton_Click(object sender, RoutedEventArgs e) => Close();
+
+    private void Window_PreviewKeyDown(object sender, KeyEventArgs e)
+    {
+        if (e.Key == Key.Escape)
+        {
+            Close();
+            e.Handled = true;
+        }
+        else if (e.Key == Key.Enter && Keyboard.Modifiers == ModifierKeys.Control)
+        {
+            Next();
+            e.Handled = true;
+        }
+    }
+
+    /// <summary>Cancelling (Esc, Cancel, ×) asks first when a note's content would be lost.</summary>
+    private void Window_Closing(object? sender, CancelEventArgs e)
+    {
+        if (DialogResult == true || _discardConfirmed || !_form.HasContent)
+        {
+            return;
+        }
+
+        _discardConfirmed = MessageDialog.Confirm(this, "Discard the note content you typed?", "Discard", "Keep editing");
+        e.Cancel = !_discardConfirmed;
+    }
 
     private void Window_SourceInitialized(object? sender, EventArgs e) =>
         NativeWindows.RemoveMinimizeMaximizeButtons(new WindowInteropHelper(this).Handle);
