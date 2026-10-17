@@ -1,6 +1,7 @@
 using System.Windows;
 using System.Windows.Interop;
 using Kofrenot.Core;
+using Kofrenot.Core.Browse;
 using Kofrenot.Core.Logging;
 using Kofrenot.Core.Placement;
 using Kofrenot.Core.Settings;
@@ -68,6 +69,7 @@ public partial class App : Application
             log,
             updates,
             session,
+            new RecentNodes(files.RecentNodes, log),
             createSettings: () =>
             {
                 var created = new SettingsWindow(settings, logHub, files, updates, session, wanted => ApplyHotkey(wanted, settings.Hotkey), openLog: OpenLogWindow);

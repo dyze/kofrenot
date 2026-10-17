@@ -33,10 +33,19 @@ public partial class NodeDetailsPanel : UserControl
     /// <summary>Writes a change (a pin) to the vault, logging the action given; false when it could not.</summary>
     public Func<Change, string, bool>? Write { get; set; }
 
+    /// <summary>Called with each node shown at a new level (opened from the search, or from a link).</summary>
+    public Action<Node>? Visited { get; set; }
+
     /// <summary>Opens a node found by the search; for a link row, under the node it comes <paramref name="from"/>.</summary>
     public void Open(KnowledgeGraph graph, Node node, Node? from = null)
     {
         Browser.Open(graph, node, from);
+        if (from is not null)
+        {
+            Visited?.Invoke(from);
+        }
+
+        Visited?.Invoke(node);
         Log.Info("Action", "Node details opened");
         Show();
     }
@@ -121,6 +130,11 @@ public partial class NodeDetailsPanel : UserControl
     {
         StopEditing();
         Log.Info("Action", $"Node details: level {Browser.Depth} opened");
+        if (Browser.Details is { } details)
+        {
+            Visited?.Invoke(details.Node);
+        }
+
         Show();
     }
 

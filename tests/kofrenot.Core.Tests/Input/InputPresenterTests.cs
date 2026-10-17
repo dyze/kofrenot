@@ -260,6 +260,30 @@ public sealed class InputPresenterTests
     }
 
     [Fact]
+    public void AnEmptyText_ListsTheRecentNodes_NotPinned_AndKnown_AfterThePinnedOnes()
+    {
+        var (dune, herbert, arrakis) = (Add("Dune"), Add("Frank Herbert"), Add("Arrakis"));
+        _graph.Apply(new NodePinned(Guid.NewGuid(), Start, dune.Id));
+        _input.Recent = [arrakis.Id, Guid.NewGuid(), dune.Id, herbert.Id];
+
+        _input.Update(_graph, "");
+
+        Assert.Equal(["Pinned", "Dune", "Recent", "Arrakis", "Frank Herbert"], _input.Rows.Select(row => row.Text));
+        Assert.Equal([true, false, true, false, false], _input.Rows.Select(row => row.IsHeader));
+    }
+
+    [Fact]
+    public void ATypedText_ListsNoRecentNodes()
+    {
+        var dune = Add("Dune");
+        _input.Recent = [dune.Id];
+
+        _input.Update(_graph, "Frank");
+
+        Assert.Empty(_input.Rows);
+    }
+
+    [Fact]
     public void ADirectedLink_IsListedAsItReadsFromTheNodeFound()
     {
         var (dune, novel) = (Add("Dune"), Add("novel"));

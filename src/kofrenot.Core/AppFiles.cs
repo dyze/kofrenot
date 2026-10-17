@@ -48,6 +48,9 @@ public sealed class AppFiles
 
     public string UpdateCheck => Path.Combine(DataDirectory, "updates.json");
 
+    /// <summary>The nodes last opened on this device, by vault (ids only).</summary>
+    public string RecentNodes => Path.Combine(DataDirectory, "recent.json");
+
     /// <summary>The master keys remembered by Windows (DPAPI), by vault.</summary>
     public string RememberedKeys => Path.Combine(DataDirectory, "keys.json");
 
@@ -65,6 +68,7 @@ public sealed class AppFiles
         new("Settings", Settings),
         new("Window positions", WindowPositions),
         new("Update check", UpdateCheck),
+        new("Recent nodes", RecentNodes),
         new("Remembered pass phrases", RememberedKeys),
         new("Vault snapshots", Cache),
         new("Logs", Logs),

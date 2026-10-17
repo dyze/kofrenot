@@ -57,7 +57,7 @@ Type in the box at the top of the main window:
 - **Enter** opens the creation screen: the type of each new node (*Generic* by default), the link type, and what exists already (the nodes with that name, which side of a link is a new node). **Enter** there adds it, **Esc** goes back to the box.
 - A node name that exists already is warned about on the creation screen: adding makes another node with that name. A link that exists already cannot be added again.
 - Nodes with the same name are marked `¹`, `²`, ... When one side of a link matches several, **Up/Down** picks one (the oldest first), **Tab** switches to the other side.
-- While the box is empty, the **pinned** nodes are listed: **Down** selects one, **Enter** opens it.
+- While the box is empty, the **pinned** nodes are listed, then the **recent** ones (the last 10 opened on this computer, the latest first): **Down** selects one, **Enter** opens it.
 - **Esc** clears the box, then hides the window.
 
 ### Node details
@@ -90,6 +90,7 @@ Everything stays on your computer, in `%LOCALAPPDATA%\kofrenot` (a portable copy
 | `settings.json` | Settings |
 | `windows.json` | Where each window was left |
 | `updates.json` | Last update check |
+| `recent.json` | The nodes you last opened, per vault (ids only, no names) |
 | `keys.json` | Remembered pass phrases (the vault keys, protected by Windows for your account) |
 | `cache\` | One encrypted snapshot per vault opened here, so it opens fast. Safe to delete |
 | `logs\kofrenot.log` | Log, at most 3 files of 1 MB, oldest deleted |

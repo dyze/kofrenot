@@ -43,6 +43,9 @@ public sealed class InputPresenter
 
     public AddPlan? Plan { get; private set; }
 
+    /// <summary>The nodes last opened on this device, the latest first (<see cref="Browse.RecentNodes"/>): listed while the text is empty.</summary>
+    public IReadOnlyList<Guid> Recent { get; set; } = [];
+
     public string Preview { get; private set; } = Hint;
 
     public IReadOnlyList<ResultRow> Rows { get; private set; } = [];
@@ -198,12 +201,15 @@ public sealed class InputPresenter
             : preview;
     }
 
-    /// <summary>While the input box is empty: the pinned nodes, under a header.</summary>
+    /// <summary>While the input box is empty: the pinned nodes, then the recent ones not pinned, each under a header.</summary>
     private List<ResultRow> StartRows(KnowledgeGraph graph)
     {
         var text = new PlanText(graph);
         var rows = new List<ResultRow>();
-        AddSection(rows, "Pinned", graph.PinnedNodes.Select(node => new ResultRow(text.NodeLabel(node), IsLink: false, IsChosen: false, node)));
+        var pinned = graph.PinnedNodes;
+        var recent = Recent.Select(graph.FindNode).OfType<Node>().Except(pinned);
+        AddSection(rows, "Pinned", pinned.Select(node => new ResultRow(text.NodeLabel(node), IsLink: false, IsChosen: false, node)));
+        AddSection(rows, "Recent", recent.Select(node => new ResultRow(text.NodeLabel(node), IsLink: false, IsChosen: false, node)));
         return rows;
     }
 

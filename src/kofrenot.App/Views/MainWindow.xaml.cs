@@ -3,6 +3,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using Kofrenot.Core;
+using Kofrenot.Core.Browse;
 using Kofrenot.Core.Graph;
 using Kofrenot.Core.Input;
 using Kofrenot.Core.Logging;
@@ -23,25 +24,29 @@ public partial class MainWindow : Window
     private readonly ILog _log;
     private readonly UpdateChecker _updates;
     private readonly VaultSession _session;
+    private readonly RecentNodes _recent;
     private readonly Func<SettingsWindow> _createSettings;
     private readonly InputPresenter _input = new();
     private SettingsWindow? _settingsDialog;
 
     /// <param name="updates">Checks once a day for a newer release; the Settings button shows a mark when there is one.</param>
     /// <param name="session">The vault the input box works on.</param>
+    /// <param name="recent">The nodes last opened on this device, listed while the input box is empty.</param>
     /// <param name="createSettings">Creates the Settings window, shown as a dialog over this one.</param>
-    public MainWindow(SettingsStore settings, ILog log, UpdateChecker updates, VaultSession session, Func<SettingsWindow> createSettings)
+    public MainWindow(SettingsStore settings, ILog log, UpdateChecker updates, VaultSession session, RecentNodes recent, Func<SettingsWindow> createSettings)
     {
         _settings = settings;
         _log = log;
         _updates = updates;
         _session = session;
+        _recent = recent;
         _createSettings = createSettings;
 
         InitializeComponent();
         DetailsPanel.Log = log;
         DetailsPanel.Rename = rename => _session.Rename(this, rename);
         DetailsPanel.Write = (change, action) => _session.Write(this, change, action);
+        DetailsPanel.Visited = node => Visited(node);
         VersionText.Text = $"kofrenot {AppVersion.Of(typeof(MainWindow).Assembly)}";
         ShowUpdateMark();
         _session.Changed += ShowVault;
@@ -106,6 +111,7 @@ public partial class MainWindow : Window
         }
 
         InputPlaceholder.Visibility = InputBox.Text.Length == 0 ? Visibility.Visible : Visibility.Collapsed;
+        _input.Recent = _recent.Of(vault.Id);
         _input.Update(vault.Graph, InputBox.Text);
         ShowPresented();
     }
@@ -159,6 +165,15 @@ public partial class MainWindow : Window
         }
 
         return true;
+    }
+
+    /// <summary>A node shown in the details goes first among the recent ones.</summary>
+    private void Visited(Node node)
+    {
+        if (_session.Current is { } vault)
+        {
+            _recent.Opened(vault.Id, node.Id);
+        }
     }
 
     /// <summary>Back from the details: the search, as it was left.</summary>
