@@ -7,11 +7,6 @@ Scope of each planned version. Implemented features move to [CHANGELOG.md](../CH
 | 0.1     | Released    | Application shell; nodes and links typed in one box, stored in an encrypted folder |
 | 0.2     | To define   | Notes as nodes                                                                     |
 
-## 0.1
-Released on 2026-10-17: see `[0.1]` in [CHANGELOG.md](../CHANGELOG.md).
-
-Not in 0.1: deleting, editing properties other than the name, user-defined types.
-
 ## 0.2 (to define)
 1. **Notes** as a node type, with content. content is saved in a separate file. only read on demand when editing a node.
 2. **Collections** as a node type. Used to order nodes at top level. By default, a collection is created and all new nodes are attached to it. Current collection is shown at top of Main Window.
