@@ -41,6 +41,7 @@ public partial class MainWindow : Window
         InitializeComponent();
         DetailsPanel.Log = log;
         DetailsPanel.Rename = rename => _session.Rename(this, rename);
+        DetailsPanel.Write = (change, action) => _session.Write(this, change, action);
         VersionText.Text = $"kofrenot {AppVersion.Of(typeof(MainWindow).Assembly)}";
         ShowUpdateMark();
         _session.Changed += ShowVault;

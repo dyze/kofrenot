@@ -28,3 +28,6 @@ public sealed record AliasAdded(Guid Id, DateTimeOffset At, string LinkType, boo
 /// a removal is a change of its own, and an alias or pin added again later has a new id.
 /// </summary>
 public sealed record ChangesRemoved(Guid Id, DateTimeOffset At, IReadOnlyList<Guid> Removes) : Change(Id, At);
+
+/// <summary>Pins <see cref="Node"/>: it is listed while the input box is empty. Unpinned by a <see cref="ChangesRemoved"/>.</summary>
+public sealed record NodePinned(Guid Id, DateTimeOffset At, Guid Node) : Change(Id, At);

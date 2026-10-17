@@ -238,6 +238,28 @@ public sealed class InputPresenterTests
     }
 
     [Fact]
+    public void AnEmptyText_ListsThePinnedNodes_UnderAHeader_AndDownSelectsThem()
+    {
+        var (dune, herbert) = (Add("Dune"), Add("Frank Herbert"));
+        _graph.Apply(new NodePinned(Guid.NewGuid(), Start, dune.Id));
+        _graph.Apply(new NodePinned(Guid.NewGuid(), Start.AddMinutes(1), herbert.Id));
+
+        _input.Update(_graph, "");
+
+        Assert.Equal(
+            [new ResultRow("Pinned", false, false, IsHeader: true), new ResultRow("Dune", false, false, dune), new ResultRow("Frank Herbert", false, false, herbert)],
+            _input.Rows);
+        Assert.Equal(InputPresenter.Hint, _input.Preview);
+
+        Assert.True(_input.MoveSelection(1));
+        Assert.True(_input.MoveSelection(1));
+
+        Assert.Same(herbert, _input.SelectedRow!.Node);
+        Assert.True(_input.Rows[2].IsChosen);
+        Assert.Equal("Enter to see the details of “Frank Herbert”. Up/Down: another one.", _input.Preview);
+    }
+
+    [Fact]
     public void ADirectedLink_IsListedAsItReadsFromTheNodeFound()
     {
         var (dune, novel) = (Add("Dune"), Add("novel"));

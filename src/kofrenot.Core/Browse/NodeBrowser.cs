@@ -112,7 +112,7 @@ public sealed class NodeBrowser
         });
         var names = graph.NamesOf(node.Id);
         IReadOnlyList<string> conflict = names.Count > 1 ? names.Select(version => version.Name).ToList() : [];
-        return new NodeDetails(node, text.NodeLabel(node), graph.Types.NodeTypeName(node.Type), rows.ToList(), conflict);
+        return new NodeDetails(node, text.NodeLabel(node), graph.Types.NodeTypeName(node.Type), rows.ToList(), conflict, IsPinned: graph.PinsOf(node.Id).Count > 0);
     }
 
     private sealed class Level(Guid nodeId)

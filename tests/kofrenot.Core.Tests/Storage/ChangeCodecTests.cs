@@ -47,7 +47,17 @@ public sealed class ChangeCodecTests
         Assert.Equal(change.Removes, decoded.Removes);
     }
 
+    [Fact]
+    public void APin_RoundTrips()
+    {
+        var change = new NodePinned(Guid.NewGuid(), At, Guid.NewGuid());
+
+        Assert.Equal(change, _codec.Decode(change.Id, _codec.Encode(change)));
+    }
+
     [Theory]
+    [InlineData("{\"format\":2,\"op\":\"pinNode\",\"at\":\"2026-10-16T09:12:00Z\"}")]
+    [InlineData("{\"format\":2,\"op\":\"pinNode\",\"at\":\"2026-10-16T09:12:00Z\",\"pin\":{}}")]
     [InlineData("{\"format\":2,\"op\":\"addAlias\",\"at\":\"2026-10-16T09:12:00Z\"}")]
     [InlineData("{\"format\":2,\"op\":\"addAlias\",\"at\":\"2026-10-16T09:12:00Z\",\"alias\":{\"phrase\":\"is in\"}}")]
     [InlineData("{\"format\":2,\"op\":\"addAlias\",\"at\":\"2026-10-16T09:12:00Z\",\"alias\":{\"linkType\":\"contains\",\"phrase\":\" \"}}")]

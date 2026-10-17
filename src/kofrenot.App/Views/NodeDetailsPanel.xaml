@@ -55,6 +55,7 @@
         <Grid.ColumnDefinitions>
           <ColumnDefinition Width="*" />
           <ColumnDefinition Width="Auto" />
+          <ColumnDefinition Width="Auto" />
         </Grid.ColumnDefinitions>
         <TextBlock x:Name="NameText" VerticalAlignment="Center" FontSize="26" FontWeight="SemiBold" TextWrapping="Wrap" />
         <TextBox x:Name="NameBox" FontSize="26" Visibility="Collapsed" TextChanged="NameBox_TextChanged" />
@@ -68,6 +69,15 @@
                 FontSize="14"
                 ToolTip="Rename (F2)"
                 Click="EditButton_Click" />
+        <!-- Pinned nodes are listed while the input box is empty. Filled pin: pinned. -->
+        <Button x:Name="PinButton"
+                Grid.Column="2"
+                Margin="2,0,0,0"
+                VerticalAlignment="Center"
+                Style="{StaticResource FlatButton}"
+                FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
+                FontSize="14"
+                Click="PinButton_Click" />
       </Grid>
       <TextBlock x:Name="RenameText" Margin="0,4,0,0" Opacity="0.8" TextWrapping="Wrap" Visibility="Collapsed" />
 

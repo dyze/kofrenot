@@ -6,7 +6,8 @@ namespace Kofrenot.Core.Browse;
 /// <param name="Name">The name, marked "¹", "²", ... among homonyms.</param>
 /// <param name="Type">The type's name, or its id when this version does not know it.</param>
 /// <param name="NameConflict">The names given on two devices before they synced, oldest first; empty without a conflict.</param>
-public sealed record NodeDetails(Node Node, string Name, string Type, IReadOnlyList<LinkRow> Links, IReadOnlyList<string> NameConflict);
+/// <param name="IsPinned">Listed while the input box is empty.</param>
+public sealed record NodeDetails(Node Node, string Name, string Type, IReadOnlyList<LinkRow> Links, IReadOnlyList<string> NameConflict, bool IsPinned);
 
 /// <summary>
 /// A link of the node shown: its type and the node at the other end. <see cref="CanOpen"/>: that

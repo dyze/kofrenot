@@ -57,6 +57,7 @@ Type in the box at the top of the main window:
 - **Enter** opens the creation screen: the type of each new node (*Generic* by default), the link type, and what exists already (the nodes with that name, which side of a link is a new node). **Enter** there adds it, **Esc** goes back to the box.
 - A node name that exists already is warned about on the creation screen: adding makes another node with that name. A link that exists already cannot be added again.
 - Nodes with the same name are marked `¹`, `²`, ... When one side of a link matches several, **Up/Down** picks one (the oldest first), **Tab** switches to the other side.
+- While the box is empty, the **pinned** nodes are listed: **Down** selects one, **Enter** opens it.
 - **Esc** clears the box, then hides the window.
 
 ### Node details
@@ -65,6 +66,7 @@ Type in the box at the top of the main window:
 - The breadcrumb at the top shows where you are. Click an item to go back to it; **⌂ Search** returns to the search. **Esc** goes back one level, and from the first level returns to the search as you left it.
 - **F2** or **✎** renames the node in place: **Enter** saves, **Esc** cancels. A name another node already has is allowed, with a warning. The old name stays in the vault's history.
 - A node renamed on two computers before they synced shows a conflict under its name, with a button for each name: click the one to keep, or rename it.
+- The **pin** button next to the name pins the node (filled pin) or unpins it. Pins are stored in the vault, so every device lists them.
 
 ## Settings
 

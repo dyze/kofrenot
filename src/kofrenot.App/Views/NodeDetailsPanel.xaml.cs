@@ -18,6 +18,8 @@ public sealed record BreadcrumbItem(string Label, int Depth, bool IsCurrent);
 public partial class NodeDetailsPanel : UserControl
 {
     private const string SearchLabel = "⌂ Search";
+    private const string PinIcon = "";
+    private const string PinnedIcon = "";
 
     public NodeDetailsPanel() => InitializeComponent();
 
@@ -27,6 +29,9 @@ public partial class NodeDetailsPanel : UserControl
     public NodeBrowser Browser { get; } = new();
 
     public ILog Log { get; set; } = NullLog.Instance;
+
+    /// <summary>Writes a change (a pin) to the vault, logging the action given; false when it could not.</summary>
+    public Func<Change, string, bool>? Write { get; set; }
 
     /// <summary>Opens a node found by the search; for a link row, under the node it comes <paramref name="from"/>.</summary>
     public void Open(KnowledgeGraph graph, Node node, Node? from = null)
@@ -54,6 +59,8 @@ public partial class NodeDetailsPanel : UserControl
         LinksHeader.Text = details.Links.Count == 0 ? "No links" : $"Links ({details.Links.Count})";
         LinksList.ItemsSource = details.Links;
         ConflictNames.ItemsSource = details.NameConflict;
+        PinButton.Content = details.IsPinned ? PinnedIcon : PinIcon;
+        PinButton.ToolTip = details.IsPinned ? "Unpin" : "Pin: listed while the input box is empty";
         ConflictPanel.Visibility = details.NameConflict.Count > 0 && !_editing ? Visibility.Visible : Visibility.Collapsed;
     }
 
@@ -122,6 +129,15 @@ public partial class NodeDetailsPanel : UserControl
         if (sender is FrameworkElement { DataContext: BreadcrumbItem item })
         {
             GoBackTo(item.Depth);
+        }
+    }
+
+    private void PinButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (Browser is { Graph: { } graph, Details: { } details })
+        {
+            Write?.Invoke(new PinPlanner(graph).Toggle(details.Node), details.IsPinned ? "Node unpinned" : "Node pinned");
+            Show();
         }
     }
 

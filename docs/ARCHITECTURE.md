@@ -34,10 +34,10 @@ One namespace per folder (`Kofrenot.Core.Settings`, `Kofrenot.UI.Views`, ...). T
 | --- | --- |
 | *(root)* | `AppVersion`; `AppFiles` (where every file of kofrenot is, including `keys.json` and the snapshots in `cache\`: the only place their names are written, listed in Settings > About; `AppFiles.For` picks the data folder, see [Portable copy](#portable-copy)); `Changelog` (reads the text shown by Settings > About); `ProjectLinks` (website, issues, releases) |
 | `Settings/` | `SettingsStore` (`settings.json`: theme, debug logging, update check, vault folder, hotkey), `Hotkey`, `SettingsCatalog` (the entries of the Settings window, their tabs, and the search that finds them) |
-| `Graph/` | `Node`, `Link`, `NodeType`, `LinkType`, `LinkVerb` (a link type read one way), `TypeCatalog` (built-in node and link types, link aliases; `LinkName`: how a link reads from one of its nodes), `LinkAliases` (the user's aliases, see [Aliases and removals](#aliases-and-removals)), `RemovableChanges`, `NameKey` (the form names are compared in), `Change` (`NodeAdded`, `LinkAdded`, `NodeRenamed`, `AliasAdded`, `ChangesRemoved`), `NodeNames` + `NameVersion` (a node's current names, see [Renames](#renames)), `KnowledgeGraph` (in-memory state, built by applying changes) |
+| `Graph/` | `Node`, `Link`, `NodeType`, `LinkType`, `LinkVerb` (a link type read one way), `TypeCatalog` (built-in node and link types, link aliases; `LinkName`: how a link reads from one of its nodes), `LinkAliases` (the user's aliases, see [Aliases and removals](#aliases-and-removals)), `RemovableChanges`, `NameKey` (the form names are compared in), `Change` (`NodeAdded`, `LinkAdded`, `NodeRenamed`, `AliasAdded`, `NodePinned`, `ChangesRemoved`), `NodeNames` + `NameVersion` (a node's current names, see [Renames](#renames)), `KnowledgeGraph` (in-memory state, built by applying changes) |
 | `Storage/` | `VaultFormat` (+ `NewerVaultFormatException`), `SecretBox` (AES-GCM seal / open), `KeyWrap` (KDF, wrap / unwrap the master key), `ChangeData` (a change as JSON, shared with the snapshot), `ChangeCodec` (change ⇄ sealed JSON), `VaultHeader`, `VaultFolder` (layout, inspect, create), `SnapshotStore`, `Vault` (open, append, refresh), `AtomicFile` (write as `.tmp`, then rename), `KeyMemory` (remembered master keys, `keys.json`), `ISecretProtector` |
 | `Input/` | `InputParser` (text → `NodeRequest` / `LinkRequest`), `GraphSearch` (`SearchHit`), `AddPlanner` (`AddChoices` → `AddPlan`: `NodePlan`, `LinkPlan`, `PlannedSide`), `InputPresenter` (the input box: preview, result rows, homonym choices), `CreationForm` (the creation screen: types, status, what exists), `PlanText` (wording shared by both), `RenamePlanner` (`RenamePlan`: a new name, its problem, homonyms), `AliasPlanner` (`AliasPlan`) |
-| `Browse/` | `NodeBrowser` (the details screen: trail of open nodes, at most 4, the selected link of each), `NodeDetails`, `LinkRow` |
+| `Browse/` | `NodeBrowser` (the details screen: trail of open nodes, at most 4, the selected link of each), `NodeDetails`, `LinkRow`, `PinPlanner` (pin or unpin) |
 | `Logging/` | `ILog` (with `NullLog`), `LogEntry`, `RingLog`, `CompositeLog`, `FilteredLog` |
 | `Placement/` | Window positions: `WindowPlacement`, `PlacementRules`, `PlacementStore` (see [Window positions](#window-positions)) |
 | `Updates/` | The daily update check, see [Updates](#updates): `UpdateChecker`, `Release`, `IReleaseFeed`, `UpdateStore` |
@@ -138,7 +138,7 @@ One number for the whole vault, `VaultFormat.Current`, written in the header and
 | Format | Since | Adds |
 | --- | --- | --- |
 | 1 | 0.1 | `addNode`, `addLink`, `renameNode` |
-| 2 | 0.2 | directed links (`contains`, `is-a`): a 0.1 app would read them as symmetric; `addAlias`, `remove` |
+| 2 | 0.2 | directed links (`contains`, `is-a`): a 0.1 app would read them as symmetric; `addAlias`, `pinNode`, `remove` |
 
 | Found | This kofrenot |
 | --- | --- |
@@ -180,6 +180,7 @@ UTF-8 JSON before encryption:
   "rename": { "node": "<node id>", "name": "Dune (novel)", "replaces": ["<node id or rename id>", "…"] } }
 { "format": 2, "at": "…", "op": "addAlias",
   "alias": { "linkType": "contains", "reverse": true, "phrase": "is in" } }
+{ "format": 2, "at": "…", "op": "pinNode", "pin": { "node": "<node id>" } }
 { "format": 2, "at": "…", "op": "remove", "removes": ["<alias or pin change id>", "…"] }
 ```
 
@@ -225,7 +226,7 @@ r3 "Dune (novel)" replaces r1 + r2 ⇒ one current name again
 - The search indexes the shown name only.
 
 ### Aliases and removals
-What the user can take back (aliases, and pins later) is added by one change and removed by another, `remove`, listing the ids it removes. Nothing is deleted from the vault.
+What the user can take back (aliases, pins) is added by one change and removed by another, `remove`, listing the ids it removes. Nothing is deleted from the vault.
 
 ```
 a1 addAlias "is in" → contained by      device A
@@ -239,6 +240,7 @@ current = added − removed               (RemovableChanges; a removal may arriv
 - An alias of a type this version does not know is kept, not shown.
 - `AliasPlanner` refuses an empty phrase and one in use, and warns about the node names containing it: the input box would read them as links.
 - Settings > Link types (`LinkTypesSection`) lists each type both ways, with its built-in phrases and the user's aliases (× removes). Phrases are not logged, only the link type.
+- Pins: `KnowledgeGraph.PinnedNodes` lists each pinned node once, the first pinned first; a node pinned on two devices has two pins, and `PinPlanner` unpins by removing both. `InputPresenter` lists them under a header (`ResultRow.IsHeader`) while the input box is empty.
 
 ### Input
 `Dune relates to Frank Herbert` → link; `Dune` → node.

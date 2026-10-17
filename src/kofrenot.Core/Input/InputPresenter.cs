@@ -5,9 +5,10 @@ namespace Kofrenot.Core.Input;
 /// <summary>
 /// A line under the input box: a node, or (indented) one of its links, coming <see cref="From"/>
 /// a node. <see cref="Node"/> is the node its details open on: the node, or the link's other end.
-/// <see cref="IsChosen"/>: the homonym chosen, or the row selected.
+/// <see cref="IsChosen"/>: the homonym chosen, or the row selected. A header (<see cref="IsHeader"/>)
+/// names the rows under it, while the input box is empty.
 /// </summary>
-public sealed record ResultRow(string Text, bool IsLink, bool IsChosen, Node? Node = null, Node? From = null)
+public sealed record ResultRow(string Text, bool IsLink, bool IsChosen, Node? Node = null, Node? From = null, bool IsHeader = false)
 {
     internal RowKey? Key => Node is null ? null : new RowKey(From?.Id, Node.Id);
 }
@@ -75,13 +76,13 @@ public sealed class InputPresenter
         }
 
         Plan = Request is null ? null : new AddPlanner(graph).Plan(Request, Choices);
-        Rows = Plan is null ? [] : RowsOf(graph, Plan);
+        Rows = Plan is null ? StartRows(graph) : RowsOf(graph, Plan);
         if (SelectedRow is null)
         {
             _selected = null;
         }
 
-        Preview = Plan is null ? Hint : PreviewOf(new PlanText(graph), Plan);
+        Preview = PreviewOf(new PlanText(graph), Plan);
     }
 
     /// <summary>
@@ -91,7 +92,7 @@ public sealed class InputPresenter
     /// </summary>
     public bool MoveSelection(int step)
     {
-        if (_graph is null || Plan is not NodePlan)
+        if (_graph is null || Plan is LinkPlan)
         {
             return false;
         }
@@ -169,11 +170,16 @@ public sealed class InputPresenter
 
     private PlannedSide? ActiveSide(LinkPlan link) => _rightActive && link.Right is not null ? link.Right : link.Left;
 
-    private string PreviewOf(PlanText text, AddPlan plan)
+    private string PreviewOf(PlanText text, AddPlan? plan)
     {
         if (SelectedRow?.Node is { } selected)
         {
             return $"Enter to see the details of “{text.NodeLabel(selected)}”. Up/Down: another one.";
+        }
+
+        if (plan is null)
+        {
+            return Hint;
         }
 
         if (PlanText.Duplicate(plan) is { } duplicate)
@@ -190,6 +196,25 @@ public sealed class InputPresenter
         return plan is LinkPlan typed && ActiveSide(typed) is { Candidates.Count: > 1 } side
             ? $"{preview} Up/Down: which “{side.Name}”. Tab: the other side."
             : preview;
+    }
+
+    /// <summary>While the input box is empty: the pinned nodes, under a header.</summary>
+    private List<ResultRow> StartRows(KnowledgeGraph graph)
+    {
+        var text = new PlanText(graph);
+        var rows = new List<ResultRow>();
+        AddSection(rows, "Pinned", graph.PinnedNodes.Select(node => new ResultRow(text.NodeLabel(node), IsLink: false, IsChosen: false, node)));
+        return rows;
+    }
+
+    private void AddSection(List<ResultRow> rows, string header, IEnumerable<ResultRow> section)
+    {
+        var start = rows.Count;
+        rows.AddRange(section.Select(row => row with { IsChosen = row.Key == _selected }));
+        if (rows.Count > start)
+        {
+            rows.Insert(start, new ResultRow(header, IsLink: false, IsChosen: false, IsHeader: true));
+        }
     }
 
     private List<ResultRow> RowsOf(KnowledgeGraph graph, AddPlan plan)

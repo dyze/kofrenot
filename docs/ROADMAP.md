@@ -16,9 +16,7 @@ Done so far: see [CHANGELOG.md](../CHANGELOG.md) `[Unreleased]`. User-defined li
 1. **Notes** as a node type, with content in a separate file, only read on demand when the note is opened.
 	- Content is Markdown (UTF-8), edited in node details, with a toolbar for basic formatting (bold, italic, headings, lists, links).
 	- Each save is a new content version naming the one it replaces (as renames do). Two versions saved in parallel on two devices are flagged as a conflict; the user keeps one or merges by hand.
-2. **Pinned nodes.** user is able to pin nodes using node details. pinned nodes appears when search box is empty.
-	- Stored in the vault, so pins follow the user across devices.
-3. **Recent entries.** if nothing in search box. show recent entries (open last on top).
+2. **Recent entries.** if nothing in search box. show recent entries (open last on top).
 	- Kept on each device: opening a node writes nothing to the vault.
 
 ## 0.3 (to define)

@@ -22,11 +22,13 @@ public sealed class KnowledgeGraph
     private readonly Dictionary<Guid, List<Link>> _linksByNode = [];
     private readonly HashSet<Guid> _removed = [];
     private readonly HashSet<Guid> _removals = [];
+    private readonly RemovableChanges<NodePinned> _pins;
 
     public KnowledgeGraph(TypeCatalog? types = null)
     {
         _types = types ?? TypeCatalog.BuiltIn;
         Aliases = new LinkAliases(_types, _removed);
+        _pins = new RemovableChanges<NodePinned>(_removed);
     }
 
     /// <summary>The link types, with the user's aliases: what the input box reads.</summary>
@@ -50,10 +52,19 @@ public sealed class KnowledgeGraph
         NodeRenamed renamed => Rename(renamed),
         AliasAdded alias => Aliases.Add(alias),
         ChangesRemoved removal => Remove(removal),
+        NodePinned pin => _pins.Add(pin),
         _ => throw new ArgumentOutOfRangeException(nameof(change), change.GetType().Name, "Unknown change"),
     };
 
     public Node? FindNode(Guid id) => _nodes.GetValueOrDefault(id);
+
+    /// <summary>The pinned nodes, each once, the first pinned first. A pin of a node not arrived yet shows nothing.</summary>
+    public IReadOnlyList<Node> PinnedNodes =>
+        _pins.Current.Select(pin => pin.Node).Distinct().Select(FindNode).OfType<Node>().ToList();
+
+    /// <summary>The pins of a node: several when it was pinned on two devices. Unpinning removes them all.</summary>
+    public IReadOnlyList<Guid> PinsOf(Guid node) =>
+        _pins.Current.Where(pin => pin.Node == node).Select(pin => pin.Id).ToList();
 
     /// <summary>
     /// The current names of a node, oldest first: one, or several when it was renamed on two
