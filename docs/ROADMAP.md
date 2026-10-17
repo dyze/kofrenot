@@ -2,15 +2,10 @@
 
 Scope of each planned version. Implemented features move to [CHANGELOG.md](../CHANGELOG.md). The goal, principles, non-goals and open questions are in [GOAL.md](GOAL.md). The features are sorted by priority.
 
-| Version | Status      | Theme                                                                                   |
-| ------- | ----------- | --------------------------------------------------------------------------------------- |
-| 0.1     | In progress | Application shell; nodes and links typed in one box, stored in an encrypted folder      |
-| 0.2     | To define   | Notes as nodes                                                                          |
-
-## 0.1
-Implemented: see `[Unreleased]` in [CHANGELOG.md](../CHANGELOG.md). Left before the release: the owner's test of the whole version.
-
-Not in 0.1: renaming, deleting, editing properties, user-defined types.
+| Version | Status      | Theme                                                                              |
+| ------- | ----------- | ---------------------------------------------------------------------------------- |
+| 0.1     | In progress | Application shell; nodes and links typed in one box, stored in an encrypted folder |
+| 0.2     | To define   | Notes as nodes                                                                     |
 
 ## 0.2 (to define)
 1. **Notes** as a node type, with content.
@@ -18,6 +13,9 @@ Not in 0.1: renaming, deleting, editing properties, user-defined types.
 3. **Containers as node type.** Used to order nodes in a tree. Useful for datasets. By default, all new nodes are attached at root.
 4. **Datasets** as node type
 	- Load/Save content
+5. Link types have **aliases**. e.g "relates to" is equivalent to "relates" or simply "-".
+	- A screen is available and allow user to display and edit those aliases.
+6. Link types have **reverse** versions. "relates to" is the reverse of "related to"
 
 ## 0.3 (to define)
 1. **Multiple vaults.** User can register several vaults on his app. Current vault is selected using a combo in main window. Selection is memorized. Each vault has his passphrase.
