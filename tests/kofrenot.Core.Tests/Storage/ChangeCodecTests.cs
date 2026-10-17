@@ -61,7 +61,7 @@ public sealed class ChangeCodecTests
     [Theory]
     [InlineData("{ not json")]
     [InlineData("null")]
-    [InlineData("{\"format\":2,\"op\":\"addNode\",\"at\":\"2026-10-16T09:12:00Z\"}")]
+    [InlineData("{\"format\":0,\"op\":\"addNode\",\"at\":\"2026-10-16T09:12:00Z\"}")]
     [InlineData("{\"format\":1,\"op\":\"rename\",\"at\":\"2026-10-16T09:12:00Z\"}")]
     [InlineData("{\"format\":1,\"op\":\"addNode\",\"at\":\"2026-10-16T09:12:00Z\"}")]
     [InlineData("{\"format\":1,\"op\":\"addNode\",\"at\":\"2026-10-16T09:12:00Z\",\"node\":{\"id\":\"3f2504e0-4f89-11d3-9a0c-0305e82c3301\",\"type\":\"generic\",\"name\":\" \"}}")]
@@ -77,6 +77,25 @@ public sealed class ChangeCodecTests
         var data = _box.Seal("KFC1"u8, Encoding.UTF8.GetBytes(json), id.ToByteArray());
 
         Assert.Throws<InvalidDataException>(() => _codec.Decode(id, data));
+    }
+
+    [Fact]
+    public void AChangeOfANewerFormat_AsksForANewerKofrenot()
+    {
+        var id = Guid.NewGuid();
+        var data = _box.Seal("KFC1"u8, Encoding.UTF8.GetBytes("{\"format\":2,\"op\":\"rename\",\"at\":\"2026-10-16T09:12:00Z\"}"), id.ToByteArray());
+
+        Assert.Equal(2, Assert.Throws<NewerVaultFormatException>(() => _codec.Decode(id, data)).Format);
+    }
+
+    [Fact]
+    public void AChange_IsWrittenInTheCurrentFormat()
+    {
+        var change = new NodeAdded(Guid.NewGuid(), At, new Node(Guid.NewGuid(), "generic", "Dune", At));
+
+        var json = Encoding.UTF8.GetString(_box.Open("KFC1"u8, _codec.Encode(change), change.Id.ToByteArray()));
+
+        Assert.StartsWith($"{{\"format\":{VaultFormat.Current},", json);
     }
 
     [Fact]

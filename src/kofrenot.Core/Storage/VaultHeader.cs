@@ -9,15 +9,13 @@ namespace Kofrenot.Core.Storage;
 /// </summary>
 public sealed record VaultHeader(int Format, Guid Id, WrappedKey Key)
 {
-    public const int CurrentFormat = 1;
-
     private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web) { WriteIndented = true };
 
     /// <summary>The master key, or null when the pass phrase is wrong.</summary>
     public byte[]? Unlock(string passPhrase) => KeyWrap.Unlock(Key, passPhrase, Id.ToByteArray());
 
     /// <exception cref="InvalidDataException">Damaged.</exception>
-    /// <exception cref="NotSupportedException">Created by a newer kofrenot.</exception>
+    /// <exception cref="NewerVaultFormatException">Of a format newer than this kofrenot reads.</exception>
     /// <exception cref="IOException">Cannot be read.</exception>
     public static VaultHeader Read(string path)
     {
@@ -32,9 +30,9 @@ public sealed record VaultHeader(int Format, Guid Id, WrappedKey Key)
             throw new InvalidDataException("The vault header is damaged", ex);
         }
 
-        if (header is { Format: > CurrentFormat })
+        if (header is not null)
         {
-            throw new NotSupportedException($"The vault has format {header.Format}: it was created by a newer kofrenot");
+            VaultFormat.EnsureSupported(header.Format);
         }
 
         return IsComplete(header) ? header : throw new InvalidDataException("The vault header is damaged");

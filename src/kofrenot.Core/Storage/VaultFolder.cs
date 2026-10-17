@@ -44,7 +44,7 @@ public static class VaultFolder
 
         var id = Guid.NewGuid();
         var (wrapped, masterKey) = KeyWrap.Create(passPhrase, id.ToByteArray(), iterations);
-        var header = new VaultHeader(VaultHeader.CurrentFormat, id, wrapped);
+        var header = new VaultHeader(VaultFormat.Current, id, wrapped);
         Directory.CreateDirectory(ChangesOf(folder));
         header.Write(HeaderOf(folder));
         return (header, masterKey);

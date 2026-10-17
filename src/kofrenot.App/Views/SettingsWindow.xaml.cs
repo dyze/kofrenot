@@ -209,15 +209,9 @@ public partial class SettingsWindow : Window
     /// <summary>Opens a link of the About tab in the default browser.</summary>
     private void OpenLink(Uri uri)
     {
-        try
+        if (Browser.Open(uri.AbsoluteUri, _log) is { } error)
         {
-            Process.Start(new ProcessStartInfo(uri.AbsoluteUri) { UseShellExecute = true });
-            _log.Info("Action", $"Open link: {uri.AbsoluteUri}");
-        }
-        catch (Exception ex) when (ex is System.ComponentModel.Win32Exception or IOException)
-        {
-            _log.Error("Action", $"Cannot open {uri.AbsoluteUri}", ex);
-            ShowMessage(ex.Message);
+            ShowMessage(error);
         }
     }
 
@@ -502,6 +496,7 @@ public partial class SettingsWindow : Window
         VaultStatusText.Text = (_session.Folder, _session.Current) switch
         {
             (null, _) => "None chosen yet. An empty folder becomes a new vault; a folder holding a kofrenot vault opens it.",
+            (_, null) when _session.NewerFormat is { } format => $"Closed: written by a newer kofrenot (vault format {format}). Install the latest kofrenot to open it.",
             (_, null) => "Locked: the pass phrase was not given.",
             (_, { } vault) => $"Open: {vault.Graph.Nodes.Count} nodes, {vault.Graph.Links.Count} links.",
         };

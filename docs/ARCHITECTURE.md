@@ -6,14 +6,14 @@
 kofrenot.App   (WPF, Windows only)
 │  main window (input box), creation dialog, settings window, pass phrase dialog, log window, changelog window, tray icon
 │  VaultSession (opens, watches and adds to the vault through the creation dialog)
-│  adapters: SerilogFileLog, SingleInstance, NativeWindows + WindowPlacer (window positions), GitHubReleaseFeed,
+│  adapters: SerilogFileLog, SingleInstance, NativeWindows + WindowPlacer (window positions), GitHubReleaseFeed, Browser,
 │            DpapiProtector, GlobalHotkey, VaultWatcher
 │
 │  implements ▼  IReleaseFeed · ILog · ISecretProtector
 │
 kofrenot.Core  (no Windows dependency, fully unit-tested on any OS)
    Graph: KnowledgeGraph · Node · Link · TypeCatalog · Change
-   Storage: Vault · VaultFolder · SecretBox · KeyWrap · SnapshotStore · KeyMemory
+   Storage: Vault · VaultFolder · VaultFormat · SecretBox · KeyWrap · SnapshotStore · KeyMemory
    Input: InputParser · GraphSearch · AddPlanner · InputPresenter · CreationForm
    AppFiles · AppVersion · Changelog · ProjectLinks
    SettingsStore · SettingsCatalog · Hotkey
@@ -34,7 +34,7 @@ One namespace per folder (`Kofrenot.Core.Settings`, `Kofrenot.UI.Views`, ...). T
 | *(root)* | `AppVersion`; `AppFiles` (where every file of kofrenot is, including `keys.json` and the snapshots in `cache\`: the only place their names are written, listed in Settings > About; `AppFiles.For` picks the data folder, see [Portable copy](#portable-copy)); `Changelog` (reads the text shown by Settings > About); `ProjectLinks` (website, issues, releases) |
 | `Settings/` | `SettingsStore` (`settings.json`: theme, debug logging, update check, vault folder, hotkey), `Hotkey`, `SettingsCatalog` (the entries of the Settings window, their tabs, and the search that finds them) |
 | `Graph/` | `Node`, `Link`, `NodeType`, `LinkType`, `TypeCatalog` (built-in node and link types, link aliases), `NameKey` (the form names are compared in), `Change` (`NodeAdded`, `LinkAdded`), `KnowledgeGraph` (in-memory state, built by applying changes) |
-| `Storage/` | `SecretBox` (AES-GCM seal / open), `KeyWrap` (KDF, wrap / unwrap the master key), `ChangeCodec` (change ⇄ sealed JSON), `VaultHeader`, `VaultFolder` (layout, inspect, create), `SnapshotStore`, `Vault` (open, append, refresh), `AtomicFile` (write as `.tmp`, then rename), `KeyMemory` (remembered master keys, `keys.json`), `ISecretProtector` |
+| `Storage/` | `VaultFormat` (+ `NewerVaultFormatException`), `SecretBox` (AES-GCM seal / open), `KeyWrap` (KDF, wrap / unwrap the master key), `ChangeCodec` (change ⇄ sealed JSON), `VaultHeader`, `VaultFolder` (layout, inspect, create), `SnapshotStore`, `Vault` (open, append, refresh), `AtomicFile` (write as `.tmp`, then rename), `KeyMemory` (remembered master keys, `keys.json`), `ISecretProtector` |
 | `Input/` | `InputParser` (text → `NodeRequest` / `LinkRequest`), `GraphSearch` (`SearchHit`), `AddPlanner` (`AddChoices` → `AddPlan`: `NodePlan`, `LinkPlan`, `PlannedSide`), `InputPresenter` (the input box: preview, result rows, homonym choices), `CreationForm` (the creation screen: types, status, what exists), `PlanText` (wording shared by both) |
 | `Logging/` | `ILog` (with `NullLog`), `LogEntry`, `RingLog`, `CompositeLog`, `FilteredLog` |
 | `Placement/` | Window positions: `WindowPlacement`, `PlacementRules`, `PlacementStore` (see [Window positions](#window-positions)) |
@@ -45,7 +45,7 @@ One namespace per folder (`Kofrenot.Core.Settings`, `Kofrenot.UI.Views`, ...). T
 | *(root)* | `App.xaml`: startup and wiring; `VaultSession` (the open vault: create, unlock, watch, `Create` (creation dialog, then add), forget the remembered key) |
 | `Views/` | Windows: `MainWindow` (input box, shows `InputPresenter`), `CreationDialog` (shows a `CreationForm`), `SettingsWindow` (tabs General, Vault, Appearance, Logging, About), `PassphraseDialog`, `LogWindow`, `ChangelogWindow` (Settings > About > *Show changelog*); `MessageDialog` (messages and questions in the app's theme, instead of the Windows `MessageBox`); `AppTheme` |
 | `Tray/` | `TrayIcon` |
-| `Platform/` | Implementations of the `Core` interfaces (`GitHubReleaseFeed`, `DpapiProtector`), `SingleInstance`, `GlobalHotkey` (`RegisterHotKey`), `VaultWatcher` (`FileSystemWatcher`), and window placement (`NativeWindows`, `WindowPlacer`) |
+| `Platform/` | Implementations of the `Core` interfaces (`GitHubReleaseFeed`, `DpapiProtector`), `Browser` (opens web pages), `SingleInstance`, `GlobalHotkey` (`RegisterHotKey`), `VaultWatcher` (`FileSystemWatcher`), and window placement (`NativeWindows`, `WindowPlacer`) |
 | `Logging/` | `LogHub`, `SerilogFileLog` |
 | `Assets/` | `kofrenot.ico` (drawn by `build/make_icon.py`) |
 
@@ -127,8 +127,22 @@ Model and principles: [GOAL.md](GOAL.md#data-model).
 - **Only added, never modified.** A change file is written as `*.tmp` then renamed, so a reader or the sync tool never sees half a file. `.tmp` files are ignored.
 - **Folders by the id's first two characters**, so no folder holds too many files.
 - An unreadable file (corrupt, wrong key, still being copied) is skipped and logged once as a warning, then tried again at each refresh; the others still load. Other files (`desktop.ini`, ...) are ignored.
-- A header `format` newer than the app's: the vault is not opened.
+- A header or change file in a newer format: see [Format](#format).
 - `VaultFolder.Inspect`: a new vault is only created in an empty (or missing) folder; a folder holding other files is refused, so nothing of the user's is mixed with it.
+
+### Format
+One number for the whole vault, `VaultFormat.Current` (1 so far), written in the header and in every change file (`format`). It is not the app version: it only changes when what is written in a vault breaks.
+
+| Found | This kofrenot |
+| --- | --- |
+| format ≤ `VaultFormat.Current` | reads it |
+| header with a newer format | does not open the vault |
+| change file with a newer format (another device has a newer kofrenot) | closes the vault, at opening or at a refresh |
+| format < 1 | the file is damaged: skipped like an unreadable file |
+
+- `NewerVaultFormatException` (a `NotSupportedException`) carries the format found. `VaultSession.NewerFormat` keeps it: the main window and Settings > Vault say to upgrade, and *Get the latest kofrenot* opens the releases page.
+- A breaking change (something an older kofrenot would misread or not read) raises `VaultFormat.Current`. The owner decides it first (`CLAUDE.md`). Changes that only add something older versions ignore safely (such as an unknown type, shown by its id) do not.
+- Not done yet: rewriting a vault in a newer format (migration). It comes with the first breaking change.
 
 ### Encryption
 

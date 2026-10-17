@@ -40,7 +40,7 @@ public sealed class VaultFolderTests : IDisposable
         Assert.True(Directory.Exists(Path.Combine(Folder, VaultFolder.ChangesFolder)));
         var read = VaultHeader.Read(VaultFolder.HeaderOf(Folder));
         Assert.Equal(header.Id, read.Id);
-        Assert.Equal(VaultHeader.CurrentFormat, read.Format);
+        Assert.Equal(VaultFormat.Current, read.Format);
         Assert.Equal(masterKey, read.Unlock("secret"));
         Assert.Null(read.Unlock("wrong"));
     }
@@ -83,7 +83,9 @@ public sealed class VaultFolderTests : IDisposable
     {
         var path = WriteHeader("{\"format\":2,\"id\":\"3f2504e0-4f89-11d3-9a0c-0305e82c3301\"}");
 
-        Assert.Throws<NotSupportedException>(() => VaultHeader.Read(path));
+        var refused = Assert.Throws<NewerVaultFormatException>(() => VaultHeader.Read(path));
+        Assert.Equal(2, refused.Format);
+        Assert.Contains($"reads up to format {VaultFormat.Current}", refused.Message);
     }
 
     public void Dispose() => _temp.Dispose();

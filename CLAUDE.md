@@ -14,6 +14,7 @@ A private, self-hosted knowledge system: store, organize, search, version and sh
 - Windows access goes behind an interface defined in `Core` and implemented in `App`.
 - All domain logic (notes, files, metadata, search, versioning, sharing, sync) lives in `Core`, so it can be reused by a later server or another client.
 - Metadata is always available locally; content may be fetched on demand. Do not design anything that needs the network to browse or search metadata.
+- **Vault format.** `VaultFormat.Current` versions what is written in a vault (header, change files, encryption); a kofrenot reads formats up to its own and asks to be upgraded beyond ([ARCHITECTURE.md](docs/ARCHITECTURE.md#format)). Before changing code that makes a breaking change to the vault format (something an older kofrenot would misread or not read), tell the owner, and wait for the go-ahead: the change raises `VaultFormat.Current`.
 - Storage, sync, conflicts and encryption are decided (`docs/GOAL.md#decisions`): ask before changing them. The rest (`docs/GOAL.md#open-questions`) is open: ask before deciding one.
 
 ## Dependencies

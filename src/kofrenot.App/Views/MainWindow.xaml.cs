@@ -6,7 +6,9 @@ using Kofrenot.Core;
 using Kofrenot.Core.Input;
 using Kofrenot.Core.Logging;
 using Kofrenot.Core.Settings;
+using Kofrenot.Core.Storage;
 using Kofrenot.Core.Updates;
+using Kofrenot.UI.Platform;
 
 namespace Kofrenot.UI.Views;
 
@@ -66,6 +68,11 @@ public partial class MainWindow : Window
         {
             StateText.Text = "No vault yet. Choose its folder in Settings > Vault: an empty folder becomes a new vault, encrypted with a pass phrase.";
             StateButton.Content = "Open settings";
+        }
+        else if (_session.NewerFormat is { } format)
+        {
+            StateText.Text = $"This vault was written by a newer kofrenot (vault format {format}; this one reads up to format {VaultFormat.Current}). Install the latest kofrenot to open it.";
+            StateButton.Content = "Get the latest kofrenot";
         }
         else
         {
@@ -157,6 +164,13 @@ public partial class MainWindow : Window
         if (_session.Folder is null)
         {
             ShowSettings();
+        }
+        else if (_session.NewerFormat is not null)
+        {
+            if (Browser.Open(ProjectLinks.Releases, _log) is { } error)
+            {
+                MessageDialog.Inform(this, $"Cannot open {ProjectLinks.Releases}.\n\n{error}");
+            }
         }
         else
         {

@@ -113,6 +113,16 @@ public sealed class VaultTests : IDisposable
     }
 
     [Fact]
+    public void AChangeOfANewerFormat_StopsTheVault_OnOpeningAndOnRefresh()
+    {
+        var reader = Open(snapshot: false);
+        WriteChange("{\"format\":2,\"op\":\"rename\",\"at\":\"2026-10-16T09:12:00Z\"}");
+
+        Assert.Equal(2, Assert.Throws<NewerVaultFormatException>(() => reader.Refresh()).Format);
+        Assert.Throws<NewerVaultFormatException>(() => Open(snapshot: false));
+    }
+
+    [Fact]
     public void OtherFiles_InTheChangesFolder_AreIgnored()
     {
         var sub = Path.Combine(ChangesFolder, "3f");
@@ -204,6 +214,16 @@ public sealed class VaultTests : IDisposable
         var node = NewNode(name);
         vault.Append(new NodeAdded(Guid.NewGuid(), node.Created, node));
         return node;
+    }
+
+    // A change file as another kofrenot would write it.
+    private void WriteChange(string json)
+    {
+        var id = Guid.NewGuid();
+        var name = id.ToString("N");
+        var path = Path.Combine(ChangesFolder, name[..2], name + ".kfc");
+        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+        File.WriteAllBytes(path, new SecretBox(_key).Seal("KFC1"u8, System.Text.Encoding.UTF8.GetBytes(json), id.ToByteArray()));
     }
 
     private static Node NewNode(string name) => new(Guid.NewGuid(), TypeCatalog.Generic.Id, name, Start);

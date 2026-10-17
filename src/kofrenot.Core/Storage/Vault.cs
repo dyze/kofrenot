@@ -35,6 +35,7 @@ public sealed class Vault
 
     /// <summary>Opens a vault with its master key: the snapshot, then the change files it lacks.</summary>
     /// <param name="cacheFolder">Where the local snapshot is kept; null for none.</param>
+    /// <exception cref="NewerVaultFormatException">A change file was written by a newer kofrenot.</exception>
     public static Vault Open(string folder, VaultHeader header, byte[] masterKey, string? cacheFolder = null, ILog? log = null)
     {
         var vault = new Vault(folder, header, masterKey, cacheFolder, log);
@@ -63,6 +64,10 @@ public sealed class Vault
 
     /// <summary>Reads the change files not read yet (written by another app, or copied by the sync tool).</summary>
     /// <returns>How many were read.</returns>
+    /// <exception cref="NewerVaultFormatException">
+    /// A change file was written by a newer kofrenot: the vault must not be used further, as this
+    /// version would miss what it means.
+    /// </exception>
     public int Refresh()
     {
         var changes = ReadNewChanges();
@@ -128,6 +133,7 @@ public sealed class Vault
     }
 
     // An unreadable file is tried again at each refresh (the sync tool may still be copying it), and reported once.
+    // A newer format is not unreadable: NewerVaultFormatException goes up.
     private Change? TryRead(Guid id, string path)
     {
         try

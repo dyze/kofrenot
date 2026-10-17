@@ -12,7 +12,6 @@ namespace Kofrenot.Core.Storage;
 /// </summary>
 public sealed class ChangeCodec(SecretBox box)
 {
-    public const int Format = 1;
     private static ReadOnlySpan<byte> Magic => "KFC1"u8;
 
     private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web)
@@ -23,7 +22,8 @@ public sealed class ChangeCodec(SecretBox box)
     public byte[] Encode(Change change) =>
         box.Seal(Magic, JsonSerializer.SerializeToUtf8Bytes(ChangeData.From(change), Json), change.Id.ToByteArray());
 
-    /// <exception cref="InvalidDataException">Damaged, another key or id, another format, or an unknown change.</exception>
+    /// <exception cref="InvalidDataException">Damaged, another key or id, or an unknown change.</exception>
+    /// <exception cref="NewerVaultFormatException">Written by a newer kofrenot.</exception>
     public Change Decode(Guid id, byte[] data)
     {
         var json = box.Open(Magic, data, id.ToByteArray());
@@ -47,17 +47,19 @@ public sealed class ChangeCodec(SecretBox box)
 
         public static ChangeData From(Change change) => change switch
         {
-            NodeAdded added => new(ChangeCodec.Format, NodeAddedOp, added.At, Node: added.Node),
-            LinkAdded added => new(ChangeCodec.Format, LinkAddedOp, added.At, Link: added.Link),
+            NodeAdded added => new(VaultFormat.Current, NodeAddedOp, added.At, Node: added.Node),
+            LinkAdded added => new(VaultFormat.Current, LinkAddedOp, added.At, Link: added.Link),
             _ => throw new ArgumentOutOfRangeException(nameof(change), change.GetType().Name, "Unknown change"),
         };
 
         public Change ToChange(Guid id)
         {
-            if (Format != ChangeCodec.Format)
+            if (Format < 1)
             {
-                throw new InvalidDataException($"Change format {Format} is not supported");
+                throw new InvalidDataException($"Change format {Format} is not valid");
             }
+
+            VaultFormat.EnsureSupported(Format);
 
             return Op switch
             {

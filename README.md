@@ -38,6 +38,7 @@ A vault is a folder: on this computer, on a file share, or in a folder a sync to
 - A **vault folder** asks for its pass phrase at start, unless *Remember pass phrase on this computer* was ticked (kept by Windows for your account; Settings > Vault > *Forget* removes it).
 - A folder holding other files is refused.
 - Several computers or copies can add to the same vault at once; what the others add appears without a restart.
+- A vault written by a newer kofrenot (on another computer, say) is not opened, or is closed as soon as it is seen: install the latest kofrenot (*Get the latest kofrenot* in the main window).
 
 ### Input box
 Type in the box at the top of the main window:

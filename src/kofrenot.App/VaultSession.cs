@@ -42,6 +42,12 @@ public sealed class VaultSession : IDisposable
     /// <summary>Whether the open vault's key is remembered on this computer.</summary>
     public bool IsRemembered => Current is { } vault && _keys.Has(vault.Id);
 
+    /// <summary>
+    /// The format of the vault when it was written by a newer kofrenot: it stays closed until
+    /// kofrenot is upgraded. Null otherwise.
+    /// </summary>
+    public int? NewerFormat { get; private set; }
+
     /// <summary>Opens the vault of the settings, asking its pass phrase unless it is remembered. Does nothing when one is open.</summary>
     public void Open(Window owner)
     {
@@ -50,9 +56,11 @@ public sealed class VaultSession : IDisposable
             return;
         }
 
+        NewerFormat = null;
         Current = OpenFolder(owner, folder);
         if (Current is null)
         {
+            Changed?.Invoke();
             return;
         }
 
@@ -77,13 +85,27 @@ public sealed class VaultSession : IDisposable
         Open(owner);
     }
 
-    /// <summary>Reads the changes other apps have added.</summary>
+    /// <summary>Reads the changes other apps have added. A change written by a newer kofrenot closes the vault.</summary>
     public void Refresh()
     {
-        if (Current?.Refresh() > 0)
+        try
         {
-            Changed?.Invoke();
+            if (Current?.Refresh() > 0)
+            {
+                Changed?.Invoke();
+            }
         }
+        catch (NewerVaultFormatException ex)
+        {
+            NeedsUpgrade(ex);
+            Close();
+        }
+    }
+
+    private void NeedsUpgrade(NewerVaultFormatException ex)
+    {
+        NewerFormat = ex.Format;
+        _log.Warn(Category, ex.Message);
     }
 
     /// <summary>
@@ -202,7 +224,12 @@ public sealed class VaultSession : IDisposable
         {
             header = VaultHeader.Read(VaultFolder.HeaderOf(folder));
         }
-        catch (Exception ex) when (ex is InvalidDataException or NotSupportedException or IOException or UnauthorizedAccessException)
+        catch (NewerVaultFormatException ex)
+        {
+            NeedsUpgrade(ex);
+            return null;
+        }
+        catch (Exception ex) when (ex is InvalidDataException or IOException or UnauthorizedAccessException)
         {
             _log.Error(Category, $"Cannot read the vault in {folder}", ex);
             MessageDialog.Inform(owner, $"The vault in {folder} cannot be opened.\n\n{ex.Message}");
@@ -246,6 +273,11 @@ public sealed class VaultSession : IDisposable
             }
 
             return Vault.Open(folder, header, key, _files.Cache, _log);
+        }
+        catch (NewerVaultFormatException ex)
+        {
+            NeedsUpgrade(ex);
+            return null;
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Security.Cryptography.CryptographicException)
         {
