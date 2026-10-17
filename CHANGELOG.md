@@ -17,6 +17,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **Input box** in the main window: `Dune` adds a node, `Dune relates to Frank Herbert` a link and the nodes it needs. While typing, the matching nodes and the links of an exact match are listed, and a preview says what Enter adds. Case and accents are ignored. Homonyms are marked `¹`, `²`, and Up/Down picks one (Tab: the other side of a link).
 - **Creation screen**: Enter in the input box shows what will be added before adding it: the type of each new node (*Generic* by default) and the link type, both chosen from the built-in types, and what exists already (a name already used, with its nodes and their types; for a link, whether each side is new). Enter adds, Esc cancels.
 - **Node details**: select a node found (or one of its links) with Up/Down, then Enter (or its › button) shows its properties and links instead of the search. From link to link, up to 4 levels, with a breadcrumb to go back; Esc goes back one level.
+- **Renaming** a node in its details (F2 or ✎). A rename never overwrites: it lists the names it replaces, so a node renamed on two devices before they synced shows a conflict, with each name offered to keep.
 - **Hotkey** Ctrl+Alt+K shows kofrenot from anywhere, changeable in Settings > General. Esc clears the input box, then hides the window.
 - **Local snapshot**: each computer keeps the loaded vault in an encrypted cache, so it opens fast.
 - **Update check** once a day against GitHub releases, switchable in About.

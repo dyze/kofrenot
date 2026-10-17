@@ -6,7 +6,8 @@ namespace Kofrenot.Core.Browse;
 /// <summary>
 /// The details screen: the trail of nodes opened from the search, then from link to link, at most
 /// <see cref="MaxDepth"/> levels. Each level keeps the link selected (Up/Down), so going back shows
-/// it again. The details are read from the graph each time, so changes from elsewhere appear.
+/// it again. Levels keep node ids, and the details are read from the graph each time, so changes
+/// (from elsewhere, or a rename) appear.
 /// </summary>
 public sealed class NodeBrowser(TypeCatalog? types = null)
 {
@@ -24,7 +25,7 @@ public sealed class NodeBrowser(TypeCatalog? types = null)
     public int Depth => _trail.Count;
 
     /// <summary>The labels of the open nodes, from level 1 to the current one.</summary>
-    public IReadOnlyList<string> Trail => Graph is null ? [] : _trail.Select(level => new PlanText(Graph).NodeLabel(level.Node)).ToList();
+    public IReadOnlyList<string> Trail => Graph is null ? [] : _trail.Select(level => new PlanText(Graph).NodeLabel(Graph.FindNode(level.NodeId)!)).ToList();
 
     /// <summary>The node of the current level, or null while closed.</summary>
     public NodeDetails? Details => Graph is null || _trail.Count == 0 ? null : DetailsOf(Graph, _trail[^1]);
@@ -37,7 +38,7 @@ public sealed class NodeBrowser(TypeCatalog? types = null)
     {
         Graph = graph;
         _trail.Clear();
-        _trail.Add(new Level(from ?? node));
+        _trail.Add(new Level((from ?? node).Id));
         if (from is not null)
         {
             OpenLinked(node);
@@ -77,7 +78,7 @@ public sealed class NodeBrowser(TypeCatalog? types = null)
         }
 
         _trail[^1].Selected = index;
-        _trail.Add(new Level(node));
+        _trail.Add(new Level(node.Id));
         return true;
     }
 
@@ -97,24 +98,27 @@ public sealed class NodeBrowser(TypeCatalog? types = null)
 
     public void Close() => BackTo(0);
 
-    private bool CanOpen(Node node) => Depth < MaxDepth && _trail.All(level => level.Node.Id != node.Id);
+    private bool CanOpen(Node node) => Depth < MaxDepth && _trail.All(level => level.NodeId != node.Id);
 
     private NodeDetails DetailsOf(KnowledgeGraph graph, Level level)
     {
         var text = new PlanText(graph);
-        var links = graph.LinksOf(level.Node.Id);
+        var node = graph.FindNode(level.NodeId)!;
+        var links = graph.LinksOf(node.Id);
         level.Selected = Math.Clamp(level.Selected, 0, Math.Max(0, links.Count - 1));
         var rows = links.Select((link, index) =>
         {
-            var other = graph.FindNode(link.Other(level.Node.Id))!;
+            var other = graph.FindNode(link.Other(node.Id))!;
             return new LinkRow(_types.LinkTypeName(link.Type), text.NodeLabel(other), other, CanOpen(other), index == level.Selected);
         });
-        return new NodeDetails(level.Node, text.NodeLabel(level.Node), _types.NodeTypeName(level.Node.Type), rows.ToList());
+        var names = graph.NamesOf(node.Id);
+        IReadOnlyList<string> conflict = names.Count > 1 ? names.Select(version => version.Name).ToList() : [];
+        return new NodeDetails(node, text.NodeLabel(node), _types.NodeTypeName(node.Type), rows.ToList(), conflict);
     }
 
-    private sealed class Level(Node node)
+    private sealed class Level(Guid nodeId)
     {
-        public Node Node { get; } = node;
+        public Guid NodeId { get; } = nodeId;
 
         public int Selected { get; set; }
     }

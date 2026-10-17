@@ -34,9 +34,9 @@ One namespace per folder (`Kofrenot.Core.Settings`, `Kofrenot.UI.Views`, ...). T
 | --- | --- |
 | *(root)* | `AppVersion`; `AppFiles` (where every file of kofrenot is, including `keys.json` and the snapshots in `cache\`: the only place their names are written, listed in Settings > About; `AppFiles.For` picks the data folder, see [Portable copy](#portable-copy)); `Changelog` (reads the text shown by Settings > About); `ProjectLinks` (website, issues, releases) |
 | `Settings/` | `SettingsStore` (`settings.json`: theme, debug logging, update check, vault folder, hotkey), `Hotkey`, `SettingsCatalog` (the entries of the Settings window, their tabs, and the search that finds them) |
-| `Graph/` | `Node`, `Link`, `NodeType`, `LinkType`, `TypeCatalog` (built-in node and link types, link aliases), `NameKey` (the form names are compared in), `Change` (`NodeAdded`, `LinkAdded`), `KnowledgeGraph` (in-memory state, built by applying changes) |
+| `Graph/` | `Node`, `Link`, `NodeType`, `LinkType`, `TypeCatalog` (built-in node and link types, link aliases), `NameKey` (the form names are compared in), `Change` (`NodeAdded`, `LinkAdded`, `NodeRenamed`), `NodeNames` + `NameVersion` (a node's current names, see [Renames](#renames)), `KnowledgeGraph` (in-memory state, built by applying changes) |
 | `Storage/` | `VaultFormat` (+ `NewerVaultFormatException`), `SecretBox` (AES-GCM seal / open), `KeyWrap` (KDF, wrap / unwrap the master key), `ChangeCodec` (change ⇄ sealed JSON), `VaultHeader`, `VaultFolder` (layout, inspect, create), `SnapshotStore`, `Vault` (open, append, refresh), `AtomicFile` (write as `.tmp`, then rename), `KeyMemory` (remembered master keys, `keys.json`), `ISecretProtector` |
-| `Input/` | `InputParser` (text → `NodeRequest` / `LinkRequest`), `GraphSearch` (`SearchHit`), `AddPlanner` (`AddChoices` → `AddPlan`: `NodePlan`, `LinkPlan`, `PlannedSide`), `InputPresenter` (the input box: preview, result rows, homonym choices), `CreationForm` (the creation screen: types, status, what exists), `PlanText` (wording shared by both) |
+| `Input/` | `InputParser` (text → `NodeRequest` / `LinkRequest`), `GraphSearch` (`SearchHit`), `AddPlanner` (`AddChoices` → `AddPlan`: `NodePlan`, `LinkPlan`, `PlannedSide`), `InputPresenter` (the input box: preview, result rows, homonym choices), `CreationForm` (the creation screen: types, status, what exists), `PlanText` (wording shared by both), `RenamePlanner` (`RenamePlan`: a new name, its problem, homonyms) |
 | `Browse/` | `NodeBrowser` (the details screen: trail of open nodes, at most 4, the selected link of each), `NodeDetails`, `LinkRow` |
 | `Logging/` | `ILog` (with `NullLog`), `LogEntry`, `RingLog`, `CompositeLog`, `FilteredLog` |
 | `Placement/` | Window positions: `WindowPlacement`, `PlacementRules`, `PlacementStore` (see [Window positions](#window-positions)) |
@@ -171,7 +171,11 @@ UTF-8 JSON before encryption:
   "node": { "id": "…", "type": "generic", "name": "Dune", "created": "2026-10-16T09:12:00Z" } }
 { "format": 1, "at": "…", "op": "addLink",
   "link": { "id": "…", "type": "relates-to", "from": "<node id>", "to": "<node id>", "created": "…" } }
+{ "format": 1, "at": "…", "op": "renameNode",
+  "rename": { "node": "<node id>", "name": "Dune (novel)", "replaces": ["<node id or rename id>", "…"] } }
 ```
+
+`renameNode` was added to format 1 before 0.1 was released, so the format number did not change (owner's decision).
 
 - Changes are applied in `at` order (then id) to an in-memory graph. Search and preview work on it only.
 - A type unknown to this version is kept and shown by its id.
@@ -194,8 +198,23 @@ start ─► snapshot (local) ─► graph + ids of the changes it holds
 - Stored in the local data folder, never in the vault folder: `cache\<vault id>.kfs` (`AppFiles`, `Vault.SnapshotOf`). It belongs to one device, so it never has to be synced or merged.
 - Encrypted with the master key like a change file (`KFS1` · nonce · ciphertext · tag, AAD = vault id), so it reveals nothing more than the vault.
 - Written as `*.tmp`, then renamed. It is only a cache: deleting it costs one full read.
-- A change file that arrives late, older than changes already applied, is fine: in 0.1 changes only add, so their order does not change the result.
-- Later, when changes modify nodes, ten edits of one node are still ten files, each read once per device; packing them into bigger files is an open question ([GOAL.md](GOAL.md#open-questions), *Packs*).
+- A change file that arrives late, older than changes already applied, is fine: adds do not depend on order, and renames name what they replace (see [Renames](#renames)), so the result is the same in any order.
+- It holds the nodes with the names they were added with, plus every rename (`SnapshotStore.Format` 2). A snapshot of format 1 (without renames) is not used, so every change is read again once.
+- Ten renames of one node are still ten files, each read once per device; packing them into bigger files is an open question ([GOAL.md](GOAL.md#open-questions), *Packs*).
+
+### Renames
+A rename never overwrites: it is a new change listing the names it **replaces**. A node's current names are those no rename replaces (`NodeNames`):
+
+```
+Dune (added) ◄─replaces── r1 "Dune (novel)"     device A
+             ◄─replaces── r2 "Dune, 1965"       device B, before syncing
+current names: r1, r2 ⇒ a conflict: shown name = the latest (r2), both offered in the details
+r3 "Dune (novel)" replaces r1 + r2 ⇒ one current name again
+```
+
+- The result does not depend on the order the files arrive in. A rename that arrives before its node is kept and applied when the node arrives.
+- `RenamePlanner` writes a rename that replaces every current name, so renaming a node in conflict, or keeping one of its names, resolves the conflict. It refuses an empty name, a name with a link phrase (the input box could not find it), and the same name when there is no conflict. Homonyms are allowed, with a warning.
+- The search indexes the shown name only.
 
 ### Input
 `Dune relates to Frank Herbert` → link; `Dune` → node.

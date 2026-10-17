@@ -8,12 +8,14 @@ namespace Kofrenot.Core.Graph;
 /// Nodes with the same name (<see cref="NameKey"/>) are all kept: they are duplicates the user
 /// sees. A link repeating another one (same type and nodes) is counted once. A link may arrive
 /// before one of its nodes (the sync tool copies files in any order): it is kept, and shown once
-/// both nodes are there.
+/// both nodes are there. A node is shown with its current name (<see cref="NodeNames"/>); a rename
+/// may also arrive before its node.
 /// </remarks>
 public sealed class KnowledgeGraph
 {
     private readonly TypeCatalog _types;
     private readonly Dictionary<Guid, Node> _nodes = [];
+    private readonly Dictionary<Guid, NodeNames> _names = [];
     private readonly Dictionary<string, List<Node>> _nodesByName = [];
     private readonly Dictionary<Guid, Link> _links = [];
     private readonly Dictionary<LinkKey, Link> _linksByEnds = [];
@@ -21,9 +23,16 @@ public sealed class KnowledgeGraph
 
     public KnowledgeGraph(TypeCatalog? types = null) => _types = types ?? TypeCatalog.BuiltIn;
 
+    /// <summary>The nodes, each with its current name.</summary>
     public IReadOnlyCollection<Node> Nodes => _nodes.Values;
 
     public IReadOnlyCollection<Link> Links => _links.Values;
+
+    /// <summary>The nodes with the names they were added with: what a snapshot keeps, with <see cref="Renames"/>.</summary>
+    public IEnumerable<Node> NodesAsAdded => _names.Values.Select(names => names.Added).OfType<Node>();
+
+    /// <summary>Every rename, including those of nodes not arrived yet.</summary>
+    public IEnumerable<NodeRenamed> Renames => _names.Values.SelectMany(names => names.Renames);
 
     /// <summary>The nodes by name key (<see cref="NameKey"/>), each list oldest first: what the search goes through.</summary>
     internal IReadOnlyDictionary<string, List<Node>> NodesByKey => _nodesByName;
@@ -33,10 +42,18 @@ public sealed class KnowledgeGraph
     {
         NodeAdded added => Add(added.Node),
         LinkAdded added => Add(added.Link),
+        NodeRenamed renamed => Rename(renamed),
         _ => throw new ArgumentOutOfRangeException(nameof(change), change.GetType().Name, "Unknown change"),
     };
 
     public Node? FindNode(Guid id) => _nodes.GetValueOrDefault(id);
+
+    /// <summary>
+    /// The current names of a node, oldest first: one, or several when it was renamed on two
+    /// devices before they synced (a conflict). Empty for an unknown node.
+    /// </summary>
+    public IReadOnlyList<NameVersion> NamesOf(Guid node) =>
+        _names.TryGetValue(node, out var names) && names.Added is not null ? names.Current() : [];
 
     /// <summary>The nodes with this name (case, accents and spaces ignored), oldest first.</summary>
     public IReadOnlyList<Node> NodesNamed(string name) =>
@@ -51,14 +68,52 @@ public sealed class KnowledgeGraph
     /// <summary>The link of this type between these nodes, or null. Either direction for a symmetric type.</summary>
     public Link? FindLink(string type, Guid from, Guid to) => _linksByEnds.GetValueOrDefault(KeyOf(type, from, to));
 
-    /// <summary>Adds a node (from a change or a snapshot). False when it is already there.</summary>
+    /// <summary>Adds a node (from a change or a snapshot), with the name it was added with. False when it is already there.</summary>
     public bool Add(Node node)
     {
-        if (!_nodes.TryAdd(node.Id, node))
+        var names = NamesFor(node.Id);
+        if (names.Added is not null)
         {
             return false;
         }
 
+        names.Added = node;
+        var shown = names.Shown(node);
+        Show(shown == node.Name ? node : node with { Name = shown });
+        return true;
+    }
+
+    /// <summary>Renames a node (from a change or a snapshot). False when the rename is already there.</summary>
+    public bool Rename(NodeRenamed rename)
+    {
+        var names = NamesFor(rename.Node);
+        if (!names.Add(rename))
+        {
+            return false;
+        }
+
+        if (_nodes.TryGetValue(rename.Node, out var node))
+        {
+            Hide(node);
+            Show(node with { Name = names.Shown(names.Added!) });
+        }
+
+        return true;
+    }
+
+    private NodeNames NamesFor(Guid node)
+    {
+        if (!_names.TryGetValue(node, out var names))
+        {
+            _names[node] = names = new NodeNames();
+        }
+
+        return names;
+    }
+
+    private void Show(Node node)
+    {
+        _nodes[node.Id] = node;
         var key = NameKey.Of(node.Name);
         if (!_nodesByName.TryGetValue(key, out var sameName))
         {
@@ -66,7 +121,17 @@ public sealed class KnowledgeGraph
         }
 
         InsertOldestFirst(sameName, node, other => (other.Created, other.Id));
-        return true;
+    }
+
+    private void Hide(Node node)
+    {
+        var key = NameKey.Of(node.Name);
+        var sameName = _nodesByName[key];
+        sameName.RemoveAll(other => other.Id == node.Id);
+        if (sameName.Count == 0)
+        {
+            _nodesByName.Remove(key);
+        }
     }
 
     /// <summary>Adds a link (from a change or a snapshot). False when it is already there, or repeats another one.</summary>

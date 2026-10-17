@@ -1,5 +1,6 @@
 using System.Windows;
 using Kofrenot.Core;
+using Kofrenot.Core.Graph;
 using Kofrenot.Core.Input;
 using Kofrenot.Core.Logging;
 using Kofrenot.Core.Settings;
@@ -126,39 +127,41 @@ public sealed class VaultSession : IDisposable
             return false;
         }
 
-        try
-        {
-            Add(vault, plan);
-            return true;
-        }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-        {
-            _log.Error("Action", "Cannot add to the vault", ex);
-            MessageDialog.Inform(owner, $"Cannot add to the vault.\n\n{ex.Message}");
-            return false;
-        }
-    }
-
-    private void Add(Vault vault, AddPlan plan)
-    {
-        try
-        {
-            foreach (var change in plan.Changes)
-            {
-                vault.Append(change);
-            }
-        }
-        finally
-        {
-            Changed?.Invoke();
-        }
-
-        _log.Info("Action", plan switch
+        return Append(owner, vault, plan.Changes, plan switch
         {
             LinkPlan link => $"Link added ({link.Type.Id}, {(link.Left.IsNew ? 1 : 0) + (link.Right?.IsNew == true ? 1 : 0)} new nodes)",
             NodePlan node => $"Node added ({node.Type.Id}{(node.NeedsConfirmation ? ", a duplicate" : string.Empty)})",
             _ => "Added",
         });
+    }
+
+    /// <summary>Renames a node. False when no vault is open, or it cannot be written (the user is told).</summary>
+    public bool Rename(Window owner, NodeRenamed rename) =>
+        Current is { } vault
+        && Append(owner, vault, [rename], rename.Replaces.Count > 1 ? $"Node renamed (a conflict of {rename.Replaces.Count} names resolved)" : "Node renamed");
+
+    private bool Append(Window owner, Vault vault, IReadOnlyList<Change> changes, string action)
+    {
+        try
+        {
+            foreach (var change in changes)
+            {
+                vault.Append(change);
+            }
+
+            _log.Info("Action", action);
+            return true;
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            _log.Error("Action", "Cannot write to the vault", ex);
+            MessageDialog.Inform(owner, $"Cannot write to the vault.\n\n{ex.Message}");
+            return false;
+        }
+        finally
+        {
+            Changed?.Invoke();
+        }
     }
 
     /// <summary>Forgets the open vault's remembered key: its pass phrase is asked at the next start.</summary>

@@ -45,7 +45,7 @@ Details: [ARCHITECTURE.md](ARCHITECTURE.md#vault).
 - **Offline first.** Every device has the full vault: browsing, searching and adding work without a network.
 - **Content on demand** (later). A note's or file's content is fetched when opened, and can be kept offline on request.
 - **Versioned.** Changes are kept, never overwritten.
-- **Conflicts are easy.** Files are only added, so the only conflicts are in the meaning (the same name added twice on two devices): they are shown, not resolved silently.
+- **Conflicts are easy.** Files are only added, so the only conflicts are in the meaning (the same name added twice, or a node renamed on two devices before they synced): they are shown, not resolved silently.
 - **Logic in Core.** The domain is plain .NET in `kofrenot.Core`, independent of Windows and of the UI.
 
 ## Versioning
@@ -67,7 +67,7 @@ What each version contains: [ROADMAP.md](ROADMAP.md).
 | --- | --- |
 | Local storage | A folder of encrypted change files, read into memory ([ARCHITECTURE.md](ARCHITECTURE.md#vault)) |
 | Sync | Outside kofrenot, by copying files. No server for now |
-| Conflicts | Concurrent duplicates are flagged, not merged |
+| Conflicts | Concurrent duplicates and concurrent renames are flagged, not merged |
 | Security | AES-256-GCM, random master key wrapped by a pass-phrase key (PBKDF2-SHA256); optionally remembered by Windows (DPAPI) |
 | Notes | Will be a node type |
 

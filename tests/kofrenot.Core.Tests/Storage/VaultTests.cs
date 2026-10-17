@@ -199,6 +199,19 @@ public sealed class VaultTests : IDisposable
     }
 
     [Fact]
+    public void ARename_IsFoundAgain_FromTheFiles_AndFromTheSnapshot()
+    {
+        var vault = Open();
+        var dune = AddNode(vault, "Dune");
+
+        vault.Append(new NodeRenamed(Guid.NewGuid(), Start.AddMinutes(1), dune.Id, "Dune (novel)", [dune.Id]));
+
+        Assert.Equal("Dune (novel)", Open(snapshot: false).Graph.FindNode(dune.Id)!.Name);
+        Directory.Delete(ChangesFolder, recursive: true);
+        Assert.Equal("Dune (novel)", Open().Graph.FindNode(dune.Id)!.Name);
+    }
+
+    [Fact]
     public void TheSnapshot_IsNamedByTheVaultId() =>
         Assert.Equal(Path.Combine(Cache, _header.Id.ToString("N") + ".kfs"), Vault.SnapshotOf(Cache, _header.Id));
 

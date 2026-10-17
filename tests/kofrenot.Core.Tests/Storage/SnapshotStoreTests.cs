@@ -37,6 +37,25 @@ public sealed class SnapshotStoreTests : IDisposable
         Assert.Equal(changes, snapshot.Changes);
         Assert.Equal([dune, herbert], snapshot.Nodes.OrderBy(node => node.Name));
         Assert.Equal([link], snapshot.Links);
+        Assert.Empty(snapshot.Renames);
+    }
+
+    [Fact]
+    public void Renames_AreKept_WithTheNodesAsAdded()
+    {
+        var graph = new KnowledgeGraph();
+        var dune = new Node(Guid.NewGuid(), "generic", "Dune", Start);
+        graph.Add(dune);
+        var rename = new NodeRenamed(Guid.NewGuid(), Start.AddMinutes(1), dune.Id, "Dune (novel)", [dune.Id]);
+        graph.Rename(rename);
+
+        Store().Save(graph, []);
+        var snapshot = Store().Load()!;
+
+        Assert.Equal([dune], snapshot.Nodes);
+        var kept = Assert.Single(snapshot.Renames);
+        Assert.Equal((rename.Id, rename.Node, rename.Name), (kept.Id, kept.Node, kept.Name));
+        Assert.Equal([dune.Id], kept.Replaces);
     }
 
     [Fact]
@@ -70,6 +89,7 @@ public sealed class SnapshotStoreTests : IDisposable
     }
 
     [Theory]
+    [InlineData("{\"format\":1,\"changes\":[],\"nodes\":[],\"links\":[],\"renames\":[]}")]
     [InlineData("{\"format\":2,\"changes\":[],\"nodes\":[],\"links\":[]}")]
     [InlineData("{\"format\":1,\"nodes\":[],\"links\":[]}")]
     [InlineData("{\"format\":1,\"changes\":[],\"links\":[]}")]

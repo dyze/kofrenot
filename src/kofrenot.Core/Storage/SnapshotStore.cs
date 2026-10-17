@@ -4,8 +4,8 @@ using Kofrenot.Core.Logging;
 
 namespace Kofrenot.Core.Storage;
 
-/// <summary>A vault's graph as loaded on this device, and the changes it holds.</summary>
-public sealed record Snapshot(IReadOnlyList<Guid> Changes, IReadOnlyList<Node> Nodes, IReadOnlyList<Link> Links);
+/// <summary>A vault's graph as loaded on this device, and the changes it holds. <see cref="Nodes"/> have the names they were added with.</summary>
+public sealed record Snapshot(IReadOnlyList<Guid> Changes, IReadOnlyList<Node> Nodes, IReadOnlyList<Link> Links, IReadOnlyList<NodeRenamed> Renames);
 
 /// <summary>
 /// Keeps a vault's graph in a local file, so each change file is read once per device. Sealed
@@ -14,7 +14,7 @@ public sealed record Snapshot(IReadOnlyList<Guid> Changes, IReadOnlyList<Node> N
 /// </summary>
 public sealed class SnapshotStore(string path, SecretBox box, Guid vault, ILog? log = null)
 {
-    public const int Format = 1;
+    public const int Format = 2;
     private static ReadOnlySpan<byte> Magic => "KFS1"u8;
 
     private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web);
@@ -31,9 +31,9 @@ public sealed class SnapshotStore(string path, SecretBox box, Guid vault, ILog? 
         try
         {
             var json = box.Open(Magic, File.ReadAllBytes(path), vault.ToByteArray());
-            if (JsonSerializer.Deserialize<SnapshotData>(json, Json) is { Format: Format, Changes: { } changes, Nodes: { } nodes, Links: { } links })
+            if (JsonSerializer.Deserialize<SnapshotData>(json, Json) is { Format: Format, Changes: { } changes, Nodes: { } nodes, Links: { } links, Renames: { } renames })
             {
-                return new Snapshot(changes, nodes, links);
+                return new Snapshot(changes, nodes, links, renames);
             }
 
             _log.Info("Vault", "The local snapshot has another format: every change is read again");
@@ -49,7 +49,7 @@ public sealed class SnapshotStore(string path, SecretBox box, Guid vault, ILog? 
     /// <summary>Saves the graph. A failure is logged only: the snapshot is a cache.</summary>
     public void Save(KnowledgeGraph graph, IEnumerable<Guid> changes)
     {
-        var data = new SnapshotData(Format, [.. changes], [.. graph.Nodes], [.. graph.Links]);
+        var data = new SnapshotData(Format, [.. changes], [.. graph.NodesAsAdded], [.. graph.Links], [.. graph.Renames]);
         try
         {
             Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(path))!);
@@ -62,5 +62,5 @@ public sealed class SnapshotStore(string path, SecretBox box, Guid vault, ILog? 
         }
     }
 
-    internal sealed record SnapshotData(int Format, List<Guid>? Changes, List<Node>? Nodes, List<Link>? Links);
+    internal sealed record SnapshotData(int Format, List<Guid>? Changes, List<Node>? Nodes, List<Link>? Links, List<NodeRenamed>? Renames);
 }

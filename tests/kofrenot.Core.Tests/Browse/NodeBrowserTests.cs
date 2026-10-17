@@ -202,6 +202,32 @@ public sealed class NodeBrowserTests
     }
 
     [Fact]
+    public void ARename_AppearsInTheDetails_AndTheTrail()
+    {
+        var dune = Add("Dune");
+        _browser.Open(_graph, dune);
+
+        _graph.Apply(new NodeRenamed(Guid.NewGuid(), Start.AddMinutes(1), dune.Id, "Dune (novel)", [dune.Id]));
+
+        Assert.Equal("Dune (novel)", _browser.Details!.Name);
+        Assert.Equal(["Dune (novel)"], _browser.Trail);
+        Assert.Empty(_browser.Details.NameConflict);
+    }
+
+    [Fact]
+    public void ANameConflict_ListsTheNames_OldestFirst()
+    {
+        var dune = Add("Dune");
+        _graph.Apply(new NodeRenamed(Guid.NewGuid(), Start.AddMinutes(2), dune.Id, "Dune, 1965", [dune.Id]));
+        _graph.Apply(new NodeRenamed(Guid.NewGuid(), Start.AddMinutes(1), dune.Id, "Dune (novel)", [dune.Id]));
+
+        _browser.Open(_graph, dune);
+
+        Assert.Equal(["Dune (novel)", "Dune, 1965"], _browser.Details!.NameConflict);
+        Assert.Equal("Dune, 1965", _browser.Details.Name);
+    }
+
+    [Fact]
     public void ALinkAddedElsewhere_AppearsInTheDetails()
     {
         var dune = Add("Dune");

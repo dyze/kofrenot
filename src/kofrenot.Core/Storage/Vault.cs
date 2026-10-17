@@ -103,6 +103,11 @@ public sealed class Vault
             Graph.Add(link);
         }
 
+        foreach (var rename in snapshot.Renames)
+        {
+            Graph.Rename(rename);
+        }
+
         _read.UnionWith(snapshot.Changes);
         return snapshot.Changes.Count;
     }

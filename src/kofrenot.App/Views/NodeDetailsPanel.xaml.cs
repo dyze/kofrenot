@@ -53,11 +53,21 @@ public partial class NodeDetailsPanel : UserControl
         CreatedText.Text = details.Node.Created.ToLocalTime().ToString("yyyy-MM-dd HH:mm", CultureInfo.CurrentCulture);
         LinksHeader.Text = details.Links.Count == 0 ? "No links" : $"Links ({details.Links.Count})";
         LinksList.ItemsSource = details.Links;
+        ConflictNames.ItemsSource = details.NameConflict;
+        ConflictPanel.Visibility = details.NameConflict.Count > 0 && !_editing ? Visibility.Visible : Visibility.Collapsed;
     }
 
-    /// <summary>Up/Down select a link, Enter opens it, Esc goes back. False for another key.</summary>
+    /// <summary>
+    /// Up/Down select a link, Enter opens it, Esc goes back, F2 renames. While the name is edited,
+    /// Enter renames and Esc cancels. False for another key.
+    /// </summary>
     public bool HandleKey(Key key)
     {
+        if (_editing)
+        {
+            return HandleEditKey(key);
+        }
+
         switch (key)
         {
             case Key.Up or Key.Down:
@@ -74,6 +84,9 @@ public partial class NodeDetailsPanel : UserControl
                 }
 
                 return true;
+            case Key.F2:
+                StartEditing();
+                return true;
             case Key.Escape:
                 GoBackTo(Browser.Depth - 1);
                 return true;
@@ -84,6 +97,7 @@ public partial class NodeDetailsPanel : UserControl
 
     private void GoBackTo(int depth)
     {
+        StopEditing();
         Browser.BackTo(depth);
         Log.Info("Action", $"Node details: back to level {Browser.Depth}");
         if (Browser.IsOpen)
@@ -98,6 +112,7 @@ public partial class NodeDetailsPanel : UserControl
 
     private void Opened()
     {
+        StopEditing();
         Log.Info("Action", $"Node details: level {Browser.Depth} opened");
         Show();
     }

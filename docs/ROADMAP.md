@@ -10,7 +10,7 @@ Scope of each planned version. Implemented features move to [CHANGELOG.md](../CH
 ## 0.1
 Implemented: see `[Unreleased]` in [CHANGELOG.md](../CHANGELOG.md). Left before the release: the owner's test of the whole version.
 
-Not in 0.1: renaming, deleting, editing properties, user-defined types.
+Not in 0.1: deleting, editing properties other than the name, user-defined types.
 
 ## 0.2 (to define)
 1. **Notes** as a node type, with content. content is saved in a separate file. only read on demand when editing a node.

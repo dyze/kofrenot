@@ -80,6 +80,34 @@ public sealed class ChangeCodecTests
     }
 
     [Fact]
+    public void ARename_RoundTrips()
+    {
+        var replaced = new[] { Guid.NewGuid(), Guid.NewGuid() };
+        var change = new NodeRenamed(Guid.NewGuid(), At, Guid.NewGuid(), "Dune (novel)", replaced);
+
+        var json = Encoding.UTF8.GetString(_box.Open("KFC1"u8, _codec.Encode(change), change.Id.ToByteArray()));
+        var decoded = Assert.IsType<NodeRenamed>(_codec.Decode(change.Id, _codec.Encode(change)));
+
+        Assert.Contains("\"op\":\"renameNode\"", json);
+        Assert.Equal((change.Id, change.At, change.Node, change.Name), (decoded.Id, decoded.At, decoded.Node, decoded.Name));
+        Assert.Equal(replaced, decoded.Replaces);
+    }
+
+    [Theory]
+    [InlineData("{\"format\":1,\"op\":\"renameNode\",\"at\":\"2026-10-16T09:12:00Z\"}")]
+    [InlineData("{\"format\":1,\"op\":\"renameNode\",\"at\":\"2026-10-16T09:12:00Z\",\"rename\":{\"name\":\"Dune\",\"replaces\":[\"3f2504e0-4f89-11d3-9a0c-0305e82c3301\"]}}")]
+    [InlineData("{\"format\":1,\"op\":\"renameNode\",\"at\":\"2026-10-16T09:12:00Z\",\"rename\":{\"node\":\"3f2504e0-4f89-11d3-9a0c-0305e82c3301\",\"replaces\":[\"3f2504e0-4f89-11d3-9a0c-0305e82c3301\"]}}")]
+    [InlineData("{\"format\":1,\"op\":\"renameNode\",\"at\":\"2026-10-16T09:12:00Z\",\"rename\":{\"node\":\"3f2504e0-4f89-11d3-9a0c-0305e82c3301\",\"name\":\" \",\"replaces\":[\"3f2504e0-4f89-11d3-9a0c-0305e82c3301\"]}}")]
+    [InlineData("{\"format\":1,\"op\":\"renameNode\",\"at\":\"2026-10-16T09:12:00Z\",\"rename\":{\"node\":\"3f2504e0-4f89-11d3-9a0c-0305e82c3301\",\"name\":\"Dune\",\"replaces\":[]}}")]
+    public void AnIncompleteRename_IsRefused(string json)
+    {
+        var id = Guid.NewGuid();
+        var data = _box.Seal("KFC1"u8, Encoding.UTF8.GetBytes(json), id.ToByteArray());
+
+        Assert.Throws<InvalidDataException>(() => _codec.Decode(id, data));
+    }
+
+    [Fact]
     public void AChangeOfANewerFormat_AsksForANewerKofrenot()
     {
         var id = Guid.NewGuid();

@@ -48,7 +48,47 @@
       </ItemsControl.ItemTemplate>
     </ItemsControl>
 
-    <TextBlock x:Name="NameText" Grid.Row="1" Margin="2,14,0,0" FontSize="26" FontWeight="SemiBold" TextWrapping="Wrap" />
+    <!-- The name: F2 or ✎ edits it in place (Enter renames, Esc cancels). Under it, a conflict
+         between names given on two devices, each name offered to keep. -->
+    <StackPanel Grid.Row="1" Margin="2,14,0,0">
+      <Grid>
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="*" />
+          <ColumnDefinition Width="Auto" />
+        </Grid.ColumnDefinitions>
+        <TextBlock x:Name="NameText" VerticalAlignment="Center" FontSize="26" FontWeight="SemiBold" TextWrapping="Wrap" />
+        <TextBox x:Name="NameBox" FontSize="26" Visibility="Collapsed" TextChanged="NameBox_TextChanged" />
+        <Button x:Name="EditButton"
+                Grid.Column="1"
+                Margin="6,0,0,0"
+                VerticalAlignment="Center"
+                Style="{StaticResource FlatButton}"
+                Content="&#xE70F;"
+                FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
+                FontSize="14"
+                ToolTip="Rename (F2)"
+                Click="EditButton_Click" />
+      </Grid>
+      <TextBlock x:Name="RenameText" Margin="0,4,0,0" Opacity="0.8" TextWrapping="Wrap" Visibility="Collapsed" />
+
+      <StackPanel x:Name="ConflictPanel" Margin="0,6,0,0" Visibility="Collapsed">
+        <TextBlock Foreground="{DynamicResource SystemFillColorCautionBrush}"
+                   TextWrapping="Wrap"
+                   Text="Renamed on two devices before they synced. Keep:" />
+        <ItemsControl x:Name="ConflictNames">
+          <ItemsControl.ItemsPanel>
+            <ItemsPanelTemplate>
+              <WrapPanel />
+            </ItemsPanelTemplate>
+          </ItemsControl.ItemsPanel>
+          <ItemsControl.ItemTemplate>
+            <DataTemplate>
+              <Button Margin="0,4,8,0" Padding="10,2" Focusable="False" Content="{Binding}" Click="KeepName_Click" />
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </StackPanel>
+    </StackPanel>
 
     <Grid Grid.Row="2" Margin="2,8,0,0">
       <Grid.ColumnDefinitions>

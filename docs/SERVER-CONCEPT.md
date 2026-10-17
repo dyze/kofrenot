@@ -39,3 +39,11 @@ Basically the vault only stores files so such server could be used for purposes 
 * Security:
 	* JSON Web Token (JWT)
 	* Token refreshed reguarly
+
+
+# File transfer
+
+* Vaults can content a lot of small files.
+* To reduce transfer durations, several files can be transmitted at once.
+* In the opposite, if a file is huge, it can be split to several chunk during transfer.
+
