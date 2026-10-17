@@ -10,7 +10,7 @@ public sealed class SnapshotStoreTests : IDisposable
     private readonly TempFolder _temp = new();
     private readonly RingLog _log = new();
     private readonly SecretBox _box = new(RandomNumberGenerator.GetBytes(SecretBox.KeySize));
-    private readonly Guid _database = Guid.NewGuid();
+    private readonly Guid _vault = Guid.NewGuid();
 
     private string FilePath => Path.Combine(_temp.Sub("cache"), "db.kfs");
 
@@ -52,7 +52,7 @@ public sealed class SnapshotStoreTests : IDisposable
     }
 
     [Fact]
-    public void ASnapshotOfAnotherDatabase_IsNotUsed()
+    public void ASnapshotOfAnotherVault_IsNotUsed()
     {
         Store().Save(new KnowledgeGraph(), []);
 
@@ -79,7 +79,7 @@ public sealed class SnapshotStoreTests : IDisposable
     public void ASnapshotOfAnotherFormat_IsNotUsed(string json)
     {
         Directory.CreateDirectory(Path.GetDirectoryName(FilePath)!);
-        File.WriteAllBytes(FilePath, _box.Seal("KFS1"u8, Encoding.UTF8.GetBytes(json), _database.ToByteArray()));
+        File.WriteAllBytes(FilePath, _box.Seal("KFS1"u8, Encoding.UTF8.GetBytes(json), _vault.ToByteArray()));
 
         Assert.Null(Store().Load());
     }
@@ -97,5 +97,5 @@ public sealed class SnapshotStoreTests : IDisposable
 
     public void Dispose() => _temp.Dispose();
 
-    private SnapshotStore Store() => new(FilePath, _box, _database, _log);
+    private SnapshotStore Store() => new(FilePath, _box, _vault, _log);
 }

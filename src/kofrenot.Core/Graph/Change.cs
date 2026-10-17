@@ -1,7 +1,7 @@
 namespace Kofrenot.Core.Graph;
 
 /// <summary>
-/// One change of the database, stored as one file named by <see cref="Id"/>. <see cref="At"/>
+/// One change of the vault, stored as one file named by <see cref="Id"/>. <see cref="At"/>
 /// orders the changes when they are applied.
 /// </summary>
 public abstract record Change(Guid Id, DateTimeOffset At);

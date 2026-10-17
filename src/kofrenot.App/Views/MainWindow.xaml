@@ -100,7 +100,7 @@
       </ListBox.ItemTemplate>
     </ListBox>
 
-    <!-- Instead of the input: no database chosen yet, or it is locked. -->
+    <!-- Instead of the input: no vault chosen yet, or it is locked. -->
     <StackPanel x:Name="StatePanel"
                 Grid.Row="1"
                 Grid.RowSpan="3"
@@ -120,7 +120,7 @@
     </StackPanel>
 
     <Grid Grid.Row="4">
-      <TextBlock x:Name="DatabaseText" FontSize="11" Opacity="0.6" TextTrimming="CharacterEllipsis" Margin="0,0,160,0" />
+      <TextBlock x:Name="VaultText" FontSize="11" Opacity="0.6" TextTrimming="CharacterEllipsis" Margin="0,0,160,0" />
       <TextBlock x:Name="VersionText" HorizontalAlignment="Right" FontSize="11" Opacity="0.6" />
     </Grid>
   </Grid>

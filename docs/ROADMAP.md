@@ -20,6 +20,6 @@ Not in 0.1: renaming, deleting, editing properties, user-defined types.
 	- Load/Save content
 
 ## 0.3 (to define)
-1. **Multiple databases.** User can register several databases on his app. Current database is selected using a combo in main window. Selection is memorized. Each database has his passphrase.
-2. **Dedicated hot keys.** User can assign a hot key per database. e.g. CTRL ALT I for private database and CTRL ALT P for personal one.
-3. **Web server.** Databases are stored on a dedicated web server. See dedicated concept  [SERVER-CONCEPT.md](SERVER-CONCEPT.md).
+1. **Multiple vaults.** User can register several vaults on his app. Current vault is selected using a combo in main window. Selection is memorized. Each vault has his passphrase.
+2. **Dedicated hot keys.** User can assign a hot key per vault. e.g. CTRL ALT I for private vault and CTRL ALT P for personal one.
+3. **Web server.** Vaults are stored on a dedicated web server. See dedicated concept  [SERVER-CONCEPT.md](SERVER-CONCEPT.md).

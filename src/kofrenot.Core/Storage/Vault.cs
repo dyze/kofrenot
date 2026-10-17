@@ -4,13 +4,13 @@ using Kofrenot.Core.Logging;
 namespace Kofrenot.Core.Storage;
 
 /// <summary>
-/// An open database: its graph in memory, the change files read so far, and the writing of new
+/// An open vault: its graph in memory, the change files read so far, and the writing of new
 /// ones. Files are only added, so several apps can use the same folder at once; each one sees the
 /// others' changes at its next <see cref="Refresh"/>. Not thread-safe: use it from one thread.
 /// </summary>
-public sealed class Database
+public sealed class Vault
 {
-    private const string Category = "Database";
+    private const string Category = "Vault";
 
     private readonly string _folder;
     private readonly ChangeCodec _codec;
@@ -19,7 +19,7 @@ public sealed class Database
     private readonly HashSet<Guid> _read = [];
     private readonly HashSet<Guid> _reportedUnreadable = [];
 
-    private Database(string folder, DatabaseHeader header, byte[] masterKey, string? cacheFolder, ILog? log)
+    private Vault(string folder, VaultHeader header, byte[] masterKey, string? cacheFolder, ILog? log)
     {
         _folder = folder;
         Id = header.Id;
@@ -33,26 +33,26 @@ public sealed class Database
 
     public KnowledgeGraph Graph { get; } = new();
 
-    /// <summary>Opens a database with its master key: the snapshot, then the change files it lacks.</summary>
+    /// <summary>Opens a vault with its master key: the snapshot, then the change files it lacks.</summary>
     /// <param name="cacheFolder">Where the local snapshot is kept; null for none.</param>
-    public static Database Open(string folder, DatabaseHeader header, byte[] masterKey, string? cacheFolder = null, ILog? log = null)
+    public static Vault Open(string folder, VaultHeader header, byte[] masterKey, string? cacheFolder = null, ILog? log = null)
     {
-        var database = new Database(folder, header, masterKey, cacheFolder, log);
-        var fromSnapshot = database.LoadSnapshot();
-        var read = database.Refresh();
-        database._log.Info(Category, $"Database {database.Id} opened: {database.Graph.Nodes.Count} nodes, "
-            + $"{database.Graph.Links.Count} links ({fromSnapshot} changes from the snapshot, {read} read)");
-        return database;
+        var vault = new Vault(folder, header, masterKey, cacheFolder, log);
+        var fromSnapshot = vault.LoadSnapshot();
+        var read = vault.Refresh();
+        vault._log.Info(Category, $"Vault {vault.Id} opened: {vault.Graph.Nodes.Count} nodes, "
+            + $"{vault.Graph.Links.Count} links ({fromSnapshot} changes from the snapshot, {read} read)");
+        return vault;
     }
 
-    /// <summary>The snapshot file of a database in <paramref name="cacheFolder"/>.</summary>
-    public static string SnapshotOf(string cacheFolder, Guid database) => Path.Combine(cacheFolder, database.ToString("N") + ".kfs");
+    /// <summary>The snapshot file of a vault in <paramref name="cacheFolder"/>.</summary>
+    public static string SnapshotOf(string cacheFolder, Guid vault) => Path.Combine(cacheFolder, vault.ToString("N") + ".kfs");
 
     /// <summary>Writes a change as a new file and applies it.</summary>
     /// <exception cref="IOException">The file cannot be written.</exception>
     public void Append(Change change)
     {
-        var path = DatabaseFolder.ChangeFileOf(_folder, change.Id);
+        var path = VaultFolder.ChangeFileOf(_folder, change.Id);
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
         AtomicFile.Write(path, _codec.Encode(change), overwrite: false);
         _read.Add(change.Id);
@@ -105,7 +105,7 @@ public sealed class Database
     private List<Change> ReadNewChanges()
     {
         var changes = new List<Change>();
-        var folder = DatabaseFolder.ChangesOf(_folder);
+        var folder = VaultFolder.ChangesOf(_folder);
         if (!Directory.Exists(folder))
         {
             return changes;
@@ -114,7 +114,7 @@ public sealed class Database
         foreach (var path in Directory.EnumerateFiles(folder, "*", SearchOption.AllDirectories))
         {
             // Skips files being written (.tmp) and anything else put there.
-            if (Path.GetExtension(path) == DatabaseFolder.ChangeExtension
+            if (Path.GetExtension(path) == VaultFolder.ChangeExtension
                 && Guid.TryParseExact(Path.GetFileNameWithoutExtension(path), "N", out var id)
                 && !_read.Contains(id)
                 && TryRead(id, path) is { } change)

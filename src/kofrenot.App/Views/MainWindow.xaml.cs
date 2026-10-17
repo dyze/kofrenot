@@ -12,22 +12,22 @@ namespace Kofrenot.UI.Views;
 
 /// <summary>
 /// The main window: the input box finds nodes while typing and adds what it says on Enter (see
-/// <see cref="InputPresenter"/>). Without an open database, it says how to get one.
+/// <see cref="InputPresenter"/>). Without an open vault, it says how to get one.
 /// </summary>
 public partial class MainWindow : Window
 {
     private readonly SettingsStore _settings;
     private readonly ILog _log;
     private readonly UpdateChecker _updates;
-    private readonly DatabaseSession _session;
+    private readonly VaultSession _session;
     private readonly Func<SettingsWindow> _createSettings;
     private readonly InputPresenter _input = new();
     private SettingsWindow? _settingsDialog;
 
     /// <param name="updates">Checks once a day for a newer release; the Settings button shows a mark when there is one.</param>
-    /// <param name="session">The database the input box works on.</param>
+    /// <param name="session">The vault the input box works on.</param>
     /// <param name="createSettings">Creates the Settings window, shown as a dialog over this one.</param>
-    public MainWindow(SettingsStore settings, ILog log, UpdateChecker updates, DatabaseSession session, Func<SettingsWindow> createSettings)
+    public MainWindow(SettingsStore settings, ILog log, UpdateChecker updates, VaultSession session, Func<SettingsWindow> createSettings)
     {
         _settings = settings;
         _log = log;
@@ -38,38 +38,38 @@ public partial class MainWindow : Window
         InitializeComponent();
         VersionText.Text = $"kofrenot {AppVersion.Of(typeof(MainWindow).Assembly)}";
         ShowUpdateMark();
-        _session.Changed += ShowDatabase;
-        ShowDatabase();
+        _session.Changed += ShowVault;
+        ShowVault();
     }
 
-    /// <summary>The input box when a database is open; otherwise what to do to get one.</summary>
-    private void ShowDatabase()
+    /// <summary>The input box when a vault is open; otherwise what to do to get one.</summary>
+    private void ShowVault()
     {
-        var database = _session.Current;
-        var open = database is not null;
+        var vault = _session.Current;
+        var open = vault is not null;
         foreach (var element in new UIElement[] { InputBox, PreviewText, ResultsList })
         {
             element.Visibility = open ? Visibility.Visible : Visibility.Collapsed;
         }
 
         StatePanel.Visibility = open ? Visibility.Collapsed : Visibility.Visible;
-        if (database is not null)
+        if (vault is not null)
         {
-            DatabaseText.Text = $"{_session.Folder} · {database.Graph.Nodes.Count} nodes · {database.Graph.Links.Count} links";
+            VaultText.Text = $"{_session.Folder} · {vault.Graph.Nodes.Count} nodes · {vault.Graph.Links.Count} links";
             ShowInput();
             return;
         }
 
         InputPlaceholder.Visibility = Visibility.Collapsed;
-        DatabaseText.Text = _session.Folder ?? string.Empty;
+        VaultText.Text = _session.Folder ?? string.Empty;
         if (_session.Folder is null)
         {
-            StateText.Text = "No database yet. Choose its folder in Settings > Database: an empty folder becomes a new database, encrypted with a pass phrase.";
+            StateText.Text = "No vault yet. Choose its folder in Settings > Vault: an empty folder becomes a new vault, encrypted with a pass phrase.";
             StateButton.Content = "Open settings";
         }
         else
         {
-            StateText.Text = "The database is locked.";
+            StateText.Text = "The vault is locked.";
             StateButton.Content = "Unlock";
         }
     }
@@ -77,13 +77,13 @@ public partial class MainWindow : Window
     /// <summary>The preview and the results for the text of the input box.</summary>
     private void ShowInput()
     {
-        if (_session.Current is not { } database)
+        if (_session.Current is not { } vault)
         {
             return;
         }
 
         InputPlaceholder.Visibility = InputBox.Text.Length == 0 ? Visibility.Visible : Visibility.Collapsed;
-        _input.Update(database.Graph, InputBox.Text);
+        _input.Update(vault.Graph, InputBox.Text);
         ShowPresented();
     }
 

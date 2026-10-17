@@ -20,7 +20,7 @@ public partial class App : Application
     private MainWindow? _window;
     private LogWindow? _logWindow;
     private TrayIcon? _tray;
-    private DatabaseSession? _session;
+    private VaultSession? _session;
     private GlobalHotkey? _hotkey;
 
     // Set at startup; a closed window cannot be shown again, so each opening creates a new one.
@@ -62,7 +62,7 @@ public partial class App : Application
         var placer = new WindowPlacer(new PlacementStore(files.WindowPositions), log);
         var updates = new UpdateChecker(new GitHubReleaseFeed(version), new UpdateStore(files.UpdateCheck), version, log: log);
         var logHub = _logHub;
-        var session = _session = new DatabaseSession(settings, files, new KeyMemory(files.RememberedKeys, new DpapiProtector(), log), log);
+        var session = _session = new VaultSession(settings, files, new KeyMemory(files.RememberedKeys, new DpapiProtector(), log), log);
         _window = new MainWindow(
             settings,
             log,

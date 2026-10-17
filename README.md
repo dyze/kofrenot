@@ -31,13 +31,13 @@ Upgrade: run a newer setup over the old one. Uninstall: *Settings > Apps*. Your 
 - **Hotkey.** Ctrl+Alt+K shows the main window from any program (Settings > General to change it).
 - **Tray icon.** Click: show the main window. Menu: Show, Settings, Log window (ticked while it is open: a click shows or closes it), Quit.
 
-### Database
-A database is a folder: on this computer, on a file share, or in a folder a sync tool copies between computers. Choose it in Settings > Database.
+### Vault
+A vault is a folder: on this computer, on a file share, or in a folder a sync tool copies between computers. Choose it in Settings > Vault.
 
-- An **empty folder** becomes a new database: kofrenot asks a pass phrase twice. Everything in it is encrypted with that pass phrase: **if it is lost, the database cannot be read**.
-- A **database folder** asks for its pass phrase at start, unless *Remember pass phrase on this computer* was ticked (kept by Windows for your account; Settings > Database > *Forget* removes it).
+- An **empty folder** becomes a new vault: kofrenot asks a pass phrase twice. Everything in it is encrypted with that pass phrase: **if it is lost, the vault cannot be read**.
+- A **vault folder** asks for its pass phrase at start, unless *Remember pass phrase on this computer* was ticked (kept by Windows for your account; Settings > Vault > *Forget* removes it).
 - A folder holding other files is refused.
-- Several computers or copies can add to the same database at once; what the others add appears without a restart.
+- Several computers or copies can add to the same vault at once; what the others add appears without a restart.
 
 ### Input box
 Type in the box at the top of the main window:
@@ -61,7 +61,7 @@ Gear button in the main window, or tray menu > Settings. A dialog over the main 
 | Tab | Options |
 | --- | --- |
 | General | Hotkey that shows kofrenot (click the box, then press the new shortcut; *Default*: Ctrl+Alt+K) |
-| Database | Database folder (*Choose...*, *Explore to*), whether it is open; the remembered pass phrase (*Forget*) |
+| Vault | Vault folder (*Choose...*, *Explore to*), whether it is open; the remembered pass phrase (*Forget*) |
 | Appearance | Theme: follow Windows (default), light or dark |
 | Logging | Detailed (debug) logging; open the log window |
 | About | Version, website, report an issue, changelog; update check (once a day, on by default; a dot on the gear button and on the tab when a newer release exists); kofrenot's files, each with *Show in folder* |
@@ -75,11 +75,11 @@ Everything stays on your computer, in `%LOCALAPPDATA%\kofrenot` (a portable copy
 | `settings.json` | Settings |
 | `windows.json` | Where each window was left |
 | `updates.json` | Last update check |
-| `keys.json` | Remembered pass phrases (the database keys, protected by Windows for your account) |
-| `cache\` | One encrypted snapshot per database opened here, so it opens fast. Safe to delete |
+| `keys.json` | Remembered pass phrases (the vault keys, protected by Windows for your account) |
+| `cache\` | One encrypted snapshot per vault opened here, so it opens fast. Safe to delete |
 | `logs\kofrenot.log` | Log, at most 3 files of 1 MB, oldest deleted |
 
-Your databases are in the folders you chose, not here.
+Your vaults are in the folders you chose, not here.
 
 kofrenot logs start/stop, every action you trigger (settings change, links opened, nodes added) and errors, never the names you type or your pass phrase.
 

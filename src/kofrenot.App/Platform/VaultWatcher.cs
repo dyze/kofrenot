@@ -4,11 +4,11 @@ using Kofrenot.Core.Storage;
 namespace Kofrenot.UI.Platform;
 
 /// <summary>
-/// Watches a database folder for change files added by another app or the sync tool, and calls
+/// Watches a vault folder for change files added by another app or the sync tool, and calls
 /// back on the UI thread once they stop arriving for a moment (a sync brings many at once).
 /// Watchers can miss events on file shares: the main window also refreshes when it is shown.
 /// </summary>
-public sealed class DatabaseWatcher : IDisposable
+public sealed class VaultWatcher : IDisposable
 {
     private static readonly TimeSpan Settle = TimeSpan.FromMilliseconds(500);
 
@@ -16,7 +16,7 @@ public sealed class DatabaseWatcher : IDisposable
     private readonly DispatcherTimer _timer;
 
     /// <param name="changed">Called on the thread that created the watcher (the UI thread).</param>
-    public DatabaseWatcher(string folder, Action changed)
+    public VaultWatcher(string folder, Action changed)
     {
         _timer = new DispatcherTimer { Interval = Settle };
         _timer.Tick += (_, _) =>
@@ -26,7 +26,7 @@ public sealed class DatabaseWatcher : IDisposable
         };
 
         // Files are written as .tmp, then renamed: the rename is the event that matters.
-        _watcher = new FileSystemWatcher(folder, "*" + DatabaseFolder.ChangeExtension)
+        _watcher = new FileSystemWatcher(folder, "*" + VaultFolder.ChangeExtension)
         {
             IncludeSubdirectories = true,
             NotifyFilter = NotifyFilters.FileName | NotifyFilters.LastWrite,

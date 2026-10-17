@@ -39,12 +39,12 @@ public partial class SettingsWindow : Window
     private readonly ILog _log;
     private readonly Action<Window> _openLog;
     private readonly UpdateChecker _updates;
-    private readonly DatabaseSession _session;
+    private readonly VaultSession _session;
     private readonly Func<Hotkey, bool> _applyHotkey;
     private string _changelogPath = string.Empty;
     private bool _loading;
 
-    /// <param name="session">The database: its folder can be changed here, and its remembered pass phrase forgotten.</param>
+    /// <param name="session">The vault: its folder can be changed here, and its remembered pass phrase forgotten.</param>
     /// <param name="applyHotkey">Registers a new hotkey; false when another program uses it (the old one then stays).</param>
     /// <param name="openLog">Opens the log window in front of this dialog.</param>
     public SettingsWindow(
@@ -52,7 +52,7 @@ public partial class SettingsWindow : Window
         LogHub logHub,
         AppFiles files,
         UpdateChecker updates,
-        DatabaseSession session,
+        VaultSession session,
         Func<Hotkey, bool> applyHotkey,
         Action<Window> openLog)
     {
@@ -64,7 +64,7 @@ public partial class SettingsWindow : Window
         _session = session;
         _applyHotkey = applyHotkey;
         InitializeComponent();
-        ShowDatabase();
+        ShowVault();
 
         ThemeComboBox.ItemsSource = ThemeOptions;
         ShowAbout(files);
@@ -494,16 +494,16 @@ public partial class SettingsWindow : Window
         _ => null,
     };
 
-    /// <summary>The Database tab: the folder, whether the database is open, and its remembered pass phrase.</summary>
-    private void ShowDatabase()
+    /// <summary>The Vault tab: the folder, whether the vault is open, and its remembered pass phrase.</summary>
+    private void ShowVault()
     {
-        DatabaseFolderBox.Text = _session.Folder ?? string.Empty;
-        ExploreDatabaseButton.IsEnabled = _session.Folder is not null;
-        DatabaseStatusText.Text = (_session.Folder, _session.Current) switch
+        VaultFolderBox.Text = _session.Folder ?? string.Empty;
+        ExploreVaultButton.IsEnabled = _session.Folder is not null;
+        VaultStatusText.Text = (_session.Folder, _session.Current) switch
         {
-            (null, _) => "None chosen yet. An empty folder becomes a new database; a folder holding a kofrenot database opens it.",
+            (null, _) => "None chosen yet. An empty folder becomes a new vault; a folder holding a kofrenot vault opens it.",
             (_, null) => "Locked: the pass phrase was not given.",
-            (_, { } database) => $"Open: {database.Graph.Nodes.Count} nodes, {database.Graph.Links.Count} links.",
+            (_, { } vault) => $"Open: {vault.Graph.Nodes.Count} nodes, {vault.Graph.Links.Count} links.",
         };
 
         var remembered = _session.IsRemembered;
@@ -511,9 +511,9 @@ public partial class SettingsWindow : Window
         ForgetButton.IsEnabled = remembered;
     }
 
-    private void ChooseDatabaseButton_Click(object sender, RoutedEventArgs e)
+    private void ChooseVaultButton_Click(object sender, RoutedEventArgs e)
     {
-        var dialog = new Microsoft.Win32.OpenFolderDialog { Title = "Database folder" };
+        var dialog = new Microsoft.Win32.OpenFolderDialog { Title = "Vault folder" };
         if (_session.Folder is { } folder && Directory.Exists(folder))
         {
             dialog.InitialDirectory = folder;
@@ -530,14 +530,14 @@ public partial class SettingsWindow : Window
         }
         catch (Exception ex) when (ex is UnauthorizedAccessException or IOException)
         {
-            _log.Error("Settings", "Cannot change the database folder", ex);
+            _log.Error("Settings", "Cannot change the vault folder", ex);
             ShowMessage(ex.Message);
         }
 
-        ShowDatabase();
+        ShowVault();
     }
 
-    private void ExploreDatabaseButton_Click(object sender, RoutedEventArgs e)
+    private void ExploreVaultButton_Click(object sender, RoutedEventArgs e)
     {
         if (_session.Folder is not { } folder)
         {
@@ -547,7 +547,7 @@ public partial class SettingsWindow : Window
         try
         {
             Process.Start(new ProcessStartInfo("explorer.exe", $"\"{folder}\""));
-            _log.Info("Action", $"Explore to the database folder: {folder}");
+            _log.Info("Action", $"Explore to the vault folder: {folder}");
         }
         catch (Exception ex) when (ex is System.ComponentModel.Win32Exception or IOException)
         {
@@ -568,7 +568,7 @@ public partial class SettingsWindow : Window
             ShowMessage(ex.Message);
         }
 
-        ShowDatabase();
+        ShowVault();
     }
 
     private void ShowMessage(string message) => MessageDialog.Inform(this, message);

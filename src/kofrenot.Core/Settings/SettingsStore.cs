@@ -12,7 +12,7 @@ public enum ThemeChoice
 
 /// <summary>
 /// User settings persisted as JSON: the theme, whether the log records debug entries, whether
-/// to check for updates, the database folder and the hotkey. A missing, corrupt or partial file
+/// to check for updates, the vault folder and the hotkey. A missing, corrupt or partial file
 /// means defaults for whatever cannot be read.
 /// </summary>
 public sealed class SettingsStore
@@ -29,7 +29,7 @@ public sealed class SettingsStore
             ? theme
             : ThemeChoice.System;
         CheckForUpdates = data?.CheckForUpdates ?? true;
-        DatabaseFolder = data?.DatabaseFolder is { } folder && !string.IsNullOrWhiteSpace(folder) ? folder : null;
+        VaultFolder = data?.VaultFolder is { } folder && !string.IsNullOrWhiteSpace(folder) ? folder : null;
         Hotkey = Hotkey.TryParse(data?.Hotkey, out var hotkey) ? hotkey : Hotkey.Default;
     }
 
@@ -41,8 +41,8 @@ public sealed class SettingsStore
     /// <summary>When on, kofrenot asks GitHub once a day for a newer release. On by default.</summary>
     public bool CheckForUpdates { get; private set; }
 
-    /// <summary>The folder of the database to open, or null when none is chosen yet.</summary>
-    public string? DatabaseFolder { get; private set; }
+    /// <summary>The folder of the vault to open, or null when none is chosen yet.</summary>
+    public string? VaultFolder { get; private set; }
 
     /// <summary>The global shortcut that shows kofrenot. Ctrl+Alt+K by default.</summary>
     public Hotkey Hotkey { get; private set; }
@@ -65,9 +65,9 @@ public sealed class SettingsStore
         Save();
     }
 
-    public void SetDatabaseFolder(string? folder)
+    public void SetVaultFolder(string? folder)
     {
-        DatabaseFolder = folder;
+        VaultFolder = folder;
         Save();
     }
 
@@ -85,7 +85,7 @@ public sealed class SettingsStore
             Directory.CreateDirectory(directory);
         }
 
-        var data = new SettingsData(DebugLogging, Theme.ToString(), CheckForUpdates, DatabaseFolder, Hotkey.ToString());
+        var data = new SettingsData(DebugLogging, Theme.ToString(), CheckForUpdates, VaultFolder, Hotkey.ToString());
         File.WriteAllText(_path, JsonSerializer.Serialize(data));
     }
 
@@ -107,6 +107,6 @@ public sealed class SettingsStore
         bool? DebugLogging = null,
         string? Theme = null,
         bool? CheckForUpdates = null,
-        string? DatabaseFolder = null,
+        string? VaultFolder = null,
         string? Hotkey = null);
 }

@@ -14,13 +14,13 @@ public sealed record SettingInfo(string Id, string Tab, string Label, IReadOnlyL
 public static class SettingsCatalog
 {
     public const string GeneralTab = "General";
-    public const string DatabaseTab = "Database";
+    public const string VaultTab = "Vault";
     public const string AppearanceTab = "Appearance";
     public const string LoggingTab = "Logging";
     public const string AboutTab = "About";
 
     public const string HotkeyId = "Hotkey";
-    public const string DatabaseFolderId = "DatabaseFolder";
+    public const string VaultFolderId = "VaultFolder";
     public const string RememberedPassPhraseId = "RememberedPassPhrase";
     public const string ThemeId = "Theme";
     public const string DebugLoggingId = "DebugLogging";
@@ -30,13 +30,13 @@ public static class SettingsCatalog
     public const string FilesId = "Files";
 
     /// <summary>The tabs, in the order they are shown.</summary>
-    public static IReadOnlyList<string> Tabs { get; } = [GeneralTab, DatabaseTab, AppearanceTab, LoggingTab, AboutTab];
+    public static IReadOnlyList<string> Tabs { get; } = [GeneralTab, VaultTab, AppearanceTab, LoggingTab, AboutTab];
 
     public static IReadOnlyList<SettingInfo> All { get; } =
     [
         new(HotkeyId, GeneralTab, "Hotkey that shows kofrenot", ["shortcut", "keyboard", "summon", "ctrl", "alt", "global"]),
-        new(DatabaseFolderId, DatabaseTab, "Database folder", ["folder", "sync", "dropbox", "share", "nodes", "open", "create"]),
-        new(RememberedPassPhraseId, DatabaseTab, "Remembered pass phrase", ["password", "passphrase", "forget", "remember", "unlock", "secret"]),
+        new(VaultFolderId, VaultTab, "Vault folder", ["database", "folder", "sync", "dropbox", "share", "nodes", "open", "create"]),
+        new(RememberedPassPhraseId, VaultTab, "Remembered pass phrase", ["password", "passphrase", "forget", "remember", "unlock", "secret"]),
         new(ThemeId, AppearanceTab, "Theme", ["dark", "light", "mode", "color", "colour"]),
         new(DebugLoggingId, LoggingTab, "Detailed (debug) logging", ["log", "verbose", "trace"]),
         new(LogWindowId, LoggingTab, "Open log window", ["log", "view", "errors"]),

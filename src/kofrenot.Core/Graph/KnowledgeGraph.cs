@@ -1,7 +1,7 @@
 namespace Kofrenot.Core.Graph;
 
 /// <summary>
-/// The nodes and links of a database, in memory, built by applying its changes. Applying a change
+/// The nodes and links of a vault, in memory, built by applying its changes. Applying a change
 /// twice does nothing, so a change read again (from a snapshot, or later from a pack) is harmless.
 /// </summary>
 /// <remarks>

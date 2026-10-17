@@ -10,7 +10,7 @@ public sealed class KeyMemoryTests : IDisposable
     private readonly TempFolder _temp = new();
     private readonly RingLog _log = new();
     private readonly FakeProtector _protector = new();
-    private readonly Guid _database = Guid.NewGuid();
+    private readonly Guid _vault = Guid.NewGuid();
 
     private string FilePath => _temp.Sub("keys.json");
 
@@ -19,18 +19,18 @@ public sealed class KeyMemoryTests : IDisposable
     {
         var memory = Memory();
 
-        Assert.False(memory.Has(_database));
-        Assert.Null(memory.Recall(_database));
+        Assert.False(memory.Has(_vault));
+        Assert.Null(memory.Recall(_vault));
     }
 
     [Fact]
-    public void ARememberedKey_IsRecalled_OnlyForItsDatabase()
+    public void ARememberedKey_IsRecalled_OnlyForItsVault()
     {
-        Memory().Remember(_database, Key);
+        Memory().Remember(_vault, Key);
 
         var memory = Memory();
-        Assert.True(memory.Has(_database));
-        Assert.Equal(Key, memory.Recall(_database));
+        Assert.True(memory.Has(_vault));
+        Assert.Equal(Key, memory.Recall(_vault));
         Assert.Null(memory.Recall(Guid.NewGuid()));
         Assert.Contains(_log.Entries, entry => entry.Level == LogLevel.Info && entry.Message.Contains("remembered"));
     }
@@ -38,7 +38,7 @@ public sealed class KeyMemoryTests : IDisposable
     [Fact]
     public void TheKey_IsStoredProtected()
     {
-        Memory().Remember(_database, Key);
+        Memory().Remember(_vault, Key);
 
         Assert.Contains(Convert.ToBase64String(_protector.Protect(Key)), File.ReadAllText(FilePath));
         Assert.DoesNotContain(Convert.ToBase64String(Key), File.ReadAllText(FilePath));
@@ -48,12 +48,12 @@ public sealed class KeyMemoryTests : IDisposable
     public void AForgottenKey_IsGone_AndTheOthersStay()
     {
         var other = Guid.NewGuid();
-        Memory().Remember(_database, Key);
+        Memory().Remember(_vault, Key);
         Memory().Remember(other, Key);
 
-        Memory().Forget(_database);
+        Memory().Forget(_vault);
 
-        Assert.False(Memory().Has(_database));
+        Assert.False(Memory().Has(_vault));
         Assert.True(Memory().Has(other));
         Assert.Contains(_log.Entries, entry => entry.Message.Contains("forgotten"));
     }
@@ -61,7 +61,7 @@ public sealed class KeyMemoryTests : IDisposable
     [Fact]
     public void ForgettingAnUnknownKey_DoesNothing()
     {
-        Memory().Forget(_database);
+        Memory().Forget(_vault);
 
         Assert.False(File.Exists(FilePath));
     }
@@ -69,10 +69,10 @@ public sealed class KeyMemoryTests : IDisposable
     [Fact]
     public void AKeyThatCannotBeUnprotected_IsNotRecalled()
     {
-        Memory().Remember(_database, Key);
+        Memory().Remember(_vault, Key);
         _protector.Fails = true;
 
-        Assert.Null(Memory().Recall(_database));
+        Assert.Null(Memory().Recall(_vault));
         Assert.Contains(_log.Entries, entry => entry.Level == LogLevel.Warning);
     }
 
@@ -82,7 +82,7 @@ public sealed class KeyMemoryTests : IDisposable
         Directory.CreateDirectory(_temp.Path);
         File.WriteAllText(FilePath, "{ not json");
 
-        Assert.False(Memory().Has(_database));
+        Assert.False(Memory().Has(_vault));
         Assert.Contains(_log.Entries, entry => entry.Level == LogLevel.Warning);
     }
 
@@ -92,7 +92,7 @@ public sealed class KeyMemoryTests : IDisposable
         Directory.CreateDirectory(_temp.Path);
         File.WriteAllText(FilePath, "null");
 
-        Assert.False(Memory().Has(_database));
+        Assert.False(Memory().Has(_vault));
     }
 
     public void Dispose() => _temp.Dispose();

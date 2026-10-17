@@ -4,23 +4,23 @@ using System.Text;
 namespace Kofrenot.Core.Storage;
 
 /// <summary>
-/// The master key of a database, encrypted with a key derived from the pass phrase
+/// The master key of a vault, encrypted with a key derived from the pass phrase
 /// (PBKDF2-SHA256), as stored in the header. Nothing secret.
 /// </summary>
 public sealed record WrappedKey(byte[] Salt, int Iterations, byte[] Sealed);
 
 /// <summary>
-/// Creates a database's master key and unlocks it with the pass phrase. Changing the pass phrase
+/// Creates a vault's master key and unlocks it with the pass phrase. Changing the pass phrase
 /// only wraps the same master key again, so the change files stay as they are.
 /// </summary>
-public static class KeyVault
+public static class KeyWrap
 {
     public const int DefaultIterations = 600_000;
     private const int SaltSize = 16;
     private static ReadOnlySpan<byte> Magic => "KFK1"u8;
 
     /// <summary>A new random master key, and its wrapped form for the header.</summary>
-    /// <param name="context">What the key belongs to (the database id): the wrapped key opens only there.</param>
+    /// <param name="context">What the key belongs to (the vault id): the wrapped key opens only there.</param>
     public static (WrappedKey Wrapped, byte[] MasterKey) Create(string passPhrase, ReadOnlySpan<byte> context, int iterations = DefaultIterations)
     {
         if (string.IsNullOrEmpty(passPhrase))

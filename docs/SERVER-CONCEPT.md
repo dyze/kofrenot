@@ -1,10 +1,10 @@
 # Principles
 
-Databases are stored on a dedicated web server. It doesn't know what is inside database files.
-Basically the database only stores files so such server could be used for purposes other than Kofrenot.
+Vaults are stored on a dedicated web server. It doesn't know what is inside vault files.
+Basically the vault only stores files so such server could be used for purposes other than Kofrenot.
 
 * Server handles multiple users.
-	* Each user has his set of databases.
+	* Each user has his set of vaults.
 * Several roles: admin & user
 * No web site exposed. Client App interacts with server using a REST API.
 * No admin UI for now. Admin unlocks accessing data files.
@@ -17,15 +17,15 @@ Basically the database only stores files so such server could be used for purpos
 	* admin must unlock user account
 * User can sign in:
 	* Possible only when unlocked
-* User can create a database:
+* User can create a vault:
 	* name is given
-* User can delete and clear a database. User validation required. Server sends a random phrase that user must key and sent to server thru another command.
-* User can list his databases
-* User can get statistics on a database: occupied disk space, number of files...
-* User can interacts with content of a database:
+* User can delete and clear a vault. User validation required. Server sends a random phrase that user must key and sent to server thru another command.
+* User can list his vaults
+* User can get statistics on a vault: occupied disk space, number of files...
+* User can interacts with content of a vault:
 	* list files
 	* download/upload files
-	* lock whole database during upload or packing?
+	* lock whole vault during upload or packing?
 
 # Techs
 
@@ -35,7 +35,7 @@ Basically the database only stores files so such server could be used for purpos
 	* sensitive data is encrypted. encryption key on server config file is ok.
 	* models:
 		* users
-		* user databases
+		* user vaults
 * Security:
 	* JSON Web Token (JWT)
 	* Token refreshed reguarly

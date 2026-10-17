@@ -1,25 +1,25 @@
 namespace Kofrenot.Core.Storage;
 
-/// <summary>What a folder chosen as database holds.</summary>
+/// <summary>What a folder chosen as vault holds.</summary>
 public enum FolderKind
 {
-    /// <summary>Missing or empty: a new database can be created in it.</summary>
+    /// <summary>Missing or empty: a new vault can be created in it.</summary>
     Empty,
 
-    /// <summary>Holds a database header.</summary>
-    Database,
+    /// <summary>Holds a vault header.</summary>
+    Vault,
 
-    /// <summary>Holds other files: not used, so nothing of the user's is mixed with the database.</summary>
+    /// <summary>Holds other files: not used, so nothing of the user's is mixed with the vault.</summary>
     Other,
 }
 
 /// <summary>
-/// The layout of a database folder, and the creation of a new one. The only place the names of
+/// The layout of a vault folder, and the creation of a new one. The only place the names of
 /// its files are written.
 /// </summary>
-public static class DatabaseFolder
+public static class VaultFolder
 {
-    public const string HeaderFile = "kofrenot-db.json";
+    public const string HeaderFile = "kofrenot-vault.json";
     public const string ChangesFolder = "changes";
     public const string ChangeExtension = ".kfc";
 
@@ -27,24 +27,24 @@ public static class DatabaseFolder
     {
         if (File.Exists(HeaderOf(folder)))
         {
-            return FolderKind.Database;
+            return FolderKind.Vault;
         }
 
         return Directory.Exists(folder) && Directory.EnumerateFileSystemEntries(folder).Any() ? FolderKind.Other : FolderKind.Empty;
     }
 
-    /// <summary>Creates a database in an empty folder: its header, with a new master key.</summary>
+    /// <summary>Creates a vault in an empty folder: its header, with a new master key.</summary>
     /// <exception cref="IOException">The folder is not empty.</exception>
-    public static (DatabaseHeader Header, byte[] MasterKey) Create(string folder, string passPhrase, int iterations = KeyVault.DefaultIterations)
+    public static (VaultHeader Header, byte[] MasterKey) Create(string folder, string passPhrase, int iterations = KeyWrap.DefaultIterations)
     {
         if (Inspect(folder) != FolderKind.Empty)
         {
-            throw new IOException("A database can only be created in an empty folder");
+            throw new IOException("A vault can only be created in an empty folder");
         }
 
         var id = Guid.NewGuid();
-        var (wrapped, masterKey) = KeyVault.Create(passPhrase, id.ToByteArray(), iterations);
-        var header = new DatabaseHeader(DatabaseHeader.CurrentFormat, id, wrapped);
+        var (wrapped, masterKey) = KeyWrap.Create(passPhrase, id.ToByteArray(), iterations);
+        var header = new VaultHeader(VaultHeader.CurrentFormat, id, wrapped);
         Directory.CreateDirectory(ChangesOf(folder));
         header.Write(HeaderOf(folder));
         return (header, masterKey);

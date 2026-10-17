@@ -4,15 +4,15 @@ using Kofrenot.Core.Logging;
 
 namespace Kofrenot.Core.Storage;
 
-/// <summary>A database's graph as loaded on this device, and the changes it holds.</summary>
+/// <summary>A vault's graph as loaded on this device, and the changes it holds.</summary>
 public sealed record Snapshot(IReadOnlyList<Guid> Changes, IReadOnlyList<Node> Nodes, IReadOnlyList<Link> Links);
 
 /// <summary>
-/// Keeps a database's graph in a local file, so each change file is read once per device. Sealed
-/// with the master key ("KFS1"), bound to the database id. Only a cache: when it is missing or
+/// Keeps a vault's graph in a local file, so each change file is read once per device. Sealed
+/// with the master key ("KFS1"), bound to the vault id. Only a cache: when it is missing or
 /// unreadable, every change is read again.
 /// </summary>
-public sealed class SnapshotStore(string path, SecretBox box, Guid database, ILog? log = null)
+public sealed class SnapshotStore(string path, SecretBox box, Guid vault, ILog? log = null)
 {
     public const int Format = 1;
     private static ReadOnlySpan<byte> Magic => "KFS1"u8;
@@ -30,17 +30,17 @@ public sealed class SnapshotStore(string path, SecretBox box, Guid database, ILo
 
         try
         {
-            var json = box.Open(Magic, File.ReadAllBytes(path), database.ToByteArray());
+            var json = box.Open(Magic, File.ReadAllBytes(path), vault.ToByteArray());
             if (JsonSerializer.Deserialize<SnapshotData>(json, Json) is { Format: Format, Changes: { } changes, Nodes: { } nodes, Links: { } links })
             {
                 return new Snapshot(changes, nodes, links);
             }
 
-            _log.Info("Database", "The local snapshot has another format: every change is read again");
+            _log.Info("Vault", "The local snapshot has another format: every change is read again");
         }
         catch (Exception ex) when (ex is InvalidDataException or JsonException or IOException or UnauthorizedAccessException)
         {
-            _log.Warn("Database", $"The local snapshot cannot be read ({ex.Message}): every change is read again");
+            _log.Warn("Vault", $"The local snapshot cannot be read ({ex.Message}): every change is read again");
         }
 
         return null;
@@ -53,12 +53,12 @@ public sealed class SnapshotStore(string path, SecretBox box, Guid database, ILo
         try
         {
             Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(path))!);
-            AtomicFile.Write(path, box.Seal(Magic, JsonSerializer.SerializeToUtf8Bytes(data, Json), database.ToByteArray()), overwrite: true);
-            _log.Debug("Database", $"Snapshot saved: {data.Changes!.Count} changes");
+            AtomicFile.Write(path, box.Seal(Magic, JsonSerializer.SerializeToUtf8Bytes(data, Json), vault.ToByteArray()), overwrite: true);
+            _log.Debug("Vault", $"Snapshot saved: {data.Changes!.Count} changes");
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
-            _log.Warn("Database", $"The local snapshot cannot be saved: {ex.Message}");
+            _log.Warn("Vault", $"The local snapshot cannot be saved: {ex.Message}");
         }
     }
 

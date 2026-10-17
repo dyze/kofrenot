@@ -5,7 +5,7 @@ public sealed record AppFile(string Label, string Path);
 
 /// <summary>
 /// Where kofrenot keeps its files: the user data (settings, window positions, update check,
-/// remembered keys, database snapshots, logs) in one folder, and the program. Databases are
+/// remembered keys, vault snapshots, logs) in one folder, and the program. Vaults are
 /// elsewhere, in the folders the user chooses. The single place their names are written.
 /// </summary>
 public sealed class AppFiles
@@ -48,10 +48,10 @@ public sealed class AppFiles
 
     public string UpdateCheck => Path.Combine(DataDirectory, "updates.json");
 
-    /// <summary>The master keys remembered by Windows (DPAPI), by database.</summary>
+    /// <summary>The master keys remembered by Windows (DPAPI), by vault.</summary>
     public string RememberedKeys => Path.Combine(DataDirectory, "keys.json");
 
-    /// <summary>The local snapshot of each database opened on this device.</summary>
+    /// <summary>The local snapshot of each vault opened on this device.</summary>
     public string Cache => Path.Combine(DataDirectory, "cache");
 
     public string Logs => Path.Combine(DataDirectory, "logs");
@@ -66,7 +66,7 @@ public sealed class AppFiles
         new("Window positions", WindowPositions),
         new("Update check", UpdateCheck),
         new("Remembered pass phrases", RememberedKeys),
-        new("Database snapshots", Cache),
+        new("Vault snapshots", Cache),
         new("Logs", Logs),
         new("Program", ProgramDirectory),
     ];

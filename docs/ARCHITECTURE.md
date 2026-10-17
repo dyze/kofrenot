@@ -5,15 +5,15 @@
 ```
 kofrenot.App   (WPF, Windows only)
 │  main window (input box), creation dialog, settings window, pass phrase dialog, log window, changelog window, tray icon
-│  DatabaseSession (opens, watches and adds to the database through the creation dialog)
+│  VaultSession (opens, watches and adds to the vault through the creation dialog)
 │  adapters: SerilogFileLog, SingleInstance, NativeWindows + WindowPlacer (window positions), GitHubReleaseFeed,
-│            DpapiProtector, GlobalHotkey, DatabaseWatcher
+│            DpapiProtector, GlobalHotkey, VaultWatcher
 │
 │  implements ▼  IReleaseFeed · ILog · ISecretProtector
 │
 kofrenot.Core  (no Windows dependency, fully unit-tested on any OS)
    Graph: KnowledgeGraph · Node · Link · TypeCatalog · Change
-   Storage: Database · DatabaseFolder · SecretBox · KeyVault · SnapshotStore · KeyMemory
+   Storage: Vault · VaultFolder · SecretBox · KeyWrap · SnapshotStore · KeyMemory
    Input: InputParser · GraphSearch · AddPlanner · InputPresenter · CreationForm
    AppFiles · AppVersion · Changelog · ProjectLinks
    SettingsStore · SettingsCatalog · Hotkey
@@ -32,9 +32,9 @@ One namespace per folder (`Kofrenot.Core.Settings`, `Kofrenot.UI.Views`, ...). T
 | `kofrenot.Core` | Content |
 | --- | --- |
 | *(root)* | `AppVersion`; `AppFiles` (where every file of kofrenot is, including `keys.json` and the snapshots in `cache\`: the only place their names are written, listed in Settings > About; `AppFiles.For` picks the data folder, see [Portable copy](#portable-copy)); `Changelog` (reads the text shown by Settings > About); `ProjectLinks` (website, issues, releases) |
-| `Settings/` | `SettingsStore` (`settings.json`: theme, debug logging, update check, database folder, hotkey), `Hotkey`, `SettingsCatalog` (the entries of the Settings window, their tabs, and the search that finds them) |
+| `Settings/` | `SettingsStore` (`settings.json`: theme, debug logging, update check, vault folder, hotkey), `Hotkey`, `SettingsCatalog` (the entries of the Settings window, their tabs, and the search that finds them) |
 | `Graph/` | `Node`, `Link`, `NodeType`, `LinkType`, `TypeCatalog` (built-in node and link types, link aliases), `NameKey` (the form names are compared in), `Change` (`NodeAdded`, `LinkAdded`), `KnowledgeGraph` (in-memory state, built by applying changes) |
-| `Storage/` | `SecretBox` (AES-GCM seal / open), `KeyVault` (KDF, wrap / unwrap the master key), `ChangeCodec` (change ⇄ sealed JSON), `DatabaseHeader`, `DatabaseFolder` (layout, inspect, create), `SnapshotStore`, `Database` (open, append, refresh), `AtomicFile` (write as `.tmp`, then rename), `KeyMemory` (remembered master keys, `keys.json`), `ISecretProtector` |
+| `Storage/` | `SecretBox` (AES-GCM seal / open), `KeyWrap` (KDF, wrap / unwrap the master key), `ChangeCodec` (change ⇄ sealed JSON), `VaultHeader`, `VaultFolder` (layout, inspect, create), `SnapshotStore`, `Vault` (open, append, refresh), `AtomicFile` (write as `.tmp`, then rename), `KeyMemory` (remembered master keys, `keys.json`), `ISecretProtector` |
 | `Input/` | `InputParser` (text → `NodeRequest` / `LinkRequest`), `GraphSearch` (`SearchHit`), `AddPlanner` (`AddChoices` → `AddPlan`: `NodePlan`, `LinkPlan`, `PlannedSide`), `InputPresenter` (the input box: preview, result rows, homonym choices), `CreationForm` (the creation screen: types, status, what exists), `PlanText` (wording shared by both) |
 | `Logging/` | `ILog` (with `NullLog`), `LogEntry`, `RingLog`, `CompositeLog`, `FilteredLog` |
 | `Placement/` | Window positions: `WindowPlacement`, `PlacementRules`, `PlacementStore` (see [Window positions](#window-positions)) |
@@ -42,10 +42,10 @@ One namespace per folder (`Kofrenot.Core.Settings`, `Kofrenot.UI.Views`, ...). T
 
 | `kofrenot.App` | Content |
 | --- | --- |
-| *(root)* | `App.xaml`: startup and wiring; `DatabaseSession` (the open database: create, unlock, watch, `Create` (creation dialog, then add), forget the remembered key) |
-| `Views/` | Windows: `MainWindow` (input box, shows `InputPresenter`), `CreationDialog` (shows a `CreationForm`), `SettingsWindow` (tabs General, Database, Appearance, Logging, About), `PassphraseDialog`, `LogWindow`, `ChangelogWindow` (Settings > About > *Show changelog*); `MessageDialog` (messages and questions in the app's theme, instead of the Windows `MessageBox`); `AppTheme` |
+| *(root)* | `App.xaml`: startup and wiring; `VaultSession` (the open vault: create, unlock, watch, `Create` (creation dialog, then add), forget the remembered key) |
+| `Views/` | Windows: `MainWindow` (input box, shows `InputPresenter`), `CreationDialog` (shows a `CreationForm`), `SettingsWindow` (tabs General, Vault, Appearance, Logging, About), `PassphraseDialog`, `LogWindow`, `ChangelogWindow` (Settings > About > *Show changelog*); `MessageDialog` (messages and questions in the app's theme, instead of the Windows `MessageBox`); `AppTheme` |
 | `Tray/` | `TrayIcon` |
-| `Platform/` | Implementations of the `Core` interfaces (`GitHubReleaseFeed`, `DpapiProtector`), `SingleInstance`, `GlobalHotkey` (`RegisterHotKey`), `DatabaseWatcher` (`FileSystemWatcher`), and window placement (`NativeWindows`, `WindowPlacer`) |
+| `Platform/` | Implementations of the `Core` interfaces (`GitHubReleaseFeed`, `DpapiProtector`), `SingleInstance`, `GlobalHotkey` (`RegisterHotKey`), `VaultWatcher` (`FileSystemWatcher`), and window placement (`NativeWindows`, `WindowPlacer`) |
 | `Logging/` | `LogHub`, `SerilogFileLog` |
 | `Assets/` | `kofrenot.ico` (drawn by `build/make_icon.py`) |
 
@@ -76,12 +76,12 @@ Publishing is self-contained, so the PC needs no .NET runtime (installing one ne
 App.OnStartup
  ├─ SingleInstance.TryClaim ── another copy runs? ─► ask it to show its window, exit
  ├─ AppFiles.For ─► SettingsStore ─► AppTheme ─► LogHub
- ├─ DatabaseSession (KeyMemory + DpapiProtector)
+ ├─ VaultSession (KeyMemory + DpapiProtector)
  ├─ MainWindow (+ WindowPlacer "Main") ─► UpdateChecker (background, once a day)
  ├─ GlobalHotkey (Ctrl+Alt+K by default) ─► MainWindow shown
  ├─ TrayIcon: Show · Settings · Log window · Quit
  ├─ MainWindow shown
- └─ once idle: DatabaseSession.Open ─► remembered key, or PassphraseDialog (create / unlock) ─► Database.Open + DatabaseWatcher
+ └─ once idle: VaultSession.Open ─► remembered key, or PassphraseDialog (create / unlock) ─► Vault.Open + VaultWatcher
 ```
 
 - Closing the main window (or Esc with an empty input box) hides it; kofrenot keeps running in the notification area until *Quit* (`ShutdownMode=OnExplicitShutdown`).
@@ -111,14 +111,14 @@ App.OnStartup
 - Opened from Settings, the log window comes in front and stays usable while Settings is open, without being always on top.
 - What is restored depends on the window (`RestoreMode`): the main and log windows their position and size, Settings its size only: as a dialog, it opens centered on the main window (`PlacementRules.CenterOn`).
 
-## Database
+## Vault
 Model and principles: [GOAL.md](GOAL.md#data-model).
 
 ### Folder
 
 ```
-<database folder>/
-  kofrenot-db.json         header, plain JSON: format, database id, KDF salt + iterations, wrapped master key
+<vault folder>/
+  kofrenot-vault.json      header, plain JSON: format, vault id, KDF salt + iterations, wrapped master key
   changes/
     3f/3f9c…e1.kfc         one encrypted change, named by a random id, written once
     a0/a07b…42.kfc
@@ -127,8 +127,8 @@ Model and principles: [GOAL.md](GOAL.md#data-model).
 - **Only added, never modified.** A change file is written as `*.tmp` then renamed, so a reader or the sync tool never sees half a file. `.tmp` files are ignored.
 - **Folders by the id's first two characters**, so no folder holds too many files.
 - An unreadable file (corrupt, wrong key, still being copied) is skipped and logged once as a warning, then tried again at each refresh; the others still load. Other files (`desktop.ini`, ...) are ignored.
-- A header `format` newer than the app's: the database is not opened.
-- `DatabaseFolder.Inspect`: a new database is only created in an empty (or missing) folder; a folder holding other files is refused, so nothing of the user's is mixed with it.
+- A header `format` newer than the app's: the vault is not opened.
+- `VaultFolder.Inspect`: a new vault is only created in an empty (or missing) folder; a folder holding other files is refused, so nothing of the user's is mixed with it.
 
 ### Encryption
 
@@ -144,7 +144,7 @@ change file = "KFC1" · nonce · ciphertext · tag
 - Built into .NET (`Rfc2898DeriveBytes`, `AesGcm`): no package.
 - A wrong pass phrase fails to unwrap the master key (GCM tag), so no extra check value is needed.
 - Changing the pass phrase (later) rewrites the header only.
-- *Remember pass phrase* stores the master key (not the pass phrase: it opens at once and survives a pass phrase change), protected by DPAPI for the current Windows user, in `keys.json` in the local data folder, per database id (`KeyMemory`). `Core` sees DPAPI through `ISecretProtector`; `App` implements it with `ProtectedData` (`DpapiProtector`).
+- *Remember pass phrase* stores the master key (not the pass phrase: it opens at once and survives a pass phrase change), protected by DPAPI for the current Windows user, in `keys.json` in the local data folder, per vault id (`KeyMemory`). `Core` sees DPAPI through `ISecretProtector`; `App` implements it with `ProtectedData` (`DpapiProtector`).
 - The key, the pass phrase and names are never logged.
 
 ### Change content
@@ -160,7 +160,7 @@ UTF-8 JSON before encryption:
 - Changes are applied in `at` order (then id) to an in-memory graph. Search and preview work on it only.
 - A type unknown to this version is kept and shown by its id.
 - Duplicate nodes (same type and normalized name) are all kept and marked; duplicate links (same type and nodes, either direction when symmetric) count as one.
-- `Database` is not thread-safe: `App` uses it from the UI thread.
+- `Vault` is not thread-safe: `App` uses it from the UI thread.
 - **Live refresh**: `App` watches the folder (`FileSystemWatcher`) and calls `Refresh`, which reads only the new files. It also refreshes when the main window is shown, as watchers can miss events on file shares.
 
 ### Local snapshot
@@ -175,8 +175,8 @@ start ─► snapshot (local) ─► graph + ids of the changes it holds
       save snapshot (after loading, and after each refresh or addition that changed it)
 ```
 
-- Stored in the local data folder, never in the database folder: `cache\<database id>.kfs` (`AppFiles`, `Database.SnapshotOf`). It belongs to one device, so it never has to be synced or merged.
-- Encrypted with the master key like a change file (`KFS1` · nonce · ciphertext · tag, AAD = database id), so it reveals nothing more than the database.
+- Stored in the local data folder, never in the vault folder: `cache\<vault id>.kfs` (`AppFiles`, `Vault.SnapshotOf`). It belongs to one device, so it never has to be synced or merged.
+- Encrypted with the master key like a change file (`KFS1` · nonce · ciphertext · tag, AAD = vault id), so it reveals nothing more than the vault.
 - Written as `*.tmp`, then renamed. It is only a cache: deleting it costs one full read.
 - A change file that arrives late, older than changes already applied, is fine: in 0.1 changes only add, so their order does not change the result.
 - Later, when changes modify nodes, ten edits of one node are still ten files, each read once per device; packing them into bigger files is an open question ([GOAL.md](GOAL.md#open-questions), *Packs*).
@@ -192,10 +192,10 @@ text ──InputParser──► NodeRequest(name) | LinkRequest(left, type, righ
            ▼ Enter: request + homonyms chosen (AddChoices)
      CreationForm: node types, link type, what exists ──► AddPlan      (CreationDialog, modal)
            ▼ Enter
-     DatabaseSession.Create ──► Database.Append
+     VaultSession.Create ──► Vault.Append
 ```
 
-- `DatabaseSession.Create(owner, request, choices)` opens the creation dialog over any window, so later features can reuse it. It returns false when cancelled or not written.
+- `VaultSession.Create(owner, request, choices)` opens the creation dialog over any window, so later features can reuse it. It returns false when cancelled or not written.
 - The dialog only shows a `CreationForm`. Each type change makes a new plan, so a different link type can turn `AlreadyLinked` into a link that can be added. Only a new node gets a type box: an existing node keeps its type.
 - The types offered come from `TypeCatalog` (only *generic* and *relates to* in 0.1).
 

@@ -8,7 +8,7 @@ using Kofrenot.UI.Platform;
 namespace Kofrenot.UI.Views;
 
 /// <summary>
-/// The creation screen, shown by <see cref="DatabaseSession.Create"/> from anywhere: a view of a
+/// The creation screen, shown by <see cref="VaultSession.Create"/> from anywhere: a view of a
 /// <see cref="CreationForm"/>, whose type choices it passes on.
 /// </summary>
 public partial class CreationDialog : Window

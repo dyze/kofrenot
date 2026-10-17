@@ -14,18 +14,18 @@ public sealed class SettingsStoreTests : IDisposable
         Assert.Equal(ThemeChoice.System, store.Theme);
         Assert.False(store.DebugLogging);
         Assert.True(store.CheckForUpdates);
-        Assert.Null(store.DatabaseFolder);
+        Assert.Null(store.VaultFolder);
         Assert.Equal(Hotkey.Default, store.Hotkey);
     }
 
     [Fact]
-    public void TheDatabaseFolder_IsPersisted_AndCanBeCleared()
+    public void TheVaultFolder_IsPersisted_AndCanBeCleared()
     {
-        new SettingsStore(FilePath).SetDatabaseFolder(@"D:\Sync\kofrenot");
-        Assert.Equal(@"D:\Sync\kofrenot", new SettingsStore(FilePath).DatabaseFolder);
+        new SettingsStore(FilePath).SetVaultFolder(@"D:\Sync\kofrenot");
+        Assert.Equal(@"D:\Sync\kofrenot", new SettingsStore(FilePath).VaultFolder);
 
-        new SettingsStore(FilePath).SetDatabaseFolder(null);
-        Assert.Null(new SettingsStore(FilePath).DatabaseFolder);
+        new SettingsStore(FilePath).SetVaultFolder(null);
+        Assert.Null(new SettingsStore(FilePath).VaultFolder);
     }
 
     [Fact]
@@ -41,7 +41,7 @@ public sealed class SettingsStoreTests : IDisposable
     [Theory]
     [InlineData("{\"Hotkey\":\"K\"}")]
     [InlineData("{\"Hotkey\":\"nonsense\"}")]
-    [InlineData("{\"DatabaseFolder\":\"  \"}")]
+    [InlineData("{\"VaultFolder\":\"  \"}")]
     public void AnInvalidHotkeyOrFolder_MeansTheDefault(string json)
     {
         Directory.CreateDirectory(_directory);
@@ -50,7 +50,7 @@ public sealed class SettingsStoreTests : IDisposable
         var store = new SettingsStore(FilePath);
 
         Assert.Equal(Hotkey.Default, store.Hotkey);
-        Assert.Null(store.DatabaseFolder);
+        Assert.Null(store.VaultFolder);
     }
 
     [Fact]

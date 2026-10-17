@@ -4,7 +4,7 @@ namespace Kofrenot.Core.Input;
 
 /// <summary>
 /// What Enter would add: the preview shows it, and <see cref="Changes"/> are appended to the
-/// database. <see cref="NeedsConfirmation"/>: it repeats a node that is already there.
+/// vault. <see cref="NeedsConfirmation"/>: it repeats a node that is already there.
 /// </summary>
 public abstract record AddPlan(IReadOnlyList<Change> Changes, bool NeedsConfirmation)
 {

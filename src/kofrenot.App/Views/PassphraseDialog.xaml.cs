@@ -6,7 +6,7 @@ using Kofrenot.UI.Platform;
 namespace Kofrenot.UI.Views;
 
 /// <summary>
-/// Asks the pass phrase of a database: to unlock it, or (twice) to create it. The pass phrase is
+/// Asks the pass phrase of a vault: to unlock it, or (twice) to create it. The pass phrase is
 /// handed to <c>accept</c> in the background, as deriving the key takes a moment; the dialog
 /// stays open while it is refused.
 /// </summary>
@@ -22,12 +22,12 @@ public partial class PassphraseDialog : Window
         _create = create;
         _accept = accept;
 
-        TitleText.Text = create ? "New database" : "Unlock database";
+        TitleText.Text = create ? "New vault" : "Unlock vault";
         FolderText.Text = folder;
         FolderText.ToolTip = folder;
         HintText.Text = create
-            ? "Choose a pass phrase. Everything in the database is encrypted with it: if it is lost, the database cannot be read."
-            : "Type the pass phrase of this database.";
+            ? "Choose a pass phrase. Everything in the vault is encrypted with it: if it is lost, the vault cannot be read."
+            : "Type the pass phrase of this vault.";
         SecondPanel.Visibility = create ? Visibility.Visible : Visibility.Collapsed;
         OkButton.Content = create ? "Create" : "Unlock";
         Loaded += (_, _) => FirstBox.Focus();
@@ -37,7 +37,7 @@ public partial class PassphraseDialog : Window
     /// Shows the dialog until <paramref name="accept"/> takes a pass phrase (true) or the user
     /// cancels. Returns whether to remember it, or null when cancelled.
     /// </summary>
-    /// <param name="accept">Creates or unlocks the database; false for a wrong pass phrase. Runs in the background.</param>
+    /// <param name="accept">Creates or unlocks the vault; false for a wrong pass phrase. Runs in the background.</param>
     public static bool? Ask(Window owner, bool create, string folder, Func<string, bool> accept)
     {
         var dialog = new PassphraseDialog(owner, create, folder, accept);

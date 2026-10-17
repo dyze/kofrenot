@@ -10,20 +10,20 @@ using Kofrenot.UI.Views;
 namespace Kofrenot.UI;
 
 /// <summary>
-/// The database kofrenot works on: the folder of the settings, opened with its remembered key or
+/// The vault kofrenot works on: the folder of the settings, opened with its remembered key or
 /// its pass phrase (created when the folder is empty), watched for the changes of other apps.
 /// </summary>
-public sealed class DatabaseSession : IDisposable
+public sealed class VaultSession : IDisposable
 {
-    private const string Category = "Database";
+    private const string Category = "Vault";
 
     private readonly SettingsStore _settings;
     private readonly AppFiles _files;
     private readonly KeyMemory _keys;
     private readonly ILog _log;
-    private DatabaseWatcher? _watcher;
+    private VaultWatcher? _watcher;
 
-    public DatabaseSession(SettingsStore settings, AppFiles files, KeyMemory keys, ILog log)
+    public VaultSession(SettingsStore settings, AppFiles files, KeyMemory keys, ILog log)
     {
         _settings = settings;
         _files = files;
@@ -31,18 +31,18 @@ public sealed class DatabaseSession : IDisposable
         _log = log;
     }
 
-    /// <summary>Raised on the UI thread when the database is opened or closed, or has new changes.</summary>
+    /// <summary>Raised on the UI thread when the vault is opened or closed, or has new changes.</summary>
     public event Action? Changed;
 
-    /// <summary>The open database, or null (none chosen, locked, or cannot be opened).</summary>
-    public Database? Current { get; private set; }
+    /// <summary>The open vault, or null (none chosen, locked, or cannot be opened).</summary>
+    public Vault? Current { get; private set; }
 
-    public string? Folder => _settings.DatabaseFolder;
+    public string? Folder => _settings.VaultFolder;
 
-    /// <summary>Whether the open database's key is remembered on this computer.</summary>
-    public bool IsRemembered => Current is { } database && _keys.Has(database.Id);
+    /// <summary>Whether the open vault's key is remembered on this computer.</summary>
+    public bool IsRemembered => Current is { } vault && _keys.Has(vault.Id);
 
-    /// <summary>Opens the database of the settings, asking its pass phrase unless it is remembered. Does nothing when one is open.</summary>
+    /// <summary>Opens the vault of the settings, asking its pass phrase unless it is remembered. Does nothing when one is open.</summary>
     public void Open(Window owner)
     {
         if (Current is not null || Folder is not { } folder)
@@ -58,22 +58,22 @@ public sealed class DatabaseSession : IDisposable
 
         try
         {
-            _watcher = new DatabaseWatcher(folder, Refresh);
+            _watcher = new VaultWatcher(folder, Refresh);
         }
         catch (Exception ex) when (ex is ArgumentException or IOException)
         {
-            _log.Warn(Category, $"The database folder cannot be watched ({ex.Message}): changes of other apps are read when the window is shown");
+            _log.Warn(Category, $"The vault folder cannot be watched ({ex.Message}): changes of other apps are read when the window is shown");
         }
 
         Changed?.Invoke();
     }
 
-    /// <summary>Uses another folder: the current database is closed, then the new one opened.</summary>
+    /// <summary>Uses another folder: the current vault is closed, then the new one opened.</summary>
     public void SwitchTo(Window owner, string folder)
     {
         Close();
-        _settings.SetDatabaseFolder(folder);
-        _log.Info("Settings", $"Database folder: {folder}");
+        _settings.SetVaultFolder(folder);
+        _log.Info("Settings", $"Vault folder: {folder}");
         Open(owner);
     }
 
@@ -88,17 +88,17 @@ public sealed class DatabaseSession : IDisposable
 
     /// <summary>
     /// Shows the creation screen for a request over <paramref name="owner"/>, then adds what it
-    /// says. False when no database is open, or the user cancels, or it cannot be written.
+    /// says. False when no vault is open, or the user cancels, or it cannot be written.
     /// </summary>
     /// <param name="choices">The homonyms already chosen (by the input box); the types default to generic.</param>
     public bool Create(Window owner, InputRequest request, AddChoices? choices = null)
     {
-        if (Current is not { } database)
+        if (Current is not { } vault)
         {
             return false;
         }
 
-        if (CreationDialog.Ask(owner, new CreationForm(database.Graph, request, choices)) is not { } plan)
+        if (CreationDialog.Ask(owner, new CreationForm(vault.Graph, request, choices)) is not { } plan)
         {
             _log.Info("Action", "Creation cancelled");
             return false;
@@ -106,24 +106,24 @@ public sealed class DatabaseSession : IDisposable
 
         try
         {
-            Add(database, plan);
+            Add(vault, plan);
             return true;
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
-            _log.Error("Action", "Cannot add to the database", ex);
-            MessageDialog.Inform(owner, $"Cannot add to the database.\n\n{ex.Message}");
+            _log.Error("Action", "Cannot add to the vault", ex);
+            MessageDialog.Inform(owner, $"Cannot add to the vault.\n\n{ex.Message}");
             return false;
         }
     }
 
-    private void Add(Database database, AddPlan plan)
+    private void Add(Vault vault, AddPlan plan)
     {
         try
         {
             foreach (var change in plan.Changes)
             {
-                database.Append(change);
+                vault.Append(change);
             }
         }
         finally
@@ -139,12 +139,12 @@ public sealed class DatabaseSession : IDisposable
         });
     }
 
-    /// <summary>Forgets the open database's remembered key: its pass phrase is asked at the next start.</summary>
+    /// <summary>Forgets the open vault's remembered key: its pass phrase is asked at the next start.</summary>
     public void Forget()
     {
-        if (Current is { } database)
+        if (Current is { } vault)
         {
-            _keys.Forget(database.Id);
+            _keys.Forget(vault.Id);
         }
     }
 
@@ -155,63 +155,63 @@ public sealed class DatabaseSession : IDisposable
         if (Current is not null)
         {
             Current = null;
-            _log.Info(Category, "Database closed");
+            _log.Info(Category, "Vault closed");
             Changed?.Invoke();
         }
     }
 
     public void Dispose() => _watcher?.Dispose();
 
-    private Database? OpenFolder(Window owner, string folder)
+    private Vault? OpenFolder(Window owner, string folder)
     {
-        switch (DatabaseFolder.Inspect(folder))
+        switch (VaultFolder.Inspect(folder))
         {
             case FolderKind.Empty:
                 return Create(owner, folder);
-            case FolderKind.Database:
+            case FolderKind.Vault:
                 return Unlock(owner, folder);
             default:
-                _log.Warn(Category, $"Not a database folder: {folder}");
-                MessageDialog.Inform(owner, $"{folder} holds other files.\n\nChoose an empty folder for a new database, or the folder of a kofrenot database.");
+                _log.Warn(Category, $"Not a vault folder: {folder}");
+                MessageDialog.Inform(owner, $"{folder} holds other files.\n\nChoose an empty folder for a new vault, or the folder of a kofrenot vault.");
                 return null;
         }
     }
 
-    private Database? Create(Window owner, string folder)
+    private Vault? Create(Window owner, string folder)
     {
-        (DatabaseHeader Header, byte[] Key)? created = null;
+        (VaultHeader Header, byte[] Key)? created = null;
         var remember = PassphraseDialog.Ask(owner, create: true, folder, passPhrase =>
         {
-            created = DatabaseFolder.Create(folder, passPhrase);
+            created = VaultFolder.Create(folder, passPhrase);
             return true;
         });
-        if (remember is null || created is not { } database)
+        if (remember is null || created is not { } vault)
         {
-            _log.Info("Action", "Database creation cancelled");
+            _log.Info("Action", "Vault creation cancelled");
             return null;
         }
 
-        _log.Info("Action", $"Database {database.Header.Id} created in {folder}");
-        return Open(owner, folder, database.Header, database.Key, remember.Value);
+        _log.Info("Action", $"Vault {vault.Header.Id} created in {folder}");
+        return Open(owner, folder, vault.Header, vault.Key, remember.Value);
     }
 
-    private Database? Unlock(Window owner, string folder)
+    private Vault? Unlock(Window owner, string folder)
     {
-        DatabaseHeader header;
+        VaultHeader header;
         try
         {
-            header = DatabaseHeader.Read(DatabaseFolder.HeaderOf(folder));
+            header = VaultHeader.Read(VaultFolder.HeaderOf(folder));
         }
         catch (Exception ex) when (ex is InvalidDataException or NotSupportedException or IOException or UnauthorizedAccessException)
         {
-            _log.Error(Category, $"Cannot read the database in {folder}", ex);
-            MessageDialog.Inform(owner, $"The database in {folder} cannot be opened.\n\n{ex.Message}");
+            _log.Error(Category, $"Cannot read the vault in {folder}", ex);
+            MessageDialog.Inform(owner, $"The vault in {folder} cannot be opened.\n\n{ex.Message}");
             return null;
         }
 
         if (_keys.Recall(header.Id) is { } remembered)
         {
-            _log.Info(Category, $"Database {header.Id} unlocked with the remembered pass phrase");
+            _log.Info(Category, $"Vault {header.Id} unlocked with the remembered pass phrase");
             return Open(owner, folder, header, remembered, remember: false);
         }
 
@@ -221,7 +221,7 @@ public sealed class DatabaseSession : IDisposable
             key = header.Unlock(passPhrase);
             if (key is null)
             {
-                _log.Warn(Category, $"Wrong pass phrase for database {header.Id}");
+                _log.Warn(Category, $"Wrong pass phrase for vault {header.Id}");
             }
 
             return key is not null;
@@ -232,11 +232,11 @@ public sealed class DatabaseSession : IDisposable
             return null;
         }
 
-        _log.Info("Action", $"Database {header.Id} unlocked");
+        _log.Info("Action", $"Vault {header.Id} unlocked");
         return Open(owner, folder, header, key, remember.Value);
     }
 
-    private Database? Open(Window owner, string folder, DatabaseHeader header, byte[] key, bool remember)
+    private Vault? Open(Window owner, string folder, VaultHeader header, byte[] key, bool remember)
     {
         try
         {
@@ -245,12 +245,12 @@ public sealed class DatabaseSession : IDisposable
                 _keys.Remember(header.Id, key);
             }
 
-            return Database.Open(folder, header, key, _files.Cache, _log);
+            return Vault.Open(folder, header, key, _files.Cache, _log);
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Security.Cryptography.CryptographicException)
         {
-            _log.Error(Category, $"Cannot open the database in {folder}", ex);
-            MessageDialog.Inform(owner, $"The database in {folder} cannot be opened.\n\n{ex.Message}");
+            _log.Error(Category, $"Cannot open the vault in {folder}", ex);
+            MessageDialog.Inform(owner, $"The vault in {folder} cannot be opened.\n\n{ex.Message}");
             return null;
         }
     }

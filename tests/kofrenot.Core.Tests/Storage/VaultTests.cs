@@ -1,27 +1,27 @@
 namespace Kofrenot.Core.Tests.Storage;
 
-public sealed class DatabaseTests : IDisposable
+public sealed class VaultTests : IDisposable
 {
     private static readonly DateTimeOffset Start = new(2026, 10, 1, 12, 0, 0, TimeSpan.Zero);
 
     private readonly TempFolder _temp = new();
     private readonly RingLog _log = new();
-    private readonly DatabaseHeader _header;
+    private readonly VaultHeader _header;
     private readonly byte[] _key;
 
-    public DatabaseTests() => (_header, _key) = DatabaseFolder.Create(Folder, "secret", iterations: 10);
+    public VaultTests() => (_header, _key) = VaultFolder.Create(Folder, "secret", iterations: 10);
 
     private string Folder => _temp.Sub("db");
 
     private string Cache => _temp.Sub("cache");
 
     [Fact]
-    public void ANewDatabase_IsEmpty()
+    public void ANewVault_IsEmpty()
     {
-        var database = Open();
+        var vault = Open();
 
-        Assert.Equal(_header.Id, database.Id);
-        Assert.Empty(database.Graph.Nodes);
+        Assert.Equal(_header.Id, vault.Id);
+        Assert.Empty(vault.Graph.Nodes);
         Assert.Contains(_log.Entries, entry => entry.Level == LogLevel.Info && entry.Message.Contains("opened"));
     }
 
@@ -38,10 +38,10 @@ public sealed class DatabaseTests : IDisposable
     [Fact]
     public void EachChange_IsOneFile_InASubFolder_WithNoTemporaryFileLeft()
     {
-        var database = Open();
+        var vault = Open();
         var change = new NodeAdded(Guid.NewGuid(), Start, NewNode("Dune"));
 
-        database.Append(change);
+        vault.Append(change);
 
         var name = change.Id.ToString("N");
         var file = Assert.Single(Directory.GetFiles(ChangesFolder, "*", SearchOption.AllDirectories));
@@ -121,9 +121,9 @@ public sealed class DatabaseTests : IDisposable
         File.WriteAllText(Path.Combine(sub, "not-an-id.kfc"), "?");
         File.WriteAllText(Path.Combine(sub, "desktop.ini"), "?");
 
-        var database = Open(snapshot: false);
+        var vault = Open(snapshot: false);
 
-        Assert.Empty(database.Graph.Nodes);
+        Assert.Empty(vault.Graph.Nodes);
         Assert.DoesNotContain(_log.Entries, entry => entry.Level == LogLevel.Warning);
     }
 
@@ -131,22 +131,22 @@ public sealed class DatabaseTests : IDisposable
     public void AMissingChangesFolder_MeansNoChanges_AndIsCreatedOnFirstAppend()
     {
         Directory.Delete(ChangesFolder);
-        var database = Open(snapshot: false);
+        var vault = Open(snapshot: false);
 
-        Assert.Empty(database.Graph.Nodes);
+        Assert.Empty(vault.Graph.Nodes);
 
-        AddNode(database, "Dune");
+        AddNode(vault, "Dune");
         Assert.Single(Directory.GetFiles(ChangesFolder, "*.kfc", SearchOption.AllDirectories));
     }
 
     [Fact]
     public void AChangeAppendedTwice_IsRefused()
     {
-        var database = Open(snapshot: false);
+        var vault = Open(snapshot: false);
         var change = new NodeAdded(Guid.NewGuid(), Start, NewNode("Dune"));
-        database.Append(change);
+        vault.Append(change);
 
-        Assert.Throws<IOException>(() => database.Append(change));
+        Assert.Throws<IOException>(() => vault.Append(change));
     }
 
     [Fact]
@@ -189,20 +189,20 @@ public sealed class DatabaseTests : IDisposable
     }
 
     [Fact]
-    public void TheSnapshot_IsNamedByTheDatabaseId() =>
-        Assert.Equal(Path.Combine(Cache, _header.Id.ToString("N") + ".kfs"), Database.SnapshotOf(Cache, _header.Id));
+    public void TheSnapshot_IsNamedByTheVaultId() =>
+        Assert.Equal(Path.Combine(Cache, _header.Id.ToString("N") + ".kfs"), Vault.SnapshotOf(Cache, _header.Id));
 
     public void Dispose() => _temp.Dispose();
 
-    private string ChangesFolder => Path.Combine(Folder, DatabaseFolder.ChangesFolder);
+    private string ChangesFolder => Path.Combine(Folder, VaultFolder.ChangesFolder);
 
-    private Database Open(bool snapshot = true) =>
-        Database.Open(Folder, _header, _key, snapshot ? Cache : null, _log);
+    private Vault Open(bool snapshot = true) =>
+        Vault.Open(Folder, _header, _key, snapshot ? Cache : null, _log);
 
-    private static Node AddNode(Database database, string name)
+    private static Node AddNode(Vault vault, string name)
     {
         var node = NewNode(name);
-        database.Append(new NodeAdded(Guid.NewGuid(), node.Created, node));
+        vault.Append(new NodeAdded(Guid.NewGuid(), node.Created, node));
         return node;
     }
 
