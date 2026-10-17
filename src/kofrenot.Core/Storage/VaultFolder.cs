@@ -22,6 +22,8 @@ public static class VaultFolder
     public const string HeaderFile = "kofrenot-vault.json";
     public const string ChangesFolder = "changes";
     public const string ChangeExtension = ".kfc";
+    public const string ContentFolder = "content";
+    public const string ContentExtension = ".kfn";
 
     public static FolderKind Inspect(string folder)
     {
@@ -55,9 +57,14 @@ public static class VaultFolder
     internal static string ChangesOf(string folder) => Path.Combine(folder, ChangesFolder);
 
     /// <summary><c>changes/3f/3f9c…e1.kfc</c>: sub-folders by the first two characters, so none holds too many files.</summary>
-    internal static string ChangeFileOf(string folder, Guid change)
+    internal static string ChangeFileOf(string folder, Guid change) => SpreadFileOf(ChangesOf(folder), change, ChangeExtension);
+
+    /// <summary><c>content/3f/3f9c…e1.kfn</c>: the content of a note version, named by its change.</summary>
+    internal static string ContentFileOf(string folder, Guid version) => SpreadFileOf(Path.Combine(folder, ContentFolder), version, ContentExtension);
+
+    private static string SpreadFileOf(string parent, Guid id, string extension)
     {
-        var name = change.ToString("N");
-        return Path.Combine(ChangesOf(folder), name[..2], name + ChangeExtension);
+        var name = id.ToString("N");
+        return Path.Combine(parent, name[..2], name + extension);
     }
 }

@@ -16,6 +16,7 @@ internal sealed record ChangeData(
     ChangeData.RenameData? Rename = null,
     ChangeData.AliasData? Alias = null,
     ChangeData.PinData? Pin = null,
+    ChangeData.NoteData? Note = null,
     List<Guid>? Removes = null)
 {
     private const string NodeAddedOp = "addNode";
@@ -24,6 +25,7 @@ internal sealed record ChangeData(
     private const string AliasAddedOp = "addAlias";
     private const string RemoveOp = "remove";
     private const string NodePinnedOp = "pinNode";
+    private const string NoteEditedOp = "editNote";
 
     public static ChangeData From(Change change) => change switch
     {
@@ -33,6 +35,7 @@ internal sealed record ChangeData(
         AliasAdded alias => new(VaultFormat.Current, AliasAddedOp, alias.At, Alias: new AliasData(alias.LinkType, alias.IsReverse, alias.Phrase)),
         ChangesRemoved removal => new(VaultFormat.Current, RemoveOp, removal.At, Removes: [.. removal.Removes]),
         NodePinned pin => new(VaultFormat.Current, NodePinnedOp, pin.At, Pin: new PinData(pin.Node)),
+        NoteEdited note => new(VaultFormat.Current, NoteEditedOp, note.At, Note: new NoteData(note.Node, [.. note.Replaces])),
         _ => throw new ArgumentOutOfRangeException(nameof(change), change.GetType().Name, "Unknown change"),
     };
 
@@ -55,6 +58,7 @@ internal sealed record ChangeData(
             AliasAddedOp when IsComplete(Alias) => new AliasAdded(id, At, Alias.LinkType!, Alias.Reverse, Alias.Phrase!),
             RemoveOp when Removes is { Count: > 0 } => new ChangesRemoved(id, At, Removes),
             NodePinnedOp when Pin is not null && Pin.Node != Guid.Empty => new NodePinned(id, At, Pin.Node),
+            NoteEditedOp when Note is { Replaces: not null } && Note.Node != Guid.Empty => new NoteEdited(id, At, Note.Node, Note.Replaces),
             _ => throw new InvalidDataException($"Unknown or incomplete change '{Op}'"),
         };
     }
@@ -80,4 +84,7 @@ internal sealed record ChangeData(
 
     /// <summary><c>"pin": { "node": "…" }</c></summary>
     internal sealed record PinData(Guid Node);
+
+    /// <summary><c>"note": { "node": "…", "replaces": ["…"] }</c>; the content is in the file named by the change id.</summary>
+    internal sealed record NoteData(Guid Node, List<Guid>? Replaces);
 }

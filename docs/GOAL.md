@@ -69,7 +69,7 @@ What each version contains: [ROADMAP.md](ROADMAP.md).
 | Sync | Outside kofrenot, by copying files. No server for now |
 | Conflicts | Concurrent duplicates, renames and note edits are flagged, not merged |
 | Security | AES-256-GCM, random master key wrapped by a pass-phrase key (PBKDF2-SHA256); optionally remembered by Windows (DPAPI) |
-| Notes | A node type; content in Markdown, each save a new version (planned for 0.2) |
+| Notes | A node type; content in Markdown, each save a new version (since 0.2) |
 
 ## Open questions
 Decisions to take with the owner before the matching features:

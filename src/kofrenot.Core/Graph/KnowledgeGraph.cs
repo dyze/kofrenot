@@ -23,6 +23,7 @@ public sealed class KnowledgeGraph
     private readonly HashSet<Guid> _removed = [];
     private readonly HashSet<Guid> _removals = [];
     private readonly RemovableChanges<NodePinned> _pins;
+    private readonly NoteVersions _notes = new();
 
     public KnowledgeGraph(TypeCatalog? types = null)
     {
@@ -53,6 +54,7 @@ public sealed class KnowledgeGraph
         AliasAdded alias => Aliases.Add(alias),
         ChangesRemoved removal => Remove(removal),
         NodePinned pin => _pins.Add(pin),
+        NoteEdited version => _notes.Add(version),
         _ => throw new ArgumentOutOfRangeException(nameof(change), change.GetType().Name, "Unknown change"),
     };
 
@@ -61,6 +63,12 @@ public sealed class KnowledgeGraph
     /// <summary>The pinned nodes, each once, the first pinned first. A pin of a node not arrived yet shows nothing.</summary>
     public IReadOnlyList<Node> PinnedNodes =>
         _pins.Current.Select(pin => pin.Node).Distinct().Select(FindNode).OfType<Node>().ToList();
+
+    /// <summary>
+    /// The current content versions of a note, oldest first: none before its first save, one, or
+    /// several when it was edited on two devices before they synced (a conflict).
+    /// </summary>
+    public IReadOnlyList<NoteEdited> NoteVersionsOf(Guid node) => _notes.Current(node);
 
     /// <summary>The pins of a node: several when it was pinned on two devices. Unpinning removes them all.</summary>
     public IReadOnlyList<Guid> PinsOf(Guid node) =>

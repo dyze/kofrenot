@@ -55,7 +55,21 @@ public sealed class ChangeCodecTests
         Assert.Equal(change, _codec.Decode(change.Id, _codec.Encode(change)));
     }
 
+    [Fact]
+    public void ANoteVersion_RoundTrips()
+    {
+        var change = new NoteEdited(Guid.NewGuid(), At, Guid.NewGuid(), [Guid.NewGuid()]);
+
+        var decoded = Assert.IsType<NoteEdited>(_codec.Decode(change.Id, _codec.Encode(change)));
+
+        Assert.Equal((change.Id, change.At, change.Node), (decoded.Id, decoded.At, decoded.Node));
+        Assert.Equal(change.Replaces, decoded.Replaces);
+    }
+
     [Theory]
+    [InlineData("{\"format\":2,\"op\":\"editNote\",\"at\":\"2026-10-16T09:12:00Z\"}")]
+    [InlineData("{\"format\":2,\"op\":\"editNote\",\"at\":\"2026-10-16T09:12:00Z\",\"note\":{\"replaces\":[]}}")]
+    [InlineData("{\"format\":2,\"op\":\"editNote\",\"at\":\"2026-10-16T09:12:00Z\",\"note\":{\"node\":\"3f2504e0-4f89-11d3-9a0c-0305e82c3301\"}}")]
     [InlineData("{\"format\":2,\"op\":\"pinNode\",\"at\":\"2026-10-16T09:12:00Z\"}")]
     [InlineData("{\"format\":2,\"op\":\"pinNode\",\"at\":\"2026-10-16T09:12:00Z\",\"pin\":{}}")]
     [InlineData("{\"format\":2,\"op\":\"addAlias\",\"at\":\"2026-10-16T09:12:00Z\"}")]

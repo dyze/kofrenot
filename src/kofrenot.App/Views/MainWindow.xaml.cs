@@ -47,6 +47,8 @@ public partial class MainWindow : Window
         DetailsPanel.Rename = rename => _session.Rename(this, rename);
         DetailsPanel.Write = (change, action) => _session.Write(this, change, action);
         DetailsPanel.Visited = node => Visited(node);
+        DetailsPanel.ReadNote = version => _session.Current?.Notes.Read(version);
+        DetailsPanel.SaveNote = (version, content) => _session.SaveNote(this, version, content);
         VersionText.Text = $"kofrenot {AppVersion.Of(typeof(MainWindow).Assembly)}";
         ShowUpdateMark();
         _session.Changed += ShowVault;
@@ -65,6 +67,7 @@ public partial class MainWindow : Window
         if (DetailsPanel.Browser.Graph != vault?.Graph)
         {
             DetailsPanel.Browser.Close();
+            DetailsPanel.Show();
         }
 
         var open = vault is not null;
@@ -360,6 +363,7 @@ public partial class MainWindow : Window
     private void Window_Closing(object? sender, CancelEventArgs e)
     {
         e.Cancel = true;
+        DetailsPanel.LeaveNote();
         Hide();
         _log.Debug("Window", "Hidden");
     }

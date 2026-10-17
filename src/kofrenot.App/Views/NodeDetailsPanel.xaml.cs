@@ -55,6 +55,7 @@ public partial class NodeDetailsPanel : UserControl
     {
         if (Browser.Details is not { } details)
         {
+            NoteBox.Close();
             return;
         }
 
@@ -71,6 +72,7 @@ public partial class NodeDetailsPanel : UserControl
         PinButton.Content = details.IsPinned ? PinnedIcon : PinIcon;
         PinButton.ToolTip = details.IsPinned ? "Unpin" : "Pin: listed while the input box is empty";
         ConflictPanel.Visibility = details.NameConflict.Count > 0 && !_editing ? Visibility.Visible : Visibility.Collapsed;
+        ShowNote(details);
     }
 
     /// <summary>
@@ -79,6 +81,11 @@ public partial class NodeDetailsPanel : UserControl
     /// </summary>
     public bool HandleKey(Key key)
     {
+        if (NoteBox.IsEditing)
+        {
+            return HandleNoteKey(key);
+        }
+
         if (_editing)
         {
             return HandleEditKey(key);
@@ -114,6 +121,7 @@ public partial class NodeDetailsPanel : UserControl
     private void GoBackTo(int depth)
     {
         StopEditing();
+        LeaveNote();
         Browser.BackTo(depth);
         Log.Info("Action", $"Node details: back to level {Browser.Depth}");
         if (Browser.IsOpen)

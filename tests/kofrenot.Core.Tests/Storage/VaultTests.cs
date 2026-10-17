@@ -227,6 +227,21 @@ public sealed class VaultTests : IDisposable
     }
 
     [Fact]
+    public void ANoteVersion_IsSaved_WithItsContent_AndFoundAgainOnReopening()
+    {
+        var vault = Open();
+        var note = AddNode(vault, "Ideas");
+        var version = new NoteEdited(Guid.NewGuid(), Start, note.Id, []);
+
+        vault.Save(version, "# Ideas");
+
+        var reopened = Open(snapshot: false);
+        Assert.Equal([version.Id], reopened.Graph.NoteVersionsOf(note.Id).Select(saved => saved.Id));
+        Assert.Equal("# Ideas", reopened.Notes.Read(version.Id));
+        Assert.Equal([version.Id], Open().Graph.NoteVersionsOf(note.Id).Select(saved => saved.Id));
+    }
+
+    [Fact]
     public void TheSnapshot_IsNamedByTheVaultId() =>
         Assert.Equal(Path.Combine(Cache, _header.Id.ToString("N") + ".kfs"), Vault.SnapshotOf(Cache, _header.Id));
 

@@ -77,8 +77,8 @@ public sealed class TypeCatalogTests
         Assert.Equal("generic", TypeCatalog.Generic.Id);
 
     [Fact]
-    public void Generic_IsTheOnlyBuiltInNodeType() =>
-        Assert.Same(TypeCatalog.Generic, Assert.Single(TypeCatalog.BuiltIn.NodeTypes));
+    public void GenericAndNote_AreTheBuiltInNodeTypes() =>
+        Assert.Equal([("generic", "Generic"), ("note", "Note")], TypeCatalog.BuiltIn.NodeTypes.Select(type => (type.Id, type.Name)));
 
     [Fact]
     public void ANodeType_IsFoundByItsId()

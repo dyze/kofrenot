@@ -31,3 +31,11 @@ public sealed record ChangesRemoved(Guid Id, DateTimeOffset At, IReadOnlyList<Gu
 
 /// <summary>Pins <see cref="Node"/>: it is listed while the input box is empty. Unpinned by a <see cref="ChangesRemoved"/>.</summary>
 public sealed record NodePinned(Guid Id, DateTimeOffset At, Guid Node) : Change(Id, At);
+
+/// <summary>
+/// A new version of the content of the note <see cref="Node"/>, kept in a file of its own named by
+/// <see cref="Change.Id"/> and read only when the note is opened. <see cref="Replaces"/> are the
+/// versions it was written over (none for the first). Two versions replacing the same one, neither
+/// knowing the other (two devices before syncing), make a conflict.
+/// </summary>
+public sealed record NoteEdited(Guid Id, DateTimeOffset At, Guid Node, IReadOnlyList<Guid> Replaces) : Change(Id, At);

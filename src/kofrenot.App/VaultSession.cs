@@ -147,6 +147,32 @@ public sealed class VaultSession : IDisposable
     public bool Write(Window owner, Change change, string action) =>
         Current is { } vault && Append(owner, vault, [change], action);
 
+    /// <summary>Saves a note version with its content. False when no vault is open, or it cannot be written (the user is told).</summary>
+    public bool SaveNote(Window owner, NoteEdited version, string content)
+    {
+        if (Current is not { } vault)
+        {
+            return false;
+        }
+
+        try
+        {
+            vault.Save(version, content);
+            _log.Info("Action", version.Replaces.Count > 1 ? $"Note saved (a conflict of {version.Replaces.Count} versions resolved)" : "Note saved");
+            return true;
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            _log.Error("Action", "Cannot write the note to the vault", ex);
+            MessageDialog.Inform(owner, $"Cannot write the note to the vault.\n\n{ex.Message}");
+            return false;
+        }
+        finally
+        {
+            Changed?.Invoke();
+        }
+    }
+
     private bool Append(Window owner, Vault vault, IReadOnlyList<Change> changes, string action)
     {
         try

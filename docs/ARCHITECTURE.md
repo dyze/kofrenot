@@ -4,7 +4,7 @@
 
 ```
 kofrenot.App   (WPF, Windows only)
-│  main window (input box, node details), creation dialog, settings window, pass phrase dialog, log window, changelog window, tray icon
+│  main window (input box, node details, note editor), creation dialog, settings window, pass phrase dialog, log window, changelog window, tray icon
 │  VaultSession (opens, watches and adds to the vault through the creation dialog)
 │  adapters: SerilogFileLog, SingleInstance, NativeWindows + WindowPlacer (window positions), GitHubReleaseFeed, Browser,
 │            DpapiProtector, GlobalHotkey, VaultWatcher
@@ -12,10 +12,11 @@ kofrenot.App   (WPF, Windows only)
 │  implements ▼  IReleaseFeed · ILog · ISecretProtector
 │
 kofrenot.Core  (no Windows dependency, fully unit-tested on any OS)
-   Graph: KnowledgeGraph · Node · Link · TypeCatalog · Change
-   Storage: Vault · VaultFolder · VaultFormat · SecretBox · KeyWrap · SnapshotStore · KeyMemory
+   Graph: KnowledgeGraph · Node · Link · TypeCatalog · LinkAliases · Change
+   Storage: Vault · VaultFolder · VaultFormat · SecretBox · KeyWrap · SnapshotStore · NoteFiles · KeyMemory
    Input: InputParser · GraphSearch · AddPlanner · InputPresenter · CreationForm
-   Browse: NodeBrowser · NodeDetails
+   Browse: NodeBrowser · NodeDetails · PinPlanner · RecentNodes
+   Notes: NotePlanner · MarkdownFormat
    AppFiles · AppVersion · Changelog · ProjectLinks
    SettingsStore · SettingsCatalog · Hotkey
    PlacementRules · PlacementStore
@@ -34,10 +35,11 @@ One namespace per folder (`Kofrenot.Core.Settings`, `Kofrenot.UI.Views`, ...). T
 | --- | --- |
 | *(root)* | `AppVersion`; `AppFiles` (where every file of kofrenot is, including `keys.json` and the snapshots in `cache\`: the only place their names are written, listed in Settings > About; `AppFiles.For` picks the data folder, see [Portable copy](#portable-copy)); `Changelog` (reads the text shown by Settings > About); `ProjectLinks` (website, issues, releases) |
 | `Settings/` | `SettingsStore` (`settings.json`: theme, debug logging, update check, vault folder, hotkey), `Hotkey`, `SettingsCatalog` (the entries of the Settings window, their tabs, and the search that finds them) |
-| `Graph/` | `Node`, `Link`, `NodeType`, `LinkType`, `LinkVerb` (a link type read one way), `TypeCatalog` (built-in node and link types, link aliases; `LinkName`: how a link reads from one of its nodes), `LinkAliases` (the user's aliases, see [Aliases and removals](#aliases-and-removals)), `RemovableChanges`, `NameKey` (the form names are compared in), `Change` (`NodeAdded`, `LinkAdded`, `NodeRenamed`, `AliasAdded`, `NodePinned`, `ChangesRemoved`), `NodeNames` + `NameVersion` (a node's current names, see [Renames](#renames)), `KnowledgeGraph` (in-memory state, built by applying changes) |
-| `Storage/` | `VaultFormat` (+ `NewerVaultFormatException`), `SecretBox` (AES-GCM seal / open), `KeyWrap` (KDF, wrap / unwrap the master key), `ChangeData` (a change as JSON, shared with the snapshot), `ChangeCodec` (change ⇄ sealed JSON), `VaultHeader`, `VaultFolder` (layout, inspect, create), `SnapshotStore`, `Vault` (open, append, refresh), `AtomicFile` (write as `.tmp`, then rename), `KeyMemory` (remembered master keys, `keys.json`), `ISecretProtector` |
+| `Graph/` | `Node`, `Link`, `NodeType`, `LinkType`, `LinkVerb` (a link type read one way), `TypeCatalog` (built-in node and link types, link aliases; `LinkName`: how a link reads from one of its nodes), `LinkAliases` (the user's aliases, see [Aliases and removals](#aliases-and-removals)), `RemovableChanges`, `NameKey` (the form names are compared in), `Change` (`NodeAdded`, `LinkAdded`, `NodeRenamed`, `AliasAdded`, `NodePinned`, `ChangesRemoved`, `NoteEdited`), `NodeNames` + `NameVersion` (a node's current names, see [Renames](#renames)), `NoteVersions` (a note's current versions, see [Notes](#notes)), `KnowledgeGraph` (in-memory state, built by applying changes) |
+| `Storage/` | `VaultFormat` (+ `NewerVaultFormatException`), `SecretBox` (AES-GCM seal / open), `KeyWrap` (KDF, wrap / unwrap the master key), `ChangeData` (a change as JSON, shared with the snapshot), `ChangeCodec` (change ⇄ sealed JSON), `VaultHeader`, `VaultFolder` (layout, inspect, create), `SnapshotStore`, `NoteFiles` (note content, `content/`), `Vault` (open, append, refresh, save a note), `AtomicFile` (write as `.tmp`, then rename), `KeyMemory` (remembered master keys, `keys.json`), `ISecretProtector` |
 | `Input/` | `InputParser` (text → `NodeRequest` / `LinkRequest`), `GraphSearch` (`SearchHit`), `AddPlanner` (`AddChoices` → `AddPlan`: `NodePlan`, `LinkPlan`, `PlannedSide`), `InputPresenter` (the input box: preview, result rows, homonym choices), `CreationForm` (the creation screen: types, status, what exists), `PlanText` (wording shared by both), `RenamePlanner` (`RenamePlan`: a new name, its problem, homonyms), `AliasPlanner` (`AliasPlan`) |
 | `Browse/` | `NodeBrowser` (the details screen: trail of open nodes, at most 4, the selected link of each), `NodeDetails`, `LinkRow`, `PinPlanner` (pin or unpin), `RecentNodes` (the nodes last opened on this device) |
+| `Notes/` | `NotePlanner` (`NoteState`, `ConflictVersion`: load a note, plan its next version), `MarkdownFormat` (`TextEdit`: the toolbar's Markdown) |
 | `Logging/` | `ILog` (with `NullLog`), `LogEntry`, `RingLog`, `CompositeLog`, `FilteredLog` |
 | `Placement/` | Window positions: `WindowPlacement`, `PlacementRules`, `PlacementStore` (see [Window positions](#window-positions)) |
 | `Updates/` | The daily update check, see [Updates](#updates): `UpdateChecker`, `Release`, `IReleaseFeed`, `UpdateStore` |
@@ -45,7 +47,7 @@ One namespace per folder (`Kofrenot.Core.Settings`, `Kofrenot.UI.Views`, ...). T
 | `kofrenot.App` | Content |
 | --- | --- |
 | *(root)* | `App.xaml`: startup and wiring; `VaultSession` (the open vault: create, unlock, watch, `Create` (creation dialog, then add), forget the remembered key) |
-| `Views/` | Windows: `MainWindow` (input box, shows `InputPresenter`), `NodeDetailsPanel` (in the main window, shows a `NodeBrowser`), `CreationDialog` (shows a `CreationForm`), `SettingsWindow` (tabs General, Vault, Link types (`LinkTypesSection`), Appearance, Logging, About), `PassphraseDialog`, `LogWindow`, `ChangelogWindow` (Settings > About > *Show changelog*); `MessageDialog` (messages and questions in the app's theme, instead of the Windows `MessageBox`); `AppTheme` |
+| `Views/` | Windows: `MainWindow` (input box, shows `InputPresenter`), `NodeDetailsPanel` (in the main window, shows a `NodeBrowser`; `NoteEditor` for a note), `CreationDialog` (shows a `CreationForm`), `SettingsWindow` (tabs General, Vault, Link types (`LinkTypesSection`), Appearance, Logging, About), `PassphraseDialog`, `LogWindow`, `ChangelogWindow` (Settings > About > *Show changelog*); `MessageDialog` (messages and questions in the app's theme, instead of the Windows `MessageBox`); `AppTheme` |
 | `Tray/` | `TrayIcon` |
 | `Platform/` | Implementations of the `Core` interfaces (`GitHubReleaseFeed`, `DpapiProtector`), `Browser` (opens web pages), `SingleInstance`, `GlobalHotkey` (`RegisterHotKey`), `VaultWatcher` (`FileSystemWatcher`), and window placement (`NativeWindows`, `WindowPlacer`) |
 | `Logging/` | `LogHub`, `SerilogFileLog` |
@@ -124,6 +126,8 @@ Model and principles: [GOAL.md](GOAL.md#data-model).
   changes/
     3f/3f9c…e1.kfc         one encrypted change, named by a random id, written once
     a0/a07b…42.kfc
+  content/
+    3f/3f9c…e1.kfn         the content of a note version, named by its change (editNote), written once
 ```
 
 - **Only added, never modified.** A change file is written as `*.tmp` then renamed, so a reader or the sync tool never sees half a file. `.tmp` files are ignored.
@@ -138,7 +142,7 @@ One number for the whole vault, `VaultFormat.Current`, written in the header and
 | Format | Since | Adds |
 | --- | --- | --- |
 | 1 | 0.1 | `addNode`, `addLink`, `renameNode` |
-| 2 | 0.2 | directed links (`contains`, `is-a`): a 0.1 app would read them as symmetric; `addAlias`, `pinNode`, `remove` |
+| 2 | 0.2 | directed links (`contains`, `is-a`): a 0.1 app would read them as symmetric; `addAlias`, `pinNode`, `remove`, `editNote` with the `content/` files |
 
 | Found | This kofrenot |
 | --- | --- |
@@ -181,6 +185,7 @@ UTF-8 JSON before encryption:
 { "format": 2, "at": "…", "op": "addAlias",
   "alias": { "linkType": "contains", "reverse": true, "phrase": "is in" } }
 { "format": 2, "at": "…", "op": "pinNode", "pin": { "node": "<node id>" } }
+{ "format": 2, "at": "…", "op": "editNote", "note": { "node": "<node id>", "replaces": ["<version id>", "…"] } }
 { "format": 2, "at": "…", "op": "remove", "removes": ["<alias or pin change id>", "…"] }
 ```
 
@@ -242,6 +247,23 @@ current = added − removed               (RemovableChanges; a removal may arriv
 - Settings > Link types (`LinkTypesSection`) lists each type both ways, with its built-in phrases and the user's aliases (× removes). Phrases are not logged, only the link type.
 - Recent nodes (`RecentNodes`, `recent.json`) are kept on each device, never in the vault: opening a node writes nothing there. `MainWindow` records each node the details show and passes the list to `InputPresenter.Recent`, which lists the known ones not pinned.
 - Pins: `KnowledgeGraph.PinnedNodes` lists each pinned node once, the first pinned first; a node pinned on two devices has two pins, and `PinPlanner` unpins by removing both. `InputPresenter` lists them under a header (`ResultRow.IsHeader`) while the input box is empty.
+
+### Notes
+A note is a node of type `note`. Its content is Markdown, in versions: each save is a content file (`content/<id>.kfn`, sealed with the master key, "KFN1", bound to its id) and an `editNote` change of the same id naming the versions it **replaces**, as renames do.
+
+```
+save   ──NotePlanner.Save──► NoteEdited(replaces = versions loaded) ──Vault.Save──► content file, then change file
+open   ──NotePlanner.Load──► latest current version's content (read now, never kept in the snapshot)
+v1 ◄─ v2 (device A)
+v1 ◄─ v3 (device B, before syncing) ⇒ conflict: v2, v3 offered; the next save replaces both
+```
+
+- Only metadata (the versions) is in the graph and the snapshot; content is read when the note is shown, so a vault opens as fast with long notes.
+- A version whose file is not synced yet (the sync tool copied the change first) shows as such; the note cannot be edited until it arrives, so no version is replaced unseen.
+- A save replaces the versions *loaded*: a version saved meanwhile on another device stays current, as a new conflict.
+- `NoteEditor` (in `NodeDetailsPanel`) saves on Ctrl+S, the save button, and when the note is left (another node, back, window hidden). While it has the focus, the details leave the keys to it, except Esc (leaves the note, saving it).
+- The toolbar inserts Markdown (`MarkdownFormat`): bold, italic, heading, list, link. The text is not rendered.
+- Note content is never logged. The search does not look into it (an open question: [GOAL.md](GOAL.md#open-questions), *Search*).
 
 ### Input
 `Dune relates to Frank Herbert` → link; `Dune` → node.

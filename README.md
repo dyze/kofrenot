@@ -11,7 +11,7 @@ A private, self-hosted knowledge system: store, organize, search, version and sh
 
 ## Status
 
-Version 0.1, in progress: the Windows application (main window, tray icon, hotkey, settings, log window, update check, installer, portable zip) and a first knowledge base: nodes and links, typed in one box, stored encrypted in a folder. No notes yet: see [docs/ROADMAP.md](docs/ROADMAP.md).
+Version 0.1 released; 0.2 in progress: directed link types and aliases, pinned and recent nodes, and notes with Markdown content. What comes next: [docs/ROADMAP.md](docs/ROADMAP.md).
 
 ## Install
 
@@ -67,6 +67,15 @@ Type in the box at the top of the main window:
 - **F2** or **✎** renames the node in place: **Enter** saves, **Esc** cancels. A name another node already has is allowed, with a warning. The old name stays in the vault's history.
 - A node renamed on two computers before they synced shows a conflict under its name, with a button for each name: click the one to keep, or rename it.
 - The **pin** button next to the name pins the node (filled pin) or unpins it. Pins are stored in the vault, so every device lists them.
+
+### Notes
+A node of type *Note* (chosen on the creation screen) has content: Markdown text, edited under its properties in the details.
+
+- Type in the box (**Tab** or a click gets there). The toolbar adds **bold**, *italic*, a heading, a list or a link; the text stays as typed, it is not rendered.
+- **Ctrl+S** or the save button saves, and so does leaving the note (another node, back, hiding the window). **Esc** leaves the text box.
+- Each save is a new version in the vault: older versions are kept. The content is read only when the note is opened.
+- A note edited on two computers before they synced shows both versions: keep one, or merge them by hand and save.
+- A note saved elsewhere whose content has not arrived yet (the sync tool copies files in any order) cannot be edited until it does.
 
 ## Settings
 

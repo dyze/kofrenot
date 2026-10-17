@@ -26,12 +26,16 @@ public sealed class Vault
         _log = log ?? NullLog.Instance;
         var box = new SecretBox(masterKey);
         _codec = new ChangeCodec(box);
+        Notes = new NoteFiles(folder, box, _log);
         _snapshot = cacheFolder is null ? null : new SnapshotStore(SnapshotOf(cacheFolder, Id), box, Id, _log);
     }
 
     public Guid Id { get; }
 
     public KnowledgeGraph Graph { get; } = new();
+
+    /// <summary>The content of note versions, read on demand.</summary>
+    public NoteFiles Notes { get; }
 
     /// <summary>Opens a vault with its master key: the snapshot, then the change files it lacks.</summary>
     /// <param name="cacheFolder">Where the local snapshot is kept; null for none.</param>
@@ -60,6 +64,17 @@ public sealed class Vault
         Graph.Apply(change);
         _log.Debug(Category, $"Change {change.Id} written");
         _snapshot?.Save(_read.Values);
+    }
+
+    /// <summary>
+    /// Saves a note version: its content first, then its change, so a device that sees the change
+    /// finds the content (unless the sync tool copies them in another order).
+    /// </summary>
+    /// <exception cref="IOException">A file cannot be written.</exception>
+    public void Save(NoteEdited version, string content)
+    {
+        Notes.Write(version.Id, content);
+        Append(version);
     }
 
     /// <summary>Reads the change files not read yet (written by another app, or copied by the sync tool).</summary>

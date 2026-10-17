@@ -21,7 +21,10 @@ public sealed class TypeCatalog
 
     public static LinkType IsA { get; } = new("is-a", ["is a", "is an"], ["has instance"]);
 
-    public static TypeCatalog BuiltIn { get; } = new([Generic], [RelatesTo, Contains, IsA]);
+    /// <summary>A node with content: Markdown text, edited in its details.</summary>
+    public static NodeType Note { get; } = new("note", "Note");
+
+    public static TypeCatalog BuiltIn { get; } = new([Generic, Note], [RelatesTo, Contains, IsA]);
 
     public IReadOnlyList<NodeType> NodeTypes { get; }
 
