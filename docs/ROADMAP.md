@@ -11,7 +11,19 @@ Scope of each planned version. Implemented features move to [CHANGELOG.md](../CH
 | 0.5     | To define   | Server: vaults stored on a web server                                              |
 
 ## 0.2
-Every planned feature is done: see [CHANGELOG.md](../CHANGELOG.md) `[Unreleased]`. User-defined link types come later.
+Done so far: see [CHANGELOG.md](../CHANGELOG.md) `[Unreleased]`. User-defined link types come later.
+
+1. **Creation in steps.** The creation screen shows one step per new node, then the link:
+	```
+	memo relates to Dune
+	  ├─ step: memo   name · type · content editor (for a note)         [Next]
+	  ├─ step: Dune   name · type · content editor (for a note)   [Back][Next]
+	  └─ step: memo [relates to ▾] Dune                           [Back][Add]
+	```
+	- Every new node gets its step, as its type is not known yet. An existing node has none; a link between existing nodes shows the link step only.
+	- Nothing is written until the last **Add**: the nodes, their note content and the link go together.
+	- **Ctrl+Enter**: Next or Add (Enter adds a line in the content). **Esc** cancels the whole creation, asking first when content was typed.
+	- The content editor and the type box are shared with the node details.
 
 ## 0.3 (to define)
 Open: is a collection a root container, or a separate scope? How does it relate to the current vault (0.4)?
