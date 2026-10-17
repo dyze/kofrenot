@@ -21,11 +21,10 @@ internal readonly record struct RowKey(Guid? From, Guid Node);
 /// switches) is the one searched, and Up/Down choose among its homonyms. Otherwise Up/Down select
 /// a node or one of its links, whose details Enter opens instead.
 /// </summary>
-public sealed class InputPresenter(TypeCatalog? types = null)
+public sealed class InputPresenter
 {
     public const string Hint = "Type a name to find or add it, or “Dune relates to Frank Herbert” to link two nodes.";
 
-    private readonly TypeCatalog _types = types ?? TypeCatalog.BuiltIn;
     private KnowledgeGraph? _graph;
     private string _text = string.Empty;
     private string? _leftName;
@@ -63,7 +62,7 @@ public sealed class InputPresenter(TypeCatalog? types = null)
 
         _graph = graph;
         _text = text;
-        Request = InputParser.Parse(text, _types);
+        Request = InputParser.Parse(text, graph.Types);
         if (Request is LinkRequest link)
         {
             KeepChoices(link);
@@ -228,7 +227,7 @@ public sealed class InputPresenter(TypeCatalog? types = null)
         foreach (var link in graph.LinksOf(node.Id))
         {
             var other = graph.FindNode(link.Other(node.Id))!;
-            var row = new ResultRow($"{_types.LinkName(link, node.Id)} {text.NodeLabel(other)}", IsLink: true, IsChosen: false, other, node);
+            var row = new ResultRow($"{graph.Types.LinkName(link, node.Id)} {text.NodeLabel(other)}", IsLink: true, IsChosen: false, other, node);
             rows.Add(row with { IsChosen = row.Key == _selected });
         }
     }

@@ -14,13 +14,13 @@ public sealed class CreationForm
     private AddChoices _choices;
 
     /// <param name="choices">The homonyms chosen in the input box; the types default to generic.</param>
-    public CreationForm(KnowledgeGraph graph, InputRequest request, AddChoices? choices = null, TypeCatalog? types = null, TimeProvider? clock = null)
+    public CreationForm(KnowledgeGraph graph, InputRequest request, AddChoices? choices = null, TimeProvider? clock = null)
     {
         _planner = new AddPlanner(graph, clock);
         _text = new PlanText(graph);
         _request = request;
         _choices = choices ?? AddChoices.Default;
-        Types = types ?? TypeCatalog.BuiltIn;
+        Types = graph.Types;
         Plan = _planner.Plan(_request, _choices);
     }
 

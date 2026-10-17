@@ -19,52 +19,35 @@ public sealed class SnapshotStoreTests : IDisposable
         Assert.Null(Store().Load());
 
     [Fact]
-    public void ASavedGraph_IsLoaded()
+    public void SavedChanges_AreLoaded_OfEveryKind()
     {
-        var graph = new KnowledgeGraph();
         var dune = new Node(Guid.NewGuid(), "generic", "Dune", Start);
         var herbert = new Node(Guid.NewGuid(), "generic", "Frank Herbert", Start);
-        var link = new Link(Guid.NewGuid(), "relates-to", dune.Id, herbert.Id, Start);
-        graph.Add(dune);
-        graph.Add(herbert);
-        graph.Add(link);
-        var changes = new[] { Guid.NewGuid(), Guid.NewGuid() };
+        var alias = new AliasAdded(Guid.NewGuid(), Start, "contains", IsReverse: true, "is in");
+        Change[] changes =
+        [
+            new NodeAdded(Guid.NewGuid(), Start, dune),
+            new NodeAdded(Guid.NewGuid(), Start, herbert),
+            new LinkAdded(Guid.NewGuid(), Start, new Link(Guid.NewGuid(), "relates-to", dune.Id, herbert.Id, Start)),
+            new NodeRenamed(Guid.NewGuid(), Start.AddMinutes(1), dune.Id, "Dune (novel)", [dune.Id]),
+            alias,
+            new ChangesRemoved(Guid.NewGuid(), Start.AddMinutes(2), [alias.Id]),
+        ];
 
-        Store().Save(graph, changes);
-        var snapshot = Store().Load();
+        Store().Save(changes);
+        var loaded = Store().Load();
 
-        Assert.NotNull(snapshot);
-        Assert.Equal(changes, snapshot.Changes);
-        Assert.Equal([dune, herbert], snapshot.Nodes.OrderBy(node => node.Name));
-        Assert.Equal([link], snapshot.Links);
-        Assert.Empty(snapshot.Renames);
-    }
-
-    [Fact]
-    public void Renames_AreKept_WithTheNodesAsAdded()
-    {
-        var graph = new KnowledgeGraph();
-        var dune = new Node(Guid.NewGuid(), "generic", "Dune", Start);
-        graph.Add(dune);
-        var rename = new NodeRenamed(Guid.NewGuid(), Start.AddMinutes(1), dune.Id, "Dune (novel)", [dune.Id]);
-        graph.Rename(rename);
-
-        Store().Save(graph, []);
-        var snapshot = Store().Load()!;
-
-        Assert.Equal([dune], snapshot.Nodes);
-        var kept = Assert.Single(snapshot.Renames);
-        Assert.Equal((rename.Id, rename.Node, rename.Name), (kept.Id, kept.Node, kept.Name));
-        Assert.Equal([dune.Id], kept.Replaces);
+        Assert.NotNull(loaded);
+        Assert.Equal(changes.Select(change => (change.Id, change.GetType())), loaded.Select(change => (change.Id, change.GetType())));
+        Assert.Equal(dune, Assert.IsType<NodeAdded>(loaded[0]).Node);
+        Assert.Equal(alias, loaded[4]);
+        Assert.Equal([alias.Id], Assert.IsType<ChangesRemoved>(loaded[5]).Removes);
     }
 
     [Fact]
     public void TheFile_IsEncrypted_WithNoTemporaryFileLeft()
     {
-        var graph = new KnowledgeGraph();
-        graph.Add(new Node(Guid.NewGuid(), "generic", "Dune", Start));
-
-        Store().Save(graph, []);
+        Store().Save([new NodeAdded(Guid.NewGuid(), Start, new Node(Guid.NewGuid(), "generic", "Dune", Start))]);
 
         Assert.DoesNotContain("Dune", Encoding.UTF8.GetString(File.ReadAllBytes(FilePath)));
         Assert.Single(Directory.GetFiles(Path.GetDirectoryName(FilePath)!));
@@ -73,7 +56,7 @@ public sealed class SnapshotStoreTests : IDisposable
     [Fact]
     public void ASnapshotOfAnotherVault_IsNotUsed()
     {
-        Store().Save(new KnowledgeGraph(), []);
+        Store().Save([]);
 
         Assert.Null(new SnapshotStore(FilePath, _box, Guid.NewGuid(), _log).Load());
         Assert.Contains(_log.Entries, entry => entry.Level == LogLevel.Warning);
@@ -89,19 +72,26 @@ public sealed class SnapshotStoreTests : IDisposable
     }
 
     [Theory]
-    [InlineData("{\"format\":1,\"changes\":[],\"nodes\":[],\"links\":[],\"renames\":[]}")]
-    [InlineData("{\"format\":2,\"changes\":[],\"nodes\":[],\"links\":[]}")]
-    [InlineData("{\"format\":1,\"nodes\":[],\"links\":[]}")]
-    [InlineData("{\"format\":1,\"changes\":[],\"links\":[]}")]
-    [InlineData("{\"format\":1,\"changes\":[],\"nodes\":[]}")]
+    [InlineData("{\"format\":2,\"changes\":[],\"nodes\":[],\"links\":[],\"renames\":[]}")]
+    [InlineData("{\"format\":3}")]
+    [InlineData("{\"format\":3,\"changes\":[{\"id\":\"3f2504e0-4f89-11d3-9a0c-0305e82c3301\"}]}")]
+    [InlineData("{\"format\":3,\"changes\":[{\"id\":\"3f2504e0-4f89-11d3-9a0c-0305e82c3301\",\"change\":{\"format\":2,\"op\":\"unknown\",\"at\":\"2026-10-16T09:12:00Z\"}}]}")]
     [InlineData("null")]
     [InlineData("{ not json")]
     public void ASnapshotOfAnotherFormat_IsNotUsed(string json)
     {
-        Directory.CreateDirectory(Path.GetDirectoryName(FilePath)!);
-        File.WriteAllBytes(FilePath, _box.Seal("KFS1"u8, Encoding.UTF8.GetBytes(json), _vault.ToByteArray()));
+        WriteSnapshot(json);
 
         Assert.Null(Store().Load());
+    }
+
+    [Fact]
+    public void ASnapshotHoldingANewerFormat_IsNotUsed()
+    {
+        WriteSnapshot("{\"format\":3,\"changes\":[{\"id\":\"3f2504e0-4f89-11d3-9a0c-0305e82c3301\",\"change\":{\"format\":99,\"op\":\"addNode\",\"at\":\"2026-10-16T09:12:00Z\"}}]}");
+
+        Assert.Null(Store().Load());
+        Assert.Contains(_log.Entries, entry => entry.Message.Contains("newer format"));
     }
 
     [Fact]
@@ -110,7 +100,7 @@ public sealed class SnapshotStoreTests : IDisposable
         // A folder where the file should be: it cannot be written.
         Directory.CreateDirectory(FilePath);
 
-        Store().Save(new KnowledgeGraph(), []);
+        Store().Save([]);
 
         Assert.Contains(_log.Entries, entry => entry.Level == LogLevel.Warning && entry.Message.Contains("cannot be saved"));
     }
@@ -118,4 +108,10 @@ public sealed class SnapshotStoreTests : IDisposable
     public void Dispose() => _temp.Dispose();
 
     private SnapshotStore Store() => new(FilePath, _box, _vault, _log);
+
+    private void WriteSnapshot(string json)
+    {
+        Directory.CreateDirectory(Path.GetDirectoryName(FilePath)!);
+        File.WriteAllBytes(FilePath, _box.Seal("KFS1"u8, Encoding.UTF8.GetBytes(json), _vault.ToByteArray()));
+    }
 }

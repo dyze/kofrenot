@@ -140,6 +140,13 @@ public sealed class VaultSession : IDisposable
         Current is { } vault
         && Append(owner, vault, [rename], rename.Replaces.Count > 1 ? $"Node renamed (a conflict of {rename.Replaces.Count} names resolved)" : "Node renamed");
 
+    /// <summary>
+    /// Writes a change planned elsewhere (an alias, a pin), logging <paramref name="action"/>. False
+    /// when no vault is open, or it cannot be written (the user is told).
+    /// </summary>
+    public bool Write(Window owner, Change change, string action) =>
+        Current is { } vault && Append(owner, vault, [change], action);
+
     private bool Append(Window owner, Vault vault, IReadOnlyList<Change> changes, string action)
     {
         try

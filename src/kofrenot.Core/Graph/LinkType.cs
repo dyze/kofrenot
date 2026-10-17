@@ -4,7 +4,8 @@ namespace Kofrenot.Core.Graph;
 /// A kind of link. <see cref="Phrases"/> name it from its <see cref="Link.From"/> node ("contains"),
 /// <see cref="ReversePhrases"/> from its <see cref="Link.To"/> node ("contained by"); the first
 /// phrase of each is its name, the others its aliases. A symmetric link has no reverse phrases: it
-/// reads the same both ways.
+/// reads the same both ways. Two link types are equal when their ids are: the same type with the
+/// user's aliases added is still that type.
 /// </summary>
 public sealed record LinkType(string Id, IReadOnlyList<string> Phrases, IReadOnlyList<string>? ReversePhrases = null)
 {
@@ -20,4 +21,8 @@ public sealed record LinkType(string Id, IReadOnlyList<string> Phrases, IReadOnl
 
     /// <summary>The ways to read it: forward, then reverse unless it is symmetric.</summary>
     public IEnumerable<LinkVerb> Verbs => Reverse is { } reverse ? [Forward, reverse] : [Forward];
+
+    public bool Equals(LinkType? other) => other is not null && other.Id == Id;
+
+    public override int GetHashCode() => Id.GetHashCode(StringComparison.Ordinal);
 }

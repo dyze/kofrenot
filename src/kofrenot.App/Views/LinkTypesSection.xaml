@@ -1,0 +1,80 @@
+<UserControl x:Class="Kofrenot.UI.Views.LinkTypesSection"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <!-- Settings > Link types: each link type, each way it reads, with its phrases. The built-in
+       ones are fixed; the user's aliases can be added and removed (×). Stored in the vault. -->
+  <StackPanel>
+    <TextBlock x:Name="StateText" Margin="0,10,0,0" Opacity="0.7" TextWrapping="Wrap" />
+
+    <ItemsControl x:Name="VerbList" Margin="0,10,0,0" Grid.IsSharedSizeScope="True">
+      <ItemsControl.ItemTemplate>
+        <DataTemplate>
+          <Grid Margin="0,3">
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="Auto" SharedSizeGroup="Verb" />
+              <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <TextBlock Margin="0,0,16,0" VerticalAlignment="Center" FontWeight="SemiBold" Text="{Binding Name}" />
+            <WrapPanel Grid.Column="1">
+              <TextBlock Margin="0,0,10,0" VerticalAlignment="Center" Opacity="0.7" Text="{Binding BuiltIn}" />
+              <ItemsControl ItemsSource="{Binding Aliases}">
+                <ItemsControl.ItemsPanel>
+                  <ItemsPanelTemplate>
+                    <WrapPanel />
+                  </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate>
+                    <Border x:Name="Chip"
+                            Margin="0,0,6,0"
+                            Padding="8,1,2,1"
+                            CornerRadius="4"
+                            BorderThickness="1"
+                            BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
+                            ToolTip="Your alias">
+                      <StackPanel Orientation="Horizontal">
+                        <TextBlock x:Name="Phrase" VerticalAlignment="Center" Text="{Binding Phrase}" />
+                        <Button Margin="4,0,0,0"
+                                Padding="4,0"
+                                MinHeight="0"
+                                MinWidth="0"
+                                Background="Transparent"
+                                BorderThickness="0"
+                                Content="&#xE711;"
+                                FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
+                                FontSize="10"
+                                ToolTip="Remove this alias"
+                                Click="RemoveAlias_Click" />
+                      </StackPanel>
+                    </Border>
+                    <DataTemplate.Triggers>
+                      <DataTrigger Binding="{Binding IsUsed}" Value="False">
+                        <Setter TargetName="Phrase" Property="TextDecorations" Value="Strikethrough" />
+                        <Setter TargetName="Chip" Property="Opacity" Value="0.6" />
+                        <Setter TargetName="Chip" Property="ToolTip" Value="Not used: another link type has this phrase already (added on another device)" />
+                      </DataTrigger>
+                    </DataTemplate.Triggers>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+            </WrapPanel>
+          </Grid>
+        </DataTemplate>
+      </ItemsControl.ItemTemplate>
+    </ItemsControl>
+
+    <!-- A new alias: which link type (and way), the phrase, then Add (or Enter). -->
+    <StackPanel x:Name="AddPanel" Margin="0,14,0,0" Orientation="Horizontal">
+      <TextBlock Margin="0,0,8,0" VerticalAlignment="Center" Text="New alias of" />
+      <ComboBox x:Name="VerbBox" Width="150" DisplayMemberPath="Name" SelectionChanged="VerbBox_SelectionChanged" />
+      <TextBox x:Name="PhraseBox"
+               Width="160"
+               Margin="8,0,0,0"
+               VerticalContentAlignment="Center"
+               TextChanged="PhraseBox_TextChanged"
+               KeyDown="PhraseBox_KeyDown" />
+      <Button x:Name="AddButton" Margin="8,0,0,0" Padding="12,4" Content="Add" Click="AddButton_Click" />
+    </StackPanel>
+    <TextBlock x:Name="PlanText" Margin="0,6,0,0" Opacity="0.7" TextWrapping="Wrap" />
+  </StackPanel>
+</UserControl>

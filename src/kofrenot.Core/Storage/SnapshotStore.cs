@@ -4,24 +4,20 @@ using Kofrenot.Core.Logging;
 
 namespace Kofrenot.Core.Storage;
 
-/// <summary>A vault's graph as loaded on this device, and the changes it holds. <see cref="Nodes"/> have the names they were added with.</summary>
-public sealed record Snapshot(IReadOnlyList<Guid> Changes, IReadOnlyList<Node> Nodes, IReadOnlyList<Link> Links, IReadOnlyList<NodeRenamed> Renames);
-
 /// <summary>
-/// Keeps a vault's graph in a local file, so each change file is read once per device. Sealed
-/// with the master key ("KFS1"), bound to the vault id. Only a cache: when it is missing or
-/// unreadable, every change is read again.
+/// Keeps the changes of a vault read on this device in a local file, so each change file is read
+/// once per device. Sealed with the master key ("KFS1"), bound to the vault id. Only a cache:
+/// when it is missing or unreadable, every change is read again.
 /// </summary>
 public sealed class SnapshotStore(string path, SecretBox box, Guid vault, ILog? log = null)
 {
-    public const int Format = 2;
+    public const int Format = 3;
     private static ReadOnlySpan<byte> Magic => "KFS1"u8;
 
-    private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web);
     private readonly ILog _log = log ?? NullLog.Instance;
 
-    /// <summary>The snapshot, or null when there is none or it cannot be used.</summary>
-    public Snapshot? Load()
+    /// <summary>The changes, or null when there is no snapshot or it cannot be used.</summary>
+    public IReadOnlyList<Change>? Load()
     {
         if (!File.Exists(path))
         {
@@ -31,12 +27,16 @@ public sealed class SnapshotStore(string path, SecretBox box, Guid vault, ILog? 
         try
         {
             var json = box.Open(Magic, File.ReadAllBytes(path), vault.ToByteArray());
-            if (JsonSerializer.Deserialize<SnapshotData>(json, Json) is { Format: Format, Changes: { } changes, Nodes: { } nodes, Links: { } links, Renames: { } renames })
+            if (JsonSerializer.Deserialize<SnapshotData>(json, ChangeCodec.Json) is { Format: Format, Changes: { } changes })
             {
-                return new Snapshot(changes, nodes, links, renames);
+                return changes.Select(stored => stored.Change?.ToChange(stored.Id) ?? throw new InvalidDataException("A change is empty")).ToList();
             }
 
             _log.Info("Vault", "The local snapshot has another format: every change is read again");
+        }
+        catch (NewerVaultFormatException ex)
+        {
+            _log.Info("Vault", $"The local snapshot holds a newer format ({ex.Format}): every change is read again");
         }
         catch (Exception ex) when (ex is InvalidDataException or JsonException or IOException or UnauthorizedAccessException)
         {
@@ -46,15 +46,15 @@ public sealed class SnapshotStore(string path, SecretBox box, Guid vault, ILog? 
         return null;
     }
 
-    /// <summary>Saves the graph. A failure is logged only: the snapshot is a cache.</summary>
-    public void Save(KnowledgeGraph graph, IEnumerable<Guid> changes)
+    /// <summary>Saves the changes. A failure is logged only: the snapshot is a cache.</summary>
+    public void Save(IReadOnlyCollection<Change> changes)
     {
-        var data = new SnapshotData(Format, [.. changes], [.. graph.NodesAsAdded], [.. graph.Links], [.. graph.Renames]);
+        var data = new SnapshotData(Format, changes.Select(change => new StoredChange(change.Id, ChangeData.From(change))).ToList());
         try
         {
             Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(path))!);
-            AtomicFile.Write(path, box.Seal(Magic, JsonSerializer.SerializeToUtf8Bytes(data, Json), vault.ToByteArray()), overwrite: true);
-            _log.Debug("Vault", $"Snapshot saved: {data.Changes!.Count} changes");
+            AtomicFile.Write(path, box.Seal(Magic, JsonSerializer.SerializeToUtf8Bytes(data, ChangeCodec.Json), vault.ToByteArray()), overwrite: true);
+            _log.Debug("Vault", $"Snapshot saved: {changes.Count} changes");
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
@@ -62,5 +62,7 @@ public sealed class SnapshotStore(string path, SecretBox box, Guid vault, ILog? 
         }
     }
 
-    internal sealed record SnapshotData(int Format, List<Guid>? Changes, List<Node>? Nodes, List<Link>? Links, List<NodeRenamed>? Renames);
+    internal sealed record SnapshotData(int Format, List<StoredChange>? Changes);
+
+    internal sealed record StoredChange(Guid Id, ChangeData? Change);
 }

@@ -141,7 +141,7 @@ public sealed class CreationFormTests
         Assert.Throws<ArgumentNullException>(() => form.Verb = null);
     }
 
-    private CreationForm Form(InputRequest request, AddChoices? choices = null) => new(_graph, request, choices, Types, _clock);
+    private CreationForm Form(InputRequest request, AddChoices? choices = null) => new(_graph, request, choices, _clock);
 
     private Node Add(string name, string? type = null, int minutes = 0)
     {

@@ -9,11 +9,10 @@ namespace Kofrenot.Core.Browse;
 /// it again. Levels keep node ids, and the details are read from the graph each time, so changes
 /// (from elsewhere, or a rename) appear.
 /// </summary>
-public sealed class NodeBrowser(TypeCatalog? types = null)
+public sealed class NodeBrowser
 {
     public const int MaxDepth = 4;
 
-    private readonly TypeCatalog _types = types ?? TypeCatalog.BuiltIn;
     private readonly List<Level> _trail = [];
 
     /// <summary>The graph browsed; null while closed.</summary>
@@ -109,11 +108,11 @@ public sealed class NodeBrowser(TypeCatalog? types = null)
         var rows = links.Select((link, index) =>
         {
             var other = graph.FindNode(link.Other(node.Id))!;
-            return new LinkRow(_types.LinkName(link, node.Id), text.NodeLabel(other), other, CanOpen(other), index == level.Selected);
+            return new LinkRow(graph.Types.LinkName(link, node.Id), text.NodeLabel(other), other, CanOpen(other), index == level.Selected);
         });
         var names = graph.NamesOf(node.Id);
         IReadOnlyList<string> conflict = names.Count > 1 ? names.Select(version => version.Name).ToList() : [];
-        return new NodeDetails(node, text.NodeLabel(node), _types.NodeTypeName(node.Type), rows.ToList(), conflict);
+        return new NodeDetails(node, text.NodeLabel(node), graph.Types.NodeTypeName(node.Type), rows.ToList(), conflict);
     }
 
     private sealed class Level(Guid nodeId)

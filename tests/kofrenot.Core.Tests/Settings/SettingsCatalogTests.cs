@@ -20,7 +20,7 @@ public class SettingsCatalogTests
     public void Tabs_AreInTheirDisplayOrder()
     {
         Assert.Equal(
-            new[] { SettingsCatalog.GeneralTab, SettingsCatalog.VaultTab, SettingsCatalog.AppearanceTab, SettingsCatalog.LoggingTab, SettingsCatalog.AboutTab },
+            new[] { SettingsCatalog.GeneralTab, SettingsCatalog.VaultTab, SettingsCatalog.LinkTypesTab, SettingsCatalog.AppearanceTab, SettingsCatalog.LoggingTab, SettingsCatalog.AboutTab },
             SettingsCatalog.Tabs);
     }
 

@@ -29,6 +29,39 @@ public sealed class ChangeCodecTests
     }
 
     [Fact]
+    public void AnAlias_RoundTrips()
+    {
+        var change = new AliasAdded(Guid.NewGuid(), At, "contains", IsReverse: true, "is in");
+
+        Assert.Equal(change, _codec.Decode(change.Id, _codec.Encode(change)));
+    }
+
+    [Fact]
+    public void ARemoval_RoundTrips()
+    {
+        var change = new ChangesRemoved(Guid.NewGuid(), At, [Guid.NewGuid(), Guid.NewGuid()]);
+
+        var decoded = Assert.IsType<ChangesRemoved>(_codec.Decode(change.Id, _codec.Encode(change)));
+
+        Assert.Equal((change.Id, change.At), (decoded.Id, decoded.At));
+        Assert.Equal(change.Removes, decoded.Removes);
+    }
+
+    [Theory]
+    [InlineData("{\"format\":2,\"op\":\"addAlias\",\"at\":\"2026-10-16T09:12:00Z\"}")]
+    [InlineData("{\"format\":2,\"op\":\"addAlias\",\"at\":\"2026-10-16T09:12:00Z\",\"alias\":{\"phrase\":\"is in\"}}")]
+    [InlineData("{\"format\":2,\"op\":\"addAlias\",\"at\":\"2026-10-16T09:12:00Z\",\"alias\":{\"linkType\":\"contains\",\"phrase\":\" \"}}")]
+    [InlineData("{\"format\":2,\"op\":\"remove\",\"at\":\"2026-10-16T09:12:00Z\"}")]
+    [InlineData("{\"format\":2,\"op\":\"remove\",\"at\":\"2026-10-16T09:12:00Z\",\"removes\":[]}")]
+    public void AnIncompleteAliasOrRemoval_IsRefused(string json)
+    {
+        var id = Guid.NewGuid();
+        var data = _box.Seal("KFC1"u8, Encoding.UTF8.GetBytes(json), id.ToByteArray());
+
+        Assert.Throws<InvalidDataException>(() => _codec.Decode(id, data));
+    }
+
+    [Fact]
     public void ATypeUnknownToThisVersion_IsKept()
     {
         var change = new NodeAdded(Guid.NewGuid(), At, new Node(Guid.NewGuid(), "book", "Dune", At));

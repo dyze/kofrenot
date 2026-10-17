@@ -74,6 +74,7 @@ Gear button in the main window, or tray menu > Settings. A dialog over the main 
 | --- | --- |
 | General | Hotkey that shows kofrenot (click the box, then press the new shortcut; *Default*: Ctrl+Alt+K) |
 | Vault | Vault folder (*Choose...*, *Explore to*), whether it is open; the remembered pass phrase (*Forget*) |
+| Link types | Each link type, both ways, with its phrases. Add your own aliases (for example `-` for *relates to*): pick the link type, type the phrase, *Add*; × removes one. They are stored in the vault, so every device has them. A phrase in use is refused, and node names containing it are warned about (the input box would read them as links) |
 | Appearance | Theme: follow Windows (default), light or dark |
 | Logging | Detailed (debug) logging; open the log window |
 | About | Version, website, report an issue, changelog; update check (once a day, on by default; a dot on the gear button and on the tab when a newer release exists); kofrenot's files, each with *Show in folder* |

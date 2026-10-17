@@ -40,15 +40,14 @@ public sealed record RenamePlan(Node Node, string Name, RenameProblem Problem, I
 /// Turns a new name into the change that renames a node. The change replaces every current name,
 /// so renaming a node in conflict (to one of its names, or another) resolves the conflict.
 /// </summary>
-public sealed class RenamePlanner(KnowledgeGraph graph, TypeCatalog? types = null, TimeProvider? clock = null)
+public sealed class RenamePlanner(KnowledgeGraph graph, TimeProvider? clock = null)
 {
-    private readonly TypeCatalog _types = types ?? TypeCatalog.BuiltIn;
     private readonly TimeProvider _clock = clock ?? TimeProvider.System;
 
     public RenamePlan Plan(Node node, string text)
     {
         var current = graph.NamesOf(node.Id);
-        var (name, problem) = InputParser.Parse(text, _types) switch
+        var (name, problem) = InputParser.Parse(text, graph.Types) switch
         {
             null => (string.Empty, RenameProblem.Empty),
             LinkRequest => (text.Trim(), RenameProblem.LinkPhrase),

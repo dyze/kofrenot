@@ -212,6 +212,21 @@ public sealed class VaultTests : IDisposable
     }
 
     [Fact]
+    public void AliasesAndRemovals_AreFoundAgain_FromTheFiles_AndFromTheSnapshot()
+    {
+        var vault = Open();
+        var kept = new AliasAdded(Guid.NewGuid(), Start, "contains", IsReverse: true, "is in");
+        var removed = new AliasAdded(Guid.NewGuid(), Start, "relates-to", IsReverse: false, "-");
+        vault.Append(kept);
+        vault.Append(removed);
+        vault.Append(new ChangesRemoved(Guid.NewGuid(), Start.AddMinutes(1), [removed.Id]));
+
+        Assert.Equal([kept.Id], Open(snapshot: false).Graph.Aliases.All.Select(alias => alias.Id));
+        Directory.Delete(ChangesFolder, recursive: true);
+        Assert.Equal([kept.Id], Open().Graph.Aliases.All.Select(alias => alias.Id));
+    }
+
+    [Fact]
     public void TheSnapshot_IsNamedByTheVaultId() =>
         Assert.Equal(Path.Combine(Cache, _header.Id.ToString("N") + ".kfs"), Vault.SnapshotOf(Cache, _header.Id));
 

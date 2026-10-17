@@ -16,3 +16,15 @@ public sealed record LinkAdded(Guid Id, DateTimeOffset At, Link Link) : Change(I
 /// neither knowing the other (two devices before syncing), make a name conflict.
 /// </summary>
 public sealed record NodeRenamed(Guid Id, DateTimeOffset At, Guid Node, string Name, IReadOnlyList<Guid> Replaces) : Change(Id, At);
+
+/// <summary>
+/// Adds <see cref="Phrase"/> as an alias of a link type (<see cref="LinkType"/> is its id), read
+/// one way: forward, or reverse when <see cref="IsReverse"/>. Removed by a <see cref="ChangesRemoved"/>.
+/// </summary>
+public sealed record AliasAdded(Guid Id, DateTimeOffset At, string LinkType, bool IsReverse, string Phrase) : Change(Id, At);
+
+/// <summary>
+/// Removes earlier changes that can be removed (aliases, pins), by id. Files are never deleted:
+/// a removal is a change of its own, and an alias or pin added again later has a new id.
+/// </summary>
+public sealed record ChangesRemoved(Guid Id, DateTimeOffset At, IReadOnlyList<Guid> Removes) : Change(Id, At);

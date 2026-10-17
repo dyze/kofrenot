@@ -3,6 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:settings="clr-namespace:Kofrenot.Core.Settings;assembly=kofrenot.Core"
         xmlns:core="clr-namespace:Kofrenot.Core;assembly=kofrenot.Core"
+        xmlns:local="clr-namespace:Kofrenot.UI.Views"
         Title="kofrenot settings"
         Icon="/Assets/kofrenot.ico"
         Width="720" Height="480"
@@ -155,6 +156,12 @@
                     ToolTip="The pass phrase will be asked at the next start"
                     Click="ForgetButton_Click" />
           </StackPanel>
+        </StackPanel>
+
+        <StackPanel Tag="{x:Static settings:SettingsCatalog.LinkTypesTab}">
+          <TextBlock Text="{x:Static settings:SettingsCatalog.LinkTypesTab}" Style="{StaticResource SectionHeader}" />
+
+          <local:LinkTypesSection x:Name="LinkTypes" Tag="{x:Static settings:SettingsCatalog.LinkAliasesId}" />
         </StackPanel>
 
         <StackPanel Tag="{x:Static settings:SettingsCatalog.AppearanceTab}">

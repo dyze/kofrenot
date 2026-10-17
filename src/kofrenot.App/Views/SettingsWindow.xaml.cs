@@ -504,6 +504,7 @@ public partial class SettingsWindow : Window
         var remembered = _session.IsRemembered;
         RememberedText.Text = remembered ? "The pass phrase is remembered on this computer." : "The pass phrase is not remembered.";
         ForgetButton.IsEnabled = remembered;
+        LinkTypes.Session = _session;
     }
 
     private void ChooseVaultButton_Click(object sender, RoutedEventArgs e)

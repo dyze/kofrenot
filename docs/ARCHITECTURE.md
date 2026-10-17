@@ -34,9 +34,9 @@ One namespace per folder (`Kofrenot.Core.Settings`, `Kofrenot.UI.Views`, ...). T
 | --- | --- |
 | *(root)* | `AppVersion`; `AppFiles` (where every file of kofrenot is, including `keys.json` and the snapshots in `cache\`: the only place their names are written, listed in Settings > About; `AppFiles.For` picks the data folder, see [Portable copy](#portable-copy)); `Changelog` (reads the text shown by Settings > About); `ProjectLinks` (website, issues, releases) |
 | `Settings/` | `SettingsStore` (`settings.json`: theme, debug logging, update check, vault folder, hotkey), `Hotkey`, `SettingsCatalog` (the entries of the Settings window, their tabs, and the search that finds them) |
-| `Graph/` | `Node`, `Link`, `NodeType`, `LinkType`, `LinkVerb` (a link type read one way), `TypeCatalog` (built-in node and link types, link aliases; `LinkName`: how a link reads from one of its nodes), `NameKey` (the form names are compared in), `Change` (`NodeAdded`, `LinkAdded`, `NodeRenamed`), `NodeNames` + `NameVersion` (a node's current names, see [Renames](#renames)), `KnowledgeGraph` (in-memory state, built by applying changes) |
-| `Storage/` | `VaultFormat` (+ `NewerVaultFormatException`), `SecretBox` (AES-GCM seal / open), `KeyWrap` (KDF, wrap / unwrap the master key), `ChangeCodec` (change ⇄ sealed JSON), `VaultHeader`, `VaultFolder` (layout, inspect, create), `SnapshotStore`, `Vault` (open, append, refresh), `AtomicFile` (write as `.tmp`, then rename), `KeyMemory` (remembered master keys, `keys.json`), `ISecretProtector` |
-| `Input/` | `InputParser` (text → `NodeRequest` / `LinkRequest`), `GraphSearch` (`SearchHit`), `AddPlanner` (`AddChoices` → `AddPlan`: `NodePlan`, `LinkPlan`, `PlannedSide`), `InputPresenter` (the input box: preview, result rows, homonym choices), `CreationForm` (the creation screen: types, status, what exists), `PlanText` (wording shared by both), `RenamePlanner` (`RenamePlan`: a new name, its problem, homonyms) |
+| `Graph/` | `Node`, `Link`, `NodeType`, `LinkType`, `LinkVerb` (a link type read one way), `TypeCatalog` (built-in node and link types, link aliases; `LinkName`: how a link reads from one of its nodes), `LinkAliases` (the user's aliases, see [Aliases and removals](#aliases-and-removals)), `RemovableChanges`, `NameKey` (the form names are compared in), `Change` (`NodeAdded`, `LinkAdded`, `NodeRenamed`, `AliasAdded`, `ChangesRemoved`), `NodeNames` + `NameVersion` (a node's current names, see [Renames](#renames)), `KnowledgeGraph` (in-memory state, built by applying changes) |
+| `Storage/` | `VaultFormat` (+ `NewerVaultFormatException`), `SecretBox` (AES-GCM seal / open), `KeyWrap` (KDF, wrap / unwrap the master key), `ChangeData` (a change as JSON, shared with the snapshot), `ChangeCodec` (change ⇄ sealed JSON), `VaultHeader`, `VaultFolder` (layout, inspect, create), `SnapshotStore`, `Vault` (open, append, refresh), `AtomicFile` (write as `.tmp`, then rename), `KeyMemory` (remembered master keys, `keys.json`), `ISecretProtector` |
+| `Input/` | `InputParser` (text → `NodeRequest` / `LinkRequest`), `GraphSearch` (`SearchHit`), `AddPlanner` (`AddChoices` → `AddPlan`: `NodePlan`, `LinkPlan`, `PlannedSide`), `InputPresenter` (the input box: preview, result rows, homonym choices), `CreationForm` (the creation screen: types, status, what exists), `PlanText` (wording shared by both), `RenamePlanner` (`RenamePlan`: a new name, its problem, homonyms), `AliasPlanner` (`AliasPlan`) |
 | `Browse/` | `NodeBrowser` (the details screen: trail of open nodes, at most 4, the selected link of each), `NodeDetails`, `LinkRow` |
 | `Logging/` | `ILog` (with `NullLog`), `LogEntry`, `RingLog`, `CompositeLog`, `FilteredLog` |
 | `Placement/` | Window positions: `WindowPlacement`, `PlacementRules`, `PlacementStore` (see [Window positions](#window-positions)) |
@@ -45,7 +45,7 @@ One namespace per folder (`Kofrenot.Core.Settings`, `Kofrenot.UI.Views`, ...). T
 | `kofrenot.App` | Content |
 | --- | --- |
 | *(root)* | `App.xaml`: startup and wiring; `VaultSession` (the open vault: create, unlock, watch, `Create` (creation dialog, then add), forget the remembered key) |
-| `Views/` | Windows: `MainWindow` (input box, shows `InputPresenter`), `NodeDetailsPanel` (in the main window, shows a `NodeBrowser`), `CreationDialog` (shows a `CreationForm`), `SettingsWindow` (tabs General, Vault, Appearance, Logging, About), `PassphraseDialog`, `LogWindow`, `ChangelogWindow` (Settings > About > *Show changelog*); `MessageDialog` (messages and questions in the app's theme, instead of the Windows `MessageBox`); `AppTheme` |
+| `Views/` | Windows: `MainWindow` (input box, shows `InputPresenter`), `NodeDetailsPanel` (in the main window, shows a `NodeBrowser`), `CreationDialog` (shows a `CreationForm`), `SettingsWindow` (tabs General, Vault, Link types (`LinkTypesSection`), Appearance, Logging, About), `PassphraseDialog`, `LogWindow`, `ChangelogWindow` (Settings > About > *Show changelog*); `MessageDialog` (messages and questions in the app's theme, instead of the Windows `MessageBox`); `AppTheme` |
 | `Tray/` | `TrayIcon` |
 | `Platform/` | Implementations of the `Core` interfaces (`GitHubReleaseFeed`, `DpapiProtector`), `Browser` (opens web pages), `SingleInstance`, `GlobalHotkey` (`RegisterHotKey`), `VaultWatcher` (`FileSystemWatcher`), and window placement (`NativeWindows`, `WindowPlacer`) |
 | `Logging/` | `LogHub`, `SerilogFileLog` |
@@ -138,7 +138,7 @@ One number for the whole vault, `VaultFormat.Current`, written in the header and
 | Format | Since | Adds |
 | --- | --- | --- |
 | 1 | 0.1 | `addNode`, `addLink`, `renameNode` |
-| 2 | 0.2 | directed links (`contains`, `is-a`): a 0.1 app would read them as symmetric |
+| 2 | 0.2 | directed links (`contains`, `is-a`): a 0.1 app would read them as symmetric; `addAlias`, `remove` |
 
 | Found | This kofrenot |
 | --- | --- |
@@ -178,6 +178,9 @@ UTF-8 JSON before encryption:
   "link": { "id": "…", "type": "relates-to", "from": "<node id>", "to": "<node id>", "created": "…" } }
 { "format": 2, "at": "…", "op": "renameNode",
   "rename": { "node": "<node id>", "name": "Dune (novel)", "replaces": ["<node id or rename id>", "…"] } }
+{ "format": 2, "at": "…", "op": "addAlias",
+  "alias": { "linkType": "contains", "reverse": true, "phrase": "is in" } }
+{ "format": 2, "at": "…", "op": "remove", "removes": ["<alias or pin change id>", "…"] }
 ```
 
 `renameNode` was added to format 1 before 0.1 was released, so the format number did not change (owner's decision).
@@ -192,7 +195,7 @@ UTF-8 JSON before encryption:
 Reading thousands of small files at each start is slow, above all on a file share. So each device reads a change file **once**, then keeps the result in a snapshot:
 
 ```
-start ─► snapshot (local) ─► graph + ids of the changes it holds
+start ─► snapshot (local) ─► the changes it holds, applied to the graph
            │ missing, unreadable or other format: start from an empty graph
            ▼
       list changes/ (names only) ─► read the files not in the snapshot ─► apply
@@ -204,7 +207,7 @@ start ─► snapshot (local) ─► graph + ids of the changes it holds
 - Encrypted with the master key like a change file (`KFS1` · nonce · ciphertext · tag, AAD = vault id), so it reveals nothing more than the vault.
 - Written as `*.tmp`, then renamed. It is only a cache: deleting it costs one full read.
 - A change file that arrives late, older than changes already applied, is fine: adds do not depend on order, and renames name what they replace (see [Renames](#renames)), so the result is the same in any order.
-- It holds the nodes with the names they were added with, plus every rename (`SnapshotStore.Format` 2). A snapshot of format 1 (without renames) is not used, so every change is read again once.
+- It holds the changes themselves, as in their files (`ChangeData`, `SnapshotStore.Format` 3), so a new kind of change needs nothing more. A snapshot of an older format is not used: every change is read again once.
 - Ten renames of one node are still ten files, each read once per device; packing them into bigger files is an open question ([GOAL.md](GOAL.md#open-questions), *Packs*).
 
 ### Renames
@@ -220,6 +223,22 @@ r3 "Dune (novel)" replaces r1 + r2 ⇒ one current name again
 - The result does not depend on the order the files arrive in. A rename that arrives before its node is kept and applied when the node arrives.
 - `RenamePlanner` writes a rename that replaces every current name, so renaming a node in conflict, or keeping one of its names, resolves the conflict. It refuses an empty name, a name with a link phrase (the input box could not find it), and the same name when there is no conflict. Homonyms are allowed, with a warning.
 - The search indexes the shown name only.
+
+### Aliases and removals
+What the user can take back (aliases, and pins later) is added by one change and removed by another, `remove`, listing the ids it removes. Nothing is deleted from the vault.
+
+```
+a1 addAlias "is in" → contained by      device A
+a2 addAlias "is in" → contained by      device B, before syncing (a copy)
+r1 remove [a1, a2]                      removes every copy
+current = added − removed               (RemovableChanges; a removal may arrive first)
+```
+
+- `LinkAliases` builds `KnowledgeGraph.Types`: the built-in types with the aliases in use added to their phrases, oldest first. Everything that reads the input (`InputPresenter`, `CreationForm`, `RenamePlanner`, `NodeBrowser`) uses it.
+- A phrase taken already (built in, or by an older alias: the same phrase added for two types on two devices) leaves the alias unused: it is listed struck through, and can be removed.
+- An alias of a type this version does not know is kept, not shown.
+- `AliasPlanner` refuses an empty phrase and one in use, and warns about the node names containing it: the input box would read them as links.
+- Settings > Link types (`LinkTypesSection`) lists each type both ways, with its built-in phrases and the user's aliases (× removes). Phrases are not logged, only the link type.
 
 ### Input
 `Dune relates to Frank Herbert` → link; `Dune` → node.

@@ -16,7 +16,7 @@ public sealed class Vault
     private readonly ChangeCodec _codec;
     private readonly SnapshotStore? _snapshot;
     private readonly ILog _log;
-    private readonly HashSet<Guid> _read = [];
+    private readonly Dictionary<Guid, Change> _read = [];
     private readonly HashSet<Guid> _reportedUnreadable = [];
 
     private Vault(string folder, VaultHeader header, byte[] masterKey, string? cacheFolder, ILog? log)
@@ -56,10 +56,10 @@ public sealed class Vault
         var path = VaultFolder.ChangeFileOf(_folder, change.Id);
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
         AtomicFile.Write(path, _codec.Encode(change), overwrite: false);
-        _read.Add(change.Id);
+        _read[change.Id] = change;
         Graph.Apply(change);
         _log.Debug(Category, $"Change {change.Id} written");
-        _snapshot?.Save(Graph, _read);
+        _snapshot?.Save(_read.Values);
     }
 
     /// <summary>Reads the change files not read yet (written by another app, or copied by the sync tool).</summary>
@@ -76,13 +76,10 @@ public sealed class Vault
             return 0;
         }
 
-        foreach (var change in changes.OrderBy(change => change.At).ThenBy(change => change.Id))
-        {
-            Graph.Apply(change);
-        }
+        Apply(changes);
 
         _log.Debug(Category, $"{changes.Count} new changes read");
-        _snapshot?.Save(Graph, _read);
+        _snapshot?.Save(_read.Values);
         return changes.Count;
     }
 
@@ -93,23 +90,17 @@ public sealed class Vault
             return 0;
         }
 
-        foreach (var node in snapshot.Nodes)
-        {
-            Graph.Add(node);
-        }
+        Apply(snapshot);
+        return snapshot.Count;
+    }
 
-        foreach (var link in snapshot.Links)
+    private void Apply(IEnumerable<Change> changes)
+    {
+        foreach (var change in changes.OrderBy(change => change.At).ThenBy(change => change.Id))
         {
-            Graph.Add(link);
+            _read[change.Id] = change;
+            Graph.Apply(change);
         }
-
-        foreach (var rename in snapshot.Renames)
-        {
-            Graph.Rename(rename);
-        }
-
-        _read.UnionWith(snapshot.Changes);
-        return snapshot.Changes.Count;
     }
 
     private List<Change> ReadNewChanges()
@@ -126,11 +117,10 @@ public sealed class Vault
             // Skips files being written (.tmp) and anything else put there.
             if (Path.GetExtension(path) == VaultFolder.ChangeExtension
                 && Guid.TryParseExact(Path.GetFileNameWithoutExtension(path), "N", out var id)
-                && !_read.Contains(id)
+                && !_read.ContainsKey(id)
                 && TryRead(id, path) is { } change)
             {
                 changes.Add(change);
-                _read.Add(id);
             }
         }
 

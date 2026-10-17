@@ -29,15 +29,7 @@ public sealed class RenameTests
         _graph.Apply(rename);
 
         Assert.False(_graph.Apply(rename));
-        Assert.Single(_graph.Renames);
-    }
-
-    [Fact]
-    public void ANodeKeepsTheNameItWasAddedWith_ForTheSnapshot()
-    {
-        _graph.Apply(Rename("Arrakis", minutes: 1, _dune.Id));
-
-        Assert.Equal([_dune], _graph.NodesAsAdded);
+        Assert.Single(_graph.NamesOf(_dune.Id));
     }
 
     [Fact]
@@ -97,10 +89,12 @@ public sealed class RenameTests
     [Fact]
     public void ARenameOfAnUnknownNode_IsKept_ButShowsNothing()
     {
-        Assert.True(_graph.Apply(new NodeRenamed(Guid.NewGuid(), Start, Guid.NewGuid(), "Ghost", [Guid.NewGuid()])));
+        var rename = new NodeRenamed(Guid.NewGuid(), Start, Guid.NewGuid(), "Ghost", [Guid.NewGuid()]);
 
+        Assert.True(_graph.Apply(rename));
+        Assert.False(_graph.Apply(rename));
         Assert.Single(_graph.Nodes);
-        Assert.Single(_graph.Renames);
+        Assert.Empty(_graph.NamesOf(rename.Node));
     }
 
     [Fact]

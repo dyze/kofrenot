@@ -20,19 +20,24 @@ public sealed class KnowledgeGraph
     private readonly Dictionary<Guid, Link> _links = [];
     private readonly Dictionary<LinkKey, Link> _linksByEnds = [];
     private readonly Dictionary<Guid, List<Link>> _linksByNode = [];
+    private readonly HashSet<Guid> _removed = [];
+    private readonly HashSet<Guid> _removals = [];
 
-    public KnowledgeGraph(TypeCatalog? types = null) => _types = types ?? TypeCatalog.BuiltIn;
+    public KnowledgeGraph(TypeCatalog? types = null)
+    {
+        _types = types ?? TypeCatalog.BuiltIn;
+        Aliases = new LinkAliases(_types, _removed);
+    }
+
+    /// <summary>The link types, with the user's aliases: what the input box reads.</summary>
+    public TypeCatalog Types => Aliases.Catalog;
+
+    public LinkAliases Aliases { get; }
 
     /// <summary>The nodes, each with its current name.</summary>
     public IReadOnlyCollection<Node> Nodes => _nodes.Values;
 
     public IReadOnlyCollection<Link> Links => _links.Values;
-
-    /// <summary>The nodes with the names they were added with: what a snapshot keeps, with <see cref="Renames"/>.</summary>
-    public IEnumerable<Node> NodesAsAdded => _names.Values.Select(names => names.Added).OfType<Node>();
-
-    /// <summary>Every rename, including those of nodes not arrived yet.</summary>
-    public IEnumerable<NodeRenamed> Renames => _names.Values.SelectMany(names => names.Renames);
 
     /// <summary>The nodes by name key (<see cref="NameKey"/>), each list oldest first: what the search goes through.</summary>
     internal IReadOnlyDictionary<string, List<Node>> NodesByKey => _nodesByName;
@@ -43,6 +48,8 @@ public sealed class KnowledgeGraph
         NodeAdded added => Add(added.Node),
         LinkAdded added => Add(added.Link),
         NodeRenamed renamed => Rename(renamed),
+        AliasAdded alias => Aliases.Add(alias),
+        ChangesRemoved removal => Remove(removal),
         _ => throw new ArgumentOutOfRangeException(nameof(change), change.GetType().Name, "Unknown change"),
     };
 
@@ -98,6 +105,19 @@ public sealed class KnowledgeGraph
             Show(node with { Name = names.Shown(names.Added!) });
         }
 
+        return true;
+    }
+
+    /// <summary>Takes back aliases or pins. False when this removal is already there.</summary>
+    public bool Remove(ChangesRemoved removal)
+    {
+        if (!_removals.Add(removal.Id))
+        {
+            return false;
+        }
+
+        _removed.UnionWith(removal.Removes);
+        Aliases.Changed();
         return true;
     }
 
