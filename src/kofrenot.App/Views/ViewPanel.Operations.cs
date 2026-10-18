@@ -1,7 +1,6 @@
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using System.Windows.Media;
 using Kofrenot.Core.Graph;
 using Kofrenot.Core.Logging;
 using Kofrenot.Core.Views;
@@ -135,14 +134,10 @@ public partial class ViewPanel
     /// <summary>A right click selects the node under the mouse, for its menu.</summary>
     private void Tree_PreviewMouseRightButtonDown(object sender, MouseButtonEventArgs e)
     {
-        for (var element = e.OriginalSource as DependencyObject; element is not null; element = VisualTreeHelper.GetParent(element))
+        if (TreeViewItemAt(e.OriginalSource) is { } item)
         {
-            if (element is TreeViewItem item)
-            {
-                item.IsSelected = true;
-                item.Focus();
-                return;
-            }
+            item.IsSelected = true;
+            item.Focus();
         }
     }
 

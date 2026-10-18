@@ -108,7 +108,7 @@ A node of type *View* shows the vault another way, in a tab of its own. Choose o
   | **Ctrl+X**, then **Ctrl+V** on another node | moves the node there: it leaves the parent it was shown under; its other parents keep it |
   | **Del** | deletes the node with everything under it, even a node that is also elsewhere, after showing what will be deleted and where else those nodes are |
 
-  A node cannot move under itself. A note or dataset whose content has not arrived on this computer yet cannot be copied.
+  Or **drag** a node onto another to move it there, holding **Ctrl** to copy it instead; the node under the pointer is highlighted, and the cursor says when it cannot go there. A node cannot move under itself. A note or dataset whose content has not arrived on this computer yet cannot be copied.
 - A view is a node like the others: found by the search, pinned, linked, synced. Its definition is kept in the vault.
 - **Edit what a view shows**: **Edit…** next to *Shows* in its details, or **Edit view…** in the right-click menu of its tab. Each change is a new version; a view edited on two computers before they synced shows the latest definition, and saving keeps yours.
 

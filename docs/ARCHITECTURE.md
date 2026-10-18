@@ -379,6 +379,7 @@ MainWindow ── TabStrip (TabRow) ── Search: input box, results, details
 
 - A copied note's or dataset's content is written again under the new version: `Vault.WriteCopies(plan.Contents)` first (it touches no memory, so a large dataset can be sealed off the UI thread), then each change is appended (`VaultSession.Copy`). Stopped halfway, it leaves versions of nodes not added: never shown.
 - In the app, `ViewPanel.Operations` keeps the node taken (Ctrl+C or Ctrl+X, in memory, not the Windows clipboard) and pastes it under the selected one (Ctrl+V); Del deletes. `OperationPreview` gives the text shown first (`MessageDialog.Confirm` with its lines): a deletion and a copy are confirmed, a refused move or a copy of content not synced (`Vault.HasContent`) is only told. After a change the tree keeps the target expanded and selected.
+- Drag and drop (`ViewPanel.DragDrop`): the drag starts past the system's minimum distance, carrying the `TreeItem` (format `kofrenot.TreeItem`, inside kofrenot only). Over a node, `MovePlanner.CanMove` gives the cursor (move, or none when refused); Ctrl held is a copy. The drop runs the same move or copy as Ctrl+V.
 
 ### Input
 `Dune relates to Frank Herbert` → link; `Dune` → node.

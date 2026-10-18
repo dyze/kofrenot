@@ -28,23 +28,23 @@ public sealed class MovePlanner(KnowledgeGraph graph, string linkType, TimeProvi
     private readonly TreeLinks _links = new(graph, linkType);
     private readonly TimeProvider _clock = clock ?? TimeProvider.System;
 
+    /// <summary>Why the node cannot move under the target, or <see cref="MoveProblem.None"/>: what a drag shows before the drop.</summary>
+    public MoveProblem CanMove(TreeItem item, Node target) => item.Parent switch
+    {
+        null => MoveProblem.Root,
+        { } parent when target.Id == parent => MoveProblem.SameParent,
+        _ when _links.Subtree(item.Node.Id).Contains(target.Id) => MoveProblem.IntoItsSubtree,
+        _ => MoveProblem.None,
+    };
+
     public MovePlan Plan(TreeItem item, Node target)
     {
-        if (item.Parent is not { } parent)
+        if (CanMove(item, target) is not MoveProblem.None and var problem)
         {
-            return new MovePlan(MoveProblem.Root, []);
+            return new MovePlan(problem, []);
         }
 
-        if (target.Id == parent)
-        {
-            return new MovePlan(MoveProblem.SameParent, []);
-        }
-
-        if (_links.Subtree(item.Node.Id).Contains(target.Id))
-        {
-            return new MovePlan(MoveProblem.IntoItsSubtree, []);
-        }
-
+        var parent = item.Parent!.Value;
         var now = _clock.GetUtcNow();
         var changes = new List<Change>();
         if (graph.FindLink(linkType, parent, item.Node.Id) is { } left)

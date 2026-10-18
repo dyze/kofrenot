@@ -9,7 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ### Added
 - **Views**: a node type showing the vault another way: a tree from a node, through a link type (*contains* by default), or a list of the nodes of a type. Chosen on its creation step; kept in the vault, so every device has it, and it works offline. In a tree, a node with several parents shows under each, and a cycle is cut. Enter or a double-click opens a node's details; Back returns to the view.
 - **Edit a view**: change what a view shows from its details (**Edit…**) or its tab's right-click menu (**Edit view…**). Each change is a new version; edits made on two computers before they synced are resolved by saving.
-- **Tree operations**: in a tree view, copy (Ctrl+C), cut (Ctrl+X) and paste (Ctrl+V) a node under another one, or delete it (Del), also from a right-click menu. A copy takes the whole subtree as new nodes; a move keeps the node's other parents; a deletion takes the whole subtree. A copy and a deletion show first what they will do.
+- **Tree operations**: in a tree view, copy (Ctrl+C), cut (Ctrl+X) and paste (Ctrl+V) a node under another one, or delete it (Del), also from a right-click menu; or drag a node onto another to move it (Ctrl held: copy it). A copy takes the whole subtree as new nodes; a move keeps the node's other parents; a deletion takes the whole subtree. A copy and a deletion show first what they will do.
 - **Tabs** at the top of the main window: *Search* first, then the views open on this computer, kept between starts. **+** opens a view, **×** closes its tab; a new view opens in a tab.
 
 ### Changed

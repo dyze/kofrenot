@@ -20,9 +20,7 @@ Views: different ways to look at the same graph. No node has to belong to anythi
               └─ tree: from "Projects", following "contains"
 ```
 
-Views, tabs, tree navigation and tree operations (copy, move, delete) are in [CHANGELOG.md](../CHANGELOG.md) (`[Unreleased]`).
-
-1. **Drag and drop in a tree**, besides the keys and the right-click menu.
+Every feature of 0.4 is in [CHANGELOG.md](../CHANGELOG.md) (`[Unreleased]`): views and their editing, tabs, tree navigation, and tree operations (copy, move, delete, drag and drop).
 
 ## 0.5 (to define)
 1. **Multiple vaults.** User can register several vaults on his app. 

@@ -79,4 +79,15 @@ public sealed class MovePlannerTests
         Assert.Equal(MoveProblem.IntoItsSubtree, _planner.Plan(TreeGraph.Item(alpha, projects), alpha).Problem);
         Assert.Equal(MoveProblem.IntoItsSubtree, _planner.Plan(TreeGraph.Item(alpha, projects), beta).Problem);
     }
+
+    [Fact]
+    public void AMove_IsCheckedBeforeTheDrop()
+    {
+        var (projects, archive, alpha) = (_tree.Add("Projects"), _tree.Add("Archive"), _tree.Add("Alpha"));
+        _tree.Contains(projects, alpha);
+
+        Assert.Equal(MoveProblem.None, _planner.CanMove(TreeGraph.Item(alpha, projects), archive));
+        Assert.Equal(MoveProblem.SameParent, _planner.CanMove(TreeGraph.Item(alpha, projects), projects));
+        Assert.Equal(MoveProblem.Root, _planner.CanMove(TreeGraph.Item(projects), archive));
+    }
 }
