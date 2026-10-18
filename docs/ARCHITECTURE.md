@@ -152,6 +152,7 @@ One number for the whole vault, `VaultFormat.Current`, written in the header and
 | 1 | 0.1 | `addNode`, `addLink`, `renameNode` |
 | 2 | 0.2 | directed links (`contains`, `is-a`): a 0.1 app would read them as symmetric; `addAlias`, `pinNode`, `remove`, `editNote` with the `content/` files |
 | 3 | 0.3 | `editDataset` with its chunked `.kfd` content files: a 0.2 app does not know them |
+| 4 | 0.4 | `remove` of nodes and links: a 0.3 app would still show them |
 
 | Found | This kofrenot |
 | --- | --- |
@@ -196,26 +197,26 @@ chunk i   = AES-256-GCM(1 MB of the file) · tag
 UTF-8 JSON before encryption:
 
 ```json
-{ "format": 3, "at": "2026-10-16T09:12:00Z", "op": "addNode",
+{ "format": 4, "at": "2026-10-16T09:12:00Z", "op": "addNode",
   "node": { "id": "…", "type": "generic", "name": "Dune", "created": "2026-10-16T09:12:00Z" } }
-{ "format": 3, "at": "…", "op": "addLink",
+{ "format": 4, "at": "…", "op": "addLink",
   "link": { "id": "…", "type": "relates-to", "from": "<node id>", "to": "<node id>", "created": "…" } }
-{ "format": 3, "at": "…", "op": "renameNode",
+{ "format": 4, "at": "…", "op": "renameNode",
   "rename": { "node": "<node id>", "name": "Dune (novel)", "replaces": ["<node id or rename id>", "…"] } }
-{ "format": 3, "at": "…", "op": "addAlias",
+{ "format": 4, "at": "…", "op": "addAlias",
   "alias": { "linkType": "contains", "reverse": true, "phrase": "is in" } }
-{ "format": 3, "at": "…", "op": "pinNode", "pin": { "node": "<node id>" } }
-{ "format": 3, "at": "…", "op": "editNote", "note": { "node": "<node id>", "replaces": ["<version id>", "…"] } }
-{ "format": 3, "at": "…", "op": "editDataset",
+{ "format": 4, "at": "…", "op": "pinNode", "pin": { "node": "<node id>" } }
+{ "format": 4, "at": "…", "op": "editNote", "note": { "node": "<node id>", "replaces": ["<version id>", "…"] } }
+{ "format": 4, "at": "…", "op": "editDataset",
   "dataset": { "node": "<node id>", "file": { "name": "survey.csv", "size": 52430, "sha256": "9f86…08" }, "replaces": ["<version id>", "…"] } }
-{ "format": 3, "at": "…", "op": "remove", "removes": ["<alias or pin change id>", "…"] }
+{ "format": 4, "at": "…", "op": "remove", "removes": ["<node, link, alias or pin id>", "…"] }
 ```
 
 `renameNode` was added to format 1 before 0.1 was released, so the format number did not change (owner's decision).
 
 - Changes are applied in `at` order (then id) to an in-memory graph. Search and preview work on it only.
 - A type unknown to this version is kept and shown by its id.
-- Duplicate nodes (same type and normalized name) are all kept and marked; duplicate links (same type and nodes, either direction when symmetric) count as one.
+- Duplicate nodes (same type and normalized name) are all kept and marked; duplicate links (same type and nodes, either direction when symmetric: copies) count as one, the oldest shown (`LinkIndex`).
 - `Vault` is not thread-safe: `App` uses it from the UI thread.
 - **Live refresh**: `App` watches the folder (`FileSystemWatcher`) and calls `Refresh`, which reads only the new files. It also refreshes when the main window is shown, as watchers can miss events on file shares.
 
@@ -253,7 +254,7 @@ r3 "Dune (novel)" replaces r1 + r2 ⇒ one current name again
 - The search indexes the shown name only.
 
 ### Aliases and removals
-What the user can take back (aliases, pins) is added by one change and removed by another, `remove`, listing the ids it removes. Nothing is deleted from the vault.
+What the user can take back (nodes, links, aliases, pins) is added by one change and removed by another, `remove`, listing the ids it removes. Nothing is deleted from the vault.
 
 ```
 a1 addAlias "is in" → contained by      device A
@@ -261,6 +262,9 @@ a2 addAlias "is in" → contained by      device B, before syncing (a copy)
 r1 remove [a1, a2]                      removes every copy
 current = added − removed               (RemovableChanges; a removal may arrive first)
 ```
+
+- **Nodes and links** (since format 4): a removed node is no longer shown, nor searched, pinned or linked; a rename or version arriving after changes nothing. A removal wins, whatever the order the files arrive in.
+- A removed link shows its next copy, if any: `KnowledgeGraph.CopiesOf` gives every copy, so a removal names them all.
 
 - `LinkAliases` builds `KnowledgeGraph.Types`: the built-in types with the aliases in use added to their phrases, oldest first. Everything that reads the input (`InputPresenter`, `CreationForm`, `RenamePlanner`, `NodeBrowser`) uses it.
 - A phrase taken already (built in, or by an older alias: the same phrase added for two types on two devices) leaves the alias unused: it is listed struck through, and can be removed.

@@ -105,7 +105,7 @@ public sealed class KnowledgeGraphTests
         var first = NewLink(dune, herbert);
         _graph.Apply(Added(first));
 
-        Assert.False(_graph.Apply(Added(NewLink(herbert, dune))));
+        Assert.False(_graph.Apply(Added(NewLink(herbert, dune, minutes: 1))));
         Assert.Equal([first], _graph.LinksOf(dune.Id));
     }
 

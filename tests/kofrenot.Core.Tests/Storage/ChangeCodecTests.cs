@@ -84,7 +84,7 @@ public sealed class ChangeCodecTests
 
         var json = Encoding.UTF8.GetString(_box.Open("KFC1"u8, _codec.Encode(change), change.Id.ToByteArray()));
 
-        Assert.StartsWith("{\"format\":3,\"op\":\"editDataset\",", json);
+        Assert.StartsWith($"{{\"format\":{VaultFormat.Current},\"op\":\"editDataset\",", json);
         Assert.Contains($"\"dataset\":{{\"node\":\"{change.Node}\",\"file\":{{\"name\":\"survey.csv\",\"size\":52430,\"sha256\":\"{new string('9', 64)}\"}},\"replaces\":[]}}", json);
     }
 
@@ -146,7 +146,7 @@ public sealed class ChangeCodecTests
 
         var json = Encoding.UTF8.GetString(_box.Open("KFC1"u8, _codec.Encode(change), id.ToByteArray()));
 
-        Assert.StartsWith("{\"format\":3,\"op\":\"addNode\",\"at\":", json);
+        Assert.StartsWith($"{{\"format\":{VaultFormat.Current},\"op\":\"addNode\",\"at\":", json);
         Assert.Contains("\"name\":\"Dune\"", json);
         Assert.DoesNotContain("link", json);
     }

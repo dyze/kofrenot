@@ -6,20 +6,18 @@ namespace Kofrenot.Core.Graph;
 /// </summary>
 /// <remarks>
 /// Nodes with the same name (<see cref="NameKey"/>) are all kept: they are duplicates the user
-/// sees. A link repeating another one (same type and nodes) is counted once. A link may arrive
-/// before one of its nodes (the sync tool copies files in any order): it is kept, and shown once
-/// both nodes are there. A node is shown with its current name (<see cref="NodeNames"/>); a rename
-/// may also arrive before its node.
+/// sees. A link repeating another one (same type and nodes) is counted once (<see cref="LinkIndex"/>).
+/// A link may arrive before one of its nodes (the sync tool copies files in any order): it is kept,
+/// and shown once both nodes are there. A node is shown with its current name (<see cref="NodeNames"/>);
+/// a rename may also arrive before its node. A removed node or link is no longer shown, whatever
+/// arrives after: a removal wins.
 /// </remarks>
 public sealed class KnowledgeGraph
 {
-    private readonly TypeCatalog _types;
     private readonly Dictionary<Guid, Node> _nodes = [];
     private readonly Dictionary<Guid, NodeNames> _names = [];
     private readonly Dictionary<string, List<Node>> _nodesByName = [];
-    private readonly Dictionary<Guid, Link> _links = [];
-    private readonly Dictionary<LinkKey, Link> _linksByEnds = [];
-    private readonly Dictionary<Guid, List<Link>> _linksByNode = [];
+    private readonly LinkIndex _links;
     private readonly HashSet<Guid> _removed = [];
     private readonly HashSet<Guid> _removals = [];
     private readonly RemovableChanges<NodePinned> _pins;
@@ -28,8 +26,9 @@ public sealed class KnowledgeGraph
 
     public KnowledgeGraph(TypeCatalog? types = null)
     {
-        _types = types ?? TypeCatalog.BuiltIn;
-        Aliases = new LinkAliases(_types, _removed);
+        var catalog = types ?? TypeCatalog.BuiltIn;
+        Aliases = new LinkAliases(catalog, _removed);
+        _links = new LinkIndex(catalog, _removed);
         _pins = new RemovableChanges<NodePinned>(_removed);
     }
 
@@ -41,7 +40,7 @@ public sealed class KnowledgeGraph
     /// <summary>The nodes, each with its current name.</summary>
     public IReadOnlyCollection<Node> Nodes => _nodes.Values;
 
-    public IReadOnlyCollection<Link> Links => _links.Values;
+    public IReadOnlyCollection<Link> Links => _links.Shown;
 
     /// <summary>The nodes by name key (<see cref="NameKey"/>), each list oldest first: what the search goes through.</summary>
     internal IReadOnlyDictionary<string, List<Node>> NodesByKey => _nodesByName;
@@ -92,12 +91,16 @@ public sealed class KnowledgeGraph
 
     /// <summary>The links of a node whose other node is known, oldest first.</summary>
     public IReadOnlyList<Link> LinksOf(Guid node) =>
-        _linksByNode.TryGetValue(node, out var links)
-            ? links.Where(link => _nodes.ContainsKey(link.Other(node))).ToList()
-            : [];
+        _links.Of(node).Where(link => _nodes.ContainsKey(link.Other(node))).ToList();
 
     /// <summary>The link of this type between these nodes, or null. Either direction for a symmetric type.</summary>
-    public Link? FindLink(string type, Guid from, Guid to) => _linksByEnds.GetValueOrDefault(KeyOf(type, from, to));
+    public Link? FindLink(string type, Guid from, Guid to) => _links.Find(type, from, to);
+
+    /// <summary>
+    /// The ids of a link and of its copies (the same link added on two devices before they synced),
+    /// oldest first: what removes it.
+    /// </summary>
+    public IReadOnlyList<Guid> CopiesOf(Link link) => _links.CopiesOf(link);
 
     /// <summary>Adds a node (from a change or a snapshot), with the name it was added with. False when it is already there.</summary>
     public bool Add(Node node)
@@ -109,8 +112,12 @@ public sealed class KnowledgeGraph
         }
 
         names.Added = node;
-        var shown = names.Shown(node);
-        Show(shown == node.Name ? node : node with { Name = shown });
+        if (!_removed.Contains(node.Id))
+        {
+            var shown = names.Shown(node);
+            Show(shown == node.Name ? node : node with { Name = shown });
+        }
+
         return true;
     }
 
@@ -132,7 +139,7 @@ public sealed class KnowledgeGraph
         return true;
     }
 
-    /// <summary>Takes back aliases or pins. False when this removal is already there.</summary>
+    /// <summary>Takes back nodes, links, aliases or pins. False when this removal is already there.</summary>
     public bool Remove(ChangesRemoved removal)
     {
         if (!_removals.Add(removal.Id))
@@ -141,9 +148,21 @@ public sealed class KnowledgeGraph
         }
 
         _removed.UnionWith(removal.Removes);
+        foreach (var id in removal.Removes)
+        {
+            if (_nodes.Remove(id, out var node))
+            {
+                Hide(node);
+            }
+        }
+
+        _links.Remove(removal.Removes);
         Aliases.Changed();
         return true;
     }
+
+    /// <summary>Adds a link (from a change or a snapshot). False when it is already there, removed, or repeats another one.</summary>
+    public bool Add(Link link) => _links.Add(link);
 
     private NodeNames NamesFor(Guid node)
     {
@@ -164,7 +183,7 @@ public sealed class KnowledgeGraph
             _nodesByName[key] = sameName = [];
         }
 
-        InsertOldestFirst(sameName, node, other => (other.Created, other.Id));
+        OldestFirst.Insert(sameName, node, other => (other.Created, other.Id));
     }
 
     private void Hide(Node node)
@@ -177,48 +196,4 @@ public sealed class KnowledgeGraph
             _nodesByName.Remove(key);
         }
     }
-
-    /// <summary>Adds a link (from a change or a snapshot). False when it is already there, or repeats another one.</summary>
-    public bool Add(Link link)
-    {
-        if (_links.ContainsKey(link.Id) || !_linksByEnds.TryAdd(KeyOf(link.Type, link.From, link.To), link))
-        {
-            return false;
-        }
-
-        _links[link.Id] = link;
-        AddToNode(link.From, link);
-        if (link.To != link.From)
-        {
-            AddToNode(link.To, link);
-        }
-
-        return true;
-    }
-
-    private void AddToNode(Guid node, Link link)
-    {
-        if (!_linksByNode.TryGetValue(node, out var links))
-        {
-            _linksByNode[node] = links = [];
-        }
-
-        InsertOldestFirst(links, link, other => (other.Created, other.Id));
-    }
-
-    // Changes arrive in any order: keeps the list sorted by creation, then id (a stable order on every device).
-    private static void InsertOldestFirst<T>(List<T> items, T item, Func<T, (DateTimeOffset Created, Guid Id)> order)
-    {
-        var position = order(item);
-        var index = items.FindIndex(other => order(other).CompareTo(position) > 0);
-        items.Insert(index < 0 ? items.Count : index, item);
-    }
-
-    private LinkKey KeyOf(string type, Guid from, Guid to)
-    {
-        var symmetric = _types.FindLinkType(type)?.IsSymmetric ?? false;
-        return symmetric && from.CompareTo(to) > 0 ? new LinkKey(type, to, from) : new LinkKey(type, from, to);
-    }
-
-    private readonly record struct LinkKey(string Type, Guid First, Guid Second);
 }

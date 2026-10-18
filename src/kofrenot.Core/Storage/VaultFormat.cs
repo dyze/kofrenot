@@ -8,7 +8,7 @@ namespace Kofrenot.Core.Storage;
 public static class VaultFormat
 {
     /// <summary>The newest format this version reads, and the one it writes.</summary>
-    public const int Current = 3;
+    public const int Current = 4;
 
     /// <exception cref="NewerVaultFormatException"><paramref name="format"/> is newer than <see cref="Current"/>.</exception>
     public static void EnsureSupported(int format)
