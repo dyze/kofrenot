@@ -25,6 +25,9 @@ public partial class ViewPanel
     /// <summary>Writes a copy, its content off the UI thread: false when it is not written (the user is told).</summary>
     public Func<CopyPlan, Task<bool>>? Copy { get; set; }
 
+    /// <summary>Edits what the view shows (a dialog, then the vault written).</summary>
+    public Action<Node>? EditView { get; set; }
+
     /// <summary>Whether a note's or dataset's version has its file in the vault.</summary>
     public Func<ContentEdited, bool>? ContentExists { get; set; }
 
@@ -143,22 +146,39 @@ public partial class ViewPanel
         }
     }
 
+    /// <summary>The tree's menu: Edit view…, then for the node selected, its operations.</summary>
     private void Tree_ContextMenuOpening(object sender, ContextMenuEventArgs e)
     {
+        var menu = Tree.ContextMenu!;
+        menu.Items.Clear();
+        menu.Items.Add(EditViewItem());
         if (SelectedItem is null)
         {
-            e.Handled = true;
             return;
         }
 
-        var menu = Tree.ContextMenu!;
-        menu.Items.Clear();
+        menu.Items.Add(new Separator());
         menu.Items.Add(MenuItemOf("Copy", "Ctrl+C", () => Take(isCut: false)));
         menu.Items.Add(MenuItemOf("Cut", "Ctrl+X", () => Take(isCut: true)));
         menu.Items.Add(MenuItemOf(_taken is { IsCut: true } ? "Move here" : "Paste a copy here", "Ctrl+V", () => Paste(), isEnabled: _taken is not null));
         menu.Items.Add(new Separator());
         menu.Items.Add(MenuItemOf("Delete…", "Del", () => Delete()));
     }
+
+    /// <summary>The menu of a list, a message, or the empty space: Edit view… only.</summary>
+    private void Panel_ContextMenuOpening(object sender, ContextMenuEventArgs e)
+    {
+        ContextMenu.Items.Clear();
+        ContextMenu.Items.Add(EditViewItem());
+    }
+
+    private MenuItem EditViewItem() => MenuItemOf("Edit view…", string.Empty, () =>
+    {
+        if (_view is not null)
+        {
+            EditView?.Invoke(_view);
+        }
+    });
 
     private static MenuItem MenuItemOf(string header, string keys, Action action, bool isEnabled = true)
     {

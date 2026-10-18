@@ -34,8 +34,8 @@ public partial class CreationDialog : Window
         _typeChoices = form.Types.NodeTypes.Select(type => new TypeChoice(type, NodeVisual.OfType(type.Id))).ToList();
         TypeBox.ItemsSource = _typeChoices;
         LinkTypeBox.ItemsSource = form.Types.Verbs;
-        ViewLinkBox.ItemsSource = form.Types.LinkTypes;
-        ViewTypeBox.ItemsSource = form.Types.NodeTypes;
+        ViewEditor.Setup(form.Types, form.FindRoots);
+        ViewEditor.Changed += ViewEditor_Changed;
         ContentBox.Edited += ContentBox_Edited;
         Loaded += (_, _) => ShowStep();
     }
@@ -51,7 +51,7 @@ public partial class CreationDialog : Window
         if (StepSide is { } side)
         {
             ContentBox.Text = _form.ContentOf(side);
-            RootBox.Text = _form.ViewOf(side).Root?.Name ?? string.Empty;
+            ViewEditor.Load(_form.ViewOf(side));
         }
 
         ShowForm();

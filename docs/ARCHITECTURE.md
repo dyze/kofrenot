@@ -356,7 +356,7 @@ Projects ─contains─► Alpha ─contains─► Shared      TreeItem(node, pa
 - Children: the nodes the view's links lead to, from the node (either way for a symmetric type); nodes are ordered by name as the search compares them (`NameKey`), homonyms oldest first (`NodeOrder`).
 - Both read the graph each time, so changes from elsewhere show. An unknown or removed root has no tree.
 
-**Tabs.** `TabList` gives the main window's tabs: `Tab.Search`, then the views open on this device (`ViewTabs`, `tabs.json`, ids only, kept per vault like `recent.json` through `NodeListsFile`) that the graph knows as views; `Closed` the others, for **+**. A tab's definition is the view's latest version (`TabList.DefinitionOf`).
+**Tabs.** `TabList` gives the main window's tabs: `Tab.Search`, then the views open on this device (`ViewTabs`, `tabs.json`, ids only, kept per vault like `recent.json` through `NodeListsFile`) that the graph knows as views; `Closed` the others, for **+**. A tab shows the view's latest version (`ViewPlanner.Load`).
 
 ```
 MainWindow ── TabStrip (TabRow) ── Search: input box, results, details
@@ -365,7 +365,9 @@ MainWindow ── TabStrip (TabRow) ── Search: input box, results, details
 
 - `ViewPanel` builds a `TreeViewItem` per `TreeItem`, with a placeholder child until expanded (children read then). A refresh (`Show`, at each change of the vault) keeps the expanded paths and the selection.
 - The details opened from a view go back to it (`NodeDetailsPanel.HomeLabel` names it); selecting another tab leaves them (the note saved).
-- The creation screen's view step (`CreationForm.IsView`, `ViewDraft`): a tree needs its root, found by `FindRoots` (the search, 8 nodes); `CanLeaveStep` and `CanAdd` wait for it. `ViewsToSave` gives each new view's first `editView`, appended after the plan's changes; the main window then opens it in a tab.
+- The creation screen's view step (`CreationForm.IsView`, `ViewDraft`): a tree needs its root, found by `ViewDraft.FindRoots` (the search, 8 nodes); `CanLeaveStep` and `CanAdd` wait for it. `ViewsToSave` gives each new view's first `editView`, appended after the plan's changes; the main window then opens it in a tab.
+- Editing a view later: `VaultSession.EditView` (from **Edit…** in the details, `NodeDetailsPanel.View`, or **Edit view…** in the tab's menu) loads it (`ViewPlanner.Load`: versions, latest definition, conflict), shows `ViewDialog`, then saves `ViewPlanner.Save`: a version replacing every version loaded, or nothing when unchanged. `ViewDraft.Of` turns a saved definition back into a draft (a root gone is to choose again; an unknown type kept by its id); `ViewDraft.Describe` says it in a sentence.
+- `ViewDefinitionEditor` (display, root search, link type, node type) is the one editor of a draft, on the creation screen and in `ViewDialog`.
 
 **Operations.** Each planner gives a plan to show first, then its changes; the tree's link type drives them, with the same children as the tree (`TreeLinks`).
 

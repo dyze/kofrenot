@@ -1,34 +1,11 @@
 using Kofrenot.Core.Graph;
+using Kofrenot.Core.Views;
 
 namespace Kofrenot.Core.Input;
-
-public enum ViewDisplay
-{
-    Tree,
-    Flat,
-}
-
-/// <summary>
-/// A new view's definition as chosen on its step: a tree (from <see cref="Root"/>, through
-/// <see cref="LinkType"/>), or a list (of <see cref="NodeType"/>). A tree needs its root.
-/// </summary>
-public sealed record ViewDraft(ViewDisplay Display, Node? Root, LinkType LinkType, NodeType NodeType)
-{
-    public static ViewDraft Default { get; } = new(ViewDisplay.Tree, Root: null, TypeCatalog.Contains, TypeCatalog.Note);
-
-    /// <summary>The definition, or null while a tree has no root.</summary>
-    public ViewDefinition? Definition => Display switch
-    {
-        ViewDisplay.Tree => Root is null ? null : new TreeDefinition(Root.Id, LinkType.Id),
-        _ => new FlatDefinition(NodeType.Id),
-    };
-}
 
 /// <summary>A new view's step: its definition, saved with the creation as its first version.</summary>
 public sealed partial class CreationForm
 {
-    public const int RootChoices = 8;
-
     private readonly Dictionary<Side, ViewDraft> _views = new() { [Side.Left] = ViewDraft.Default, [Side.Right] = ViewDraft.Default };
 
     /// <summary>A new node of type view: its step has its definition to choose.</summary>
@@ -38,8 +15,8 @@ public sealed partial class CreationForm
 
     public void SetView(Side side, ViewDraft view) => _views[side] = view;
 
-    /// <summary>The nodes a tree can start from, found by name as in the input box.</summary>
-    public IReadOnlyList<SearchHit> FindRoots(string text) => GraphSearch.Find(_graph, text, RootChoices);
+    /// <summary>The nodes a tree can start from (<see cref="ViewDraft.FindRoots"/>).</summary>
+    public IReadOnlyList<SearchHit> FindRoots(string text) => ViewDraft.FindRoots(_graph, text);
 
     /// <summary>False on a new view's step while its definition is not complete.</summary>
     public bool CanLeaveStep => Step.Side is not { } side || !IsView(side) || _views[side].Definition is not null;

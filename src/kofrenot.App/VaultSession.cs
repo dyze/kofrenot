@@ -224,6 +224,30 @@ public sealed class VaultSession : IDisposable
     /// </summary>
     public bool Write(Window owner, Change change, string action) => Write(owner, [change], action);
 
+    /// <summary>
+    /// Shows what a view shows, to edit it, then saves a new version. False when no vault is open,
+    /// the user cancels, nothing changed, or it cannot be written (the user is told).
+    /// </summary>
+    public bool EditView(Window owner, Node view)
+    {
+        if (Current is not { } vault)
+        {
+            return false;
+        }
+
+        var planner = new ViewPlanner(vault.Graph);
+        var loaded = planner.Load(view);
+        if (ViewDialog.Ask(owner, vault.Graph, view, loaded) is not { } definition)
+        {
+            _log.Info("Action", "View edit cancelled");
+            return false;
+        }
+
+        return planner.Save(view, definition, loaded) is { } version
+            && Current == vault
+            && Append(owner, vault, [version], loaded.IsConflict ? $"View edited (a conflict of {loaded.Versions.Count} versions resolved)" : "View edited");
+    }
+
     /// <summary>Writes changes planned elsewhere (a move, a deletion), in their order, as <see cref="Write(Window, Change, string)"/>.</summary>
     public bool Write(Window owner, IReadOnlyList<Change> changes, string action) =>
         Current is { } vault && Append(owner, vault, changes, action);

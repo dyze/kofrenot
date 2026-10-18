@@ -63,10 +63,12 @@ public partial class MainWindow : Window
         DetailsPanel.ExportDataset = (version, target) => _session.ExportDataset(this, version, target);
         DetailsPanel.IsImporting = _session.IsImporting;
         DetailsPanel.ShowImage = ShowImage;
+        DetailsPanel.EditView = view => _session.EditView(this, view);
         ViewContent.Log = log;
         ViewContent.Write = (changes, action) => _session.Write(this, changes, action);
         ViewContent.Copy = plan => _session.Copy(this, plan);
         ViewContent.ContentExists = version => _session.Current?.HasContent(version) ?? false;
+        ViewContent.EditView = view => _session.EditView(this, view);
         VersionText.Text = $"kofrenot {AppVersion.Of(typeof(MainWindow).Assembly)}";
         ShowUpdateMark();
         _session.Changed += ShowVault;

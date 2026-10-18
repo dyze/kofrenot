@@ -25,7 +25,7 @@ public partial class ViewPanel : UserControl
     private KnowledgeGraph? _graph;
     private CoreTreeView? _tree;
     private TreeDefinition? _definition;
-    private Guid? _view;
+    private Node? _view;
     private string? _selectedPath;
     private Guid? _selectedNode;
 
@@ -41,17 +41,17 @@ public partial class ViewPanel : UserControl
 
     public void Show(KnowledgeGraph graph, Node view)
     {
-        if (_view != view.Id)
+        if (_view?.Id != view.Id)
         {
-            _view = view.Id;
             _expanded.Clear();
             _selectedPath = null;
             _selectedNode = null;
         }
 
+        _view = view;
         _graph = graph;
         _definition = null;
-        switch (TabList.DefinitionOf(graph, view))
+        switch (new ViewPlanner(graph).Load(view).Definition)
         {
             case TreeDefinition definition when new CoreTreeView(graph, definition) is { Root: { } root } tree:
                 _tree = tree;
@@ -75,7 +75,7 @@ public partial class ViewPanel : UserControl
 
                 break;
             default:
-                ShowMessage("This view has no definition yet.");
+                ShowMessage("This view has no definition yet: right-click here, then Edit view….");
                 break;
         }
     }

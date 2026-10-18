@@ -32,9 +32,5 @@ public sealed class TabList(ViewTabs open)
         return NodeOrder.ByName(graph.Nodes.Where(node => IsView(node) && !tabs.Contains(node.Id)));
     }
 
-    /// <summary>A view's definition: its latest version (the latest of a conflict), or null before the first.</summary>
-    public static ViewDefinition? DefinitionOf(KnowledgeGraph graph, Node view) =>
-        graph.ViewVersionsOf(view.Id) is [.., var latest] ? latest.Definition : null;
-
     private static bool IsView(Node node) => node.Type == TypeCatalog.View.Id;
 }

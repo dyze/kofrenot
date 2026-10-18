@@ -100,64 +100,8 @@
         </Grid>
       </Border>
 
-      <!-- A view's definition: a tree from a node found by name, through a link type; or a list of
-           the nodes of a type. -->
-      <Grid x:Name="ViewPanel" Margin="0,12,0,0" Visibility="Collapsed">
-        <Grid.RowDefinitions>
-          <RowDefinition Height="Auto" />
-          <RowDefinition Height="Auto" />
-          <RowDefinition Height="Auto" />
-          <RowDefinition Height="Auto" />
-        </Grid.RowDefinitions>
-        <Grid.ColumnDefinitions>
-          <ColumnDefinition Width="140" />
-          <ColumnDefinition Width="*" />
-        </Grid.ColumnDefinitions>
-        <TextBlock VerticalAlignment="Center" Opacity="0.7" Text="Shows" />
-        <ComboBox x:Name="DisplayBox"
-                  Grid.Column="1"
-                  FontSize="{StaticResource BodyFontSize}"
-                  SelectionChanged="DisplayBox_SelectionChanged">
-          <ComboBoxItem Content="A tree" />
-          <ComboBoxItem Content="A list" />
-        </ComboBox>
-
-        <TextBlock x:Name="RootLabel" Grid.Row="1" Margin="0,10,0,0" VerticalAlignment="Top" Opacity="0.7" Text="From the node" />
-        <StackPanel x:Name="RootPanel" Grid.Row="1" Grid.Column="1" Margin="0,10,0,0">
-          <TextBox x:Name="RootBox" Padding="6,4" FontSize="{StaticResource BodyFontSize}" TextChanged="RootBox_TextChanged" PreviewKeyDown="RootBox_PreviewKeyDown" />
-          <ListBox x:Name="RootList"
-                   MaxHeight="180"
-                   Margin="0,4,0,0"
-                   FontSize="{StaticResource BodyFontSize}"
-                   SelectionChanged="RootList_SelectionChanged">
-            <ListBox.ItemTemplate>
-              <DataTemplate>
-                <StackPanel Orientation="Horizontal">
-                  <local:NodeVisualView Width="20" Height="20" Margin="0,0,8,0" Visual="{Binding Visual}" />
-                  <TextBlock VerticalAlignment="Center" Text="{Binding Label}" />
-                </StackPanel>
-              </DataTemplate>
-            </ListBox.ItemTemplate>
-          </ListBox>
-        </StackPanel>
-
-        <TextBlock x:Name="ThroughLabel" Grid.Row="2" Margin="0,10,0,0" VerticalAlignment="Center" Opacity="0.7" Text="Through" />
-        <ComboBox x:Name="ViewLinkBox"
-                  Grid.Row="2"
-                  Grid.Column="1"
-                  Margin="0,10,0,0"
-                  FontSize="{StaticResource BodyFontSize}"
-                  SelectionChanged="ViewLinkBox_SelectionChanged" />
-
-        <TextBlock x:Name="NodeTypeLabel" Grid.Row="3" Margin="0,10,0,0" VerticalAlignment="Center" Opacity="0.7" Text="Nodes of type" />
-        <ComboBox x:Name="ViewTypeBox"
-                  Grid.Row="3"
-                  Grid.Column="1"
-                  Margin="0,10,0,0"
-                  DisplayMemberPath="Name"
-                  FontSize="{StaticResource BodyFontSize}"
-                  SelectionChanged="ViewTypeBox_SelectionChanged" />
-      </Grid>
+      <!-- A view's definition. -->
+      <local:ViewDefinitionEditor x:Name="ViewEditor" Margin="0,12,0,0" Visibility="Collapsed" />
 
       <!-- A name that exists already, and the nodes that have it. -->
       <TextBlock x:Name="WarningText"

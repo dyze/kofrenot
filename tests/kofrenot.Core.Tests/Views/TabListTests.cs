@@ -40,18 +40,5 @@ public sealed class TabListTests : IDisposable
         Assert.Equal([archive, files], _tabs.Closed(_tree.Graph, _vault));
     }
 
-    [Fact]
-    public void AView_IsDefinedByItsLatestVersion()
-    {
-        var files = _tree.Add("Files", TypeCatalog.View.Id);
-        Assert.Null(TabList.DefinitionOf(_tree.Graph, files));
-
-        var first = new ViewEdited(Guid.NewGuid(), TreeGraph.Start, files.Id, new FlatDefinition(TypeCatalog.Note.Id), []);
-        var conflict = new ViewEdited(Guid.NewGuid(), TreeGraph.Start.AddMinutes(1), files.Id, new FlatDefinition(TypeCatalog.Dataset.Id), []);
-        _tree.Apply([conflict, first]);
-
-        Assert.Equal(conflict.Definition, TabList.DefinitionOf(_tree.Graph, files));
-    }
-
     public void Dispose() => _temp.Dispose();
 }

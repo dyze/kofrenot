@@ -80,6 +80,7 @@ public partial class NodeDetailsPanel : UserControl
         ConflictPanel.Visibility = details.NameConflict.Count > 0 && !_editing ? Visibility.Visible : Visibility.Collapsed;
         ShowNote(details);
         ShowDataset(details);
+        ShowView(details);
     }
 
     /// <summary>
