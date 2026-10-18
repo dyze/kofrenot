@@ -14,6 +14,10 @@ Scope of each planned version. Implemented features move to [CHANGELOG.md](../CH
 ## 0.4 (to define)
 Open: is a collection a root container, or a separate scope? How does it relate to the current vault (0.5)?
 
+==🟠To be discussed. Kofrenot is a knowledge tool able to store any type of information.== 
+==🟠In my original idea, Collections and Containers were a way to propose to user different ways to access nodes. User could create a Collection storing a whole set of files in a tree size way. Another collections could show the list of all memos stored in systems (as GoogleKeep does). The problem is that a node must be then always attached to a Collection (the default one or a custom one).== 
+==🟠Thinking twice, we could maybe propose a flexible display of information showing views. A view would be then defined with a type (flat, treeview...) and a query that would define a root node or may be later something more clever (fetch all nodes of types memo).==
+
 1. **Collections** as a node type. Used to order nodes at top level. By default, a collection is created and all new nodes are attached to it. Current collection is shown at top of Main Window.
 	- Uses the link type "contains" (0.2).
 2. **Containers as node type.** Used to order nodes in a tree. Useful for datasets. By default, all new nodes are attached at root.
@@ -37,5 +41,6 @@ Needs the "Sync: no server for now" decision changed ([GOAL.md](GOAL.md#decision
 	- Only changing from generic to a more specific type might be sufficient for a first version.
 3. **Restore previous versions.** If a user didn't a mistake he can see the list of versions and restore one of them.
 4. **Node links.** User can link nodes using the node details screen.
-5. File drop zone. Main window shows a small zone in which user can drop one or several files. This is a way to secure quickly a set of files. The App, proposes a preview of actions that will be done. node names and types are determined automatically. User acks and app proceeds with actions.
+5. **File drop zone.** Main window shows a small zone in which user can drop one or several files. This is a way to secure quickly a set of files. The App, proposes a preview of actions that will be done. node names and types are determined automatically. User acks and app proceeds with actions.
+6. **pinned for off line.** When a node is pinned for off line access, its content is already downloaded to be sure it is always accessible w/o access to vault storage. 
 
