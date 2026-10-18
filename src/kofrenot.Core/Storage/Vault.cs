@@ -1,3 +1,4 @@
+using Kofrenot.Core.Datasets;
 using Kofrenot.Core.Graph;
 using Kofrenot.Core.Logging;
 
@@ -28,6 +29,7 @@ public sealed class Vault
         _codec = new ChangeCodec(box);
         Notes = new NoteFiles(folder, box, _log);
         Datasets = new DatasetFiles(folder, new ChunkedBox(masterKey));
+        Thumbnails = new ThumbnailFiles(folder, box, _log);
         _snapshot = cacheFolder is null ? null : new SnapshotStore(SnapshotOf(cacheFolder, Id), box, Id, _log);
     }
 
@@ -40,6 +42,9 @@ public sealed class Vault
 
     /// <summary>The files of dataset versions, read on demand.</summary>
     public DatasetFiles Datasets { get; }
+
+    /// <summary>The thumbnails of dataset versions (images), read on demand.</summary>
+    public ThumbnailFiles Thumbnails { get; }
 
     /// <summary>Opens a vault with its master key: the snapshot, then the change files it lacks.</summary>
     /// <param name="cacheFolder">Where the local snapshot is kept; null for none.</param>
@@ -82,15 +87,36 @@ public sealed class Vault
     }
 
     /// <summary>
-    /// Saves a dataset version: its file first (read from <paramref name="content"/>, checked against
-    /// <see cref="DatasetEdited.File"/>), then its change. For a large file, write it with
-    /// <see cref="DatasetFiles.Write"/> off this thread, then <see cref="Append"/> the version.
+    /// Saves a dataset version: its files (<see cref="WriteDataset"/>), then its change. For a large
+    /// file, call <see cref="WriteDataset"/> off this thread, then <see cref="Append"/> the version.
     /// </summary>
     /// <exception cref="IOException">A file cannot be written, or the content is not the one described.</exception>
-    public void Save(DatasetEdited version, Stream content)
+    public void Save(DatasetEdited version, Func<Stream> open, IThumbnailMaker? thumbnails = null)
     {
-        Datasets.Write(version, content);
+        WriteDataset(version, open, thumbnails);
         Append(version);
+    }
+
+    /// <summary>
+    /// Writes the files of a dataset version, not its change: the thumbnail of an image (when
+    /// <paramref name="thumbnails"/> makes one), then the file, read from <paramref name="open"/>
+    /// (opened once for each) and checked against <see cref="DatasetEdited.File"/>. It changes
+    /// nothing in memory, so it can run off the thread using the vault.
+    /// </summary>
+    /// <exception cref="IOException">A file cannot be written, or the content is not the one described.</exception>
+    public void WriteDataset(DatasetEdited version, Func<Stream> open, IThumbnailMaker? thumbnails = null)
+    {
+        if (thumbnails is not null && DatasetType.HasThumbnail(version.File))
+        {
+            using var image = open();
+            if (thumbnails.Make(image) is { } png)
+            {
+                Thumbnails.Write(version.Id, png);
+            }
+        }
+
+        using var content = open();
+        Datasets.Write(version, content);
     }
 
     /// <summary>Reads the change files not read yet (written by another app, or copied by the sync tool).</summary>

@@ -2,6 +2,8 @@ namespace Kofrenot.Core.Tests.Input;
 
 public sealed class InputPresenterTests
 {
+    private static readonly NodeVisual Generic = new(NodeIcon.Generic);
+
     private static readonly DateTimeOffset Start = new(2026, 10, 16, 9, 0, 0, TimeSpan.Zero);
 
     private readonly KnowledgeGraph _graph = new();
@@ -39,7 +41,7 @@ public sealed class InputPresenterTests
 
         Assert.Equal("“dune” exists already. Enter to add another one.", _input.Preview);
         Assert.Equal(
-            [new ResultRow("Dune", false, false, dune), new ResultRow("relates to Frank Herbert", true, false, herbert, dune), new ResultRow("Dune Messiah", false, false, messiah)],
+            [new ResultRow("Dune", false, false, dune, Visual: Generic), new ResultRow("relates to Frank Herbert", true, false, herbert, dune), new ResultRow("Dune Messiah", false, false, messiah, Visual: Generic)],
             _input.Rows);
     }
 
@@ -247,7 +249,7 @@ public sealed class InputPresenterTests
         _input.Update(_graph, "");
 
         Assert.Equal(
-            [new ResultRow("Pinned", false, false, IsHeader: true), new ResultRow("Dune", false, false, dune), new ResultRow("Frank Herbert", false, false, herbert)],
+            [new ResultRow("Pinned", false, false, IsHeader: true), new ResultRow("Dune", false, false, dune, Visual: Generic), new ResultRow("Frank Herbert", false, false, herbert, Visual: Generic)],
             _input.Rows);
         Assert.Equal(InputPresenter.Hint, _input.Preview);
 

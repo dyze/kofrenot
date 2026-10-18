@@ -1,3 +1,4 @@
+using Kofrenot.Core.Browse;
 using Kofrenot.Core.Graph;
 
 namespace Kofrenot.Core.Input;
@@ -6,9 +7,9 @@ namespace Kofrenot.Core.Input;
 /// A line under the input box: a node, or (indented) one of its links, coming <see cref="From"/>
 /// a node. <see cref="Node"/> is the node its details open on: the node, or the link's other end.
 /// <see cref="IsChosen"/>: the homonym chosen, or the row selected. A header (<see cref="IsHeader"/>)
-/// names the rows under it, while the input box is empty.
+/// names the rows under it, while the input box is empty. A node row has its <see cref="Visual"/>.
 /// </summary>
-public sealed record ResultRow(string Text, bool IsLink, bool IsChosen, Node? Node = null, Node? From = null, bool IsHeader = false)
+public sealed record ResultRow(string Text, bool IsLink, bool IsChosen, Node? Node = null, Node? From = null, bool IsHeader = false, NodeVisual? Visual = null)
 {
     internal RowKey? Key => Node is null ? null : new RowKey(From?.Id, Node.Id);
 }
@@ -208,8 +209,8 @@ public sealed class InputPresenter
         var rows = new List<ResultRow>();
         var pinned = graph.PinnedNodes;
         var recent = Recent.Select(graph.FindNode).OfType<Node>().Except(pinned);
-        AddSection(rows, "Pinned", pinned.Select(node => new ResultRow(text.NodeLabel(node), IsLink: false, IsChosen: false, node)));
-        AddSection(rows, "Recent", recent.Select(node => new ResultRow(text.NodeLabel(node), IsLink: false, IsChosen: false, node)));
+        AddSection(rows, "Pinned", pinned.Select(node => NodeRow(graph, text, node, chosen: false)));
+        AddSection(rows, "Recent", recent.Select(node => NodeRow(graph, text, node, chosen: false)));
         return rows;
     }
 
@@ -247,9 +248,12 @@ public sealed class InputPresenter
         return rows;
     }
 
+    private static ResultRow NodeRow(KnowledgeGraph graph, PlanText text, Node node, bool chosen) =>
+        new(text.NodeLabel(node), IsLink: false, chosen, node, Visual: NodeVisual.Of(graph, node));
+
     private void AddNode(KnowledgeGraph graph, PlanText text, List<ResultRow> rows, Node node, bool chosen, bool withLinks)
     {
-        rows.Add(new ResultRow(text.NodeLabel(node), IsLink: false, chosen, node));
+        rows.Add(NodeRow(graph, text, node, chosen));
         if (!withLinks)
         {
             return;

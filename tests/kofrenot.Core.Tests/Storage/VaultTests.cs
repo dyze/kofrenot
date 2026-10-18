@@ -250,10 +250,7 @@ public sealed class VaultTests : IDisposable
         File.WriteAllText(source, "a,b\n1,2\n");
         var version = new DatasetEdited(Guid.NewGuid(), Start, dataset.Id, DatasetFiles.Describe(source), []);
 
-        using (var content = File.OpenRead(source))
-        {
-            vault.Save(version, content);
-        }
+        vault.Save(version, () => File.OpenRead(source));
 
         var reopened = Open(snapshot: false);
         Assert.Equal([version], reopened.Graph.DatasetVersionsOf(dataset.Id).Select(saved => saved with { Replaces = version.Replaces }));
@@ -270,10 +267,44 @@ public sealed class VaultTests : IDisposable
         var dataset = AddNode(vault, "Survey");
         var version = new DatasetEdited(Guid.NewGuid(), Start, dataset.Id, new DatasetFile("a.csv", 3, new string('0', 64)), []);
 
-        Assert.Throws<IOException>(() => vault.Save(version, new MemoryStream([1, 2, 3])));
+        Assert.Throws<IOException>(() => vault.Save(version, () => new MemoryStream([1, 2, 3])));
 
         Assert.Empty(vault.Graph.DatasetVersionsOf(dataset.Id));
         Assert.False(vault.Datasets.Exists(version.Id));
+    }
+
+    [Fact]
+    public void AnImage_IsSavedWithTheThumbnailMade_ReadingItAgainForItsFile()
+    {
+        var vault = Open();
+        var dataset = AddNode(vault, "Photo");
+        byte[] image = [1, 2, 3];
+        var version = ImageVersion(dataset, "photo.png", image);
+        var maker = new FakeThumbnailMaker([9, 9]);
+
+        vault.Save(version, () => new MemoryStream(image), maker);
+
+        Assert.Equal([image], maker.Read);
+        Assert.Equal([9, 9], Open().Thumbnails.Read(version.Id));
+        Assert.True(vault.Datasets.Exists(version.Id));
+    }
+
+    [Theory]
+    [InlineData("notes.txt", true)]
+    [InlineData("photo.png", false)]
+    public void NoThumbnail_IsSaved_ForAFileOtherThanAnImage_OrAnImageNotDecoded(string name, bool makesOne)
+    {
+        var vault = Open();
+        var dataset = AddNode(vault, "File");
+        byte[] content = [1, 2, 3];
+        var version = ImageVersion(dataset, name, content);
+        var maker = new FakeThumbnailMaker(makesOne ? [9] : null);
+
+        vault.Save(version, () => new MemoryStream(content), maker);
+
+        Assert.Null(vault.Thumbnails.Read(version.Id));
+        Assert.Equal(name == "photo.png" ? 1 : 0, maker.Read.Count);
+        Assert.True(vault.Datasets.Exists(version.Id));
     }
 
     [Fact]
@@ -305,6 +336,23 @@ public sealed class VaultTests : IDisposable
     }
 
     private static Node NewNode(string name) => new(Guid.NewGuid(), TypeCatalog.Generic.Id, name, Start);
+
+    private static DatasetEdited ImageVersion(Node dataset, string name, byte[] content) =>
+        new(Guid.NewGuid(), Start, dataset.Id, new DatasetFile(name, content.Length, Convert.ToHexStringLower(System.Security.Cryptography.SHA256.HashData(content))), []);
+
+    /// <summary>Gives the same thumbnail for any image, or none; keeps what it read.</summary>
+    private sealed class FakeThumbnailMaker(byte[]? thumbnail) : IThumbnailMaker
+    {
+        public List<byte[]> Read { get; } = [];
+
+        public byte[]? Make(Stream image)
+        {
+            var read = new MemoryStream();
+            image.CopyTo(read);
+            Read.Add(read.ToArray());
+            return thumbnail;
+        }
+    }
 
     private static Link NewLink(Node from, Node to) => new(Guid.NewGuid(), TypeCatalog.RelatesTo.Id, from.Id, to.Id, Start);
 }

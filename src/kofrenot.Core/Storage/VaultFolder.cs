@@ -25,6 +25,7 @@ public static class VaultFolder
     public const string ContentFolder = "content";
     public const string ContentExtension = ".kfn";
     public const string DatasetExtension = ".kfd";
+    public const string ThumbnailExtension = ".kft";
 
     public static FolderKind Inspect(string folder)
     {
@@ -65,6 +66,9 @@ public static class VaultFolder
 
     /// <summary><c>content/b2/b2d4…07.kfd</c>: the file of a dataset version, named by its change.</summary>
     internal static string DatasetFileOf(string folder, Guid version) => SpreadFileOf(Path.Combine(folder, ContentFolder), version, DatasetExtension);
+
+    /// <summary><c>content/b2/b2d4…07.kft</c>: the thumbnail of a dataset version, named by its change.</summary>
+    internal static string ThumbnailFileOf(string folder, Guid version) => SpreadFileOf(Path.Combine(folder, ContentFolder), version, ThumbnailExtension);
 
     private static string SpreadFileOf(string parent, Guid id, string extension)
     {
