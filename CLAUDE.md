@@ -36,6 +36,7 @@ Only those listed in `docs/ARCHITECTURE.md#stack`. Ask before adding one.
 
 ## How we work
 - **Concise answers.** Short explanations, diagrams over long text.
+- **Plan first.** Before changing any code, present an implementation plan for the developer to review. Change code only after the developer explicitly says to implement it.
 - **Do it well.** Prefer the clean, simple solution over the quick hack.
 - **Ask before** adding a dependency, changing the architecture, doing a large refactor, or touching anything listed as a non-goal.
 - **Tests.** Every change in `Core` comes with xUnit tests.
