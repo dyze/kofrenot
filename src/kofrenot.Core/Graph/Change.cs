@@ -33,8 +33,9 @@ public sealed record ChangesRemoved(Guid Id, DateTimeOffset At, IReadOnlyList<Gu
 public sealed record NodePinned(Guid Id, DateTimeOffset At, Guid Node) : Change(Id, At);
 
 /// <summary>
-/// A new version of the content of <see cref="Node"/> (a note's text, a dataset's file), kept in a
-/// file of its own named by <see cref="Change.Id"/> and read only when needed. <see cref="Replaces"/>
+/// A new version of the content of <see cref="Node"/>: a note's text or a dataset's file, kept in a
+/// file of its own named by <see cref="Change.Id"/> and read only when needed; a view's definition,
+/// small, kept in the change. <see cref="Replaces"/>
 /// are the versions it was written over (none for the first). Two versions replacing the same one,
 /// neither knowing the other (two devices before syncing), make a conflict.
 /// </summary>
@@ -46,4 +47,8 @@ public sealed record NoteEdited(Guid Id, DateTimeOffset At, Guid Node, IReadOnly
 
 /// <summary>A new version of a dataset's file; <see cref="File"/> describes it, so it is known without reading it.</summary>
 public sealed record DatasetEdited(Guid Id, DateTimeOffset At, Guid Node, DatasetFile File, IReadOnlyList<Guid> Replaces)
+    : ContentEdited(Id, At, Node, Replaces);
+
+/// <summary>A new version of a view's definition, held by the change: a view works offline.</summary>
+public sealed record ViewEdited(Guid Id, DateTimeOffset At, Guid Node, ViewDefinition Definition, IReadOnlyList<Guid> Replaces)
     : ContentEdited(Id, At, Node, Replaces);

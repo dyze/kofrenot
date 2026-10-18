@@ -23,6 +23,7 @@ public sealed class KnowledgeGraph
     private readonly RemovableChanges<NodePinned> _pins;
     private readonly ContentVersions<NoteEdited> _notes = new();
     private readonly ContentVersions<DatasetEdited> _datasets = new();
+    private readonly ContentVersions<ViewEdited> _views = new();
 
     public KnowledgeGraph(TypeCatalog? types = null)
     {
@@ -56,6 +57,7 @@ public sealed class KnowledgeGraph
         NodePinned pin => _pins.Add(pin),
         NoteEdited version => _notes.Add(version),
         DatasetEdited version => _datasets.Add(version),
+        ViewEdited version => _views.Add(version),
         _ => throw new ArgumentOutOfRangeException(nameof(change), change.GetType().Name, "Unknown change"),
     };
 
@@ -73,6 +75,9 @@ public sealed class KnowledgeGraph
 
     /// <summary>The current file versions of a dataset, oldest first, as <see cref="NoteVersionsOf"/>.</summary>
     public IReadOnlyList<DatasetEdited> DatasetVersionsOf(Guid node) => _datasets.Current(node);
+
+    /// <summary>The current definitions of a view, oldest first, as <see cref="NoteVersionsOf"/>.</summary>
+    public IReadOnlyList<ViewEdited> ViewVersionsOf(Guid node) => _views.Current(node);
 
     /// <summary>The pins of a node: several when it was pinned on two devices. Unpinning removes them all.</summary>
     public IReadOnlyList<Guid> PinsOf(Guid node) =>

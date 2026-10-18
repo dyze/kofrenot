@@ -158,6 +158,19 @@ public sealed class KnowledgeGraphTests
     }
 
     [Fact]
+    public void AView_KeepsItsCurrentDefinition()
+    {
+        var view = Guid.NewGuid();
+        var first = new ViewEdited(Guid.NewGuid(), Start, view, new FlatDefinition(TypeCatalog.Note.Id), []);
+        var second = new ViewEdited(Guid.NewGuid(), Start.AddMinutes(1), view, new TreeDefinition(view, TypeCatalog.Contains.Id), [first.Id]);
+
+        _graph.Apply(second);
+        Assert.True(_graph.Apply(first));
+
+        Assert.Equal([second], _graph.ViewVersionsOf(view));
+    }
+
+    [Fact]
     public void AnUnknownChange_IsRefused() =>
         Assert.Throws<ArgumentOutOfRangeException>(() => _graph.Apply(new OtherChange(Guid.NewGuid(), Start)));
 

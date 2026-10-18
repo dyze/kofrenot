@@ -27,7 +27,10 @@ public sealed class TypeCatalog
     /// <summary>A node with a file of any size, imported and exported from its details.</summary>
     public static NodeType Dataset { get; } = new("dataset", "Dataset");
 
-    public static TypeCatalog BuiltIn { get; } = new([Generic, Note, Dataset], [RelatesTo, Contains, IsA]);
+    /// <summary>A way to look at the graph: a tree or a list (<see cref="ViewDefinition"/>).</summary>
+    public static NodeType View { get; } = new("view", "View");
+
+    public static TypeCatalog BuiltIn { get; } = new([Generic, Note, Dataset, View], [RelatesTo, Contains, IsA]);
 
     public IReadOnlyList<NodeType> NodeTypes { get; }
 

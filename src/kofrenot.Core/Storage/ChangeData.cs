@@ -18,6 +18,7 @@ internal sealed record ChangeData(
     ChangeData.PinData? Pin = null,
     ChangeData.NoteData? Note = null,
     ChangeData.DatasetData? Dataset = null,
+    ChangeData.ViewData? View = null,
     List<Guid>? Removes = null)
 {
     private const string NodeAddedOp = "addNode";
@@ -28,6 +29,7 @@ internal sealed record ChangeData(
     private const string NodePinnedOp = "pinNode";
     private const string NoteEditedOp = "editNote";
     private const string DatasetEditedOp = "editDataset";
+    private const string ViewEditedOp = "editView";
 
     public static ChangeData From(Change change) => change switch
     {
@@ -39,6 +41,7 @@ internal sealed record ChangeData(
         NodePinned pin => new(VaultFormat.Current, NodePinnedOp, pin.At, Pin: new PinData(pin.Node)),
         NoteEdited note => new(VaultFormat.Current, NoteEditedOp, note.At, Note: new NoteData(note.Node, [.. note.Replaces])),
         DatasetEdited dataset => new(VaultFormat.Current, DatasetEditedOp, dataset.At, Dataset: new DatasetData(dataset.Node, FileData.From(dataset.File), [.. dataset.Replaces])),
+        ViewEdited view => new(VaultFormat.Current, ViewEditedOp, view.At, View: ViewData.From(view)),
         _ => throw new ArgumentOutOfRangeException(nameof(change), change.GetType().Name, "Unknown change"),
     };
 
@@ -64,6 +67,8 @@ internal sealed record ChangeData(
             NoteEditedOp when Note is { Replaces: not null } && Note.Node != Guid.Empty => new NoteEdited(id, At, Note.Node, Note.Replaces),
             DatasetEditedOp when Dataset is { File: { } file, Replaces: { } replaces } && Dataset.Node != Guid.Empty && IsComplete(file)
                 => new DatasetEdited(id, At, Dataset.Node, file.ToFile(), replaces),
+            ViewEditedOp when View is { Replaces: { } replaces } && View.Node != Guid.Empty && View.ToDefinition() is { } definition
+                => new ViewEdited(id, At, View.Node, definition, replaces),
             _ => throw new InvalidDataException($"Unknown or incomplete change '{Op}'"),
         };
     }
@@ -104,6 +109,34 @@ internal sealed record ChangeData(
     /// the file's content is in the file named by the change id.
     /// </summary>
     internal sealed record DatasetData(Guid Node, FileData? File, List<Guid>? Replaces);
+
+    /// <summary>
+    /// <c>"view": { "node": "…", "display": "tree", "query": { "root": "…", "linkType": "contains" }, "replaces": ["…"] }</c>,
+    /// or <c>"display": "flat", "query": { "nodeType": "note" }</c>.
+    /// </summary>
+    internal sealed record ViewData(Guid Node, string? Display, QueryData? Query, List<Guid>? Replaces)
+    {
+        private const string Tree = "tree";
+        private const string Flat = "flat";
+
+        public static ViewData From(ViewEdited view) => view.Definition switch
+        {
+            TreeDefinition tree => new(view.Node, Tree, new QueryData(tree.Root, tree.LinkType), [.. view.Replaces]),
+            FlatDefinition flat => new(view.Node, Flat, new QueryData(NodeType: flat.NodeType), [.. view.Replaces]),
+            _ => throw new ArgumentOutOfRangeException(nameof(view), view.Definition.GetType().Name, "Unknown view definition"),
+        };
+
+        /// <summary>The definition, or null when incomplete.</summary>
+        public ViewDefinition? ToDefinition() => (Display, Query) switch
+        {
+            (Tree, { Root: { } root, LinkType: { } linkType }) when root != Guid.Empty && linkType.Length > 0 => new TreeDefinition(root, linkType),
+            (Flat, { NodeType: { } nodeType }) when nodeType.Length > 0 => new FlatDefinition(nodeType),
+            _ => null,
+        };
+    }
+
+    /// <summary><c>"query": { "root": "…", "linkType": "contains" }</c> or <c>"query": { "nodeType": "note" }</c></summary>
+    internal sealed record QueryData(Guid? Root = null, string? LinkType = null, string? NodeType = null);
 
     /// <summary><c>"file": { "name": "survey.csv", "size": 52430, "sha256": "9f86…08" }</c></summary>
     internal sealed record FileData(string? Name, long Size, string? Sha256)

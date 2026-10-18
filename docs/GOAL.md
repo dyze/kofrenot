@@ -18,7 +18,7 @@ Everything is a **node**, and nodes are joined by **links**.
 
 - A node has a type, a name and a creation date. Later types add their own properties: notes and files will be node types.
 - A link has a type and joins two nodes. A link type has a name and aliases ("relates to", "related to"); it is symmetric, or directed with an inverse name ("written by" / "wrote").
-- Types are extensible: 0.3 has three built-in node types (*generic*, *note*, *dataset*) and three link types (*relates to*, *contains*, *is a*). Later, the user defines their own types and properties.
+- Types are extensible: 0.4 has four built-in node types (*generic*, *note*, *dataset*, *view*) and three link types (*relates to*, *contains*, *is a*). Later, the user defines their own types and properties.
 
 ## How it works (target)
 
@@ -72,6 +72,7 @@ What each version contains: [ROADMAP.md](ROADMAP.md).
 | Notes | A node type; content in Markdown, each save a new version (since 0.2) |
 | Content on demand | Content files are in the vault folder on every device (the sync tool copies them); kofrenot reads one only when needed: a note shown, a dataset exported (since 0.3) |
 | Datasets | A node type holding one file of any size, each import a new version; encrypted in 1 MB chunks, so memory use does not depend on the size (since 0.3) |
+| Views | A node type holding a definition (a tree from a root node through a link type, or a list of the nodes of a type), in versions kept in its changes: views work offline (since 0.4) |
 
 ## Open questions
 Decisions to take with the owner before the matching features:

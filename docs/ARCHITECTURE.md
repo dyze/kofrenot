@@ -152,7 +152,7 @@ One number for the whole vault, `VaultFormat.Current`, written in the header and
 | 1 | 0.1 | `addNode`, `addLink`, `renameNode` |
 | 2 | 0.2 | directed links (`contains`, `is-a`): a 0.1 app would read them as symmetric; `addAlias`, `pinNode`, `remove`, `editNote` with the `content/` files |
 | 3 | 0.3 | `editDataset` with its chunked `.kfd` content files: a 0.2 app does not know them |
-| 4 | 0.4 | `remove` of nodes and links: a 0.3 app would still show them |
+| 4 | 0.4 | `remove` of nodes and links: a 0.3 app would still show them; `editView` |
 
 | Found | This kofrenot |
 | --- | --- |
@@ -209,6 +209,8 @@ UTF-8 JSON before encryption:
 { "format": 4, "at": "…", "op": "editNote", "note": { "node": "<node id>", "replaces": ["<version id>", "…"] } }
 { "format": 4, "at": "…", "op": "editDataset",
   "dataset": { "node": "<node id>", "file": { "name": "survey.csv", "size": 52430, "sha256": "9f86…08" }, "replaces": ["<version id>", "…"] } }
+{ "format": 4, "at": "…", "op": "editView",
+  "view": { "node": "<node id>", "display": "tree", "query": { "root": "<node id>", "linkType": "contains" }, "replaces": ["<version id>", "…"] } }
 { "format": 4, "at": "…", "op": "remove", "removes": ["<node, link, alias or pin id>", "…"] }
 ```
 
@@ -335,7 +337,24 @@ row    ──NodeVisual.Of(graph, node)──► Icon (type, or the file's categ
 - The thumbnail is written before the content file and the change (`Vault.WriteDataset`, off the UI thread), so a device seeing the change normally finds it. A missing one (not synced yet, or a version imported before thumbnails) shows the icon. Keeping a version from a conflict makes its thumbnail again from its content.
 - `.kft` files are sealed with the master key ("KFT1", bound to the version id), like note content: a thumbnail shows the data, so it is content. Never logged, never in the snapshot.
 - `ThumbnailCache.Shared` keeps the 200 latest decoded thumbnails in memory, for the open vault only (`Use`, at each vault change), so typing in the input box does not read them again.
-- Icons are Segoe Fluent glyphs (`NodeVisualView.GlyphOf`): generic, note, file, image, text, code, audio, video, archive, PDF.
+- Icons are Segoe Fluent glyphs (`NodeVisualView.GlyphOf`): generic, note, file, image, text, code, audio, video, archive, PDF, view.
+
+### Views
+A view is a node of type `view`. Its definition is in `editView` versions, as a dataset's file description: the change holds it, so it is in the graph and the snapshot, and a view works offline. Versions replace one another as for notes (`ContentVersions`, `KnowledgeGraph.ViewVersionsOf`).
+
+| Definition | Display | Read by (`Core/Views`) |
+| --- | --- | --- |
+| `TreeDefinition(root, linkType)` | `tree` | `TreeView`: `Root`, then `ChildrenOf(item)`, read when asked |
+| `FlatDefinition(nodeType)` | `flat` | `FlatView.Nodes` |
+
+```
+Projects ─contains─► Alpha ─contains─► Shared      TreeItem(node, path, canExpand)
+         ─contains─► Beta  ─contains─► Shared      Shared: one item under each parent
+                           ─contains─► Projects    on its path: listed, not expandable (cycle cut)
+```
+
+- Children: the nodes the view's links lead to, from the node (either way for a symmetric type); nodes are ordered by name as the search compares them (`NameKey`), homonyms oldest first (`NodeOrder`).
+- Both read the graph each time, so changes from elsewhere show. An unknown or removed root has no tree.
 
 ### Input
 `Dune relates to Frank Herbert` → link; `Dune` → node.

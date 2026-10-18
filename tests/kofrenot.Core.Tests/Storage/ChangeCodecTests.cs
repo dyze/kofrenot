@@ -107,7 +107,61 @@ public sealed class ChangeCodecTests
         Assert.Throws<InvalidDataException>(() => _codec.Decode(id, data));
     }
 
-    private const string Hash = "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08";
+    public static TheoryData<ViewDefinition> ViewDefinitions => [new TreeDefinition(Guid.NewGuid(), "contains"), new FlatDefinition("note")];
+
+    [Theory]
+    [MemberData(nameof(ViewDefinitions))]
+    public void AViewVersion_RoundTrips_WithItsDefinition(ViewDefinition definition)
+    {
+        var change = new ViewEdited(Guid.NewGuid(), At, Guid.NewGuid(), definition, [Guid.NewGuid()]);
+
+        var decoded = Assert.IsType<ViewEdited>(_codec.Decode(change.Id, _codec.Encode(change)));
+
+        Assert.Equal((change.Id, change.At, change.Node, change.Definition), (decoded.Id, decoded.At, decoded.Node, decoded.Definition));
+        Assert.Equal(change.Replaces, decoded.Replaces);
+    }
+
+    [Fact]
+    public void AViewVersion_HasTheDocumentedShape()
+    {
+        var root = Guid.NewGuid();
+        var change = new ViewEdited(Guid.NewGuid(), At, Guid.NewGuid(), new TreeDefinition(root, "contains"), []);
+
+        var json = Encoding.UTF8.GetString(_box.Open("KFC1"u8, _codec.Encode(change), change.Id.ToByteArray()));
+
+        Assert.Contains($"\"op\":\"editView\",", json);
+        Assert.Contains($"\"view\":{{\"node\":\"{change.Node}\",\"display\":\"tree\",\"query\":{{\"root\":\"{root}\",\"linkType\":\"contains\"}},\"replaces\":[]}}", json);
+    }
+
+    [Theory]
+    [InlineData("{\"node\":\"" + Node + "\",\"display\":\"tree\",\"query\":{\"root\":\"" + Node + "\",\"linkType\":\"contains\"}}")]
+    [InlineData("{\"display\":\"tree\",\"query\":{\"root\":\"" + Node + "\",\"linkType\":\"contains\"},\"replaces\":[]}")]
+    [InlineData("{\"node\":\"" + Node + "\",\"display\":\"tree\",\"replaces\":[]}")]
+    [InlineData("{\"node\":\"" + Node + "\",\"display\":\"tree\",\"query\":{\"linkType\":\"contains\"},\"replaces\":[]}")]
+    [InlineData("{\"node\":\"" + Node + "\",\"display\":\"tree\",\"query\":{\"root\":\"00000000-0000-0000-0000-000000000000\",\"linkType\":\"contains\"},\"replaces\":[]}")]
+    [InlineData("{\"node\":\"" + Node + "\",\"display\":\"tree\",\"query\":{\"root\":\"" + Node + "\",\"linkType\":\"\"},\"replaces\":[]}")]
+    [InlineData("{\"node\":\"" + Node + "\",\"display\":\"tree\",\"query\":{\"root\":\"" + Node + "\"},\"replaces\":[]}")]
+    [InlineData("{\"node\":\"" + Node + "\",\"display\":\"flat\",\"query\":{\"nodeType\":\"\"},\"replaces\":[]}")]
+    [InlineData("{\"node\":\"" + Node + "\",\"display\":\"flat\",\"query\":{\"root\":\"" + Node + "\"},\"replaces\":[]}")]
+    [InlineData("{\"node\":\"" + Node + "\",\"display\":\"grid\",\"query\":{\"nodeType\":\"note\"},\"replaces\":[]}")]
+    public void AnIncompleteViewVersion_IsRefused(string view)
+    {
+        var id = Guid.NewGuid();
+        var json = "{\"format\":4,\"op\":\"editView\",\"at\":\"2026-10-16T09:12:00Z\",\"view\":" + view + "}";
+        var data = _box.Seal("KFC1"u8, Encoding.UTF8.GetBytes(json), id.ToByteArray());
+
+        Assert.Throws<InvalidDataException>(() => _codec.Decode(id, data));
+    }
+
+    [Fact]
+    public void AnUnknownViewDefinition_IsNotWritten() =>
+        Assert.Throws<ArgumentOutOfRangeException>(() => _codec.Encode(new ViewEdited(Guid.NewGuid(), At, Guid.NewGuid(), new OtherDefinition(), [])));
+
+    private sealed record OtherDefinition : ViewDefinition;
+
+    private const string Node = "3f2504e0-4f89-11d3-9a0c-0305e82c3301";
+
+    private const string Hash ="9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08";
     private const string UpperHash = "9F86D081884C7D659A2FEAA0C55AD015A3BF4F1B2B0B822CD15D6C15B0F00A08";
 
     [Theory]

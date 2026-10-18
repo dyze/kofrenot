@@ -11,13 +11,14 @@ public sealed class NodeVisualTests
     [InlineData("note", NodeIcon.Note)]
     [InlineData("book", NodeIcon.Generic)]
     [InlineData("dataset", NodeIcon.File)]
+    [InlineData("view", NodeIcon.View)]
     public void ANodeWithoutFile_HasTheIconOfItsType(string type, NodeIcon icon) =>
         Assert.Equal(new NodeVisual(icon), NodeVisual.Of(_graph, Add(type)));
 
     [Fact]
     public void ATypeAlone_HasItsIcon() =>
         Assert.Equal(
-            [NodeIcon.Generic, NodeIcon.Note, NodeIcon.File],
+            [NodeIcon.Generic, NodeIcon.Note, NodeIcon.File, NodeIcon.View],
             TypeCatalog.BuiltIn.NodeTypes.Select(type => NodeVisual.OfType(type.Id).Icon));
 
     [Theory]

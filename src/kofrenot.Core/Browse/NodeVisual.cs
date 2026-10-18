@@ -16,6 +16,7 @@ public enum NodeIcon
     Video,
     Archive,
     Pdf,
+    View,
 }
 
 /// <summary>
@@ -42,6 +43,7 @@ public sealed record NodeVisual(NodeIcon Icon, Guid? Thumbnail = null)
     {
         _ when typeId == TypeCatalog.Note.Id => NodeIcon.Note,
         _ when typeId == TypeCatalog.Dataset.Id => NodeIcon.File,
+        _ when typeId == TypeCatalog.View.Id => NodeIcon.View,
         _ => NodeIcon.Generic,
     });
 

@@ -41,6 +41,7 @@
     <Using Include="Kofrenot.Core.Settings" />
     <Using Include="Kofrenot.Core.Storage" />
     <Using Include="Kofrenot.Core.Updates" />
+    <Using Include="Kofrenot.Core.Views" />
   </ItemGroup>
 
   <ItemGroup>

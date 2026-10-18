@@ -29,6 +29,7 @@ public partial class NodeVisualView : UserControl
         NodeIcon.Video => "",
         NodeIcon.Archive => "",
         NodeIcon.Pdf => "",
+        NodeIcon.View => "",
         _ => "",
     };
 
