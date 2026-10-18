@@ -60,6 +60,9 @@ public partial class DatasetPanel : UserControl
     /// <summary>A file is being imported into this dataset (here, or from the creation screen).</summary>
     public Func<Guid, bool> IsImporting { get; set; } = _ => false;
 
+    /// <summary>Shows a version's image in its own window.</summary>
+    public Action<DatasetEdited>? ShowImage { get; set; }
+
     public ILog Log
     {
         get => View.Log;
@@ -72,6 +75,20 @@ public partial class DatasetPanel : UserControl
     private bool IsBusy => _work is not null || (_node is not null && IsImporting(_node.Id));
 
     private DatasetEdited? Exportable => _state is { IsMissing: false, Latest: { } latest } && !IsBusy ? latest : null;
+
+    /// <summary>The latest version, when it is an image the image window shows (synced, not too large).</summary>
+    private DatasetEdited? Viewable =>
+        Exportable is { } latest && DatasetType.Of(latest.File).Viewer == DatasetViewer.Image && DatasetType.WhyNotShown(latest.File) is null
+            ? latest
+            : null;
+
+    private void ViewImage()
+    {
+        if (Viewable is { } latest)
+        {
+            ShowImage?.Invoke(latest);
+        }
+    }
 
     public static string DateOf(DatasetEdited version) =>
         version.At.ToLocalTime().ToString("yyyy-MM-dd HH:mm", CultureInfo.CurrentCulture);
@@ -144,6 +161,8 @@ public partial class DatasetPanel : UserControl
         FileInfoText.Text = latest is null ? string.Empty : $"{DatasetType.Of(latest.File).Name} · {ByteSize.Format(latest.File.Size)} · imported {DateOf(latest)}";
         ImportButton.IsEnabled = !IsBusy;
         ExportButton.IsEnabled = Exportable is not null;
+        ViewButton.Visibility = latest is not null && DatasetType.Of(latest.File).Viewer == DatasetViewer.Image ? Visibility.Visible : Visibility.Collapsed;
+        ViewButton.IsEnabled = Viewable is not null;
         ConflictVersions.ItemsSource = _state?.Conflict.Select(choice => new DatasetConflictChoice(choice)).ToList();
         ConflictPanel.Visibility = _state?.Conflict.Count > 0 && !IsBusy ? Visibility.Visible : Visibility.Collapsed;
         StatusText.Text = _state switch
@@ -219,6 +238,8 @@ public partial class DatasetPanel : UserControl
 
     private void Export_Click(object sender, RoutedEventArgs e) => ChooseExport();
 
+    private void View_Click(object sender, RoutedEventArgs e) => ViewImage();
+
     private void KeepVersion_Click(object sender, RoutedEventArgs e)
     {
         if (sender is FrameworkElement { DataContext: DatasetConflictChoice { CanKeep: true } choice } && !IsBusy)
@@ -251,7 +272,16 @@ public partial class DatasetPanel : UserControl
             ? paths[0]
             : null;
 
-    private void FileRow_MouseLeftButtonDown(object sender, MouseButtonEventArgs e) => _pressedAt = e.GetPosition(this);
+    /// <summary>A press may start a drag out; a double-click views an image.</summary>
+    private void FileRow_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        _pressedAt = e.GetPosition(this);
+        if (e.ClickCount == 2)
+        {
+            _pressedAt = null;
+            ViewImage();
+        }
+    }
 
     /// <summary>Dragging the file out exports it first (the cursor waits), then lets Windows drop it.</summary>
     private void FileRow_MouseMove(object sender, MouseEventArgs e)

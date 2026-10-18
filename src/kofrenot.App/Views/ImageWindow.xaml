@@ -1,0 +1,27 @@
+<Window x:Class="Kofrenot.UI.Views.ImageWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="kofrenot image"
+        Icon="/Assets/kofrenot.ico"
+        Width="900"
+        Height="650"
+        MinWidth="300"
+        MinHeight="200"
+        WindowStartupLocation="CenterScreen"
+        PreviewKeyDown="Window_PreviewKeyDown">
+  <!-- A dataset's image, full size or fitted to the window, decrypted in memory only. One window,
+       reused by each image opened; Esc closes it. -->
+  <Window.Resources>
+    <ResourceDictionary Source="SharedStyles.xaml" />
+  </Window.Resources>
+
+  <Grid Margin="8">
+    <Grid.RowDefinitions>
+      <RowDefinition Height="*" />
+      <RowDefinition Height="Auto" />
+    </Grid.RowDefinitions>
+
+    <Image x:Name="Picture" Stretch="Uniform" StretchDirection="DownOnly" />
+    <TextBlock x:Name="StatusText" Grid.Row="1" Margin="0,6,0,0" Style="{StaticResource CaptionText}" />
+  </Grid>
+</Window>

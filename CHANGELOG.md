@@ -8,7 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 - **Datasets**: a node type holding one file of any kind and size, encrypted in the vault. Chosen on its creation step (or dropped there), then imported again from its details (**Import…**, Ctrl+I, or a file dropped on it) and exported (**Export…**, Ctrl+E, or dragged out). Each import is a new version; files imported on two computers before they synced show a conflict, to keep one version. The file's name, size and date are shown offline; the file itself is read only when viewed or exported.
-- **Dataset type and viewer**: a dataset's type is its file's extension (*PNG file*, *JSON file*, ...). Images (png, jpg, gif, bmp, tif, ico) and texts (txt, md, csv, json, xml, html, yaml, code, ...) are shown in its details, decrypted in memory only: nothing decrypted is written to disk. A long text shows its beginning; other types are exported to be opened.
+- **Dataset type and viewer**: a dataset's type is its file's extension (*PNG file*, *JSON file*, ...). Texts (txt, md, csv, json, xml, html, yaml, code, ...) are shown in its details, images (png, jpg, gif, bmp, tif, ico) in their own resizable window (**View image**, or a double-click on the file), decrypted in memory only: nothing decrypted is written to disk. A long text shows its beginning; other types are exported to be opened.
 - **Thumbnails and icons**: every node shows an icon in the search results, the links and a dataset's details, by its type and for a dataset by its file's kind (image, text, code, audio, video, archive, PDF). An image dataset shows a thumbnail instead, made once at import and stored encrypted in the vault.
 
 ### Changed

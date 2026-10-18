@@ -77,6 +77,12 @@ public partial class App : Application
                 var created = new SettingsWindow(settings, logHub, files, updates, session, wanted => ApplyHotkey(wanted, settings.Hotkey), openLog: OpenLogWindow);
                 placer.Attach(created, "Settings", RestoreMode.SizeOverOwner);
                 return created;
+            },
+            createImageWindow: () =>
+            {
+                var created = new ImageWindow { Log = log };
+                placer.Attach(created, "Image", RestoreMode.PositionAndSize);
+                return created;
             });
         var window = _window;
         placer.Attach(window, "Main", RestoreMode.PositionAndSize);

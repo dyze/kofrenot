@@ -26,6 +26,8 @@ public partial class MainWindow : Window
     private readonly VaultSession _session;
     private readonly RecentNodes _recent;
     private readonly Func<SettingsWindow> _createSettings;
+    private readonly Func<ImageWindow> _createImageWindow;
+    private ImageWindow? _imageWindow;
     private readonly InputPresenter _input = new();
     private SettingsWindow? _settingsDialog;
 
@@ -33,7 +35,7 @@ public partial class MainWindow : Window
     /// <param name="session">The vault the input box works on.</param>
     /// <param name="recent">The nodes last opened on this device, listed while the input box is empty.</param>
     /// <param name="createSettings">Creates the Settings window, shown as a dialog over this one.</param>
-    public MainWindow(SettingsStore settings, ILog log, UpdateChecker updates, VaultSession session, RecentNodes recent, Func<SettingsWindow> createSettings)
+    public MainWindow(SettingsStore settings, ILog log, UpdateChecker updates, VaultSession session, RecentNodes recent, Func<SettingsWindow> createSettings, Func<ImageWindow> createImageWindow)
     {
         _settings = settings;
         _log = log;
@@ -41,6 +43,7 @@ public partial class MainWindow : Window
         _session = session;
         _recent = recent;
         _createSettings = createSettings;
+        _createImageWindow = createImageWindow;
 
         InitializeComponent();
         DetailsPanel.Log = log;
@@ -53,6 +56,7 @@ public partial class MainWindow : Window
         DetailsPanel.SaveDataset = (version, open) => _session.SaveDataset(this, version, open);
         DetailsPanel.ExportDataset = (version, target) => _session.ExportDataset(this, version, target);
         DetailsPanel.IsImporting = _session.IsImporting;
+        DetailsPanel.ShowImage = ShowImage;
         VersionText.Text = $"kofrenot {AppVersion.Of(typeof(MainWindow).Assembly)}";
         ShowUpdateMark();
         _session.Changed += ShowVault;
@@ -65,6 +69,23 @@ public partial class MainWindow : Window
     /// The search, or a node's details, when a vault is open; otherwise what to do to get one. The
     /// details close with the vault they show.
     /// </summary>
+    /// <summary>Shows a dataset's image in the image window, opened once and reused; it closes with its vault.</summary>
+    private void ShowImage(DatasetEdited version)
+    {
+        if (_session.Current is not { } vault)
+        {
+            return;
+        }
+
+        if (_imageWindow is null)
+        {
+            _imageWindow = _createImageWindow();
+            _imageWindow.Closed += (_, _) => _imageWindow = null;
+        }
+
+        _imageWindow.Open(vault.Datasets, version);
+    }
+
     private void ShowVault()
     {
         var vault = _session.Current;
@@ -72,6 +93,7 @@ public partial class MainWindow : Window
         if (DetailsPanel.Browser.Graph != vault?.Graph)
         {
             DetailsPanel.Browser.Close();
+            _imageWindow?.Close();
             DetailsPanel.Show();
         }
 

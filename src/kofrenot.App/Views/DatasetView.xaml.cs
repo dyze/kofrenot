@@ -1,7 +1,6 @@
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Media.Imaging;
 using Kofrenot.Core.Datasets;
 using Kofrenot.Core.Graph;
 using Kofrenot.Core.Logging;
@@ -10,8 +9,9 @@ using Kofrenot.Core.Storage;
 namespace Kofrenot.UI.Views;
 
 /// <summary>
-/// Shows a dataset version's file with its viewer (<see cref="DatasetType"/>), read and decoded off
-/// the UI thread, in memory only: nothing decrypted is written to disk.
+/// Shows a dataset version's text in its details (<see cref="DatasetType"/>), read off the UI
+/// thread, in memory only: nothing decrypted is written to disk. An image opens in its own window
+/// (<see cref="ImageWindow"/>) instead; another type says to export the file.
 /// </summary>
 public partial class DatasetView : UserControl
 {
@@ -20,13 +20,13 @@ public partial class DatasetView : UserControl
 
     public DatasetView() => InitializeComponent();
 
-    /// <summary>Raised when the view starts or stops showing a file, so the details give it room.</summary>
+    /// <summary>Raised when the view starts or stops showing a text, so the details give it room.</summary>
     public event Action? ContentChanged;
 
     public ILog Log { get; set; } = NullLog.Instance;
 
-    /// <summary>An image or a text is shown.</summary>
-    public bool IsShowing => ImageView.Visibility == Visibility.Visible || TextView.Visibility == Visibility.Visible;
+    /// <summary>A text is shown.</summary>
+    public bool IsShowing => TextView.Visibility == Visibility.Visible;
 
     /// <summary>The text shown has the keyboard: the details leave its keys alone.</summary>
     public bool IsReading => TextView.IsKeyboardFocusWithin;
@@ -46,14 +46,16 @@ public partial class DatasetView : UserControl
         }
 
         _shown = version.Id;
-        Visibility = Visibility.Visible;
         if (DatasetType.WhyNotShown(version.File) is { } why)
         {
+            Visibility = Visibility.Visible;
             MessageText.Text = why;
-            return;
         }
-
-        _ = Load(files, version);
+        else if (DatasetType.Of(version.File).Viewer == DatasetViewer.Text)
+        {
+            Visibility = Visibility.Visible;
+            _ = Load(files, version);
+        }
     }
 
     /// <summary>Shows nothing, and forgets a file being read.</summary>
@@ -62,9 +64,8 @@ public partial class DatasetView : UserControl
         _loading++;
         _shown = null;
         var hadContent = IsShowing;
-        ImageView.Source = null;
         TextView.Text = string.Empty;
-        ImageView.Visibility = TextView.Visibility = Visibility.Collapsed;
+        TextView.Visibility = Visibility.Collapsed;
         MessageText.Text = string.Empty;
         Visibility = Visibility.Collapsed;
         if (hadContent)
@@ -76,22 +77,26 @@ public partial class DatasetView : UserControl
     private async Task Load(DatasetFiles files, DatasetEdited version)
     {
         var loading = ++_loading;
-        var viewer = DatasetType.Of(version.File).Viewer;
         MessageText.Text = "Loading…";
         try
         {
-            object content = viewer == DatasetViewer.Image
-                ? await Task.Run(() => ReadImage(files, version.Id))
-                : await Task.Run(() => ReadText(files, version.Id));
+            var text = await Task.Run(() =>
+            {
+                using var content = files.OpenRead(version.Id);
+                return TextPreview.Read(content);
+            });
             if (loading != _loading)
             {
                 return;
             }
 
-            ShowContent(content);
-            Log.Info("Action", $"Dataset viewed ({viewer})");
+            TextView.Text = text.Text;
+            TextView.Visibility = Visibility.Visible;
+            MessageText.Text = text.IsCut ? "Only the beginning is shown: export the file to see all of it." : string.Empty;
+            ContentChanged?.Invoke();
+            Log.Info("Action", "Dataset viewed (text)");
         }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidDataException or NotSupportedException)
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidDataException)
         {
             if (loading == _loading)
             {
@@ -99,48 +104,5 @@ public partial class DatasetView : UserControl
                 MessageText.Text = "This file cannot be shown here: export it to open it.";
             }
         }
-    }
-
-    private void ShowContent(object content)
-    {
-        if (content is BitmapSource image)
-        {
-            ImageView.Source = image;
-            ImageView.Visibility = Visibility.Visible;
-            MessageText.Text = $"{image.PixelWidth} × {image.PixelHeight} pixels";
-        }
-        else if (content is TextPreview text)
-        {
-            TextView.Text = text.Text;
-            TextView.Visibility = Visibility.Visible;
-            MessageText.Text = text.IsCut ? "Only the beginning is shown: export the file to see all of it." : string.Empty;
-        }
-
-        ContentChanged?.Invoke();
-    }
-
-    // Decoded in memory, then frozen to cross to the UI thread.
-    private static BitmapSource ReadImage(DatasetFiles files, Guid version)
-    {
-        var bytes = new MemoryStream();
-        using (var content = files.OpenRead(version))
-        {
-            content.CopyTo(bytes);
-        }
-
-        bytes.Position = 0;
-        var image = new BitmapImage();
-        image.BeginInit();
-        image.CacheOption = BitmapCacheOption.OnLoad;
-        image.StreamSource = bytes;
-        image.EndInit();
-        image.Freeze();
-        return image;
-    }
-
-    private static TextPreview ReadText(DatasetFiles files, Guid version)
-    {
-        using var content = files.OpenRead(version);
-        return TextPreview.Read(content);
     }
 }

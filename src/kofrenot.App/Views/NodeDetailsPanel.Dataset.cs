@@ -26,6 +26,12 @@ public partial class NodeDetailsPanel
         set => DatasetBox.Export = value;
     }
 
+    /// <summary>Shows a dataset version's image in its own window.</summary>
+    public Action<DatasetEdited>? ShowImage
+    {
+        set => DatasetBox.ShowImage = value;
+    }
+
     /// <summary>A file is being imported into this dataset.</summary>
     public Func<Guid, bool> IsImporting
     {

@@ -49,7 +49,7 @@ One namespace per folder (`Kofrenot.Core.Settings`, `Kofrenot.UI.Views`, ...). T
 | `kofrenot.App` | Content |
 | --- | --- |
 | *(root)* | `App.xaml`: startup and wiring; `VaultSession` (the open vault: create, unlock, watch, `Create` (creation dialog, then add), forget the remembered key) |
-| `Views/` | Windows: `MainWindow` (input box, shows `InputPresenter`), `NodeDetailsPanel` (in the main window, shows a `NodeBrowser`; `NoteEditor` for a note, `DatasetPanel` for a dataset: import, export, drag in and out, and `DatasetView`, its viewer), `NodeVisualView` + `ThumbnailCache` (a node's picture in rows), `CreationDialog` (shows a `CreationForm`, one step at a time; the focus starts on the step's type box), `MarkdownBox` (note text and toolbar), `SharedStyles` (the type scale: title, heading, body, secondary, caption, footer; shared buttons), `SettingsWindow` (tabs General, Vault, Link types (`LinkTypesSection`), Appearance, Logging, About), `PassphraseDialog`, `LogWindow`, `ChangelogWindow` (Settings > About > *Show changelog*); `MessageDialog` (messages and questions in the app's theme, instead of the Windows `MessageBox`); `AppTheme` |
+| `Views/` | Windows: `MainWindow` (input box, shows `InputPresenter`), `NodeDetailsPanel` (in the main window, shows a `NodeBrowser`; `NoteEditor` for a note, `DatasetPanel` for a dataset: import, export, drag in and out, and `DatasetView`, its viewer), `NodeVisualView` + `ThumbnailCache` (a node's picture in rows), `CreationDialog` (shows a `CreationForm`, one step at a time; the focus starts on the step's type box), `MarkdownBox` (note text and toolbar), `SharedStyles` (the type scale: title, heading, body, secondary, caption, footer; shared buttons), `SettingsWindow` (tabs General, Vault, Link types (`LinkTypesSection`), Appearance, Logging, About), `PassphraseDialog`, `ImageWindow` (a dataset's image), `LogWindow`, `ChangelogWindow` (Settings > About > *Show changelog*); `MessageDialog` (messages and questions in the app's theme, instead of the Windows `MessageBox`); `AppTheme` |
 | `Tray/` | `TrayIcon` |
 | `Platform/` | Implementations of the `Core` interfaces (`GitHubReleaseFeed`, `DpapiProtector`), `WpfThumbnailMaker` (`IThumbnailMaker`), `DragExport`, `Browser` (opens web pages), `SingleInstance`, `GlobalHotkey` (`RegisterHotKey`), `VaultWatcher` (`FileSystemWatcher`), and window placement (`NativeWindows`, `WindowPlacer`) |
 | `Logging/` | `LogHub`, `SerilogFileLog` |
@@ -110,7 +110,7 @@ App.OnStartup
 - `UpdateStore` (`updates.json`) is state, not a setting.
 
 ## Window positions
-- Saved in `windows.json` by window name (`Main`, `Settings`, `Log`) when a window is hidden or closed, restored when it is first shown. Kept out of `settings.json`: it is state, not a setting.
+- Saved in `windows.json` by window name (`Main`, `Settings`, `Log`, `Image`) when a window is hidden or closed, restored when it is first shown. Kept out of `settings.json`: it is state, not a setting.
 - Stored in screen pixels (WPF units change with each monitor's scaling), as the monitor's device name (`\\.\DISPLAY2`, steadier than a monitor number) and the position relative to its work area.
 - `PlacementRules.Fit` (in `Core`, tested) makes a saved position visible again: back on its monitor, or on the primary one if it is gone, then shrunk to the work area and moved inside it.
 - `PlacementRules.KeepVisible` does the same for a window on screen. `WindowPlacer.KeepOnScreen` applies it each time a window is shown and after a scaling change (`DpiChanged`). It checks the visible frame (without the invisible resize borders), so a window snapped to an edge is left alone.
@@ -309,15 +309,15 @@ keep   ──DatasetPlanner.Keep──► a conflict's chosen version again, as 
 
 | Category | Extensions | Viewer |
 | --- | --- | --- |
-| Image | png, jpg, jpeg, gif, bmp, tif, tiff, ico | Image: decoded by WPF (`BitmapImage`), up to `DatasetType.MaxImageSize` (64 MB) |
+| Image | png, jpg, jpeg, gif, bmp, tif, tiff, ico | Image: in its own window (`ImageWindow`), decoded by WPF (`BitmapImage`), up to `DatasetType.MaxImageSize` (64 MB) |
 | Image | webp, svg, heic, raw | None |
 | Text | txt, md, csv, tsv, log, rtf | Text: its first `TextPreview.MaxChars` (256 K) characters, UTF-8 unless a byte order mark says otherwise |
 | Code | json, xml, html, htm, yaml, yml, ini, toml, cs, py, js, ts, css, sql, sh, cmd, ps1, java, c, cpp, h, go, rs | Text (HTML as text, not rendered) |
 | Audio, Video, Archive, Pdf | wav, mp3, flac, ogg, m4a, aac, wma; mp4, mkv, avi, mov, webm, wmv; zip, 7z, rar, tar, gz, bz2, xz; pdf | None: "export it to open it" |
 | Other | the others | None |
 
-- `DatasetView` (in `DatasetPanel`) reads the latest version through `DatasetFiles.OpenRead` and decodes it off the UI thread, **in memory only**: nothing decrypted reaches the disk (an export, or a drag out, is the only way out). An image is frozen to cross to the UI thread; a version shown already is not read again.
-- The details row of a dataset takes room only while its viewer shows something (`NodeDetailsPanel.FitDatasetRow`), as a note's editor does.
+- A text is shown in the details by `DatasetView` (in `DatasetPanel`); an image in `ImageWindow`, opened by *View image* or a double-click on the file: one window, reused by each image, resizable, its place remembered (`Image`), closed when the vault changes. Both read the latest version through `DatasetFiles.OpenRead` and decode it off the UI thread, **in memory only**: nothing decrypted reaches the disk (an export, or a drag out, is the only way out). An image is frozen to cross to the UI thread; a text shown already is not read again.
+- The details row of a dataset takes room only while its viewer shows a text (`NodeDetailsPanel.FitDatasetRow`), as a note's editor does.
 
 **Thumbnails and icons.** Every node is pictured in the search rows, the details' link rows and a dataset's header by a `NodeVisual`: an icon, and for an image the version whose thumbnail replaces it.
 
