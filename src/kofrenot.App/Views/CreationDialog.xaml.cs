@@ -34,6 +34,8 @@ public partial class CreationDialog : Window
         _typeChoices = form.Types.NodeTypes.Select(type => new TypeChoice(type, NodeVisual.OfType(type.Id))).ToList();
         TypeBox.ItemsSource = _typeChoices;
         LinkTypeBox.ItemsSource = form.Types.Verbs;
+        ViewLinkBox.ItemsSource = form.Types.LinkTypes;
+        ViewTypeBox.ItemsSource = form.Types.NodeTypes;
         ContentBox.Edited += ContentBox_Edited;
         Loaded += (_, _) => ShowStep();
     }
@@ -49,6 +51,7 @@ public partial class CreationDialog : Window
         if (StepSide is { } side)
         {
             ContentBox.Text = _form.ContentOf(side);
+            RootBox.Text = _form.ViewOf(side).Root?.Name ?? string.Empty;
         }
 
         ShowForm();
@@ -101,7 +104,7 @@ public partial class CreationDialog : Window
         ShowStatus();
         BackButton.Visibility = _form.StepIndex > 0 ? Visibility.Visible : Visibility.Collapsed;
         NextButton.Content = _form.IsLastStep ? "Add" : "Next";
-        NextButton.IsEnabled = !_reading && (!_form.IsLastStep || _form.Plan.CanAdd);
+        NextButton.IsEnabled = !_reading && (_form.IsLastStep ? _form.CanAdd : _form.CanLeaveStep);
         _showing = false;
     }
 
@@ -111,6 +114,7 @@ public partial class CreationDialog : Window
         TypeBox.SelectedItem = _typeChoices.First(choice => choice.Type == _form.TypeOf(side));
         ContentBox.Visibility = _form.IsNote(side) ? Visibility.Visible : Visibility.Collapsed;
         ShowFile(side);
+        ShowView(side);
 
         // Only a node request can repeat a name: a link's new nodes have names no node has.
         WarningText.Text = _form.Warning ?? string.Empty;
@@ -124,13 +128,15 @@ public partial class CreationDialog : Window
         info.Text = side.IsNew ? $"New node ({side.Type.Name})" : _form.Describe(side);
     }
 
-    private void ShowStatus() => StatusText.Text = _form.IsLastStep
-        ? _form.Status
-        : StepSide is { } side && _form.IsNote(side)
-            ? "Tab: write the content. Enter (Ctrl+Enter in the content): next step."
-            : StepSide is { } datasetSide && _form.IsDataset(datasetSide)
-                ? "Choose its file, or drop it here; it can also be imported later. Enter: next step."
-            : "Enter: next step.";
+    private void ShowStatus() => StatusText.Text = !_form.CanLeaveStep
+        ? "Type the name of the node the tree starts from, and choose it."
+        : _form.IsLastStep
+            ? _form.Status
+            : StepSide is { } side && _form.IsNote(side)
+                ? "Tab: write the content. Enter (Ctrl+Enter in the content): next step."
+                : StepSide is { } datasetSide && _form.IsDataset(datasetSide)
+                    ? "Choose its file, or drop it here; it can also be imported later. Enter: next step."
+                    : "Enter: next step.";
 
     private void TypeBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
@@ -174,7 +180,7 @@ public partial class CreationDialog : Window
         {
             ShowStep();
         }
-        else if (_form.Plan.CanAdd)
+        else if (_form.CanAdd)
         {
             DialogResult = true;
         }

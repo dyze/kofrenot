@@ -51,6 +51,9 @@ public sealed class AppFiles
     /// <summary>The nodes last opened on this device, by vault (ids only).</summary>
     public string RecentNodes => Path.Combine(DataDirectory, "recent.json");
 
+    /// <summary>The views open as tabs on this device, by vault (ids only).</summary>
+    public string ViewTabs => Path.Combine(DataDirectory, "tabs.json");
+
     /// <summary>The master keys remembered by Windows (DPAPI), by vault.</summary>
     public string RememberedKeys => Path.Combine(DataDirectory, "keys.json");
 
@@ -69,6 +72,7 @@ public sealed class AppFiles
         new("Window positions", WindowPositions),
         new("Update check", UpdateCheck),
         new("Recent nodes", RecentNodes),
+        new("Open tabs", ViewTabs),
         new("Remembered pass phrases", RememberedKeys),
         new("Vault snapshots", Cache),
         new("Logs", Logs),

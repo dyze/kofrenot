@@ -72,6 +72,7 @@ public partial class App : Application
             updates,
             session,
             new RecentNodes(files.RecentNodes, log),
+            new ViewTabs(files.ViewTabs, log),
             createSettings: () =>
             {
                 var created = new SettingsWindow(settings, logHub, files, updates, session, wanted => ApplyHotkey(wanted, settings.Hotkey), openLog: OpenLogWindow);

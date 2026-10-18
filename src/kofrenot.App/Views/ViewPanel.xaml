@@ -1,0 +1,47 @@
+<UserControl x:Class="Kofrenot.UI.Views.ViewPanel"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:Kofrenot.UI.Views">
+  <!-- A view tab's content: its tree (children read when expanded) or its list. Enter or a
+       double-click opens a node's details; Back returns here. -->
+  <UserControl.Resources>
+    <ResourceDictionary Source="SharedStyles.xaml" />
+  </UserControl.Resources>
+
+  <Grid>
+    <TextBlock x:Name="MessageText"
+               MaxWidth="460"
+               HorizontalAlignment="Center"
+               VerticalAlignment="Center"
+               Opacity="0.8"
+               TextAlignment="Center"
+               TextWrapping="Wrap"
+               Visibility="Collapsed" />
+
+    <TreeView x:Name="Tree"
+              Background="Transparent"
+              BorderThickness="0"
+              FontSize="{StaticResource BodyFontSize}"
+              Visibility="Collapsed"
+              KeyDown="Content_KeyDown"
+              MouseDoubleClick="Content_MouseDoubleClick"
+              SelectedItemChanged="Tree_SelectedItemChanged" />
+
+    <ListBox x:Name="List"
+             Background="Transparent"
+             BorderThickness="0"
+             FontSize="{StaticResource BodyFontSize}"
+             Visibility="Collapsed"
+             KeyDown="Content_KeyDown"
+             MouseDoubleClick="Content_MouseDoubleClick">
+      <ListBox.ItemTemplate>
+        <DataTemplate>
+          <StackPanel Orientation="Horizontal">
+            <local:NodeVisualView Width="24" Height="24" Margin="0,1,10,1" Visual="{Binding Visual}" />
+            <TextBlock VerticalAlignment="Center" Text="{Binding Node.Name}" />
+          </StackPanel>
+        </DataTemplate>
+      </ListBox.ItemTemplate>
+    </ListBox>
+  </Grid>
+</UserControl>

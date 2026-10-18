@@ -10,6 +10,7 @@ using Kofrenot.Core.Logging;
 using Kofrenot.Core.Settings;
 using Kofrenot.Core.Storage;
 using Kofrenot.Core.Updates;
+using Kofrenot.Core.Views;
 using Kofrenot.UI.Platform;
 
 namespace Kofrenot.UI.Views;
@@ -25,6 +26,8 @@ public partial class MainWindow : Window
     private readonly UpdateChecker _updates;
     private readonly VaultSession _session;
     private readonly RecentNodes _recent;
+    private readonly ViewTabs _tabs;
+    private readonly TabList _tabList;
     private readonly Func<SettingsWindow> _createSettings;
     private readonly Func<ImageWindow> _createImageWindow;
     private ImageWindow? _imageWindow;
@@ -34,14 +37,17 @@ public partial class MainWindow : Window
     /// <param name="updates">Checks once a day for a newer release; the Settings button shows a mark when there is one.</param>
     /// <param name="session">The vault the input box works on.</param>
     /// <param name="recent">The nodes last opened on this device, listed while the input box is empty.</param>
+    /// <param name="tabs">The views open as tabs on this device.</param>
     /// <param name="createSettings">Creates the Settings window, shown as a dialog over this one.</param>
-    public MainWindow(SettingsStore settings, ILog log, UpdateChecker updates, VaultSession session, RecentNodes recent, Func<SettingsWindow> createSettings, Func<ImageWindow> createImageWindow)
+    public MainWindow(SettingsStore settings, ILog log, UpdateChecker updates, VaultSession session, RecentNodes recent, ViewTabs tabs, Func<SettingsWindow> createSettings, Func<ImageWindow> createImageWindow)
     {
         _settings = settings;
         _log = log;
         _updates = updates;
         _session = session;
         _recent = recent;
+        _tabs = tabs;
+        _tabList = new TabList(tabs);
         _createSettings = createSettings;
         _createImageWindow = createImageWindow;
 
@@ -98,16 +104,21 @@ public partial class MainWindow : Window
         }
 
         var open = vault is not null;
+        var view = vault is null ? null : SelectedView(vault);
         foreach (var element in new UIElement[] { InputArea, PreviewText, ResultsArea })
         {
-            element.Visibility = open && !DetailsShown ? Visibility.Visible : Visibility.Collapsed;
+            element.Visibility = open && !DetailsShown && view is null ? Visibility.Visible : Visibility.Collapsed;
         }
 
+        ViewContent.Visibility = open && !DetailsShown && view is not null ? Visibility.Visible : Visibility.Collapsed;
         DetailsPanel.Visibility = open && DetailsShown ? Visibility.Visible : Visibility.Collapsed;
         StatePanel.Visibility = open ? Visibility.Collapsed : Visibility.Visible;
+        TabStrip.Visibility = open ? Visibility.Visible : Visibility.Collapsed;
+        TitleText.Visibility = open ? Visibility.Collapsed : Visibility.Visible;
         if (vault is not null)
         {
             VaultText.Text = $"{_session.Folder} · {vault.Graph.Nodes.Count} nodes · {vault.Graph.Links.Count} links";
+            ShowTabs(vault, view);
             ShowInput();
             DetailsPanel.Show();
             return;
@@ -226,11 +237,11 @@ public partial class MainWindow : Window
         }
     }
 
-    /// <summary>Back from the details: the search, as it was left.</summary>
+    /// <summary>Back from the details: the search or the view they were opened from, as it was left.</summary>
     private void DetailsPanel_BackToSearch()
     {
         ShowVault();
-        InputBox.Focus();
+        FocusTab();
     }
 
     private bool Presented(bool changed)
@@ -255,6 +266,13 @@ public partial class MainWindow : Window
             }
 
             InputBox.Clear();
+
+            // A new view opens in a tab.
+            if (added.NewNodes.LastOrDefault(node => node.Type == TypeCatalog.View.Id) is { } view)
+            {
+                OpenTab(view);
+                return true;
+            }
         }
 
         InputBox.Focus();
@@ -373,6 +391,10 @@ public partial class MainWindow : Window
         if (_session.Current is not null && DetailsShown)
         {
             DetailsPanel.Focus();
+        }
+        else if (ViewContent.IsVisible)
+        {
+            ViewContent.FocusContent();
         }
         else if (_session.Current is not null)
         {

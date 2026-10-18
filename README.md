@@ -89,6 +89,19 @@ A node of type *Dataset* holds one file of any kind and size, stored encrypted i
 - Files imported on two computers before they synced show both versions: keep one.
 - A dataset imported elsewhere whose file has not arrived yet cannot be shown or exported until it does.
 
+### Views
+A node of type *View* shows the vault another way, in a tab of its own. Choose on its creation step what it shows:
+
+| Shows | Choose | For example |
+| --- | --- | --- |
+| A tree | the node it starts from (type part of its name, **Up/Down** or a click choose among the nodes found) and the link type it follows (*contains* by default) | your projects and what they contain |
+| A list | a node type | every note |
+
+- The **tabs** are at the top of the main window: *Search* first, then the views open on this computer, kept from one start to the next. A **click** selects a tab, **×** closes a view's tab, **+** opens another view. A view you create opens in a tab at once.
+- In a tree, a node is expanded with its arrow (or **Right**); a node with several parents shows under each; a node that comes back on its own path is not expanded again.
+- **Enter** or a **double-click** opens a node's details; Back returns to the view.
+- A view is a node like the others: found by the search, pinned, linked, synced. Its definition is kept in the vault.
+
 ## Settings
 
 Gear button in the main window, or tray menu > Settings. A dialog over the main window: changes are saved at once, Esc (or closing it) closes it. *Find a setting* (Ctrl+F) shows the matching settings of every tab; Ctrl+Tab changes tab.
@@ -112,6 +125,7 @@ Everything stays on your computer, in `%LOCALAPPDATA%\kofrenot` (a portable copy
 | `windows.json` | Where each window was left |
 | `updates.json` | Last update check |
 | `recent.json` | The nodes you last opened, per vault (ids only, no names) |
+| `tabs.json` | The views open as tabs, per vault (ids only, no names) |
 | `keys.json` | Remembered pass phrases (the vault keys, protected by Windows for your account) |
 | `cache\` | One encrypted snapshot per vault opened here, so it opens fast. Safe to delete |
 | `logs\kofrenot.log` | Log, at most 3 files of 1 MB, oldest deleted |

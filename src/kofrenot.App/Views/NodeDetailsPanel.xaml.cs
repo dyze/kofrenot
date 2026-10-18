@@ -17,7 +17,8 @@ public sealed record BreadcrumbItem(string Label, int Depth, bool IsCurrent);
 /// </summary>
 public partial class NodeDetailsPanel : UserControl
 {
-    private const string SearchLabel = "⌂ Search";
+    /// <summary>The first item of the breadcrumb: where Back returns to (the search, or a view).</summary>
+    public string HomeLabel { get; set; } = "⌂ Search";
     private const string PinIcon = "";
     private const string PinnedIcon = "";
 
@@ -66,7 +67,7 @@ public partial class NodeDetailsPanel : UserControl
 
         Breadcrumb.ItemsSource = Browser.Trail
             .Select((label, index) => new BreadcrumbItem(label, index + 1, IsCurrent: index + 1 == Browser.Depth))
-            .Prepend(new BreadcrumbItem(SearchLabel, 0, IsCurrent: false))
+            .Prepend(new BreadcrumbItem(HomeLabel, 0, IsCurrent: false))
             .ToList();
         NameText.Text = details.Name;
         TypeText.Text = details.Type;

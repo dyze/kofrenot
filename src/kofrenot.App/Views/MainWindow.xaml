@@ -25,7 +25,63 @@
     </Grid.RowDefinitions>
 
     <Grid>
-      <TextBlock VerticalAlignment="Center" Style="{StaticResource HeadingText}" Text="kofrenot" />
+      <TextBlock x:Name="TitleText" VerticalAlignment="Center" Style="{StaticResource HeadingText}" Text="kofrenot" />
+
+      <!-- The tabs: the search, then the views open on this device. A click selects one, × closes
+           a view's tab, + opens a view in a new tab. -->
+      <StackPanel x:Name="TabStrip" Margin="0,0,56,0" VerticalAlignment="Center" Orientation="Horizontal" Visibility="Collapsed">
+        <ItemsControl x:Name="TabsList" Focusable="False">
+          <ItemsControl.ItemsPanel>
+            <ItemsPanelTemplate>
+              <WrapPanel />
+            </ItemsPanelTemplate>
+          </ItemsControl.ItemsPanel>
+          <ItemsControl.ItemTemplate>
+            <DataTemplate>
+              <Border Margin="0,0,4,0" Padding="10,4" Cursor="Hand" Style="{StaticResource RowFrame}" MouseLeftButtonDown="Tab_MouseLeftButtonDown">
+                <Grid>
+                  <StackPanel Orientation="Horizontal">
+                    <TextBlock x:Name="TabText" VerticalAlignment="Center" FontSize="{StaticResource BodyFontSize}" Text="{Binding Name}" />
+                    <Button x:Name="CloseButton"
+                            Margin="6,0,0,0"
+                            Padding="4,2"
+                            Style="{StaticResource FlatButton}"
+                            FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
+                            FontSize="10"
+                            Content="&#xE711;"
+                            ToolTip="Close this tab"
+                            Click="CloseTab_Click" />
+                  </StackPanel>
+                  <Border x:Name="Underline"
+                          Height="3"
+                          Margin="0,0,0,-4"
+                          VerticalAlignment="Bottom"
+                          CornerRadius="1.5"
+                          Background="{DynamicResource AccentFillColorDefaultBrush}"
+                          Visibility="Collapsed" />
+                </Grid>
+              </Border>
+              <DataTemplate.Triggers>
+                <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                  <Setter TargetName="Underline" Property="Visibility" Value="Visible" />
+                  <Setter TargetName="TabText" Property="FontWeight" Value="SemiBold" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Tab.IsSearch}" Value="True">
+                  <Setter TargetName="CloseButton" Property="Visibility" Value="Collapsed" />
+                </DataTrigger>
+              </DataTemplate.Triggers>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+        <Button x:Name="AddTabButton"
+                Padding="8,4"
+                Style="{StaticResource FlatButton}"
+                FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
+                FontSize="12"
+                Content="&#xE710;"
+                ToolTip="Open a view in a tab"
+                Click="AddTab_Click" />
+      </StackPanel>
 
       <Button x:Name="SettingsButton"
               Width="40"
@@ -124,7 +180,15 @@
       </ItemsControl>
     </ScrollViewer>
 
-    <!-- Instead of the search: the details of a node, and the nodes linked to it. -->
+    <!-- Instead of the search: the view of the selected tab. -->
+    <local:ViewPanel x:Name="ViewContent"
+                     Grid.Row="1"
+                     Grid.RowSpan="3"
+                     Margin="0,10,0,0"
+                     Visibility="Collapsed"
+                     OpenNode="ViewContent_OpenNode" />
+
+    <!-- Instead of the search or a view: the details of a node, and the nodes linked to it. -->
     <local:NodeDetailsPanel x:Name="DetailsPanel"
                             Grid.Row="1"
                             Grid.RowSpan="3"

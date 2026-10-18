@@ -20,12 +20,9 @@ Views: different ways to look at the same graph. No node has to belong to anythi
               └─ tree: from "Projects", following "contains"
 ```
 
-1. **Views.** A view is a node of type *view*: searchable, pinnable, synced and versioned like any node. It holds a display and a query, in versions as a dataset's file description: kept in the vault's metadata, so a view works offline.
-	- Displays: *flat* (a list) and *tree*.
-	- Queries: *root node + link type to follow* (tree), or *node type =* (flat). Richer queries come later.
-2. **Tabs.** Views open as tabs on top of the main window. *Search* (today's screen) is always the first tab and cannot be closed; view tabs can be added and closed.
-3. **Tree view.** Navigates from a root node through "contains" links (0.2). No container type: any node with "contains" links holds others.
-	- A node can have several parents: it is shown under each. Cycles are cut.
+Views, tabs and tree navigation are in [CHANGELOG.md](../CHANGELOG.md) (`[Unreleased]`).
+
+1. **Tree operations.** In a tree view (Ctrl+C / Ctrl+X / Ctrl+V, Del, and a right-click menu; drag and drop later):
 	- **Move:** only the link to the parent shown in the tree changes; the node's other parents stay.
 	- **Copy:** copies the node with its whole subtree as new nodes; a copied dataset starts with its current file. What will be copied is shown first.
 	- **Delete:** deletes the node with its whole subtree, after a preview of the consequences (nodes deleted, links removed). A node of the subtree that also has another parent is deleted too: the preview lists those other parents.

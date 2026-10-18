@@ -135,7 +135,7 @@ public sealed class VaultSession : IDisposable
 
         var notes = form.NotesToSave();
         var withNotes = notes.Count > 0 ? $", {notes.Count} with content" : string.Empty;
-        var added = Append(owner, vault, form.Plan.Changes, form.Plan switch
+        var added = Append(owner, vault, [.. form.Plan.Changes, .. form.ViewsToSave()], form.Plan switch
         {
             LinkPlan link => $"Link added ({link.Type.Id}, {(link.Left.IsNew ? 1 : 0) + (link.Right?.IsNew == true ? 1 : 0)} new nodes{withNotes})",
             NodePlan node => $"Node added ({node.Type.Id}{(node.NeedsConfirmation ? ", a duplicate" : string.Empty)}{withNotes})",

@@ -49,10 +49,10 @@ public sealed partial class CreationForm
     /// <summary>A new note on a step has content, or a new dataset a file: cancelling would lose it.</summary>
     public bool HasContent => NewSides.Any(side => HasNoteContent(side) || FileOf(side) is not null);
 
-    /// <summary>The next step. False on the last one.</summary>
+    /// <summary>The next step. False on the last one, and on a step that cannot be left yet (<see cref="CanLeaveStep"/>).</summary>
     public bool Next()
     {
-        if (IsLastStep)
+        if (IsLastStep || !CanLeaveStep)
         {
             return false;
         }

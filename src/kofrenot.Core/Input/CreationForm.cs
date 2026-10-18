@@ -9,6 +9,7 @@ namespace Kofrenot.Core.Input;
 /// </summary>
 public sealed partial class CreationForm
 {
+    private readonly KnowledgeGraph _graph;
     private readonly AddPlanner _planner;
     private readonly PlanText _text;
     private readonly TimeProvider _clock;
@@ -18,6 +19,7 @@ public sealed partial class CreationForm
     /// <param name="choices">The homonyms chosen in the input box; the types default to generic.</param>
     public CreationForm(KnowledgeGraph graph, InputRequest request, AddChoices? choices = null, TimeProvider? clock = null)
     {
+        _graph = graph;
         _clock = clock ?? TimeProvider.System;
         _planner = new AddPlanner(graph, _clock);
         _text = new PlanText(graph);

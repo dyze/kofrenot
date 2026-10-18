@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+- **Views**: a node type showing the vault another way: a tree from a node, through a link type (*contains* by default), or a list of the nodes of a type. Chosen on its creation step; kept in the vault, so every device has it, and it works offline. In a tree, a node with several parents shows under each, and a cycle is cut. Enter or a double-click opens a node's details; Back returns to the view.
+- **Tabs** at the top of the main window: *Search* first, then the views open on this computer, kept between starts. **+** opens a view, **×** closes its tab; a new view opens in a tab.
+
 ### Changed
 - **Vault format 4**, to remove nodes and links, and for views. kofrenot 0.3 does not open a vault written by this version, and offers the update. Vaults of formats 1 to 3 are read as they are.
 
