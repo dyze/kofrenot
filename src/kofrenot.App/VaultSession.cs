@@ -23,6 +23,7 @@ public sealed class VaultSession : IDisposable
     private readonly KeyMemory _keys;
     private readonly ILog _log;
     private readonly HashSet<Guid> _importing = [];
+    private readonly WpfThumbnailMaker _thumbnails = new();
     private VaultWatcher? _watcher;
 
     public VaultSession(SettingsStore settings, AppFiles files, KeyMemory keys, ILog log)
@@ -155,9 +156,9 @@ public sealed class VaultSession : IDisposable
     }
 
     /// <summary>
-    /// Saves a dataset version: its file (read from <paramref name="open"/>) written off the UI
-    /// thread, then its change. False when no vault is open, it closed meanwhile, or a file cannot
-    /// be read or written (the user is told).
+    /// Saves a dataset version: its files (an image's thumbnail, then the file, read from
+    /// <paramref name="open"/>) written off the UI thread, then its change. False when no vault is
+    /// open, it closed meanwhile, or a file cannot be read or written (the user is told).
     /// </summary>
     public async Task<bool> SaveDataset(Window owner, DatasetEdited version, Func<Stream> open)
     {
@@ -169,11 +170,7 @@ public sealed class VaultSession : IDisposable
         Changed?.Invoke();
         try
         {
-            await Task.Run(() =>
-            {
-                using var content = open();
-                vault.Datasets.Write(version, content);
-            });
+            await Task.Run(() => vault.WriteDataset(version, open, _thumbnails));
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidDataException)
         {

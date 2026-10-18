@@ -13,11 +13,11 @@ kofrenot.App   (WPF, Windows only)
 │
 kofrenot.Core  (no Windows dependency, fully unit-tested on any OS)
    Graph: KnowledgeGraph · Node · Link · TypeCatalog · LinkAliases · Change
-   Storage: Vault · VaultFolder · VaultFormat · SecretBox · ChunkedBox · KeyWrap · SnapshotStore · NoteFiles · DatasetFiles · KeyMemory
+   Storage: Vault · VaultFolder · VaultFormat · SecretBox · ChunkedBox · KeyWrap · SnapshotStore · NoteFiles · DatasetFiles · ThumbnailFiles · KeyMemory
    Input: InputParser · GraphSearch · AddPlanner · InputPresenter · CreationForm
-   Browse: NodeBrowser · NodeDetails · PinPlanner · RecentNodes
+   Browse: NodeBrowser · NodeDetails · NodeVisual · PinPlanner · RecentNodes
    Notes: NotePlanner · MarkdownFormat
-   Datasets: DatasetPlanner · DatasetType · TextPreview · ByteSize
+   Datasets: DatasetPlanner · DatasetType · TextPreview · ByteSize · IThumbnailMaker
    AppFiles · AppVersion · RunningCopy · Changelog · ProjectLinks
    SettingsStore · SettingsCatalog · Hotkey
    PlacementRules · PlacementStore
@@ -37,11 +37,11 @@ One namespace per folder (`Kofrenot.Core.Settings`, `Kofrenot.UI.Views`, ...). T
 | *(root)* | `AppVersion`; `RunningCopy` + `AppCopy` (another copy running: same or not, and the warning); `AppFiles` (where every file of kofrenot is, including `keys.json` and the snapshots in `cache\`: the only place their names are written, listed in Settings > About; `AppFiles.For` picks the data folder, see [Portable copy](#portable-copy)); `Changelog` (reads the text shown by Settings > About); `ProjectLinks` (website, issues, releases) |
 | `Settings/` | `SettingsStore` (`settings.json`: theme, debug logging, update check, vault folder, hotkey), `Hotkey`, `SettingsCatalog` (the entries of the Settings window, their tabs, and the search that finds them) |
 | `Graph/` | `Node`, `Link`, `NodeType`, `LinkType`, `LinkVerb` (a link type read one way), `TypeCatalog` (built-in node and link types, link aliases; `LinkName`: how a link reads from one of its nodes), `LinkAliases` (the user's aliases, see [Aliases and removals](#aliases-and-removals)), `RemovableChanges`, `NameKey` (the form names are compared in), `Change` (`NodeAdded`, `LinkAdded`, `NodeRenamed`, `AliasAdded`, `NodePinned`, `ChangesRemoved`, `ContentEdited`: `NoteEdited`, `DatasetEdited`), `DatasetFile` (a dataset version's file: name, size, SHA-256), `NodeNames` + `NameVersion` (a node's current names, see [Renames](#renames)), `ContentVersions` (the current versions of a note or dataset, see [Notes](#notes)), `KnowledgeGraph` (in-memory state, built by applying changes) |
-| `Storage/` | `VaultFormat` (+ `NewerVaultFormatException`), `SecretBox` (AES-GCM seal / open), `ChunkedBox` (AES-GCM over 1 MB chunks, streamed), `KeyWrap` (KDF, wrap / unwrap the master key), `ChangeData` (a change as JSON, shared with the snapshot), `ChangeCodec` (change ⇄ sealed JSON), `VaultHeader`, `VaultFolder` (layout, inspect, create), `SnapshotStore`, `NoteFiles` (note content, `content/`), `DatasetFiles` (dataset content, `content/`: describe a file, write, export, open), `Vault` (open, append, refresh, save a note or a dataset version), `AtomicFile` (write as `.tmp`, then rename), `KeyMemory` (remembered master keys, `keys.json`), `ISecretProtector` |
+| `Storage/` | `VaultFormat` (+ `NewerVaultFormatException`), `SecretBox` (AES-GCM seal / open), `ChunkedBox` (AES-GCM over 1 MB chunks, streamed), `KeyWrap` (KDF, wrap / unwrap the master key), `ChangeData` (a change as JSON, shared with the snapshot), `ChangeCodec` (change ⇄ sealed JSON), `VaultHeader`, `VaultFolder` (layout, inspect, create), `SnapshotStore`, `NoteFiles` (note content, `content/`), `DatasetFiles` (dataset content, `content/`: describe a file, write, export, open), `ThumbnailFiles` (thumbnails, `content/`), `Vault` (open, append, refresh, save a note or a dataset version, `WriteDataset`: its files only, off the UI thread), `AtomicFile` (write as `.tmp`, then rename), `KeyMemory` (remembered master keys, `keys.json`), `ISecretProtector` |
 | `Input/` | `InputParser` (text → `NodeRequest` / `LinkRequest`), `GraphSearch` (`SearchHit`), `AddPlanner` (`AddChoices` → `AddPlan`: `NodePlan`, `LinkPlan`, `PlannedSide`), `InputPresenter` (the input box: preview, result rows, homonym choices), `CreationForm` (the creation screen: steps, types, note content, dataset file, status, what exists), `PlanText` (wording shared by both), `RenamePlanner` (`RenamePlan`: a new name, its problem, homonyms), `AliasPlanner` (`AliasPlan`) |
-| `Browse/` | `NodeBrowser` (the details screen: trail of open nodes, at most 4, the selected link of each), `NodeDetails`, `LinkRow`, `PinPlanner` (pin or unpin), `RecentNodes` (the nodes last opened on this device) |
+| `Browse/` | `NodeBrowser` (the details screen: trail of open nodes, at most 4, the selected link of each), `NodeDetails`, `LinkRow`, `NodeVisual` (`NodeIcon`: how a node is pictured in rows, see [Datasets](#datasets)), `PinPlanner` (pin or unpin), `RecentNodes` (the nodes last opened on this device) |
 | `Notes/` | `NotePlanner` (`NoteState`, `ConflictVersion`: load a note, plan its next version), `MarkdownFormat` (`TextEdit`: the toolbar's Markdown) |
-| `Datasets/` | `DatasetPlanner` (`DatasetState`, `DatasetChoice`: load a dataset, plan an import or the version kept from a conflict), `ByteSize` (sizes as shown: 1.2 MB), `DatasetType` (`DatasetViewer`: the inner type, from the extension, and its viewer), `TextPreview` (the beginning of a text, for the viewer) |
+| `Datasets/` | `DatasetPlanner` (`DatasetState`, `DatasetChoice`: load a dataset, plan an import or the version kept from a conflict), `ByteSize` (sizes as shown: 1.2 MB), `DatasetType` (`DatasetCategory`, `DatasetViewer`: the inner type, from the extension, its category and viewer), `IThumbnailMaker` (implemented by App), `TextPreview` (the beginning of a text, for the viewer) |
 | `Logging/` | `ILog` (with `NullLog`), `LogEntry`, `RingLog`, `CompositeLog`, `FilteredLog` |
 | `Placement/` | Window positions: `WindowPlacement`, `PlacementRules`, `PlacementStore` (see [Window positions](#window-positions)) |
 | `Updates/` | The daily update check, see [Updates](#updates): `UpdateChecker`, `Release`, `IReleaseFeed`, `UpdateStore` |
@@ -49,9 +49,9 @@ One namespace per folder (`Kofrenot.Core.Settings`, `Kofrenot.UI.Views`, ...). T
 | `kofrenot.App` | Content |
 | --- | --- |
 | *(root)* | `App.xaml`: startup and wiring; `VaultSession` (the open vault: create, unlock, watch, `Create` (creation dialog, then add), forget the remembered key) |
-| `Views/` | Windows: `MainWindow` (input box, shows `InputPresenter`), `NodeDetailsPanel` (in the main window, shows a `NodeBrowser`; `NoteEditor` for a note, `DatasetPanel` for a dataset: import, export, drag in and out, and `DatasetView`, its viewer), `CreationDialog` (shows a `CreationForm`, one step at a time; the focus starts on the step's type box), `MarkdownBox` (note text and toolbar), `SharedStyles` (the type scale: title, heading, body, secondary, caption, footer; shared buttons), `SettingsWindow` (tabs General, Vault, Link types (`LinkTypesSection`), Appearance, Logging, About), `PassphraseDialog`, `LogWindow`, `ChangelogWindow` (Settings > About > *Show changelog*); `MessageDialog` (messages and questions in the app's theme, instead of the Windows `MessageBox`); `AppTheme` |
+| `Views/` | Windows: `MainWindow` (input box, shows `InputPresenter`), `NodeDetailsPanel` (in the main window, shows a `NodeBrowser`; `NoteEditor` for a note, `DatasetPanel` for a dataset: import, export, drag in and out, and `DatasetView`, its viewer), `NodeVisualView` + `ThumbnailCache` (a node's picture in rows), `CreationDialog` (shows a `CreationForm`, one step at a time; the focus starts on the step's type box), `MarkdownBox` (note text and toolbar), `SharedStyles` (the type scale: title, heading, body, secondary, caption, footer; shared buttons), `SettingsWindow` (tabs General, Vault, Link types (`LinkTypesSection`), Appearance, Logging, About), `PassphraseDialog`, `LogWindow`, `ChangelogWindow` (Settings > About > *Show changelog*); `MessageDialog` (messages and questions in the app's theme, instead of the Windows `MessageBox`); `AppTheme` |
 | `Tray/` | `TrayIcon` |
-| `Platform/` | Implementations of the `Core` interfaces (`GitHubReleaseFeed`, `DpapiProtector`), `Browser` (opens web pages), `SingleInstance`, `GlobalHotkey` (`RegisterHotKey`), `VaultWatcher` (`FileSystemWatcher`), and window placement (`NativeWindows`, `WindowPlacer`) |
+| `Platform/` | Implementations of the `Core` interfaces (`GitHubReleaseFeed`, `DpapiProtector`), `WpfThumbnailMaker` (`IThumbnailMaker`), `DragExport`, `Browser` (opens web pages), `SingleInstance`, `GlobalHotkey` (`RegisterHotKey`), `VaultWatcher` (`FileSystemWatcher`), and window placement (`NativeWindows`, `WindowPlacer`) |
 | `Logging/` | `LogHub`, `SerilogFileLog` |
 | `Assets/` | `kofrenot.ico` (drawn by `build/make_icon.py`) |
 
@@ -135,6 +135,7 @@ Model and principles: [GOAL.md](GOAL.md#data-model).
   content/
     3f/3f9c…e1.kfn         the content of a note version, named by its change (editNote), written once
     b2/b2d4…07.kfd         the file of a dataset version, named by its change (editDataset), written once
+    b2/b2d4…07.kft         the thumbnail of an image dataset version (128 px PNG), same name, written once, before the .kfd
 ```
 
 - **Only added, never modified.** A change file is written as `*.tmp` then renamed, so a reader or the sync tool never sees half a file. `.tmp` files are ignored.
@@ -291,7 +292,7 @@ A dataset is a node of type `dataset` holding one file, in versions like a note 
 
 ```
 import ──DatasetFiles.Describe──► DatasetFile(name, size, sha256) ──DatasetPlanner.Import──► DatasetEdited(replaces = versions loaded)
-       ──Vault.Save──► content file (checked against size and sha256), then change file
+       ──Vault.Save──► an image's thumbnail, the content file (checked against size and sha256), then change file
 export ──DatasetFiles.Export──► the latest current version, decrypted as a stream into the chosen file (.tmp, then renamed)
 keep   ──DatasetPlanner.Keep──► a conflict's chosen version again, as a new version: its content opened and sealed again under the new id
 ```
@@ -304,16 +305,33 @@ keep   ──DatasetPlanner.Keep──► a conflict's chosen version again, as 
 - Drag out (`DragExport`): Windows only takes a file on disk, so the file is first exported (the cursor waits) into a folder of its own in the temporary folder (`%TEMP%\kofrenot\<random>\<name>`), given to Windows as a file drop, and deleted when the drag ends; folders left by a drag that did not end are deleted at the next one. Its name is made safe for Windows first (`DatasetFile.SafeName`).
 - File names, paths and content are never logged (an exception's message names the file: it is shown, and only its type is logged); ids and sizes are.
 
-**Viewer.** A dataset's inner type is its file's extension (`DatasetType.Of`, read from the name: nothing more is stored), which picks its viewer:
+**Viewer.** A dataset's inner type is its file's extension (`DatasetType.Of`, read from the name: nothing more is stored), which gives its category (for its icon) and its viewer:
 
-| Viewer | Extensions | Shown |
+| Category | Extensions | Viewer |
 | --- | --- | --- |
-| Image | png, jpg, jpeg, gif, bmp, tif, tiff, ico | decoded by WPF (`BitmapImage`), up to `DatasetType.MaxImageSize` (64 MB) |
-| Text | txt, md, csv, tsv, log, json, xml, html, htm, yaml, yml, ini, toml, cs, py, js, ts, css, sql, sh, cmd, ps1 | its first `TextPreview.MaxChars` (256 K) characters, UTF-8 unless a byte order mark says otherwise; HTML as text, not rendered |
-| None | the others | "export it to open it" |
+| Image | png, jpg, jpeg, gif, bmp, tif, tiff, ico | Image: decoded by WPF (`BitmapImage`), up to `DatasetType.MaxImageSize` (64 MB) |
+| Image | webp, svg, heic, raw | None |
+| Text | txt, md, csv, tsv, log, rtf | Text: its first `TextPreview.MaxChars` (256 K) characters, UTF-8 unless a byte order mark says otherwise |
+| Code | json, xml, html, htm, yaml, yml, ini, toml, cs, py, js, ts, css, sql, sh, cmd, ps1, java, c, cpp, h, go, rs | Text (HTML as text, not rendered) |
+| Audio, Video, Archive, Pdf | wav, mp3, flac, ogg, m4a, aac, wma; mp4, mkv, avi, mov, webm, wmv; zip, 7z, rar, tar, gz, bz2, xz; pdf | None: "export it to open it" |
+| Other | the others | None |
 
 - `DatasetView` (in `DatasetPanel`) reads the latest version through `DatasetFiles.OpenRead` and decodes it off the UI thread, **in memory only**: nothing decrypted reaches the disk (an export, or a drag out, is the only way out). An image is frozen to cross to the UI thread; a version shown already is not read again.
 - The details row of a dataset takes room only while its viewer shows something (`NodeDetailsPanel.FitDatasetRow`), as a note's editor does.
+
+**Thumbnails and icons.** Every node is pictured in the search rows, the details' link rows and a dataset's header by a `NodeVisual`: an icon, and for an image the version whose thumbnail replaces it.
+
+```
+import ──Vault.WriteDataset──► image the viewer shows (≤ 64 MB)? ──IThumbnailMaker.Make (WpfThumbnailMaker)──► content/<id>.kft
+row    ──NodeVisual.Of(graph, node)──► Icon (type, or the file's category) + Thumbnail (latest version id, for an image)
+       ──NodeVisualView──► glyph at once ──ThumbnailCache.Get (off the UI thread)──► the thumbnail, once read
+```
+
+- `WpfThumbnailMaker` decodes the image straight to 128 px on its longest side (`DecodePixelWidth` or `DecodePixelHeight`, the size read from the header first), never enlarging a small one, and saves a PNG. An image it cannot decode gets no thumbnail; the dataset keeps its icon.
+- The thumbnail is written before the content file and the change (`Vault.WriteDataset`, off the UI thread), so a device seeing the change normally finds it. A missing one (not synced yet, or a version imported before thumbnails) shows the icon. Keeping a version from a conflict makes its thumbnail again from its content.
+- `.kft` files are sealed with the master key ("KFT1", bound to the version id), like note content: a thumbnail shows the data, so it is content. Never logged, never in the snapshot.
+- `ThumbnailCache.Shared` keeps the 200 latest decoded thumbnails in memory, for the open vault only (`Use`, at each vault change), so typing in the input box does not read them again.
+- Icons are Segoe Fluent glyphs (`NodeVisualView.GlyphOf`): generic, note, file, image, text, code, audio, video, archive, PDF.
 
 ### Input
 `Dune relates to Frank Herbert` → link; `Dune` → node.

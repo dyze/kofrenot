@@ -82,6 +82,7 @@ A node of type *Dataset* holds one file of any kind and size, stored encrypted i
 
 - The details show the file's name, its type (its extension: *PNG file*, *JSON file*, ...), size and import date, even before the file itself has synced to this computer.
 - **Images** (png, jpg, gif, bmp, tif, ico) and **texts** (txt, md, csv, json, xml, html, yaml, code, ...) are shown under them, decrypted in memory only: nothing decrypted is written to disk. A long text shows its first 256 K characters; click in it to scroll or select, **Esc** leaves it. Other types are exported to be opened.
+- Every node shows an icon in the search results and the links: by its type, and for a dataset by its file (image, text, code, audio, video, archive, PDF). An image dataset shows a **thumbnail** instead, made once at import and stored encrypted in the vault.
 - **Import…** (**Ctrl+I**), or a file dropped on the dataset, imports a new version. Importing the same file again does nothing.
 - **Export…** (**Ctrl+E**) saves the file where you choose; or drag the file's name out to a folder or another app.
 - Each import is a new version in the vault: older versions are kept. The file is read only when shown or exported.

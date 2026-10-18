@@ -3,6 +3,7 @@ using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using Kofrenot.Core.Browse;
 using Kofrenot.Core.Datasets;
 using Kofrenot.Core.Graph;
 using Kofrenot.Core.Logging;
@@ -138,6 +139,7 @@ public partial class DatasetPanel : UserControl
     private void ShowState()
     {
         var latest = _state?.Latest;
+        HeaderVisual.Visual = _graph is null || _node is null ? null : NodeVisual.Of(_graph, _node);
         FileNameText.Text = latest?.File.Name ?? "No file yet";
         FileInfoText.Text = latest is null ? string.Empty : $"{DatasetType.Of(latest.File).Name} · {ByteSize.Format(latest.File.Size)} · imported {DateOf(latest)}";
         ImportButton.IsEnabled = !IsBusy;

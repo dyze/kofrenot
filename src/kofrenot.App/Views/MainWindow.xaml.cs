@@ -68,6 +68,7 @@ public partial class MainWindow : Window
     private void ShowVault()
     {
         var vault = _session.Current;
+        ThumbnailCache.Shared.Use(vault?.Thumbnails);
         if (DetailsPanel.Browser.Graph != vault?.Graph)
         {
             DetailsPanel.Browser.Close();

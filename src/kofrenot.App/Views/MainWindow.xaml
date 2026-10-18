@@ -74,19 +74,21 @@
                TextWrapping="Wrap" />
 
     <!-- The nodes found, and the links of the exact matches; while the box is empty, the pinned
-         nodes under a header. › opens a node's details. Nothing is
-         focusable: typing stays in the input box. -->
+         nodes under a header. Each node has its picture (NodeVisualView). › opens a node's
+         details. Nothing is focusable: typing stays in the input box. -->
     <ScrollViewer x:Name="ResultsArea" Grid.Row="3" Margin="0,10,0,0" VerticalScrollBarVisibility="Auto" Focusable="False">
       <ItemsControl x:Name="ResultsList" FontSize="{StaticResource BodyFontSize}">
         <ItemsControl.ItemTemplate>
           <DataTemplate>
             <Grid Margin="6,1">
               <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="Auto" />
               </Grid.ColumnDefinitions>
-              <TextBlock x:Name="RowText" VerticalAlignment="Center" Text="{Binding Text}" />
-              <Button x:Name="OpenButton" Grid.Column="1" Style="{StaticResource OpenRowButton}" Click="OpenResult_Click" />
+              <local:NodeVisualView x:Name="RowVisual" Margin="0,1,10,1" Visual="{Binding Visual}" />
+              <TextBlock x:Name="RowText" Grid.Column="1" VerticalAlignment="Center" Text="{Binding Text}" />
+              <Button x:Name="OpenButton" Grid.Column="2" Style="{StaticResource OpenRowButton}" Click="OpenResult_Click" />
             </Grid>
             <DataTemplate.Triggers>
               <DataTrigger Binding="{Binding Node}" Value="{x:Null}">
@@ -98,6 +100,7 @@
               </DataTrigger>
               <DataTrigger Binding="{Binding IsHeader}" Value="True">
                 <Setter TargetName="RowText" Property="Margin" Value="0,8,0,2" />
+                <Setter TargetName="RowVisual" Property="Visibility" Value="Collapsed" />
                 <Setter TargetName="RowText" Property="FontSize" Value="{StaticResource CaptionFontSize}" />
                 <Setter TargetName="RowText" Property="FontWeight" Value="SemiBold" />
                 <Setter TargetName="RowText" Property="Opacity" Value="0.6" />
