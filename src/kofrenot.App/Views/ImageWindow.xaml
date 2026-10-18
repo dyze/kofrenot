@@ -9,8 +9,9 @@
         MinHeight="200"
         WindowStartupLocation="CenterScreen"
         PreviewKeyDown="Window_PreviewKeyDown">
-  <!-- A dataset's image, full size or fitted to the window, decrypted in memory only. One window,
-       reused by each image opened; Esc closes it. -->
+  <!-- A dataset's image, decrypted in memory only: fitted to the window, then zoomed by the wheel
+       (around the pointer) or +/- (0 fits again), scrolled when larger. One window, reused by
+       each image opened; Esc closes it. -->
   <Window.Resources>
     <ResourceDictionary Source="SharedStyles.xaml" />
   </Window.Resources>
@@ -21,7 +22,18 @@
       <RowDefinition Height="Auto" />
     </Grid.RowDefinitions>
 
-    <Image x:Name="Picture" Stretch="Uniform" StretchDirection="DownOnly" />
+    <ScrollViewer x:Name="Scroller"
+                  Focusable="False"
+                  HorizontalScrollBarVisibility="Auto"
+                  VerticalScrollBarVisibility="Auto"
+                  PreviewMouseWheel="Scroller_PreviewMouseWheel"
+                  SizeChanged="Scroller_SizeChanged">
+      <Image x:Name="Picture"
+             HorizontalAlignment="Center"
+             VerticalAlignment="Center"
+             RenderOptions.BitmapScalingMode="HighQuality"
+             Stretch="Fill" />
+    </ScrollViewer>
     <TextBlock x:Name="StatusText" Grid.Row="1" Margin="0,6,0,0" Style="{StaticResource CaptionText}" />
   </Grid>
 </Window>

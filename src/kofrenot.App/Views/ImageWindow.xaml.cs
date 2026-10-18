@@ -1,6 +1,7 @@
 using System.IO;
 using System.Windows;
 using System.Windows.Input;
+using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using Kofrenot.Core.Datasets;
 using Kofrenot.Core.Graph;
@@ -11,24 +12,27 @@ namespace Kofrenot.UI.Views;
 
 /// <summary>
 /// Shows a dataset version's image, read and decoded off the UI thread, in memory only: nothing
-/// decrypted is written to disk. The image fits the window, never enlarged; the window is
-/// resizable and remembers where it was left.
+/// decrypted is written to disk. It opens fitted to the window (never enlarged) and follows its
+/// size until zoomed (<see cref="ImageZoom"/>): the wheel zooms around the pointer, +/- around the
+/// middle, 0 fits again. The window is resizable and remembers where it was left.
 /// </summary>
 public partial class ImageWindow : Window
 {
     private int _loading;
+    private DatasetEdited? _version;
+    private double _zoom = 1;
+    private bool _fitting = true;
 
     public ImageWindow() => InitializeComponent();
 
     public ILog Log { get; set; } = NullLog.Instance;
 
-    /// <summary>The version shown, or null.</summary>
-    public Guid? Version { get; private set; }
+    private BitmapSource? Image => Picture.Source as BitmapSource;
 
     /// <summary>Shows an image instead of the one shown, then brings the window to the front.</summary>
     public void Open(DatasetFiles files, DatasetEdited version)
     {
-        Version = version.Id;
+        _version = version;
         Title = $"{version.File.Name} - kofrenot";
         Picture.Source = null;
         StatusText.Text = $"Loading… ({ByteSize.Format(version.File.Size)})";
@@ -54,7 +58,7 @@ public partial class ImageWindow : Window
             }
 
             Picture.Source = image;
-            StatusText.Text = $"{image.PixelWidth} × {image.PixelHeight} pixels · {ByteSize.Format(version.File.Size)}";
+            Fit();
             Log.Info("Action", "Dataset viewed (image)");
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidDataException or NotSupportedException or ArgumentException)
@@ -86,12 +90,88 @@ public partial class ImageWindow : Window
         return image;
     }
 
+    /// <summary>The whole image in the window, at most one image pixel per screen pixel; it then follows the window's size.</summary>
+    private void Fit()
+    {
+        if (Image is not { } image)
+        {
+            return;
+        }
+
+        var dpi = VisualTreeHelper.GetDpi(this);
+        _fitting = true;
+        ZoomTo(ImageZoom.Fit(Scroller.ActualWidth * dpi.DpiScaleX, Scroller.ActualHeight * dpi.DpiScaleY, image.PixelWidth, image.PixelHeight), at: null);
+    }
+
+    /// <summary>Zooms, keeping the image point under <paramref name="at"/> (in the scroller; null: its middle) in place.</summary>
+    private void ZoomTo(double zoom, Point? at)
+    {
+        if (Image is not { } image)
+        {
+            return;
+        }
+
+        var anchor = at ?? new Point(Scroller.ViewportWidth / 2, Scroller.ViewportHeight / 2);
+        var before = Scroller.TranslatePoint(anchor, Picture);
+        var (ratioX, ratioY) = Picture.ActualWidth > 0 ? (before.X / Picture.ActualWidth, before.Y / Picture.ActualHeight) : (0.5, 0.5);
+
+        // One image pixel per screen pixel at zoom 1, whatever the screen's scaling.
+        var dpi = VisualTreeHelper.GetDpi(this);
+        _zoom = zoom;
+        Picture.Width = image.PixelWidth * zoom / dpi.DpiScaleX;
+        Picture.Height = image.PixelHeight * zoom / dpi.DpiScaleY;
+        Scroller.UpdateLayout();
+
+        var after = Picture.TranslatePoint(new Point(ratioX * Picture.ActualWidth, ratioY * Picture.ActualHeight), Scroller);
+        Scroller.ScrollToHorizontalOffset(Scroller.HorizontalOffset + after.X - anchor.X);
+        Scroller.ScrollToVerticalOffset(Scroller.VerticalOffset + after.Y - anchor.Y);
+        ShowStatus(image);
+    }
+
+    private void Step(bool zoomIn, Point? at)
+    {
+        _fitting = false;
+        ZoomTo(zoomIn ? ImageZoom.In(_zoom) : ImageZoom.Out(_zoom), at);
+    }
+
+    private void ShowStatus(BitmapSource image) =>
+        StatusText.Text = $"{image.PixelWidth} × {image.PixelHeight} pixels · {ByteSize.Format(_version!.File.Size)} · "
+            + $"{ImageZoom.Percent(_zoom)}{(_fitting ? " (fitted)" : string.Empty)}. Wheel or +/- zooms, 0 fits.";
+
+    private void Scroller_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
+    {
+        Step(zoomIn: e.Delta > 0, e.GetPosition(Scroller));
+        e.Handled = true;
+    }
+
+    private void Scroller_SizeChanged(object sender, SizeChangedEventArgs e)
+    {
+        if (_fitting)
+        {
+            Fit();
+        }
+    }
+
     private void Window_PreviewKeyDown(object sender, KeyEventArgs e)
     {
-        if (e.Key == Key.Escape)
+        switch (e.Key)
         {
-            Close();
-            e.Handled = true;
+            case Key.Escape:
+                Close();
+                break;
+            case Key.Add or Key.OemPlus:
+                Step(zoomIn: true, at: null);
+                break;
+            case Key.Subtract or Key.OemMinus:
+                Step(zoomIn: false, at: null);
+                break;
+            case Key.D0 or Key.NumPad0:
+                Fit();
+                break;
+            default:
+                return;
         }
+
+        e.Handled = true;
     }
 }
