@@ -18,7 +18,7 @@ Everything is a **node**, and nodes are joined by **links**.
 
 - A node has a type, a name and a creation date. Later types add their own properties: notes and files will be node types.
 - A link has a type and joins two nodes. A link type has a name and aliases ("relates to", "related to"); it is symmetric, or directed with an inverse name ("written by" / "wrote").
-- Types are extensible: 0.1 has one built-in node type (*generic*) and one link type (*relates to*). Later, the user defines their own types and properties.
+- Types are extensible: 0.2 has two built-in node types (*generic*, *note*) and three link types (*relates to*, *contains*, *is a*). Later, the user defines their own types and properties.
 
 ## How it works (target)
 

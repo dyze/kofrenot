@@ -11,7 +11,7 @@ A private, self-hosted knowledge system: store, organize, search, version and sh
 
 ## Status
 
-Version 0.1 released; 0.2 in progress: directed link types and aliases, pinned and recent nodes, and notes with Markdown content. What comes next: [docs/ROADMAP.md](docs/ROADMAP.md).
+Version 0.2: nodes and links typed in one box (directed link types, your own aliases), notes with Markdown content, pinned and recent nodes, all stored encrypted in a folder. What comes next: [docs/ROADMAP.md](docs/ROADMAP.md).
 
 ## Install
 

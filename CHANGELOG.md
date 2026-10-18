@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.2] - 2026-10-18
+
 ### Added
 - **Directed link types** with a reverse: *contains* / *contained by*, *is a* (alias *is an*) / *has instance*. A link can be typed either way and reads from the node it is seen from.
 - **Link type aliases** in Settings > Link types: your own phrases for a link type, either way, stored in the vault.
@@ -40,5 +42,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **Update check** once a day against GitHub releases, switchable in About.
 - **Installer and portable zip** (`build\installer.cmd`), self-contained.
 
-[Unreleased]: https://github.com/dyze/kofrenot/compare/0.1...HEAD
+[Unreleased]: https://github.com/dyze/kofrenot/compare/0.2...HEAD
+[0.2]: https://github.com/dyze/kofrenot/compare/0.1...0.2
 [0.1]: https://github.com/dyze/kofrenot/releases/tag/0.1
