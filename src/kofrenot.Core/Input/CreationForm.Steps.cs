@@ -1,3 +1,4 @@
+using Kofrenot.Core.Datasets;
 using Kofrenot.Core.Graph;
 
 namespace Kofrenot.Core.Input;
@@ -18,13 +19,20 @@ public sealed record CreationStep(Side? Side)
 /// <summary>The content of a new note, saved with the creation: its first version.</summary>
 public sealed record NoteToSave(NoteEdited Version, string Content);
 
+/// <summary>The file of a new dataset, imported with the creation from <see cref="Path"/>: its first version.</summary>
+public sealed record DatasetToSave(DatasetEdited Version, string Path);
+
+/// <summary>A file chosen for a new dataset: where it is, and what it is (<see cref="DatasetFile"/>).</summary>
+public sealed record ChosenFile(string Path, DatasetFile File);
+
 /// <summary>
-/// The steps of the creation screen: one per new node (its type, and its content for a note), then
-/// the link. An existing node has no step. Nothing is added before the last step.
+/// The steps of the creation screen: one per new node (its type, its content for a note, its file
+/// for a dataset), then the link. An existing node has no step. Nothing is added before the last step.
 /// </summary>
 public sealed partial class CreationForm
 {
     private readonly Dictionary<Side, string> _contents = new() { [Side.Left] = string.Empty, [Side.Right] = string.Empty };
+    private readonly Dictionary<Side, ChosenFile> _files = [];
 
     /// <summary>Fixed for the request: types and the link type do not change which nodes are new.</summary>
     public IReadOnlyList<CreationStep> Steps { get; }
@@ -38,8 +46,8 @@ public sealed partial class CreationForm
     /// <summary>"Step 1 of 3", or empty for a single step.</summary>
     public string StepText => Steps.Count > 1 ? $"Step {StepIndex + 1} of {Steps.Count}" : string.Empty;
 
-    /// <summary>A new note on a step has content: cancelling would lose it.</summary>
-    public bool HasContent => Steps.Any(step => step.Side is { } side && IsNote(side) && !string.IsNullOrWhiteSpace(_contents[side]));
+    /// <summary>A new note on a step has content, or a new dataset a file: cancelling would lose it.</summary>
+    public bool HasContent => NewSides.Any(side => HasNoteContent(side) || FileOf(side) is not null);
 
     /// <summary>The next step. False on the last one.</summary>
     public bool Next()
@@ -90,20 +98,48 @@ public sealed partial class CreationForm
 
     public void SetContent(Side side, string content) => _contents[side] = content;
 
+    /// <summary>A new node of type dataset: its step has a file to choose.</summary>
+    public bool IsDataset(Side side) => TypeOf(side).Id == TypeCatalog.Dataset.Id;
+
+    /// <summary>The file chosen for a new dataset, or null. Kept while its type changes, used only for a dataset.</summary>
+    public ChosenFile? FileOf(Side side) => IsDataset(side) ? _files.GetValueOrDefault(side) : null;
+
+    /// <summary>Chooses the file of a new dataset; null takes it back.</summary>
+    public void SetFile(Side side, ChosenFile? file)
+    {
+        if (file is null)
+        {
+            _files.Remove(side);
+        }
+        else
+        {
+            _files[side] = file;
+        }
+    }
+
     /// <summary>
     /// The first version of each new note with content, for its node in <see cref="AddPlan.Changes"/>.
     /// New ids at each call: call it once, when adding.
     /// </summary>
-    public IReadOnlyList<NoteToSave> NotesToSave()
-    {
-        var added = Plan.NewNodes;
-        var newSides = Steps.Select(step => step.Side).OfType<Side>().ToList();
-        return newSides
-            .Select((side, index) => (Side: side, Node: added[index]))
-            .Where(pair => IsNote(pair.Side) && !string.IsNullOrWhiteSpace(_contents[pair.Side]))
+    public IReadOnlyList<NoteToSave> NotesToSave() =>
+        NewNodes()
+            .Where(pair => HasNoteContent(pair.Side))
             .Select(pair => new NoteToSave(new NoteEdited(Guid.NewGuid(), _clock.GetUtcNow(), pair.Node.Id, []), _contents[pair.Side]))
             .ToList();
-    }
+
+    /// <summary>The first version of each new dataset with a file, as <see cref="NotesToSave"/>.</summary>
+    public IReadOnlyList<DatasetToSave> DatasetsToSave() =>
+        NewNodes()
+            .Where(pair => FileOf(pair.Side) is not null)
+            .Select(pair => new DatasetToSave(DatasetPlanner.First(pair.Node.Id, _files[pair.Side].File, _clock.GetUtcNow()), _files[pair.Side].Path))
+            .ToList();
+
+    private IEnumerable<Side> NewSides => Steps.Select(step => step.Side).OfType<Side>();
+
+    private bool HasNoteContent(Side side) => IsNote(side) && !string.IsNullOrWhiteSpace(_contents[side]);
+
+    // The new sides, in the order of the plan's new nodes.
+    private IEnumerable<(Side Side, Node Node)> NewNodes() => NewSides.Zip(Plan.NewNodes);
 
     private static List<CreationStep> StepsOf(AddPlan plan)
     {

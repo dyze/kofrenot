@@ -24,7 +24,10 @@ public sealed class TypeCatalog
     /// <summary>A node with content: Markdown text, edited in its details.</summary>
     public static NodeType Note { get; } = new("note", "Note");
 
-    public static TypeCatalog BuiltIn { get; } = new([Generic, Note], [RelatesTo, Contains, IsA]);
+    /// <summary>A node with a file of any size, imported and exported from its details.</summary>
+    public static NodeType Dataset { get; } = new("dataset", "Dataset");
+
+    public static TypeCatalog BuiltIn { get; } = new([Generic, Note, Dataset], [RelatesTo, Contains, IsA]);
 
     public IReadOnlyList<NodeType> NodeTypes { get; }
 

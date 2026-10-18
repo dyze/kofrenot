@@ -120,6 +120,46 @@ public sealed class CreationStepsTests
         Assert.Equal(dune.Id, Assert.Single(form.NotesToSave()).Version.Node);
     }
 
+    [Fact]
+    public void TheFileOfANewDataset_IsImportedWithItsNode()
+    {
+        var form = Form(new LinkRequest("memo", TypeCatalog.RelatesTo.Forward, "Survey"));
+        form.SetType(Side.Right, TypeCatalog.Dataset);
+        var chosen = new ChosenFile(@"C:\data\survey.csv", new DatasetFile("survey.csv", 10, new string('a', 64)));
+        form.SetFile(Side.Right, chosen);
+
+        var dataset = Assert.Single(form.DatasetsToSave());
+
+        var survey = form.Plan.Changes.OfType<NodeAdded>().Single(added => added.Node.Name == "Survey").Node;
+        Assert.Equal((survey.Id, _clock.Now, chosen.File, chosen.Path), (dataset.Version.Node, dataset.Version.At, dataset.Version.File, dataset.Path));
+        Assert.Empty(dataset.Version.Replaces);
+        Assert.Empty(form.NotesToSave());
+        Assert.True(form.HasContent);
+    }
+
+    [Fact]
+    public void AFile_IsImportedAndKept_OnlyForADataset_UntilTakenBack()
+    {
+        var form = Form(new NodeRequest("survey"));
+        var chosen = new ChosenFile("survey.csv", new DatasetFile("survey.csv", 10, new string('a', 64)));
+        form.SetType(Side.Left, TypeCatalog.Dataset);
+        form.SetFile(Side.Left, chosen);
+
+        form.SetType(Side.Left, TypeCatalog.Note);
+        Assert.False(form.IsDataset(Side.Left));
+        Assert.Null(form.FileOf(Side.Left));
+        Assert.False(form.HasContent);
+        Assert.Empty(form.DatasetsToSave());
+
+        form.SetType(Side.Left, TypeCatalog.Dataset);
+        Assert.Equal(chosen, form.FileOf(Side.Left));
+        Assert.Single(form.DatasetsToSave());
+
+        form.SetFile(Side.Left, null);
+        Assert.Null(form.FileOf(Side.Left));
+        Assert.Empty(form.DatasetsToSave());
+    }
+
     private CreationForm Form(InputRequest request) => new(_graph, request, clock: _clock);
 
     private void Add(string name) => _graph.Add(new Node(Guid.NewGuid(), "generic", name, _clock.Now));

@@ -84,8 +84,8 @@ public sealed class TypeCatalogTests
         Assert.Equal("generic", TypeCatalog.Generic.Id);
 
     [Fact]
-    public void GenericAndNote_AreTheBuiltInNodeTypes() =>
-        Assert.Equal([("generic", "Generic"), ("note", "Note")], TypeCatalog.BuiltIn.NodeTypes.Select(type => (type.Id, type.Name)));
+    public void GenericNoteAndDataset_AreTheBuiltInNodeTypes() =>
+        Assert.Equal([("generic", "Generic"), ("note", "Note"), ("dataset", "Dataset")], TypeCatalog.BuiltIn.NodeTypes.Select(type => (type.Id, type.Name)));
 
     [Fact]
     public void ANodeType_IsFoundByItsId()
