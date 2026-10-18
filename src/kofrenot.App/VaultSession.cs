@@ -22,6 +22,7 @@ public sealed class VaultSession : IDisposable
     private readonly AppFiles _files;
     private readonly KeyMemory _keys;
     private readonly ILog _log;
+    private readonly HashSet<Guid> _importing = [];
     private VaultWatcher? _watcher;
 
     public VaultSession(SettingsStore settings, AppFiles files, KeyMemory keys, ILog log)
@@ -39,6 +40,9 @@ public sealed class VaultSession : IDisposable
     public Vault? Current { get; private set; }
 
     public string? Folder => _settings.VaultFolder;
+
+    /// <summary>A file is being imported into this dataset (<see cref="SaveDataset"/>).</summary>
+    public bool IsImporting(Guid dataset) => _importing.Contains(dataset);
 
     /// <summary>Whether the open vault's key is remembered on this computer.</summary>
     public bool IsRemembered => Current is { } vault && _keys.Has(vault.Id);
@@ -136,7 +140,78 @@ public sealed class VaultSession : IDisposable
             NodePlan node => $"Node added ({node.Type.Id}{(node.NeedsConfirmation ? ", a duplicate" : string.Empty)}{withNotes})",
             _ => "Added",
         }, notes);
-        return added ? form.Plan : null;
+        if (!added)
+        {
+            return null;
+        }
+
+        // The nodes are there: their files follow, each in the background (the user is told if one fails).
+        foreach (var dataset in form.DatasetsToSave())
+        {
+            _ = SaveDataset(owner, dataset.Version, () => File.OpenRead(dataset.Path));
+        }
+
+        return form.Plan;
+    }
+
+    /// <summary>
+    /// Saves a dataset version: its file (read from <paramref name="open"/>) written off the UI
+    /// thread, then its change. False when no vault is open, it closed meanwhile, or a file cannot
+    /// be read or written (the user is told).
+    /// </summary>
+    public async Task<bool> SaveDataset(Window owner, DatasetEdited version, Func<Stream> open)
+    {
+        if (Current is not { } vault || !_importing.Add(version.Node))
+        {
+            return false;
+        }
+
+        Changed?.Invoke();
+        try
+        {
+            await Task.Run(() =>
+            {
+                using var content = open();
+                vault.Datasets.Write(version, content);
+            });
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidDataException)
+        {
+            // The message names the file: shown, not logged.
+            _log.Warn("Action", $"Cannot import the dataset's file ({ex.GetType().Name})");
+            MessageDialog.Inform(owner, $"Cannot import the file.\n\n{ex.Message}");
+            return false;
+        }
+        finally
+        {
+            _importing.Remove(version.Node);
+            Changed?.Invoke();
+        }
+
+        var replaced = version.Replaces.Count > 1 ? $", a conflict of {version.Replaces.Count} versions resolved" : string.Empty;
+        return Current == vault && Append(owner, vault, [version], $"Dataset imported ({version.File.Size} bytes{replaced})");
+    }
+
+    /// <summary>Exports a dataset version's file to <paramref name="target"/>, off the UI thread. False when it could not (the user is told).</summary>
+    public async Task<bool> ExportDataset(Window owner, DatasetEdited version, string target)
+    {
+        if (Current is not { } vault)
+        {
+            return false;
+        }
+
+        try
+        {
+            await Task.Run(() => vault.Datasets.Export(version.Id, target));
+            _log.Info("Action", $"Dataset exported ({version.File.Size} bytes)");
+            return true;
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidDataException)
+        {
+            _log.Warn("Action", $"Cannot export the dataset's file ({ex.GetType().Name})");
+            MessageDialog.Inform(owner, $"Cannot export the file.\n\n{ex.Message}");
+            return false;
+        }
     }
 
     /// <summary>Renames a node. False when no vault is open, or it cannot be written (the user is told).</summary>

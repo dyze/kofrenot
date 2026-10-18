@@ -1,0 +1,36 @@
+<UserControl x:Class="Kofrenot.UI.Views.DatasetView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <!-- A dataset's file shown inside kofrenot, decrypted in memory only: an image, or the
+       beginning of a text (read only). Other types say to export the file. -->
+  <UserControl.Resources>
+    <ResourceDictionary Source="SharedStyles.xaml" />
+  </UserControl.Resources>
+
+  <Grid Margin="0,10,0,0">
+    <Grid.RowDefinitions>
+      <RowDefinition Height="*" />
+      <RowDefinition Height="Auto" />
+    </Grid.RowDefinitions>
+
+    <Image x:Name="ImageView"
+           HorizontalAlignment="Left"
+           VerticalAlignment="Top"
+           Stretch="Uniform"
+           StretchDirection="DownOnly"
+           Visibility="Collapsed" />
+    <TextBox x:Name="TextView"
+             FontFamily="Cascadia Mono, Consolas"
+             FontSize="{StaticResource CaptionFontSize}"
+             HorizontalScrollBarVisibility="Auto"
+             IsReadOnly="True"
+             TextWrapping="NoWrap"
+             VerticalScrollBarVisibility="Auto"
+             Visibility="Collapsed" />
+    <TextBlock x:Name="MessageText"
+               Grid.Row="1"
+               Margin="0,4,0,0"
+               Style="{StaticResource CaptionText}"
+               TextWrapping="Wrap" />
+  </Grid>
+</UserControl>

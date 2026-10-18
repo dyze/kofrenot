@@ -49,6 +49,10 @@ public partial class MainWindow : Window
         DetailsPanel.Visited = node => Visited(node);
         DetailsPanel.ReadNote = version => _session.Current?.Notes.Read(version);
         DetailsPanel.SaveNote = (version, content) => _session.SaveNote(this, version, content);
+        DetailsPanel.DatasetFiles = () => _session.Current?.Datasets;
+        DetailsPanel.SaveDataset = (version, open) => _session.SaveDataset(this, version, open);
+        DetailsPanel.ExportDataset = (version, target) => _session.ExportDataset(this, version, target);
+        DetailsPanel.IsImporting = _session.IsImporting;
         VersionText.Text = $"kofrenot {AppVersion.Of(typeof(MainWindow).Assembly)}";
         ShowUpdateMark();
         _session.Changed += ShowVault;

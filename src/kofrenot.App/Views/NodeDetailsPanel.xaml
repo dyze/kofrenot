@@ -5,7 +5,7 @@
              Focusable="True"
              FocusVisualStyle="{x:Null}">
   <!-- The details of a node, in the main window instead of the search: breadcrumb, properties,
-       a note's content (NoteEditor),
+       a note's content (NoteEditor), a dataset's file (DatasetPanel),
        links. Up/Down select a link, Enter or › opens its other node, Esc goes back one level. -->
   <UserControl.Resources>
     <ResourceDictionary Source="SharedStyles.xaml" />
@@ -19,6 +19,8 @@
       <RowDefinition Height="Auto" />
       <!-- The note editor: takes room only for a note. -->
       <RowDefinition x:Name="NoteRow" Height="Auto" />
+      <!-- A dataset's file: takes room only while its viewer shows it. -->
+      <RowDefinition x:Name="DatasetRow" Height="Auto" />
       <RowDefinition Height="Auto" />
       <RowDefinition Height="*" />
     </Grid.RowDefinitions>
@@ -121,9 +123,11 @@
 
     <local:NoteEditor x:Name="NoteBox" Grid.Row="3" Visibility="Collapsed" />
 
-    <TextBlock x:Name="LinksHeader" Grid.Row="4" Margin="2,18,0,4" FontWeight="SemiBold" />
+    <local:DatasetPanel x:Name="DatasetBox" Grid.Row="4" Visibility="Collapsed" />
 
-    <ScrollViewer Grid.Row="5" VerticalScrollBarVisibility="Auto" Focusable="False">
+    <TextBlock x:Name="LinksHeader" Grid.Row="5" Margin="2,18,0,4" FontWeight="SemiBold" />
+
+    <ScrollViewer Grid.Row="6" VerticalScrollBarVisibility="Auto" Focusable="False">
       <ItemsControl x:Name="LinksList" Grid.IsSharedSizeScope="True">
         <ItemsControl.ItemTemplate>
           <DataTemplate>

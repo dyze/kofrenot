@@ -81,7 +81,7 @@ public partial class CreationDialog : Window
         ShowStatus();
         BackButton.Visibility = _form.StepIndex > 0 ? Visibility.Visible : Visibility.Collapsed;
         NextButton.Content = _form.IsLastStep ? "Add" : "Next";
-        NextButton.IsEnabled = !_form.IsLastStep || _form.Plan.CanAdd;
+        NextButton.IsEnabled = !_reading && (!_form.IsLastStep || _form.Plan.CanAdd);
         _showing = false;
     }
 
@@ -90,6 +90,7 @@ public partial class CreationDialog : Window
         NodeName.Text = _form.NameOf(side);
         TypeBox.SelectedItem = _form.TypeOf(side);
         ContentBox.Visibility = _form.IsNote(side) ? Visibility.Visible : Visibility.Collapsed;
+        ShowFile(side);
 
         // Only a node request can repeat a name: a link's new nodes have names no node has.
         WarningText.Text = _form.Warning ?? string.Empty;
@@ -107,6 +108,8 @@ public partial class CreationDialog : Window
         ? _form.Status
         : StepSide is { } side && _form.IsNote(side)
             ? "Tab: write the content. Enter (Ctrl+Enter in the content): next step."
+            : StepSide is { } datasetSide && _form.IsDataset(datasetSide)
+                ? "Choose its file, or drop it here; it can also be imported later. Enter: next step."
             : "Enter: next step.";
 
     private void TypeBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -139,9 +142,14 @@ public partial class CreationDialog : Window
 
     private void NextButton_Click(object sender, RoutedEventArgs e) => Next();
 
-    /// <summary>The next step, or on the last one, Add.</summary>
+    /// <summary>The next step, or on the last one, Add; not while a chosen file is read.</summary>
     private void Next()
     {
+        if (_reading)
+        {
+            return;
+        }
+
         if (_form.Next())
         {
             ShowStep();
@@ -176,7 +184,7 @@ public partial class CreationDialog : Window
         }
     }
 
-    /// <summary>Cancelling (Esc, Cancel, ×) asks first when a note's content would be lost.</summary>
+    /// <summary>Cancelling (Esc, Cancel, ×) asks first when a note's content or a dataset's file would be lost.</summary>
     private void Window_Closing(object? sender, CancelEventArgs e)
     {
         if (DialogResult == true || _discardConfirmed || !_form.HasContent)
@@ -184,7 +192,7 @@ public partial class CreationDialog : Window
             return;
         }
 
-        _discardConfirmed = MessageDialog.Confirm(this, "Discard the note content you typed?", "Discard", "Keep editing");
+        _discardConfirmed = MessageDialog.Confirm(this, "Discard the note content you typed, or the file you chose?", "Discard", "Keep editing");
         e.Cancel = !_discardConfirmed;
     }
 

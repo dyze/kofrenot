@@ -21,7 +21,11 @@ public partial class NodeDetailsPanel : UserControl
     private const string PinIcon = "";
     private const string PinnedIcon = "";
 
-    public NodeDetailsPanel() => InitializeComponent();
+    public NodeDetailsPanel()
+    {
+        InitializeComponent();
+        DatasetBox.ViewChanged += FitDatasetRow;
+    }
 
     /// <summary>Raised when the user goes back to the search (Esc at level 1, or ⌂ Search).</summary>
     public event Action? BackToSearch;
@@ -56,6 +60,7 @@ public partial class NodeDetailsPanel : UserControl
         if (Browser.Details is not { } details)
         {
             NoteBox.Close();
+            DatasetBox.Close();
             return;
         }
 
@@ -73,6 +78,7 @@ public partial class NodeDetailsPanel : UserControl
         PinButton.ToolTip = details.IsPinned ? "Unpin" : "Pin: listed while the input box is empty";
         ConflictPanel.Visibility = details.NameConflict.Count > 0 && !_editing ? Visibility.Visible : Visibility.Collapsed;
         ShowNote(details);
+        ShowDataset(details);
     }
 
     /// <summary>
@@ -81,6 +87,11 @@ public partial class NodeDetailsPanel : UserControl
     /// </summary>
     public bool HandleKey(Key key)
     {
+        if (DatasetBox.IsReading)
+        {
+            return HandleDatasetKey(key);
+        }
+
         if (NoteBox.IsEditing)
         {
             return HandleNoteKey(key);
@@ -89,6 +100,11 @@ public partial class NodeDetailsPanel : UserControl
         if (_editing)
         {
             return HandleEditKey(key);
+        }
+
+        if (HandleDatasetKey(key))
+        {
+            return true;
         }
 
         switch (key)

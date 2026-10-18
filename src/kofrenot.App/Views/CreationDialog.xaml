@@ -13,9 +13,9 @@
         PreviewKeyDown="Window_PreviewKeyDown"
         Closing="Window_Closing"
         FontSize="{DynamicResource BodyFontSize}">
-  <!-- The creation screen, in steps: each new node (its type, and its content for a note), then
-       the link. Nothing is added before the last step. Enter or Ctrl+Enter: Next / Add (in the
-       content, Enter adds a line); Esc cancels the whole creation. -->
+  <!-- The creation screen, in steps: each new node (its type, its content for a note, its file for
+       a dataset), then the link. Nothing is added before the last step. Enter or Ctrl+Enter: Next /
+       Add (in the content, Enter adds a line); Esc cancels the whole creation. -->
   <Window.Resources>
     <ResourceDictionary Source="SharedStyles.xaml" />
   </Window.Resources>
@@ -53,6 +53,43 @@
       </Grid>
 
       <local:MarkdownBox x:Name="ContentBox" Height="220" Margin="0,12,0,0" Visibility="Collapsed" />
+
+      <!-- A dataset's file: chosen, or dropped here. -->
+      <Border x:Name="FilePanel"
+              Margin="0,12,0,0"
+              Padding="12,10"
+              AllowDrop="True"
+              Background="{DynamicResource ControlFillColorDefaultBrush}"
+              BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
+              BorderThickness="1"
+              CornerRadius="6"
+              Visibility="Collapsed"
+              DragOver="FilePanel_DragOver"
+              Drop="FilePanel_Drop">
+        <Grid>
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="Auto" />
+          </Grid.ColumnDefinitions>
+          <TextBlock x:Name="FileText" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+          <Button x:Name="ChooseFileButton"
+                  Grid.Column="1"
+                  Margin="8,0,0,0"
+                  Padding="10,3"
+                  Content="Choose…"
+                  Click="ChooseFile_Click" />
+          <Button x:Name="RemoveFileButton"
+                  Grid.Column="2"
+                  Margin="4,0,0,0"
+                  Style="{StaticResource FlatButton}"
+                  FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
+                  FontSize="12"
+                  Content="&#xE711;"
+                  ToolTip="Take this file back"
+                  Click="RemoveFile_Click" />
+        </Grid>
+      </Border>
 
       <!-- A name that exists already, and the nodes that have it. -->
       <TextBlock x:Name="WarningText"
