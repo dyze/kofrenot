@@ -1,6 +1,7 @@
 using Kofrenot.Core.Datasets;
 using Kofrenot.Core.Graph;
 using Kofrenot.Core.Logging;
+using Kofrenot.Core.Views;
 
 namespace Kofrenot.Core.Storage;
 
@@ -118,6 +119,29 @@ public sealed class Vault
 
         using var content = open();
         Datasets.Write(version, content, progress);
+    }
+
+    /// <summary>
+    /// Writes the files of copied content (<see cref="CopyPlan.Contents"/>), not their changes: a
+    /// note's text, or a dataset's file sealed again (with its thumbnail) under the new version.
+    /// It changes nothing in memory, so it can run off the thread using the vault; then append
+    /// <see cref="CopyPlan.Changes"/>.
+    /// </summary>
+    /// <exception cref="IOException">A file cannot be read or written.</exception>
+    public void WriteCopies(IEnumerable<ContentCopy> copies, IThumbnailMaker? thumbnails = null)
+    {
+        foreach (var copy in copies)
+        {
+            switch (copy.To)
+            {
+                case DatasetEdited dataset:
+                    WriteDataset(dataset, () => Datasets.OpenRead(copy.From.Id), thumbnails);
+                    break;
+                default:
+                    Notes.Write(copy.To.Id, Notes.Read(copy.From.Id) ?? throw new IOException($"Note version {copy.From.Id} is not in the vault"));
+                    break;
+            }
+        }
     }
 
     /// <summary>Reads the change files not read yet (written by another app, or copied by the sync tool).</summary>

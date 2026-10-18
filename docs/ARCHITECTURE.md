@@ -356,6 +356,16 @@ Projects ─contains─► Alpha ─contains─► Shared      TreeItem(node, pa
 - Children: the nodes the view's links lead to, from the node (either way for a symmetric type); nodes are ordered by name as the search compares them (`NameKey`), homonyms oldest first (`NodeOrder`).
 - Both read the graph each time, so changes from elsewhere show. An unknown or removed root has no tree.
 
+**Operations.** Each planner gives a plan to show first, then its changes; the tree's link type drives them, with the same children as the tree (`TreeLinks`).
+
+| Planner | Plan | Changes |
+| --- | --- | --- |
+| `DeletePlanner.Plan(item)` | `DeletePlan`: the nodes (the node and its whole subtree, even a node with another parent), their links, `OtherParents` | one `remove`: the nodes, and every copy of their links |
+| `MovePlanner.Plan(item, target)` | `MovePlan`: `Problem` (`Root`, `SameParent`, `IntoItsSubtree`) or none | `remove` of the link from the parent shown (every copy), `addLink` from the target; other parents stay |
+| `CopyPlanner.Plan(node, target, isAvailable)` | `CopyPlan`: the nodes, `Missing` (content not synced: no copy) | new nodes (same type and name), their links and one to the target; each note, dataset and view gets its original's latest version |
+
+- A copied note's or dataset's content is written again under the new version: `Vault.WriteCopies(plan.Contents)` first (it touches no memory, so a large dataset can be sealed off the UI thread), then each change is appended. Stopped halfway, it leaves versions of nodes not added: never shown.
+
 ### Input
 `Dune relates to Frank Herbert` → link; `Dune` → node.
 

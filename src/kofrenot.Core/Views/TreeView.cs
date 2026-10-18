@@ -20,21 +20,15 @@ public sealed record TreeItem(Node Node, IReadOnlyList<Guid> Path, bool CanExpan
 /// </summary>
 public sealed class TreeView(KnowledgeGraph graph, TreeDefinition definition)
 {
+    private readonly TreeLinks _links = new(graph, definition.LinkType);
+
     /// <summary>Null when the root node is unknown (removed, or not synced yet).</summary>
     public TreeItem? Root => graph.FindNode(definition.Root) is { } root ? ItemOf(root, []) : null;
 
     public IReadOnlyList<TreeItem> ChildrenOf(TreeItem item) => item.CanExpand
-        ? NodeOrder.ByName(ChildNodes(item.Node.Id)).Select(child => ItemOf(child, item.Path)).ToList()
+        ? NodeOrder.ByName(_links.ChildrenOf(item.Node.Id)).Select(child => ItemOf(child, item.Path)).ToList()
         : [];
 
     private TreeItem ItemOf(Node node, IReadOnlyList<Guid> parentPath) =>
-        new(node, [.. parentPath, node.Id], !parentPath.Contains(node.Id) && ChildNodes(node.Id).Any());
-
-    private IEnumerable<Node> ChildNodes(Guid node)
-    {
-        var symmetric = graph.Types.FindLinkType(definition.LinkType)?.IsSymmetric ?? false;
-        return graph.LinksOf(node)
-            .Where(link => link.Type == definition.LinkType && (symmetric || link.From == node))
-            .Select(link => graph.FindNode(link.Other(node))!);
-    }
+        new(node, [.. parentPath, node.Id], !parentPath.Contains(node.Id) && _links.ToChildren(node.Id).Any());
 }

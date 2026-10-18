@@ -242,6 +242,40 @@ public sealed class VaultTests : IDisposable
     }
 
     [Fact]
+    public void ACopy_WritesTheContentOfItsNotesAndDatasets_UnderTheirNewVersions()
+    {
+        var vault = Open();
+        var (projects, ideas, survey, archive) = (AddNode(vault, "Projects"), AddNode(vault, "Ideas"), AddNode(vault, "Survey"), AddNode(vault, "Archive"));
+        vault.Append(new LinkAdded(Guid.NewGuid(), Start, new Link(Guid.NewGuid(), TypeCatalog.Contains.Id, projects.Id, ideas.Id, Start)));
+        vault.Append(new LinkAdded(Guid.NewGuid(), Start, new Link(Guid.NewGuid(), TypeCatalog.Contains.Id, projects.Id, survey.Id, Start)));
+        vault.Save(new NoteEdited(Guid.NewGuid(), Start, ideas.Id, []), "# Ideas");
+        var source = _temp.Sub("survey.csv");
+        File.WriteAllText(source, "a,b\n");
+        vault.Save(new DatasetEdited(Guid.NewGuid(), Start, survey.Id, DatasetFiles.Describe(source), []), () => File.OpenRead(source));
+        var plan = new CopyPlanner(vault.Graph, TypeCatalog.Contains.Id).Plan(projects, archive, _ => true);
+
+        vault.WriteCopies(plan.Contents);
+        plan.Changes.ToList().ForEach(vault.Append);
+
+        var reopened = Open(snapshot: false);
+        var note = Assert.IsType<NoteEdited>(plan.Contents.Single(copy => copy.From.Node == ideas.Id).To);
+        Assert.Equal("# Ideas", reopened.Notes.Read(Assert.Single(reopened.Graph.NoteVersionsOf(note.Node)).Id));
+        var dataset = Assert.IsType<DatasetEdited>(plan.Contents.Single(copy => copy.From.Node == survey.Id).To);
+        var target = _temp.Sub("exported.csv");
+        reopened.Datasets.Export(Assert.Single(reopened.Graph.DatasetVersionsOf(dataset.Node)).Id, target);
+        Assert.Equal("a,b\n", File.ReadAllText(target));
+    }
+
+    [Fact]
+    public void ACopy_OfANoteNotSynced_IsRefused()
+    {
+        var vault = Open();
+        var copy = new ContentCopy(new NoteEdited(Guid.NewGuid(), Start, Guid.NewGuid(), []), new NoteEdited(Guid.NewGuid(), Start, Guid.NewGuid(), []));
+
+        Assert.Throws<IOException>(() => vault.WriteCopies([copy]));
+    }
+
+    [Fact]
     public void ADatasetVersion_IsSaved_WithItsFile_AndFoundAgainOnReopening()
     {
         var vault = Open();
