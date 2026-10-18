@@ -11,7 +11,7 @@ A private, self-hosted knowledge system: store, organize, search, version and sh
 
 ## Status
 
-Version 0.2: nodes and links typed in one box (directed link types, your own aliases), notes with Markdown content, pinned and recent nodes, all stored encrypted in a folder. What comes next: [docs/ROADMAP.md](docs/ROADMAP.md).
+Version 0.2: nodes and links typed in one box (directed link types, your own aliases), notes with Markdown content, pinned and recent nodes, all stored encrypted in a folder. In progress for 0.3: datasets (files of any size). What comes next: [docs/ROADMAP.md](docs/ROADMAP.md).
 
 ## Install
 
@@ -54,7 +54,7 @@ Type in the box at the top of the main window:
 
 - While you type, the nodes whose name has a word starting with the text are listed; a node matched exactly shows its links. Case, accents and extra spaces are ignored.
 - The line under the box says what Enter will add.
-- **Enter** opens the creation screen, in steps: one per new node (its type, *Generic* by default, and for a *Note* its content), then for a link its two nodes and the link type. Each step starts on its type box; **Tab** goes to a note's content. **Enter** (or **Ctrl+Enter** in a note's content) goes to the next step, and on the last one adds everything at once; **Back** returns to a step. **Esc** cancels the whole creation, asking first if you typed note content.
+- **Enter** opens the creation screen, in steps: one per new node (its type, *Generic* by default, for a *Note* its content, for a *Dataset* its file), then for a link its two nodes and the link type. Each step starts on its type box; **Tab** goes to a note's content. **Enter** (or **Ctrl+Enter** in a note's content) goes to the next step, and on the last one adds everything at once; **Back** returns to a step. **Esc** cancels the whole creation, asking first if you typed note content or chose a file.
 - A node name that exists already is warned about on the creation screen: adding makes another node with that name. A link that exists already cannot be added again.
 - Nodes with the same name are marked `¹`, `²`, ... When one side of a link matches several, **Up/Down** picks one (the oldest first), **Tab** switches to the other side.
 - While the box is empty, the **pinned** nodes are listed, then the **recent** ones (the last 10 opened, added or linked on this computer, the latest first): **Down** selects one, **Enter** opens it.
@@ -76,6 +76,17 @@ A node of type *Note* (chosen on the creation screen) has content: Markdown text
 - Each save is a new version in the vault: older versions are kept. The content is read only when the note is opened.
 - A note edited on two computers before they synced shows both versions: keep one, or merge them by hand and save.
 - A note saved elsewhere whose content has not arrived yet (the sync tool copies files in any order) cannot be edited until it does.
+
+### Datasets
+A node of type *Dataset* holds one file of any kind and size, stored encrypted in the vault. Choose it on the creation step (**Choose…**, or drop it there), or later in the details.
+
+- The details show the file's name, its type (its extension: *PNG file*, *JSON file*, ...), size and import date, even before the file itself has synced to this computer.
+- **Images** (png, jpg, gif, bmp, tif, ico) and **texts** (txt, md, csv, json, xml, html, yaml, code, ...) are shown under them, decrypted in memory only: nothing decrypted is written to disk. A long text shows its first 256 K characters; click in it to scroll or select, **Esc** leaves it. Other types are exported to be opened.
+- **Import…** (**Ctrl+I**), or a file dropped on the dataset, imports a new version. Importing the same file again does nothing.
+- **Export…** (**Ctrl+E**) saves the file where you choose; or drag the file's name out to a folder or another app.
+- Each import is a new version in the vault: older versions are kept. The file is read only when shown or exported.
+- Files imported on two computers before they synced show both versions: keep one.
+- A dataset imported elsewhere whose file has not arrived yet cannot be shown or exported until it does.
 
 ## Settings
 
@@ -106,7 +117,9 @@ Everything stays on your computer, in `%LOCALAPPDATA%\kofrenot` (a portable copy
 
 Your vaults are in the folders you chose, not here.
 
-kofrenot logs start/stop, every action you trigger (settings change, links opened, nodes added) and errors, never the names you type or your pass phrase.
+kofrenot logs start/stop, every action you trigger (settings change, links opened, nodes added) and errors, never the names you type, the names of your files, or your pass phrase.
+
+A dataset dragged out of kofrenot is first exported into `%TEMP%\kofrenot`, and deleted there once dropped.
 
 **Log window**: tray menu > *Log window*, or Settings > Logging (it opens in front of Settings and stays open after Settings is closed). Live view of the last 1000 entries, level and text filters, Copy, Clear (window only), Open log folder.
 

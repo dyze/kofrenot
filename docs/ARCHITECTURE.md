@@ -4,7 +4,7 @@
 
 ```
 kofrenot.App   (WPF, Windows only)
-│  main window (input box, node details, note editor), creation dialog, settings window, pass phrase dialog, log window, changelog window, tray icon
+│  main window (input box, node details, note editor, dataset panel), creation dialog, settings window, pass phrase dialog, log window, changelog window, tray icon
 │  VaultSession (opens, watches and adds to the vault through the creation dialog)
 │  adapters: SerilogFileLog, SingleInstance, NativeWindows + WindowPlacer (window positions), GitHubReleaseFeed, Browser,
 │            DpapiProtector, GlobalHotkey, VaultWatcher
@@ -13,10 +13,11 @@ kofrenot.App   (WPF, Windows only)
 │
 kofrenot.Core  (no Windows dependency, fully unit-tested on any OS)
    Graph: KnowledgeGraph · Node · Link · TypeCatalog · LinkAliases · Change
-   Storage: Vault · VaultFolder · VaultFormat · SecretBox · KeyWrap · SnapshotStore · NoteFiles · KeyMemory
+   Storage: Vault · VaultFolder · VaultFormat · SecretBox · ChunkedBox · KeyWrap · SnapshotStore · NoteFiles · DatasetFiles · KeyMemory
    Input: InputParser · GraphSearch · AddPlanner · InputPresenter · CreationForm
    Browse: NodeBrowser · NodeDetails · PinPlanner · RecentNodes
    Notes: NotePlanner · MarkdownFormat
+   Datasets: DatasetPlanner · DatasetType · TextPreview · ByteSize
    AppFiles · AppVersion · RunningCopy · Changelog · ProjectLinks
    SettingsStore · SettingsCatalog · Hotkey
    PlacementRules · PlacementStore
@@ -35,11 +36,12 @@ One namespace per folder (`Kofrenot.Core.Settings`, `Kofrenot.UI.Views`, ...). T
 | --- | --- |
 | *(root)* | `AppVersion`; `RunningCopy` + `AppCopy` (another copy running: same or not, and the warning); `AppFiles` (where every file of kofrenot is, including `keys.json` and the snapshots in `cache\`: the only place their names are written, listed in Settings > About; `AppFiles.For` picks the data folder, see [Portable copy](#portable-copy)); `Changelog` (reads the text shown by Settings > About); `ProjectLinks` (website, issues, releases) |
 | `Settings/` | `SettingsStore` (`settings.json`: theme, debug logging, update check, vault folder, hotkey), `Hotkey`, `SettingsCatalog` (the entries of the Settings window, their tabs, and the search that finds them) |
-| `Graph/` | `Node`, `Link`, `NodeType`, `LinkType`, `LinkVerb` (a link type read one way), `TypeCatalog` (built-in node and link types, link aliases; `LinkName`: how a link reads from one of its nodes), `LinkAliases` (the user's aliases, see [Aliases and removals](#aliases-and-removals)), `RemovableChanges`, `NameKey` (the form names are compared in), `Change` (`NodeAdded`, `LinkAdded`, `NodeRenamed`, `AliasAdded`, `NodePinned`, `ChangesRemoved`, `NoteEdited`), `NodeNames` + `NameVersion` (a node's current names, see [Renames](#renames)), `NoteVersions` (a note's current versions, see [Notes](#notes)), `KnowledgeGraph` (in-memory state, built by applying changes) |
-| `Storage/` | `VaultFormat` (+ `NewerVaultFormatException`), `SecretBox` (AES-GCM seal / open), `KeyWrap` (KDF, wrap / unwrap the master key), `ChangeData` (a change as JSON, shared with the snapshot), `ChangeCodec` (change ⇄ sealed JSON), `VaultHeader`, `VaultFolder` (layout, inspect, create), `SnapshotStore`, `NoteFiles` (note content, `content/`), `Vault` (open, append, refresh, save a note), `AtomicFile` (write as `.tmp`, then rename), `KeyMemory` (remembered master keys, `keys.json`), `ISecretProtector` |
-| `Input/` | `InputParser` (text → `NodeRequest` / `LinkRequest`), `GraphSearch` (`SearchHit`), `AddPlanner` (`AddChoices` → `AddPlan`: `NodePlan`, `LinkPlan`, `PlannedSide`), `InputPresenter` (the input box: preview, result rows, homonym choices), `CreationForm` (the creation screen: steps, types, note content, status, what exists), `PlanText` (wording shared by both), `RenamePlanner` (`RenamePlan`: a new name, its problem, homonyms), `AliasPlanner` (`AliasPlan`) |
+| `Graph/` | `Node`, `Link`, `NodeType`, `LinkType`, `LinkVerb` (a link type read one way), `TypeCatalog` (built-in node and link types, link aliases; `LinkName`: how a link reads from one of its nodes), `LinkAliases` (the user's aliases, see [Aliases and removals](#aliases-and-removals)), `RemovableChanges`, `NameKey` (the form names are compared in), `Change` (`NodeAdded`, `LinkAdded`, `NodeRenamed`, `AliasAdded`, `NodePinned`, `ChangesRemoved`, `ContentEdited`: `NoteEdited`, `DatasetEdited`), `DatasetFile` (a dataset version's file: name, size, SHA-256), `NodeNames` + `NameVersion` (a node's current names, see [Renames](#renames)), `ContentVersions` (the current versions of a note or dataset, see [Notes](#notes)), `KnowledgeGraph` (in-memory state, built by applying changes) |
+| `Storage/` | `VaultFormat` (+ `NewerVaultFormatException`), `SecretBox` (AES-GCM seal / open), `ChunkedBox` (AES-GCM over 1 MB chunks, streamed), `KeyWrap` (KDF, wrap / unwrap the master key), `ChangeData` (a change as JSON, shared with the snapshot), `ChangeCodec` (change ⇄ sealed JSON), `VaultHeader`, `VaultFolder` (layout, inspect, create), `SnapshotStore`, `NoteFiles` (note content, `content/`), `DatasetFiles` (dataset content, `content/`: describe a file, write, export, open), `Vault` (open, append, refresh, save a note or a dataset version), `AtomicFile` (write as `.tmp`, then rename), `KeyMemory` (remembered master keys, `keys.json`), `ISecretProtector` |
+| `Input/` | `InputParser` (text → `NodeRequest` / `LinkRequest`), `GraphSearch` (`SearchHit`), `AddPlanner` (`AddChoices` → `AddPlan`: `NodePlan`, `LinkPlan`, `PlannedSide`), `InputPresenter` (the input box: preview, result rows, homonym choices), `CreationForm` (the creation screen: steps, types, note content, dataset file, status, what exists), `PlanText` (wording shared by both), `RenamePlanner` (`RenamePlan`: a new name, its problem, homonyms), `AliasPlanner` (`AliasPlan`) |
 | `Browse/` | `NodeBrowser` (the details screen: trail of open nodes, at most 4, the selected link of each), `NodeDetails`, `LinkRow`, `PinPlanner` (pin or unpin), `RecentNodes` (the nodes last opened on this device) |
 | `Notes/` | `NotePlanner` (`NoteState`, `ConflictVersion`: load a note, plan its next version), `MarkdownFormat` (`TextEdit`: the toolbar's Markdown) |
+| `Datasets/` | `DatasetPlanner` (`DatasetState`, `DatasetChoice`: load a dataset, plan an import or the version kept from a conflict), `ByteSize` (sizes as shown: 1.2 MB), `DatasetType` (`DatasetViewer`: the inner type, from the extension, and its viewer), `TextPreview` (the beginning of a text, for the viewer) |
 | `Logging/` | `ILog` (with `NullLog`), `LogEntry`, `RingLog`, `CompositeLog`, `FilteredLog` |
 | `Placement/` | Window positions: `WindowPlacement`, `PlacementRules`, `PlacementStore` (see [Window positions](#window-positions)) |
 | `Updates/` | The daily update check, see [Updates](#updates): `UpdateChecker`, `Release`, `IReleaseFeed`, `UpdateStore` |
@@ -47,7 +49,7 @@ One namespace per folder (`Kofrenot.Core.Settings`, `Kofrenot.UI.Views`, ...). T
 | `kofrenot.App` | Content |
 | --- | --- |
 | *(root)* | `App.xaml`: startup and wiring; `VaultSession` (the open vault: create, unlock, watch, `Create` (creation dialog, then add), forget the remembered key) |
-| `Views/` | Windows: `MainWindow` (input box, shows `InputPresenter`), `NodeDetailsPanel` (in the main window, shows a `NodeBrowser`; `NoteEditor` for a note), `CreationDialog` (shows a `CreationForm`, one step at a time; the focus starts on the step's type box), `MarkdownBox` (note text and toolbar), `SharedStyles` (the type scale: title, heading, body, secondary, caption, footer; shared buttons), `SettingsWindow` (tabs General, Vault, Link types (`LinkTypesSection`), Appearance, Logging, About), `PassphraseDialog`, `LogWindow`, `ChangelogWindow` (Settings > About > *Show changelog*); `MessageDialog` (messages and questions in the app's theme, instead of the Windows `MessageBox`); `AppTheme` |
+| `Views/` | Windows: `MainWindow` (input box, shows `InputPresenter`), `NodeDetailsPanel` (in the main window, shows a `NodeBrowser`; `NoteEditor` for a note, `DatasetPanel` for a dataset: import, export, drag in and out, and `DatasetView`, its viewer), `CreationDialog` (shows a `CreationForm`, one step at a time; the focus starts on the step's type box), `MarkdownBox` (note text and toolbar), `SharedStyles` (the type scale: title, heading, body, secondary, caption, footer; shared buttons), `SettingsWindow` (tabs General, Vault, Link types (`LinkTypesSection`), Appearance, Logging, About), `PassphraseDialog`, `LogWindow`, `ChangelogWindow` (Settings > About > *Show changelog*); `MessageDialog` (messages and questions in the app's theme, instead of the Windows `MessageBox`); `AppTheme` |
 | `Tray/` | `TrayIcon` |
 | `Platform/` | Implementations of the `Core` interfaces (`GitHubReleaseFeed`, `DpapiProtector`), `Browser` (opens web pages), `SingleInstance`, `GlobalHotkey` (`RegisterHotKey`), `VaultWatcher` (`FileSystemWatcher`), and window placement (`NativeWindows`, `WindowPlacer`) |
 | `Logging/` | `LogHub`, `SerilogFileLog` |
@@ -132,6 +134,7 @@ Model and principles: [GOAL.md](GOAL.md#data-model).
     a0/a07b…42.kfc
   content/
     3f/3f9c…e1.kfn         the content of a note version, named by its change (editNote), written once
+    b2/b2d4…07.kfd         the file of a dataset version, named by its change (editDataset), written once
 ```
 
 - **Only added, never modified.** A change file is written as `*.tmp` then renamed, so a reader or the sync tool never sees half a file. `.tmp` files are ignored.
@@ -147,6 +150,7 @@ One number for the whole vault, `VaultFormat.Current`, written in the header and
 | --- | --- | --- |
 | 1 | 0.1 | `addNode`, `addLink`, `renameNode` |
 | 2 | 0.2 | directed links (`contains`, `is-a`): a 0.1 app would read them as symmetric; `addAlias`, `pinNode`, `remove`, `editNote` with the `content/` files |
+| 3 | 0.3 | `editDataset` with its chunked `.kfd` content files: a 0.2 app does not know them |
 
 | Found | This kofrenot |
 | --- | --- |
@@ -170,6 +174,17 @@ master key (32 random bytes) ◄──────── unwraps ─────
 change file = "KFC1" · nonce · ciphertext · tag
 ```
 
+A dataset's file can be of any size, so it is sealed in chunks (`ChunkedBox`), read and written as a stream:
+
+```
+.kfd file = "KFD1" · nonce prefix (8 random bytes) · chunk 0 · chunk 1 · … · last chunk
+chunk i   = AES-256-GCM(1 MB of the file) · tag
+            nonce = prefix · i (4 bytes, big-endian)    AAD = "KFD1" · version id · last (1 byte)
+```
+
+- A chunk changed, moved, left out or added after the last one fails to open; so does a file cut after a chunk (no last one). An empty file is one empty last chunk.
+- Memory use stays at about two chunks, whatever the size.
+
 - Built into .NET (`Rfc2898DeriveBytes`, `AesGcm`): no package.
 - A wrong pass phrase fails to unwrap the master key (GCM tag), so no extra check value is needed.
 - Changing the pass phrase (later) rewrites the header only.
@@ -180,17 +195,19 @@ change file = "KFC1" · nonce · ciphertext · tag
 UTF-8 JSON before encryption:
 
 ```json
-{ "format": 2, "at": "2026-10-16T09:12:00Z", "op": "addNode",
+{ "format": 3, "at": "2026-10-16T09:12:00Z", "op": "addNode",
   "node": { "id": "…", "type": "generic", "name": "Dune", "created": "2026-10-16T09:12:00Z" } }
-{ "format": 2, "at": "…", "op": "addLink",
+{ "format": 3, "at": "…", "op": "addLink",
   "link": { "id": "…", "type": "relates-to", "from": "<node id>", "to": "<node id>", "created": "…" } }
-{ "format": 2, "at": "…", "op": "renameNode",
+{ "format": 3, "at": "…", "op": "renameNode",
   "rename": { "node": "<node id>", "name": "Dune (novel)", "replaces": ["<node id or rename id>", "…"] } }
-{ "format": 2, "at": "…", "op": "addAlias",
+{ "format": 3, "at": "…", "op": "addAlias",
   "alias": { "linkType": "contains", "reverse": true, "phrase": "is in" } }
-{ "format": 2, "at": "…", "op": "pinNode", "pin": { "node": "<node id>" } }
-{ "format": 2, "at": "…", "op": "editNote", "note": { "node": "<node id>", "replaces": ["<version id>", "…"] } }
-{ "format": 2, "at": "…", "op": "remove", "removes": ["<alias or pin change id>", "…"] }
+{ "format": 3, "at": "…", "op": "pinNode", "pin": { "node": "<node id>" } }
+{ "format": 3, "at": "…", "op": "editNote", "note": { "node": "<node id>", "replaces": ["<version id>", "…"] } }
+{ "format": 3, "at": "…", "op": "editDataset",
+  "dataset": { "node": "<node id>", "file": { "name": "survey.csv", "size": 52430, "sha256": "9f86…08" }, "replaces": ["<version id>", "…"] } }
+{ "format": 3, "at": "…", "op": "remove", "removes": ["<alias or pin change id>", "…"] }
 ```
 
 `renameNode` was added to format 1 before 0.1 was released, so the format number did not change (owner's decision).
@@ -269,6 +286,35 @@ v1 ◄─ v3 (device B, before syncing) ⇒ conflict: v2, v3 offered; the next s
 - `MarkdownBox` (text and toolbar) is shared by `NoteEditor` and the creation steps. The toolbar inserts Markdown (`MarkdownFormat`): bold, italic, heading, list, link. The text is not rendered.
 - Note content is never logged. The search does not look into it (an open question: [GOAL.md](GOAL.md#open-questions), *Search*).
 
+### Datasets
+A dataset is a node of type `dataset` holding one file, in versions like a note (`ContentVersions`, shared with notes): each import is a content file (`content/<id>.kfd`, chunked: see [Encryption](#encryption)) and an `editDataset` change of the same id, holding the file's name, size and SHA-256, and naming the versions it **replaces**.
+
+```
+import ──DatasetFiles.Describe──► DatasetFile(name, size, sha256) ──DatasetPlanner.Import──► DatasetEdited(replaces = versions loaded)
+       ──Vault.Save──► content file (checked against size and sha256), then change file
+export ──DatasetFiles.Export──► the latest current version, decrypted as a stream into the chosen file (.tmp, then renamed)
+keep   ──DatasetPlanner.Keep──► a conflict's chosen version again, as a new version: its content opened and sealed again under the new id
+```
+
+- The metadata is in the graph and the snapshot, so a dataset's file name and size are shown offline, before its content is synced. The content is never kept in memory.
+- An import reads the file twice: once for its hash, once to seal it. A file changed in between is refused, and nothing is written.
+- Importing the same file again (name, size and hash), with no conflict, writes nothing.
+- A version whose content file is not synced yet is shown as such and cannot be exported. Importing over it is allowed: its name and size are seen.
+- Hashing, sealing and exporting run off the UI thread (`Task.Run`, in `VaultSession.SaveDataset` and `ExportDataset`); the change is then appended on it. Meanwhile `DatasetPanel` says what it does and takes no other import (`VaultSession.IsImporting`, also for a file chosen on the creation screen, imported once its node is added).
+- Drag out (`DragExport`): Windows only takes a file on disk, so the file is first exported (the cursor waits) into a folder of its own in the temporary folder (`%TEMP%\kofrenot\<random>\<name>`), given to Windows as a file drop, and deleted when the drag ends; folders left by a drag that did not end are deleted at the next one. Its name is made safe for Windows first (`DatasetFile.SafeName`).
+- File names, paths and content are never logged (an exception's message names the file: it is shown, and only its type is logged); ids and sizes are.
+
+**Viewer.** A dataset's inner type is its file's extension (`DatasetType.Of`, read from the name: nothing more is stored), which picks its viewer:
+
+| Viewer | Extensions | Shown |
+| --- | --- | --- |
+| Image | png, jpg, jpeg, gif, bmp, tif, tiff, ico | decoded by WPF (`BitmapImage`), up to `DatasetType.MaxImageSize` (64 MB) |
+| Text | txt, md, csv, tsv, log, json, xml, html, htm, yaml, yml, ini, toml, cs, py, js, ts, css, sql, sh, cmd, ps1 | its first `TextPreview.MaxChars` (256 K) characters, UTF-8 unless a byte order mark says otherwise; HTML as text, not rendered |
+| None | the others | "export it to open it" |
+
+- `DatasetView` (in `DatasetPanel`) reads the latest version through `DatasetFiles.OpenRead` and decodes it off the UI thread, **in memory only**: nothing decrypted reaches the disk (an export, or a drag out, is the only way out). An image is frozen to cross to the UI thread; a version shown already is not read again.
+- The details row of a dataset takes room only while its viewer shows something (`NodeDetailsPanel.FitDatasetRow`), as a note's editor does.
+
 ### Input
 `Dune relates to Frank Herbert` → link; `Dune` → node.
 
@@ -278,14 +324,14 @@ text ──InputParser──► NodeRequest(name) | LinkRequest(left, verb, righ
            ▼
      GraphSearch (word prefix, case- and accent-insensitive) ──► Preview     (InputPresenter)
            ▼ Enter: request + homonyms chosen (AddChoices)
-     CreationForm, in steps: each new node (type, note content), then the link ──► AddPlan + notes   (CreationDialog, modal)
+     CreationForm, in steps: each new node (type, note content, dataset file), then the link ──► AddPlan + notes + datasets   (CreationDialog, modal)
            ▼ Enter
-     VaultSession.Create ──► Vault.Append (changes), then Vault.Save (each note's first version)
+     VaultSession.Create ──► Vault.Append (changes), then Vault.Save (each note's and dataset's first version)
 ```
 
 - `VaultSession.Create(owner, request, choices)` opens the creation dialog over any window, so later features can reuse it. It returns false when cancelled or not written.
 - The dialog only shows a `CreationForm`. Each type change makes a new plan, so a different link type can turn `AlreadyLinked` into a link that can be added. Only a new node gets a step (`CreationForm.Steps`): an existing node keeps its type.
-- Nothing is written before the last step. `NotesToSave` gives the first version of each new note with content, for its `NodeAdded`; the dialog asks before discarding typed content.
+- Nothing is written before the last step. `NotesToSave` gives the first version of each new note with content, for its `NodeAdded`, and `DatasetsToSave` each new dataset's with a file chosen (by a file dialog or a drop on its step); the dialog asks before discarding typed content or a chosen file.
 - The types offered come from `TypeCatalog`: node type *generic*; link types *relates to* (symmetric), *contains* and *is a*. The creation screen offers each link type both ways (`TypeCatalog.Verbs`): a `LinkVerb` is a type read forward or reverse, and a reverse verb links from the right node to the left one.
 
 - Names are compared by `NameKey`: lower case, accents removed, spaces collapsed. They are stored as typed, trimmed, with single spaces.
