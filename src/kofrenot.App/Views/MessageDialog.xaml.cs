@@ -8,7 +8,7 @@ namespace Kofrenot.UI.Views;
 public partial class MessageDialog : Window
 {
     /// <param name="owner">The window to center on; null before any window (at start): centered on the screen, in the taskbar.</param>
-    private MessageDialog(Window? owner, string message)
+    private MessageDialog(Window? owner, string message, IReadOnlyList<string>? lines = null)
     {
         InitializeComponent();
         Owner = owner;
@@ -19,16 +19,19 @@ public partial class MessageDialog : Window
         }
 
         MessageText.Text = message;
+        LinesList.ItemsSource = lines;
+        LinesArea.Visibility = lines is { Count: > 0 } ? Visibility.Visible : Visibility.Collapsed;
         Loaded += (_, _) => OkButton.Focus();
     }
 
-    public static void Inform(Window owner, string message) =>
-        new MessageDialog(owner, message).ShowDialog();
+    /// <param name="lines">Details listed under the message.</param>
+    public static void Inform(Window owner, string message, IReadOnlyList<string>? lines = null) =>
+        new MessageDialog(owner, message, lines).ShowDialog();
 
-    /// <summary>Asks a question: true when the user chose <paramref name="yes"/>.</summary>
-    public static bool Confirm(Window? owner, string message, string yes, string no = "Cancel")
+    /// <summary>Asks a question, its details in <paramref name="lines"/>: true when the user chose <paramref name="yes"/>.</summary>
+    public static bool Confirm(Window? owner, string message, string yes, string no = "Cancel", IReadOnlyList<string>? lines = null)
     {
-        var dialog = new MessageDialog(owner, message);
+        var dialog = new MessageDialog(owner, message, lines);
         dialog.OkButton.Content = yes;
         dialog.OkButton.IsCancel = false;
         dialog.CancelButton.Content = no;

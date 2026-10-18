@@ -5,6 +5,7 @@ using Kofrenot.Core.Input;
 using Kofrenot.Core.Logging;
 using Kofrenot.Core.Settings;
 using Kofrenot.Core.Storage;
+using Kofrenot.Core.Views;
 using Kofrenot.UI.Platform;
 using Kofrenot.UI.Views;
 
@@ -221,8 +222,37 @@ public sealed class VaultSession : IDisposable
     /// Writes a change planned elsewhere (an alias, a pin), logging <paramref name="action"/>. False
     /// when no vault is open, or it cannot be written (the user is told).
     /// </summary>
-    public bool Write(Window owner, Change change, string action) =>
-        Current is { } vault && Append(owner, vault, [change], action);
+    public bool Write(Window owner, Change change, string action) => Write(owner, [change], action);
+
+    /// <summary>Writes changes planned elsewhere (a move, a deletion), in their order, as <see cref="Write(Window, Change, string)"/>.</summary>
+    public bool Write(Window owner, IReadOnlyList<Change> changes, string action) =>
+        Current is { } vault && Append(owner, vault, changes, action);
+
+    /// <summary>
+    /// Writes a copy: the content of its notes and datasets written again off the UI thread (a
+    /// dataset may be large), then its changes. False when no vault is open, it closed meanwhile,
+    /// or a file cannot be read or written (the user is told).
+    /// </summary>
+    public async Task<bool> Copy(Window owner, CopyPlan plan)
+    {
+        if (Current is not { } vault)
+        {
+            return false;
+        }
+
+        try
+        {
+            await Task.Run(() => vault.WriteCopies(plan.Contents, _thumbnails));
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidDataException)
+        {
+            _log.Warn("Action", $"Cannot copy the nodes' content ({ex.GetType().Name})");
+            MessageDialog.Inform(owner, $"Cannot copy.\n\n{ex.Message}");
+            return false;
+        }
+
+        return Current == vault && Append(owner, vault, plan.Changes, $"Nodes copied ({plan.Nodes.Count}, {plan.Contents.Count} with content)");
+    }
 
     /// <summary>Saves a note version with its content. False when no vault is open, or it cannot be written (the user is told).</summary>
     public bool SaveNote(Window owner, NoteEdited version, string content) =>

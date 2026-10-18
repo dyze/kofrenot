@@ -13,6 +13,9 @@ public sealed class NoteFiles(string vaultFolder, SecretBox box, ILog? log = nul
 
     private readonly ILog _log = log ?? NullLog.Instance;
 
+    /// <summary>Whether a version's file is in the vault (it may arrive after its change).</summary>
+    public bool Exists(Guid version) => File.Exists(VaultFolder.ContentFileOf(vaultFolder, version));
+
     /// <exception cref="IOException">The file cannot be written.</exception>
     public void Write(Guid version, string content)
     {

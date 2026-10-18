@@ -24,6 +24,7 @@ public partial class ViewPanel : UserControl
     private readonly HashSet<string> _expanded = [];
     private KnowledgeGraph? _graph;
     private CoreTreeView? _tree;
+    private TreeDefinition? _definition;
     private Guid? _view;
     private string? _selectedPath;
     private Guid? _selectedNode;
@@ -49,10 +50,12 @@ public partial class ViewPanel : UserControl
         }
 
         _graph = graph;
+        _definition = null;
         switch (TabList.DefinitionOf(graph, view))
         {
             case TreeDefinition definition when new CoreTreeView(graph, definition) is { Root: { } root } tree:
                 _tree = tree;
+                _definition = definition;
                 Tree.Items.Clear();
                 Tree.Items.Add(ItemOf(root));
                 ShowOnly(Tree);
@@ -173,6 +176,10 @@ public partial class ViewPanel : UserControl
         if (e.Key == Key.Enter && Keyboard.Modifiers == ModifierKeys.None)
         {
             e.Handled = OpenSelected();
+        }
+        else if (sender == Tree)
+        {
+            e.Handled = HandleTreeKey(e.Key);
         }
     }
 

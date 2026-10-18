@@ -267,6 +267,24 @@ public sealed class VaultTests : IDisposable
     }
 
     [Fact]
+    public void TheContentOfAVersion_IsFoundOnlyOnceWritten()
+    {
+        var vault = Open();
+        var note = new NoteEdited(Guid.NewGuid(), Start, Guid.NewGuid(), []);
+        var source = _temp.Sub("survey.csv");
+        File.WriteAllText(source, "a,b\n");
+        var dataset = new DatasetEdited(Guid.NewGuid(), Start, Guid.NewGuid(), DatasetFiles.Describe(source), []);
+        Assert.False(vault.HasContent(note));
+        Assert.False(vault.HasContent(dataset));
+
+        vault.Save(note, "# Ideas");
+        vault.Save(dataset, () => File.OpenRead(source));
+
+        Assert.True(vault.HasContent(note));
+        Assert.True(vault.HasContent(dataset));
+    }
+
+    [Fact]
     public void ACopy_OfANoteNotSynced_IsRefused()
     {
         var vault = Open();

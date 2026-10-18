@@ -100,6 +100,15 @@ A node of type *View* shows the vault another way, in a tab of its own. Choose o
 - The **tabs** are at the top of the main window: *Search* first, then the views open on this computer, kept from one start to the next. A **click** selects a tab, **×** closes a view's tab, **+** opens another view. A view you create opens in a tab at once.
 - In a tree, a node is expanded with its arrow (or **Right**); a node with several parents shows under each; a node that comes back on its own path is not expanded again.
 - **Enter** or a **double-click** opens a node's details; Back returns to the view.
+- In a tree, the keys or a **right-click** menu change it:
+
+  | Keys | Does |
+  | --- | --- |
+  | **Ctrl+C**, then **Ctrl+V** on another node | copies the node with everything under it, as new nodes under that one (notes, datasets and views with their latest version), after showing what will be copied |
+  | **Ctrl+X**, then **Ctrl+V** on another node | moves the node there: it leaves the parent it was shown under; its other parents keep it |
+  | **Del** | deletes the node with everything under it, even a node that is also elsewhere, after showing what will be deleted and where else those nodes are |
+
+  A node cannot move under itself. A note or dataset whose content has not arrived on this computer yet cannot be copied.
 - A view is a node like the others: found by the search, pinned, linked, synced. Its definition is kept in the vault.
 
 ## Settings

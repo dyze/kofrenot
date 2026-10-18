@@ -15,11 +15,28 @@
     <Grid.RowDefinitions>
       <RowDefinition Height="Auto" />
       <RowDefinition Height="Auto" />
+      <RowDefinition Height="Auto" />
     </Grid.RowDefinitions>
 
     <TextBlock x:Name="MessageText" VerticalAlignment="Center" TextWrapping="Wrap" />
 
-    <StackPanel Grid.Row="1"
+    <!-- The details of a question (what an operation will do), one per line. -->
+    <ScrollViewer x:Name="LinesArea"
+                  Grid.Row="1"
+                  MaxHeight="280"
+                  Margin="0,10,0,0"
+                  VerticalScrollBarVisibility="Auto"
+                  Visibility="Collapsed">
+      <ItemsControl x:Name="LinesList" Margin="12,0,0,0" Opacity="0.85">
+        <ItemsControl.ItemTemplate>
+          <DataTemplate>
+            <TextBlock Margin="0,1" Text="{Binding}" TextWrapping="Wrap" />
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+    </ScrollViewer>
+
+    <StackPanel Grid.Row="2"
                 Margin="0,20,0,0"
                 HorizontalAlignment="Right"
                 Orientation="Horizontal">

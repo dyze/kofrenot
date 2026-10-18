@@ -375,7 +375,8 @@ MainWindow ── TabStrip (TabRow) ── Search: input box, results, details
 | `MovePlanner.Plan(item, target)` | `MovePlan`: `Problem` (`Root`, `SameParent`, `IntoItsSubtree`) or none | `remove` of the link from the parent shown (every copy), `addLink` from the target; other parents stay |
 | `CopyPlanner.Plan(node, target, isAvailable)` | `CopyPlan`: the nodes, `Missing` (content not synced: no copy) | new nodes (same type and name), their links and one to the target; each note, dataset and view gets its original's latest version |
 
-- A copied note's or dataset's content is written again under the new version: `Vault.WriteCopies(plan.Contents)` first (it touches no memory, so a large dataset can be sealed off the UI thread), then each change is appended. Stopped halfway, it leaves versions of nodes not added: never shown.
+- A copied note's or dataset's content is written again under the new version: `Vault.WriteCopies(plan.Contents)` first (it touches no memory, so a large dataset can be sealed off the UI thread), then each change is appended (`VaultSession.Copy`). Stopped halfway, it leaves versions of nodes not added: never shown.
+- In the app, `ViewPanel.Operations` keeps the node taken (Ctrl+C or Ctrl+X, in memory, not the Windows clipboard) and pastes it under the selected one (Ctrl+V); Del deletes. `OperationPreview` gives the text shown first (`MessageDialog.Confirm` with its lines): a deletion and a copy are confirmed, a refused move or a copy of content not synced (`Vault.HasContent`) is only told. After a change the tree keeps the target expanded and selected.
 
 ### Input
 `Dune relates to Frank Herbert` → link; `Dune` → node.

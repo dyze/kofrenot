@@ -20,12 +20,9 @@ Views: different ways to look at the same graph. No node has to belong to anythi
               └─ tree: from "Projects", following "contains"
 ```
 
-Views, tabs and tree navigation are in [CHANGELOG.md](../CHANGELOG.md) (`[Unreleased]`).
+Views, tabs, tree navigation and tree operations (copy, move, delete) are in [CHANGELOG.md](../CHANGELOG.md) (`[Unreleased]`).
 
-1. **Tree operations.** In a tree view (Ctrl+C / Ctrl+X / Ctrl+V, Del, and a right-click menu; drag and drop later):
-	- **Move:** only the link to the parent shown in the tree changes; the node's other parents stay.
-	- **Copy:** copies the node with its whole subtree as new nodes; a copied dataset starts with its current file. What will be copied is shown first.
-	- **Delete:** deletes the node with its whole subtree, after a preview of the consequences (nodes deleted, links removed). A node of the subtree that also has another parent is deleted too: the preview lists those other parents.
+1. **Drag and drop in a tree**, besides the keys and the right-click menu.
 
 ## 0.5 (to define)
 1. **Multiple vaults.** User can register several vaults on his app. 

@@ -47,6 +47,9 @@ public sealed class Vault
     /// <summary>The thumbnails of dataset versions (images), read on demand.</summary>
     public ThumbnailFiles Thumbnails { get; }
 
+    /// <summary>Whether the file of a note's or dataset's version is in the vault (it may arrive after its change).</summary>
+    public bool HasContent(ContentEdited version) => version is DatasetEdited ? Datasets.Exists(version.Id) : Notes.Exists(version.Id);
+
     /// <summary>Opens a vault with its master key: the snapshot, then the change files it lacks.</summary>
     /// <param name="cacheFolder">Where the local snapshot is kept; null for none.</param>
     /// <exception cref="NewerVaultFormatException">A change file was written by a newer kofrenot.</exception>
