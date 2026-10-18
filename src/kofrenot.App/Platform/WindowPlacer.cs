@@ -4,6 +4,7 @@ using System.Windows.Interop;
 using System.Windows.Threading;
 using Kofrenot.Core.Logging;
 using Kofrenot.Core.Placement;
+using Kofrenot.Core.Settings;
 
 namespace Kofrenot.UI.Platform;
 
@@ -116,6 +117,55 @@ public sealed class WindowPlacer
             bounds.Top + (visible.Top - frame.Top),
             bounds.Width + (visible.Width - frame.Width),
             bounds.Height + (visible.Height - frame.Height)));
+    }
+
+    /// <summary>
+    /// Call just before the main window is shown: puts it in the middle of the monitor under the
+    /// mouse, or centered on the mouse, fully on screen, keeping its size. For
+    /// <see cref="MainWindowPosition.LastPosition"/>, or a maximized window, nothing changes: it
+    /// reopens where it was left (see <see cref="Attach"/>).
+    /// </summary>
+    public static void PlaceMainWindow(Window window, MainWindowPosition position, ILog log)
+    {
+        if (position == MainWindowPosition.LastPosition
+            || window.WindowState == WindowState.Maximized
+            || NativeWindows.CursorPosition() is not { } pointer)
+        {
+            return;
+        }
+
+        // Before the first show the window has no handle yet; WPF would also center it over this position.
+        var handle = new WindowInteropHelper(window).EnsureHandle();
+        window.WindowStartupLocation = WindowStartupLocation.Manual;
+        var monitors = NativeWindows.Monitors();
+
+        // Twice: moved to a monitor with another scaling, WPF resizes the window; the second pass
+        // centers it with its new size.
+        for (var pass = 0; pass < 2; pass++)
+        {
+            if (NativeWindows.WindowBounds(handle) is not { } current)
+            {
+                return;
+            }
+
+            var bounds = position == MainWindowPosition.AtMouse
+                ? PlacementRules.CenterOnPoint(pointer, current.Width, current.Height, monitors)
+                : PlacementRules.CenterOnMonitorAt(pointer, current.Width, current.Height, monitors);
+            if (bounds is null)
+            {
+                return;
+            }
+
+            if (bounds != current)
+            {
+                NativeWindows.SetWindowBounds(handle, bounds);
+            }
+
+            if (pass == 1)
+            {
+                log.Debug("Window", $"Main window placed ({position}) at {bounds.Left},{bounds.Top}");
+            }
+        }
     }
 
     /// <summary>

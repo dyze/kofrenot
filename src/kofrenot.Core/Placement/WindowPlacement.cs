@@ -2,6 +2,9 @@ using System.Text.Json.Serialization;
 
 namespace Kofrenot.Core.Placement;
 
+/// <summary>A point in screen pixels, such as the mouse pointer.</summary>
+public sealed record ScreenPoint(int X, int Y);
+
 /// <summary>A rectangle in screen pixels.</summary>
 public sealed record ScreenRect(int Left, int Top, int Width, int Height)
 {

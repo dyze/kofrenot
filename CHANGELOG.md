@@ -11,6 +11,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **Link type aliases** in Settings > Link types: your own phrases for a link type, either way, stored in the vault.
 - **Pinned nodes**: pin a node from its details; pinned nodes are listed while the input box is empty. Stored in the vault.
 - **Recent nodes**: the last 10 nodes opened, added or linked on this computer are listed after the pinned ones while the input box is empty.
+- **Main window position** (Settings > General): centered on the mouse's monitor (default), at the mouse, or where you left it, as in coursee.
 - **Notes**: a node type with Markdown content, edited in its details with a toolbar (bold, italic, heading, list, link) and saved as a new version each time. Edits made on two computers before they synced are shown as a conflict, to keep one version or merge them by hand.
 
 ### Changed

@@ -114,6 +114,7 @@ App.OnStartup
 - The log window also keeps its column widths (`WindowPlacement.Columns`, given to `WindowPlacer.Attach`); saved widths are dropped if the number of columns changed.
 - Opened from Settings, the log window comes in front and stays usable while Settings is open, without being always on top.
 - What is restored depends on the window (`RestoreMode`): the main and log windows their position and size, Settings its size only: as a dialog, it opens centered on the main window (`PlacementRules.CenterOn`).
+- The main window can instead appear by the mouse each time it is shown (Settings > General, `MainWindowPosition`): `WindowPlacer.PlaceMainWindow`, just before `Show`, centers it on the monitor under the pointer (`PlacementRules.CenterOnMonitorAt`) or on the pointer (`CenterOnPoint`), keeping its size, inside the work area. Twice, as a monitor with another scaling resizes it. *Where I left it* and a maximized window keep the restored position. Taken from coursee.
 
 ## Vault
 Model and principles: [GOAL.md](GOAL.md#data-model).

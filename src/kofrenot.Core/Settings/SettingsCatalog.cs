@@ -21,6 +21,7 @@ public static class SettingsCatalog
     public const string AboutTab = "About";
 
     public const string HotkeyId = "Hotkey";
+    public const string MainWindowPositionId = "MainWindowPosition";
     public const string VaultFolderId = "VaultFolder";
     public const string RememberedPassPhraseId = "RememberedPassPhrase";
     public const string LinkAliasesId = "LinkAliases";
@@ -37,6 +38,7 @@ public static class SettingsCatalog
     public static IReadOnlyList<SettingInfo> All { get; } =
     [
         new(HotkeyId, GeneralTab, "Hotkey that shows kofrenot", ["shortcut", "keyboard", "summon", "ctrl", "alt", "global"]),
+        new(MainWindowPositionId, GeneralTab, "Main window position", ["place", "where", "mouse", "center", "centre", "monitor", "screen", "window"]),
         new(VaultFolderId, VaultTab, "Vault folder", ["database", "folder", "sync", "dropbox", "share", "nodes", "open", "create"]),
         new(RememberedPassPhraseId, VaultTab, "Remembered pass phrase", ["password", "passphrase", "forget", "remember", "unlock", "secret"]),
         new(LinkAliasesId, LinkTypesTab, "Link types and their aliases", ["alias", "phrase", "relates", "contains", "instance", "reverse", "input"]),

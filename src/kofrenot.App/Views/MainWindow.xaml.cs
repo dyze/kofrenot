@@ -311,6 +311,7 @@ public partial class MainWindow : Window
 
         if (!IsVisible)
         {
+            WindowPlacer.PlaceMainWindow(this, _settings.MainWindowPosition, _log);
             _log.Debug("Window", "Shown");
             Show();
         }

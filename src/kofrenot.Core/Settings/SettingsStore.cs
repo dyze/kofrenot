@@ -10,10 +10,23 @@ public enum ThemeChoice
     Dark,
 }
 
+/// <summary>Where the main window appears each time it is shown. Always kept fully on screen.</summary>
+public enum MainWindowPosition
+{
+    /// <summary>In the middle of the monitor under the mouse.</summary>
+    Centered,
+
+    /// <summary>Centered on the mouse pointer.</summary>
+    AtMouse,
+
+    /// <summary>Where it was left, on the same monitor.</summary>
+    LastPosition,
+}
+
 /// <summary>
-/// User settings persisted as JSON: the theme, whether the log records debug entries, whether
-/// to check for updates, the vault folder and the hotkey. A missing, corrupt or partial file
-/// means defaults for whatever cannot be read.
+/// User settings persisted as JSON: the theme, where the main window appears, whether the log
+/// records debug entries, whether to check for updates, the vault folder and the hotkey. A
+/// missing, corrupt or partial file means defaults for whatever cannot be read.
 /// </summary>
 public sealed class SettingsStore
 {
@@ -29,6 +42,9 @@ public sealed class SettingsStore
             ? theme
             : ThemeChoice.System;
         CheckForUpdates = data?.CheckForUpdates ?? true;
+        MainWindowPosition = Enum.TryParse<MainWindowPosition>(data?.MainWindowPosition, ignoreCase: true, out var position) && Enum.IsDefined(position)
+            ? position
+            : MainWindowPosition.Centered;
         VaultFolder = data?.VaultFolder is { } folder && !string.IsNullOrWhiteSpace(folder) ? folder : null;
         Hotkey = Hotkey.TryParse(data?.Hotkey, out var hotkey) ? hotkey : Hotkey.Default;
     }
@@ -37,6 +53,9 @@ public sealed class SettingsStore
     public bool DebugLogging { get; private set; }
 
     public ThemeChoice Theme { get; private set; }
+
+    /// <summary>Where the main window appears when it is shown. In the middle of the mouse's monitor by default.</summary>
+    public MainWindowPosition MainWindowPosition { get; private set; }
 
     /// <summary>When on, kofrenot asks GitHub once a day for a newer release. On by default.</summary>
     public bool CheckForUpdates { get; private set; }
@@ -56,6 +75,12 @@ public sealed class SettingsStore
     public void SetTheme(ThemeChoice theme)
     {
         Theme = theme;
+        Save();
+    }
+
+    public void SetMainWindowPosition(MainWindowPosition position)
+    {
+        MainWindowPosition = position;
         Save();
     }
 
@@ -85,7 +110,7 @@ public sealed class SettingsStore
             Directory.CreateDirectory(directory);
         }
 
-        var data = new SettingsData(DebugLogging, Theme.ToString(), CheckForUpdates, VaultFolder, Hotkey.ToString());
+        var data = new SettingsData(DebugLogging, Theme.ToString(), CheckForUpdates, VaultFolder, Hotkey.ToString(), MainWindowPosition.ToString());
         File.WriteAllText(_path, JsonSerializer.Serialize(data));
     }
 
@@ -108,5 +133,6 @@ public sealed class SettingsStore
         string? Theme = null,
         bool? CheckForUpdates = null,
         string? VaultFolder = null,
-        string? Hotkey = null);
+        string? Hotkey = null,
+        string? MainWindowPosition = null);
 }

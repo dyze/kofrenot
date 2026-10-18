@@ -93,6 +93,29 @@ public sealed class SettingsStoreTests : IDisposable
         Assert.Equal(ThemeChoice.System, new SettingsStore(FilePath).Theme);
     }
 
+    [Theory]
+    [InlineData(MainWindowPosition.Centered)]
+    [InlineData(MainWindowPosition.AtMouse)]
+    [InlineData(MainWindowPosition.LastPosition)]
+    public void MainWindowPosition_IsPersisted(MainWindowPosition position)
+    {
+        new SettingsStore(FilePath).SetMainWindowPosition(position);
+
+        Assert.Equal(position, new SettingsStore(FilePath).MainWindowPosition);
+    }
+
+    [Theory]
+    [InlineData("{\"MainWindowPosition\":\"Elsewhere\"}")]
+    [InlineData("{\"MainWindowPosition\":\"7\"}")]
+    [InlineData("{}")]
+    public void UnknownOrMissingMainWindowPosition_IsCentered(string json)
+    {
+        Directory.CreateDirectory(_directory);
+        File.WriteAllText(FilePath, json);
+
+        Assert.Equal(MainWindowPosition.Centered, new SettingsStore(FilePath).MainWindowPosition);
+    }
+
     [Fact]
     public void StoredTheme_IgnoresCase()
     {

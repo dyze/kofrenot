@@ -83,7 +83,7 @@ Gear button in the main window, or tray menu > Settings. A dialog over the main 
 
 | Tab | Options |
 | --- | --- |
-| General | Hotkey that shows kofrenot (click the box, then press the new shortcut; *Default*: Ctrl+Alt+K) |
+| General | Hotkey that shows kofrenot (click the box, then press the new shortcut; *Default*: Ctrl+Alt+K); main window position: centered on the mouse's monitor (default), at the mouse, or where you left it. Its size is kept, and it always stays fully on screen |
 | Vault | Vault folder (*Choose...*, *Explore to*), whether it is open; the remembered pass phrase (*Forget*) |
 | Link types | Each link type, both ways, with its phrases. Add your own aliases (for example `-` for *relates to*): pick the link type, type the phrase, *Add*; × removes one. They are stored in the vault, so every device has them. A phrase in use is refused, and node names containing it are warned about (the input box would read them as links) |
 | Appearance | Theme: follow Windows (default), light or dark |

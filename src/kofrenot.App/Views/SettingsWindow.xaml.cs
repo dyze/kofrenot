@@ -27,6 +27,13 @@ public partial class SettingsWindow : Window
     public static readonly DependencyProperty AboutMarkedProperty =
         DependencyProperty.Register(nameof(AboutMarked), typeof(bool), typeof(SettingsWindow));
 
+    private static readonly Option<MainWindowPosition>[] PositionOptions =
+    [
+        new(MainWindowPosition.Centered, "Centered on the mouse's monitor"),
+        new(MainWindowPosition.AtMouse, "At the mouse"),
+        new(MainWindowPosition.LastPosition, "Where I left it"),
+    ];
+
     private static readonly Option<ThemeChoice>[] ThemeOptions =
     [
         new(ThemeChoice.System, "Follow Windows"),
@@ -67,6 +74,7 @@ public partial class SettingsWindow : Window
         ShowVault();
 
         ThemeComboBox.ItemsSource = ThemeOptions;
+        PositionComboBox.ItemsSource = PositionOptions;
         ShowAbout(files);
 
         LoadValues();
@@ -227,6 +235,7 @@ public partial class SettingsWindow : Window
         DebugLoggingCheckBox.IsChecked = _settings.DebugLogging;
         HotkeyBox.Text = _settings.Hotkey.ToString();
         ThemeComboBox.SelectedItem = ThemeOptions.First(option => option.Value == _settings.Theme);
+        PositionComboBox.SelectedItem = PositionOptions.First(option => option.Value == _settings.MainWindowPosition);
         _loading = false;
     }
 
@@ -390,6 +399,25 @@ public partial class SettingsWindow : Window
         catch (Exception ex) when (ex is UnauthorizedAccessException or IOException)
         {
             _log.Error("Settings", "Cannot change the theme", ex);
+            ShowMessage(ex.Message);
+        }
+    }
+
+    private void PositionComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (_loading || PositionComboBox.SelectedItem is not Option<MainWindowPosition> option || option.Value == _settings.MainWindowPosition)
+        {
+            return;
+        }
+
+        try
+        {
+            _settings.SetMainWindowPosition(option.Value);
+            _log.Info("Settings", $"Main window position: {option.Value}");
+        }
+        catch (Exception ex) when (ex is UnauthorizedAccessException or IOException)
+        {
+            _log.Error("Settings", "Cannot change the main window position", ex);
             ShowMessage(ex.Message);
         }
     }

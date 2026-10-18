@@ -53,6 +53,10 @@ public static class NativeWindows
             ? ToScreenRect(rect)
             : WindowBounds(window);
 
+    /// <summary>Where the mouse pointer is, or null when Windows cannot tell (secure desktop).</summary>
+    public static ScreenPoint? CursorPosition() =>
+        GetCursorPos(out var point) ? new ScreenPoint(point.X, point.Y) : null;
+
     /// <summary>Moves and resizes the window without activating it.</summary>
     public static void SetWindowBounds(IntPtr window, ScreenRect bounds) =>
         SetWindowPos(window, IntPtr.Zero, bounds.Left, bounds.Top, bounds.Width, bounds.Height, SwpNoZOrder | SwpNoActivate);
@@ -90,6 +94,13 @@ public static class NativeWindows
         public int Bottom;
     }
 
+    [StructLayout(LayoutKind.Sequential)]
+    private struct NativePoint
+    {
+        public int X;
+        public int Y;
+    }
+
     [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
     private struct MonitorInfoEx
     {
@@ -112,6 +123,9 @@ public static class NativeWindows
 
     [DllImport("user32.dll")]
     private static extern bool EnableWindow(IntPtr window, bool enable);
+
+    [DllImport("user32.dll")]
+    private static extern bool GetCursorPos(out NativePoint point);
 
     [DllImport("user32.dll")]
     private static extern bool GetWindowRect(IntPtr window, out NativeRect rect);
