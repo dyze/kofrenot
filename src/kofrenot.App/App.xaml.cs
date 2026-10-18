@@ -31,18 +31,20 @@ public partial class App : Application
     {
         base.OnStartup(e);
 
-        // Another copy is running: it has been asked to show its window, so this one leaves.
-        _singleInstance = SingleInstance.TryClaim(() => Dispatcher.BeginInvoke(() => _window?.ShowFromOutside()));
-        if (_singleInstance is null)
-        {
-            Shutdown(0);
-            return;
-        }
-
         var files = AppFiles.For(
             AppContext.BaseDirectory,
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData));
         var settings = new SettingsStore(files.Settings);
+
+        // Another copy is running: this one leaves, after showing it or warning about it.
+        _singleInstance = SingleInstance.TryClaim(() => Dispatcher.BeginInvoke(() => _window?.ShowFromOutside()));
+        if (_singleInstance is null)
+        {
+            AppTheme.Apply(settings.Theme);
+            ShowOrWarnAboutRunningCopy();
+            Shutdown(0);
+            return;
+        }
 
         // Before any window or the tray menu is created.
         AppTheme.ApplyToTrayMenu(settings.Theme);
@@ -115,6 +117,21 @@ public partial class App : Application
 
         // Once the window is on screen, so the pass phrase dialog has an owner to center on.
         Dispatcher.BeginInvoke(() => session.Open(window), System.Windows.Threading.DispatcherPriority.ApplicationIdle);
+    }
+
+    /// <summary>
+    /// The same copy is running (started again): it shows its window. Another copy (installed,
+    /// portable or a build): this one says which, instead of silently showing the other. Nothing
+    /// is stopped; the user may still show the running one.
+    /// </summary>
+    private static void ShowOrWarnAboutRunningCopy()
+    {
+        var starting = new AppCopy(Environment.ProcessPath ?? AppContext.BaseDirectory, AppVersion.Of(typeof(App).Assembly));
+        if (SingleInstance.FindRunning() is not { } running || running.IsSameAs(starting)
+            || MessageDialog.Confirm(null, RunningCopy.Warning(starting, running), "Show the running one", "Close"))
+        {
+            SingleInstance.ShowRunning();
+        }
     }
 
     /// <summary>Registers a new hotkey. One that another program already uses: <paramref name="current"/> is registered again.</summary>

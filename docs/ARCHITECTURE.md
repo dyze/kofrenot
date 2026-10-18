@@ -17,7 +17,7 @@ kofrenot.Core  (no Windows dependency, fully unit-tested on any OS)
    Input: InputParser · GraphSearch · AddPlanner · InputPresenter · CreationForm
    Browse: NodeBrowser · NodeDetails · PinPlanner · RecentNodes
    Notes: NotePlanner · MarkdownFormat
-   AppFiles · AppVersion · Changelog · ProjectLinks
+   AppFiles · AppVersion · RunningCopy · Changelog · ProjectLinks
    SettingsStore · SettingsCatalog · Hotkey
    PlacementRules · PlacementStore
    UpdateChecker · UpdateStore · Release
@@ -33,7 +33,7 @@ One namespace per folder (`Kofrenot.Core.Settings`, `Kofrenot.UI.Views`, ...). T
 
 | `kofrenot.Core` | Content |
 | --- | --- |
-| *(root)* | `AppVersion`; `AppFiles` (where every file of kofrenot is, including `keys.json` and the snapshots in `cache\`: the only place their names are written, listed in Settings > About; `AppFiles.For` picks the data folder, see [Portable copy](#portable-copy)); `Changelog` (reads the text shown by Settings > About); `ProjectLinks` (website, issues, releases) |
+| *(root)* | `AppVersion`; `RunningCopy` + `AppCopy` (another copy running: same or not, and the warning); `AppFiles` (where every file of kofrenot is, including `keys.json` and the snapshots in `cache\`: the only place their names are written, listed in Settings > About; `AppFiles.For` picks the data folder, see [Portable copy](#portable-copy)); `Changelog` (reads the text shown by Settings > About); `ProjectLinks` (website, issues, releases) |
 | `Settings/` | `SettingsStore` (`settings.json`: theme, debug logging, update check, vault folder, hotkey), `Hotkey`, `SettingsCatalog` (the entries of the Settings window, their tabs, and the search that finds them) |
 | `Graph/` | `Node`, `Link`, `NodeType`, `LinkType`, `LinkVerb` (a link type read one way), `TypeCatalog` (built-in node and link types, link aliases; `LinkName`: how a link reads from one of its nodes), `LinkAliases` (the user's aliases, see [Aliases and removals](#aliases-and-removals)), `RemovableChanges`, `NameKey` (the form names are compared in), `Change` (`NodeAdded`, `LinkAdded`, `NodeRenamed`, `AliasAdded`, `NodePinned`, `ChangesRemoved`, `NoteEdited`), `NodeNames` + `NameVersion` (a node's current names, see [Renames](#renames)), `NoteVersions` (a note's current versions, see [Notes](#notes)), `KnowledgeGraph` (in-memory state, built by applying changes) |
 | `Storage/` | `VaultFormat` (+ `NewerVaultFormatException`), `SecretBox` (AES-GCM seal / open), `KeyWrap` (KDF, wrap / unwrap the master key), `ChangeData` (a change as JSON, shared with the snapshot), `ChangeCodec` (change ⇄ sealed JSON), `VaultHeader`, `VaultFolder` (layout, inspect, create), `SnapshotStore`, `NoteFiles` (note content, `content/`), `Vault` (open, append, refresh, save a note), `AtomicFile` (write as `.tmp`, then rename), `KeyMemory` (remembered master keys, `keys.json`), `ISecretProtector` |
@@ -78,8 +78,10 @@ Publishing is self-contained, so the PC needs no .NET runtime (installing one ne
 
 ```
 App.OnStartup
- ├─ SingleInstance.TryClaim ── another copy runs? ─► ask it to show its window, exit
- ├─ AppFiles.For ─► SettingsStore ─► AppTheme ─► LogHub
+ ├─ AppFiles.For ─► SettingsStore
+ ├─ SingleInstance.TryClaim ── another copy runs? ─► the same exe and version: ask it to show its window
+ │                                                 another copy: warn (RunningCopy), show it on request; exit
+ ├─ AppTheme ─► LogHub
  ├─ VaultSession (KeyMemory + DpapiProtector)
  ├─ MainWindow (+ WindowPlacer "Main") ─► UpdateChecker (background, once a day)
  ├─ GlobalHotkey (Ctrl+Alt+K by default) ─► MainWindow shown
@@ -90,6 +92,7 @@ App.OnStartup
 
 - Closing the main window (or Esc with an empty input box) hides it; kofrenot keeps running in the notification area until *Quit* (`ShutdownMode=OnExplicitShutdown`).
 - A hotkey another program already uses is not registered: logged as a warning at start, refused in Settings > General (the previous one stays).
+- One copy runs at a time (they would write the same files). A copy started while another runs finds it (`SingleInstance.FindRunning`: its process, exe and version). Another exe or version (installed, portable, a build) gets a warning naming both (`RunningCopy.Warning`), with *Show the running one* or *Close*; nothing is stopped. The settings are read first, for the theme of that warning.
 - Settings is a modal dialog over the main window. The log window can be opened in front of it and stays open after it closes.
 
 ## Portable copy

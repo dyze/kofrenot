@@ -1,9 +1,14 @@
+using System.ComponentModel;
+using System.Diagnostics;
+using Kofrenot.Core;
+
 namespace Kofrenot.UI.Platform;
 
 /// <summary>
 /// Keeps a single kofrenot running per Windows session. The first copy owns a named mutex and
 /// waits on a named event; a later copy sets the event (the first copy then shows its main
-/// window) and exits, so two copies never write the same data files.
+/// window) and exits, so two copies never write the same data files. Which copy is running,
+/// and whether to show it, is up to the caller (<see cref="ShowRunning"/>).
 /// </summary>
 public sealed class SingleInstance : IDisposable
 {
@@ -28,7 +33,7 @@ public sealed class SingleInstance : IDisposable
 
     /// <summary>
     /// Returns the instance guard when this is the first copy. Returns null when another copy
-    /// is already running; that copy has then been asked to show its main window.
+    /// is already running.
     /// <paramref name="onShowRequested"/> is called on a background thread.
     /// </summary>
     public static SingleInstance? TryClaim(Action onShowRequested)
@@ -37,19 +42,51 @@ public sealed class SingleInstance : IDisposable
         if (!createdNew)
         {
             mutex.Dispose();
-            if (EventWaitHandle.TryOpenExisting(ShowEventName, out var existing))
-            {
-                using (existing)
-                {
-                    existing.Set();
-                }
-            }
-
             return null;
         }
 
         var showEvent = new EventWaitHandle(initialState: false, EventResetMode.AutoReset, ShowEventName);
         return new SingleInstance(mutex, showEvent, onShowRequested);
+    }
+
+    /// <summary>Asks the copy already running to show its main window.</summary>
+    public static void ShowRunning()
+    {
+        if (EventWaitHandle.TryOpenExisting(ShowEventName, out var existing))
+        {
+            using (existing)
+            {
+                existing.Set();
+            }
+        }
+    }
+
+    /// <summary>
+    /// The other kofrenot running in this session (its exe and version), or null when it cannot
+    /// be found (renamed exe, or its process cannot be read).
+    /// </summary>
+    public static AppCopy? FindRunning()
+    {
+        using var current = Process.GetCurrentProcess();
+        foreach (var process in Process.GetProcessesByName(current.ProcessName))
+        {
+            using (process)
+            {
+                try
+                {
+                    if (process.Id != current.Id && process.MainModule?.FileName is { } path)
+                    {
+                        return new AppCopy(path, AppVersion.Format(FileVersionInfo.GetVersionInfo(path).ProductVersion));
+                    }
+                }
+                catch (Exception ex) when (ex is Win32Exception or InvalidOperationException)
+                {
+                    // Exited meanwhile, or not readable: try the next one.
+                }
+            }
+        }
+
+        return null;
     }
 
     public void Dispose()

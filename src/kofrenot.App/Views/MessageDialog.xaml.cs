@@ -7,10 +7,17 @@ namespace Kofrenot.UI.Views;
 /// <summary>A message in the app's theme, centered on its owner (the Windows <c>MessageBox</c> ignores the theme).</summary>
 public partial class MessageDialog : Window
 {
-    private MessageDialog(Window owner, string message)
+    /// <param name="owner">The window to center on; null before any window (at start): centered on the screen, in the taskbar.</param>
+    private MessageDialog(Window? owner, string message)
     {
         InitializeComponent();
         Owner = owner;
+        if (owner is null)
+        {
+            WindowStartupLocation = WindowStartupLocation.CenterScreen;
+            ShowInTaskbar = true;
+        }
+
         MessageText.Text = message;
         Loaded += (_, _) => OkButton.Focus();
     }
@@ -19,7 +26,7 @@ public partial class MessageDialog : Window
         new MessageDialog(owner, message).ShowDialog();
 
     /// <summary>Asks a question: true when the user chose <paramref name="yes"/>.</summary>
-    public static bool Confirm(Window owner, string message, string yes, string no = "Cancel")
+    public static bool Confirm(Window? owner, string message, string yes, string no = "Cancel")
     {
         var dialog = new MessageDialog(owner, message);
         dialog.OkButton.Content = yes;

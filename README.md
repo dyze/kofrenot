@@ -27,7 +27,7 @@ Upgrade: run a newer setup over the old one. Uninstall: *Settings > Apps*. Your 
 
 ## Usage
 
-- **Main window.** Opens at start. Closing it hides it: kofrenot keeps running in the notification area. Starting kofrenot again shows the running copy.
+- **Main window.** Opens at start. Closing it hides it: kofrenot keeps running in the notification area. Starting kofrenot again shows the running copy. Starting *another* copy (installed, portable, or a build) while one runs says which one runs: quit it from its tray icon to use the other.
 - **Hotkey.** Ctrl+Alt+K shows the main window from any program (Settings > General to change it).
 - **Tray icon.** Click: show the main window. Menu: Show, Settings, Log window (ticked while it is open: a click shows or closes it), Quit.
 
