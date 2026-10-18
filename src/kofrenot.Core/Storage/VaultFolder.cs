@@ -1,3 +1,5 @@
+using Kofrenot.Core.Datasets;
+
 namespace Kofrenot.Core.Storage;
 
 /// <summary>What a folder chosen as vault holds.</summary>
@@ -54,6 +56,23 @@ public static class VaultFolder
         return (header, masterKey);
     }
 
+    /// <summary>
+    /// The files of a folder and their total size, sub-folders included (a vault: header, changes,
+    /// contents, thumbnails); none for a missing folder. Reads the folder listing only, but walks
+    /// every sub-folder: call it off the UI thread.
+    /// </summary>
+    public static FolderSize SizeOf(string folder)
+    {
+        var directory = new DirectoryInfo(folder);
+        if (!directory.Exists)
+        {
+            return new FolderSize(0, 0);
+        }
+
+        var files = directory.EnumerateFiles("*", SearchOption.AllDirectories).ToList();
+        return new FolderSize(files.Count, files.Sum(file => file.Length));
+    }
+
     public static string HeaderOf(string folder) => Path.Combine(folder, HeaderFile);
 
     internal static string ChangesOf(string folder) => Path.Combine(folder, ChangesFolder);
@@ -75,4 +94,11 @@ public static class VaultFolder
         var name = id.ToString("N");
         return Path.Combine(parent, name[..2], name + extension);
     }
+}
+
+/// <summary>How many files a folder holds, and their size in bytes.</summary>
+public sealed record FolderSize(int Files, long Bytes)
+{
+    /// <summary>"4.2 MB in 87 files", in the current culture unless another is given.</summary>
+    public string Describe(IFormatProvider? culture = null) => $"{ByteSize.Format(Bytes, culture)} in {Files} {(Files == 1 ? "file" : "files")}";
 }

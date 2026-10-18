@@ -5,6 +5,7 @@ using System.Windows.Input;
 using Kofrenot.Core;
 using Kofrenot.Core.Logging;
 using Kofrenot.Core.Settings;
+using Kofrenot.Core.Storage;
 using Kofrenot.Core.Updates;
 using Kofrenot.UI.Logging;
 using Kofrenot.UI.Platform;
@@ -44,6 +45,7 @@ public partial class SettingsWindow : Window
     private readonly SettingsStore _settings;
     private readonly LogHub _logHub;
     private readonly ILog _log;
+    private int _measuringSize;
     private readonly Action<Window> _openLog;
     private readonly UpdateChecker _updates;
     private readonly VaultSession _session;
@@ -526,13 +528,41 @@ public partial class SettingsWindow : Window
             (null, _) => "None chosen yet. An empty folder becomes a new vault; a folder holding a kofrenot vault opens it.",
             (_, null) when _session.NewerFormat is { } format => $"Closed: written by a newer kofrenot (vault format {format}). Install the latest kofrenot to open it.",
             (_, null) => "Locked: the pass phrase was not given.",
-            (_, { } vault) => $"Open: {vault.Graph.Nodes.Count} nodes, {vault.Graph.Links.Count} links.",
+            (_, { } vault) => $"{OpenText(vault)}, measuring its size…",
         };
+        if (_session is { Current: { } open, Folder: { } openFolder })
+        {
+            _ = ShowVaultSize(open, openFolder);
+        }
 
         var remembered = _session.IsRemembered;
         RememberedText.Text = remembered ? "The pass phrase is remembered on this computer." : "The pass phrase is not remembered.";
         ForgetButton.IsEnabled = remembered;
         LinkTypes.Session = _session;
+    }
+
+    private static string OpenText(Vault vault) => $"Open: {vault.Graph.Nodes.Count} nodes, {vault.Graph.Links.Count} links";
+
+    /// <summary>Measures the vault folder off the UI thread (it may be a slow file share), then adds it to the status.</summary>
+    private async Task ShowVaultSize(Vault vault, string folder)
+    {
+        var measuring = ++_measuringSize;
+        string size;
+        try
+        {
+            size = (await Task.Run(() => VaultFolder.SizeOf(folder))).Describe();
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            _log.Warn("Settings", $"The vault folder cannot be measured ({ex.GetType().Name})");
+            size = "its size cannot be measured";
+        }
+
+        // The tab may show another vault, or a newer measure, by now.
+        if (measuring == _measuringSize && _session.Current == vault)
+        {
+            VaultStatusText.Text = $"{OpenText(vault)} · {size}.";
+        }
     }
 
     private void ChooseVaultButton_Click(object sender, RoutedEventArgs e)

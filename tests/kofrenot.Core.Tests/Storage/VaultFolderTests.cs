@@ -88,6 +88,31 @@ public sealed class VaultFolderTests : IDisposable
         Assert.Contains($"reads up to format {VaultFormat.Current}", refused.Message);
     }
 
+    [Fact]
+    public void TheSize_CountsEveryFile_InEverySubFolder()
+    {
+        VaultFolder.Create(Folder, "secret phrase", Iterations);
+        var header = new FileInfo(VaultFolder.HeaderOf(Folder)).Length;
+        var nested = Path.Combine(Folder, VaultFolder.ContentFolder, "3f");
+        Directory.CreateDirectory(nested);
+        File.WriteAllBytes(Path.Combine(nested, "a.kfd"), new byte[2000]);
+        File.WriteAllBytes(Path.Combine(Folder, VaultFolder.ChangesFolder, "b.kfc"), new byte[48]);
+
+        var size = VaultFolder.SizeOf(Folder);
+
+        Assert.Equal(new FolderSize(3, header + 2048), size);
+    }
+
+    [Fact]
+    public void AMissingFolder_HasNoSize() =>
+        Assert.Equal(new FolderSize(0, 0), VaultFolder.SizeOf(Folder));
+
+    [Theory]
+    [InlineData(1, 512, "512 bytes in 1 file")]
+    [InlineData(87, 4404019, "4.2 MB in 87 files")]
+    public void TheSize_IsShown(int files, long bytes, string shown) =>
+        Assert.Equal(shown, new FolderSize(files, bytes).Describe(System.Globalization.CultureInfo.InvariantCulture));
+
     public void Dispose() => _temp.Dispose();
 
     private string WriteHeader(string json)

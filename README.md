@@ -32,7 +32,7 @@ Upgrade: run a newer setup over the old one. Uninstall: *Settings > Apps*. Your 
 - **Tray icon.** Click: show the main window. Menu: Show, Settings, Log window (ticked while it is open: a click shows or closes it), Quit.
 
 ### Vault
-A vault is a folder: on this computer, on a file share, or in a folder a sync tool copies between computers. Choose it in Settings > Vault.
+A vault is a folder: on this computer, on a file share, or in a folder a sync tool copies between computers. Choose it in Settings > Vault, which also shows its nodes, links and size on disk (measured each time the tab is shown).
 
 - An **empty folder** becomes a new vault: kofrenot asks a pass phrase twice. Everything in it is encrypted with that pass phrase: **if it is lost, the vault cannot be read**.
 - A **vault folder** asks for its pass phrase at start, unless *Remember pass phrase on this computer* was ticked (kept by Windows for your account; Settings > Vault > *Forget* removes it).
