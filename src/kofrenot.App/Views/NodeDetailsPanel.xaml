@@ -4,10 +4,10 @@
              xmlns:local="clr-namespace:Kofrenot.UI.Views"
              Focusable="True"
              FocusVisualStyle="{x:Null}">
-  <!-- The details of a node, in the main window instead of the search: breadcrumb, properties,
-       a note's content (NoteEditor), a dataset's file (DatasetPanel),
-       links. Up/Down or a click select a link, Enter, a double-click or › opens its other node, Esc
-       goes back one level. -->
+  <!-- The details of a node, in the main window instead of the search: breadcrumb; properties,
+       with a dataset's file (DatasetPanel) on their right; a note's content (NoteEditor); links,
+       across the width. Up/Down or a click select a link, Enter, a double-click or › opens its
+       other node, Esc goes back one level. -->
   <UserControl.Resources>
     <ResourceDictionary Source="SharedStyles.xaml" />
   </UserControl.Resources>
@@ -16,12 +16,10 @@
   <Grid TextElement.FontSize="{StaticResource BodyFontSize}">
     <Grid.RowDefinitions>
       <RowDefinition Height="Auto" />
-      <RowDefinition Height="Auto" />
-      <RowDefinition Height="Auto" />
+      <!-- Properties, and next to them a dataset's file: takes room only while its viewer shows a text. -->
+      <RowDefinition x:Name="TopRow" Height="Auto" />
       <!-- The note editor: takes room only for a note. -->
       <RowDefinition x:Name="NoteRow" Height="Auto" />
-      <!-- A dataset's file: takes room only while its viewer shows it. -->
-      <RowDefinition x:Name="DatasetRow" Height="Auto" />
       <RowDefinition Height="Auto" />
       <RowDefinition Height="*" />
     </Grid.RowDefinitions>
@@ -55,80 +53,90 @@
       </ItemsControl.ItemTemplate>
     </ItemsControl>
 
-    <!-- The name: F2 or ✎ edits it in place (Enter renames, Esc cancels). Under it, a conflict
-         between names given on two devices, each name offered to keep. -->
-    <StackPanel Grid.Row="1" Margin="2,14,0,0">
-      <Grid>
-        <Grid.ColumnDefinitions>
-          <ColumnDefinition Width="*" />
-          <ColumnDefinition Width="Auto" />
-          <ColumnDefinition Width="Auto" />
-        </Grid.ColumnDefinitions>
-        <TextBlock x:Name="NameText" VerticalAlignment="Center" Style="{StaticResource TitleText}" />
-        <TextBox x:Name="NameBox" FontSize="{StaticResource TitleFontSize}" Visibility="Collapsed" TextChanged="NameBox_TextChanged" />
-        <Button x:Name="EditButton"
-                Grid.Column="1"
-                Margin="6,0,0,0"
-                VerticalAlignment="Center"
-                Style="{StaticResource FlatButton}"
-                Content="&#xE70F;"
-                FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
-                FontSize="14"
-                ToolTip="Rename (F2)"
-                Click="EditButton_Click" />
-        <!-- Pinned nodes are listed while the input box is empty. Filled pin: pinned. -->
-        <Button x:Name="PinButton"
-                Grid.Column="2"
-                Margin="2,0,0,0"
-                VerticalAlignment="Center"
-                Style="{StaticResource FlatButton}"
-                FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
-                FontSize="14"
-                Click="PinButton_Click" />
-      </Grid>
-      <TextBlock x:Name="RenameText" Margin="0,4,0,0" Opacity="0.8" TextWrapping="Wrap" Visibility="Collapsed" />
-
-      <StackPanel x:Name="ConflictPanel" Margin="0,6,0,0" Visibility="Collapsed">
-        <TextBlock Foreground="{DynamicResource SystemFillColorCautionBrush}"
-                   TextWrapping="Wrap"
-                   Text="Renamed on two devices before they synced. Keep:" />
-        <ItemsControl x:Name="ConflictNames">
-          <ItemsControl.ItemsPanel>
-            <ItemsPanelTemplate>
-              <WrapPanel />
-            </ItemsPanelTemplate>
-          </ItemsControl.ItemsPanel>
-          <ItemsControl.ItemTemplate>
-            <DataTemplate>
-              <Button Margin="0,4,8,0" Padding="10,2" Focusable="False" Content="{Binding}" Click="KeepName_Click" />
-            </DataTemplate>
-          </ItemsControl.ItemTemplate>
-        </ItemsControl>
-      </StackPanel>
-    </StackPanel>
-
-    <Grid Grid.Row="2" Margin="2,8,0,0">
+    <!-- Properties on the left; a dataset's file on the right (the column has no width for other types). -->
+    <Grid Grid.Row="1">
       <Grid.ColumnDefinitions>
-        <ColumnDefinition Width="110" />
         <ColumnDefinition Width="*" />
+        <ColumnDefinition x:Name="ContentColumn" Width="0" />
       </Grid.ColumnDefinitions>
-      <Grid.RowDefinitions>
-        <RowDefinition Height="Auto" />
-        <RowDefinition Height="Auto" />
-      </Grid.RowDefinitions>
-      <TextBlock Opacity="0.7" Text="Type" />
-      <TextBlock x:Name="TypeText" Grid.Column="1" />
-      <TextBlock Grid.Row="1" Opacity="0.7" Text="Created" />
-      <TextBlock x:Name="CreatedText" Grid.Row="1" Grid.Column="1" />
+
+      <StackPanel VerticalAlignment="Top">
+        <!-- The name: F2 or ✎ edits it in place (Enter renames, Esc cancels). Under it, a conflict
+             between names given on two devices, each name offered to keep. -->
+        <StackPanel Margin="2,14,0,0">
+          <Grid>
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="*" />
+              <ColumnDefinition Width="Auto" />
+              <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <TextBlock x:Name="NameText" VerticalAlignment="Center" Style="{StaticResource TitleText}" />
+            <TextBox x:Name="NameBox" FontSize="{StaticResource TitleFontSize}" Visibility="Collapsed" TextChanged="NameBox_TextChanged" />
+            <Button x:Name="EditButton"
+                    Grid.Column="1"
+                    Margin="6,0,0,0"
+                    VerticalAlignment="Center"
+                    Style="{StaticResource FlatButton}"
+                    Content="&#xE70F;"
+                    FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
+                    FontSize="14"
+                    ToolTip="Rename (F2)"
+                    Click="EditButton_Click" />
+            <!-- Pinned nodes are listed while the input box is empty. Filled pin: pinned. -->
+            <Button x:Name="PinButton"
+                    Grid.Column="2"
+                    Margin="2,0,0,0"
+                    VerticalAlignment="Center"
+                    Style="{StaticResource FlatButton}"
+                    FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
+                    FontSize="14"
+                    Click="PinButton_Click" />
+          </Grid>
+          <TextBlock x:Name="RenameText" Margin="0,4,0,0" Opacity="0.8" TextWrapping="Wrap" Visibility="Collapsed" />
+
+          <StackPanel x:Name="ConflictPanel" Margin="0,6,0,0" Visibility="Collapsed">
+            <TextBlock Foreground="{DynamicResource SystemFillColorCautionBrush}"
+                       TextWrapping="Wrap"
+                       Text="Renamed on two devices before they synced. Keep:" />
+            <ItemsControl x:Name="ConflictNames">
+              <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                  <WrapPanel />
+                </ItemsPanelTemplate>
+              </ItemsControl.ItemsPanel>
+              <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                  <Button Margin="0,4,8,0" Padding="10,2" Focusable="False" Content="{Binding}" Click="KeepName_Click" />
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </StackPanel>
+        </StackPanel>
+
+        <Grid Margin="2,8,0,0">
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="110" />
+            <ColumnDefinition Width="*" />
+          </Grid.ColumnDefinitions>
+          <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+          </Grid.RowDefinitions>
+          <TextBlock Opacity="0.7" Text="Type" />
+          <TextBlock x:Name="TypeText" Grid.Column="1" />
+          <TextBlock Grid.Row="1" Opacity="0.7" Text="Created" />
+          <TextBlock x:Name="CreatedText" Grid.Row="1" Grid.Column="1" />
+        </Grid>
+      </StackPanel>
+
+      <local:DatasetPanel x:Name="DatasetBox" Grid.Column="1" Margin="16,0,0,0" Visibility="Collapsed" />
     </Grid>
 
-    <local:NoteEditor x:Name="NoteBox" Grid.Row="3" Visibility="Collapsed" />
+    <local:NoteEditor x:Name="NoteBox" Grid.Row="2" Visibility="Collapsed" />
 
-    <local:DatasetPanel x:Name="DatasetBox" Grid.Row="4" Visibility="Collapsed" />
+    <TextBlock x:Name="LinksHeader" Grid.Row="3" Margin="2,18,0,4" FontWeight="SemiBold" />
 
-    <TextBlock x:Name="LinksHeader" Grid.Row="5" Margin="2,18,0,4" FontWeight="SemiBold" />
-
-    <ScrollViewer Grid.Row="6" VerticalScrollBarVisibility="Auto" Focusable="False">
+    <ScrollViewer Grid.Row="4" VerticalScrollBarVisibility="Auto" Focusable="False">
       <ItemsControl x:Name="LinksList" Grid.IsSharedSizeScope="True">
         <ItemsControl.ItemTemplate>
           <DataTemplate>

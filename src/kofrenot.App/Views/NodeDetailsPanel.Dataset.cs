@@ -8,7 +8,7 @@ using Kofrenot.Core.Storage;
 
 namespace Kofrenot.UI.Views;
 
-/// <summary>The file of a dataset, under its properties: Import, Export, drop in, drag out.</summary>
+/// <summary>The file of a dataset, next to its properties: Import, Export, drop in, drag out.</summary>
 public partial class NodeDetailsPanel
 {
     /// <summary>The files of the open vault's datasets; null when no vault is open.</summary>
@@ -42,6 +42,7 @@ public partial class NodeDetailsPanel
     {
         var files = details.Node.Type == TypeCatalog.Dataset.Id ? DatasetFiles?.Invoke() : null;
         DatasetBox.Visibility = files is null ? Visibility.Collapsed : Visibility.Visible;
+        ContentColumn.Width = files is null ? new GridLength(0) : new GridLength(1, GridUnitType.Star);
         if (files is null)
         {
             DatasetBox.Close();
@@ -60,9 +61,9 @@ public partial class NodeDetailsPanel
         FitDatasetRow();
     }
 
-    /// <summary>The viewer takes room only while it shows the file, as a note's editor does.</summary>
+    /// <summary>The properties row grows only while the viewer shows a text, as a note's editor does.</summary>
     private void FitDatasetRow() =>
-        DatasetRow.Height = DatasetBox.IsViewing ? new GridLength(2, GridUnitType.Star) : GridLength.Auto;
+        TopRow.Height = DatasetBox.IsViewing ? new GridLength(2, GridUnitType.Star) : GridLength.Auto;
 
     /// <summary>
     /// Ctrl+I imports a file, Ctrl+E exports it, while a dataset is shown. In the text shown, Esc
