@@ -251,6 +251,24 @@ public sealed class NodeBrowserTests
         Assert.Equal(("contains", "contained by"), (fromKitchen, Assert.Single(_browser.Details!.Links).Type));
     }
 
+    [Fact]
+    public void AClickOnALink_SelectsIt_AsUpDownWould()
+    {
+        var dune = Add("Dune");
+        var (herbert, arrakis) = (Add("Frank Herbert"), Add("Arrakis"));
+        Link(dune, herbert, minutes: 1);
+        Link(dune, arrakis, minutes: 2);
+        _browser.Open(_graph, dune);
+        var second = _browser.Details!.Links[1];
+
+        Assert.True(_browser.Select(second));
+        Assert.Equal([false, true], _browser.Details!.Links.Select(link => link.IsSelected));
+        Assert.False(_browser.Select(second));
+        Assert.False(_browser.Select(second with { OtherNode = Add("Elsewhere") }));
+        Assert.True(_browser.OpenSelected());
+        Assert.Equal(arrakis, _browser.Details!.Node);
+    }
+
     private Node Add(string name, string? type = null, int minutes = 0)
     {
         var node = new Node(Guid.NewGuid(), type ?? TypeCatalog.Generic.Id, name, Start.AddMinutes(minutes));

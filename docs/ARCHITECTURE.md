@@ -376,7 +376,7 @@ search                                    details, level 2 of 4
 
 - `InputPresenter` keeps the selected row (`MoveSelection`, `SelectedRow`) while the text stays the same: a node row, or a link row (`ResultRow.From` is the node it belongs to). While a link is typed, Up/Down choose homonyms (`MoveChoice`) instead. `ResultRow.Node` is the node the row opens, and gives it its **›** button. A link row opens `From` as level 1 and `Node` as level 2 (`NodeBrowser.Open`).
 - `NodeBrowser` holds the trail: one level per node opened, each keeping its selected link, so going back shows it again. `LinkRow.CanOpen` is false at `MaxDepth` (4) and for a node already in the trail. `Details` is read from the graph each time, so a refresh shows changes from elsewhere.
-- Search rows and detail links are two lists (`MainWindow`, `NodeDetailsPanel`) sharing their size and **›** button (`Views/SharedStyles.xaml`).
+- Search rows and detail links are two lists (`MainWindow`, `NodeDetailsPanel`) sharing their size, **›** button and row style (`Views/SharedStyles.xaml`: `RowFrame`, highlighted when hovered; `RowSelectionBar`, the accent bar of the selected row). A click selects a row through the same logic as the keys (`InputPresenter.Select`, `NodeBrowser.Select`; while a link is typed, it chooses a homonym), a double-click opens it as Enter does. Nothing takes the focus, so typing stays in the input box.
 - `NodeDetailsPanel` takes the place of the search in `MainWindow` and handles Up/Down/Enter/Esc while shown. It raises `BackToSearch` when the trail is empty. The trail is closed when its vault closes.
 
 ## Logging

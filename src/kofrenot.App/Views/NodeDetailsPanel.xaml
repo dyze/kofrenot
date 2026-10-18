@@ -6,7 +6,8 @@
              FocusVisualStyle="{x:Null}">
   <!-- The details of a node, in the main window instead of the search: breadcrumb, properties,
        a note's content (NoteEditor), a dataset's file (DatasetPanel),
-       links. Up/Down select a link, Enter or › opens its other node, Esc goes back one level. -->
+       links. Up/Down or a click select a link, Enter, a double-click or › opens its other node, Esc
+       goes back one level. -->
   <UserControl.Resources>
     <ResourceDictionary Source="SharedStyles.xaml" />
   </UserControl.Resources>
@@ -131,22 +132,28 @@
       <ItemsControl x:Name="LinksList" Grid.IsSharedSizeScope="True">
         <ItemsControl.ItemTemplate>
           <DataTemplate>
-            <Grid x:Name="Row" Margin="0,1">
-              <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto" SharedSizeGroup="LinkType" />
-                <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="Auto" />
-              </Grid.ColumnDefinitions>
-              <TextBlock x:Name="Type" Margin="6,0,16,0" VerticalAlignment="Center" Opacity="0.75" Text="{Binding Type}" />
-              <local:NodeVisualView Grid.Column="1" Margin="0,1,10,1" Visual="{Binding Visual}" />
-              <TextBlock x:Name="Other" Grid.Column="2" VerticalAlignment="Center" Text="{Binding Other}" TextTrimming="CharacterEllipsis" />
-              <Button x:Name="Open" Grid.Column="3" Style="{StaticResource OpenRowButton}" Click="OpenLink_Click" />
-            </Grid>
+            <Border x:Name="Frame" Margin="0,1" Style="{StaticResource RowFrame}" MouseLeftButtonDown="Link_MouseLeftButtonDown">
+              <Grid>
+                <Border x:Name="SelectionBar" Style="{StaticResource RowSelectionBar}" />
+                <Grid x:Name="Row">
+                  <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" SharedSizeGroup="LinkType" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                  </Grid.ColumnDefinitions>
+                  <TextBlock x:Name="Type" Margin="10,0,16,0" VerticalAlignment="Center" Opacity="0.75" Text="{Binding Type}" />
+                  <local:NodeVisualView Grid.Column="1" Margin="0,1,10,1" Visual="{Binding Visual}" />
+                  <TextBlock x:Name="Other" Grid.Column="2" VerticalAlignment="Center" Text="{Binding Other}" TextTrimming="CharacterEllipsis" />
+                  <Button x:Name="Open" Grid.Column="3" Style="{StaticResource OpenRowButton}" Click="OpenLink_Click" />
+                </Grid>
+              </Grid>
+            </Border>
             <DataTemplate.Triggers>
               <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                <Setter TargetName="Frame" Property="Background" Value="{DynamicResource SubtleFillColorSecondaryBrush}" />
+                <Setter TargetName="SelectionBar" Property="Visibility" Value="Visible" />
                 <Setter TargetName="Other" Property="FontWeight" Value="SemiBold" />
-                <Setter TargetName="Type" Property="Text" Value="{Binding Type, StringFormat=› {0}}" />
               </DataTrigger>
               <DataTrigger Binding="{Binding CanOpen}" Value="False">
                 <Setter TargetName="Row" Property="Opacity" Value="0.45" />

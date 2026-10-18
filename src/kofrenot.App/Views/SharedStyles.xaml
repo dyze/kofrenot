@@ -55,6 +55,29 @@
     <Setter Property="Focusable" Value="False" />
   </Style>
 
+  <!-- A row of a list (search results, links): highlighted across its width when hovered, so its
+       › button is clearly its own. A selected row's template sets SelectedRowBrush and shows an
+       accent bar (RowSelectionBar). -->
+  <Style x:Key="RowFrame" TargetType="Border">
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="CornerRadius" Value="4" />
+    <Style.Triggers>
+      <Trigger Property="IsMouseOver" Value="True">
+        <Setter Property="Background" Value="{DynamicResource SubtleFillColorTertiaryBrush}" />
+      </Trigger>
+    </Style.Triggers>
+  </Style>
+
+  <!-- The bar at the start of a selected row, as in Windows' own lists. -->
+  <Style x:Key="RowSelectionBar" TargetType="Border">
+    <Setter Property="Width" Value="3" />
+    <Setter Property="Margin" Value="0,6" />
+    <Setter Property="HorizontalAlignment" Value="Left" />
+    <Setter Property="CornerRadius" Value="1.5" />
+    <Setter Property="Background" Value="{DynamicResource AccentFillColorDefaultBrush}" />
+    <Setter Property="Visibility" Value="Collapsed" />
+  </Style>
+
   <!-- › at the end of a row: opens the details of its node. -->
   <Style x:Key="OpenRowButton" TargetType="Button" BasedOn="{StaticResource FlatButton}">
     <Setter Property="Padding" Value="8,4" />

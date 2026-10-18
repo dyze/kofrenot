@@ -127,7 +127,47 @@ public sealed class InputPresenter
             return false;
         }
 
-        var choice = (side.Choice + step + side.Candidates.Count) % side.Candidates.Count;
+        Choose(link, (side.Choice + step + side.Candidates.Count) % side.Candidates.Count);
+        return true;
+    }
+
+    /// <summary>
+    /// A click on a row: selects it, as Up/Down would. While a link is typed, a click on a homonym
+    /// of the side being typed chooses it instead. False when it changed nothing, or the row
+    /// cannot be selected (a header, a link row then, or a row no longer listed).
+    /// </summary>
+    public bool Select(ResultRow row)
+    {
+        if (_graph is null || row.Key is not { } key || !Rows.Any(listed => listed.Key == key))
+        {
+            return false;
+        }
+
+        if (Plan is LinkPlan link)
+        {
+            var candidates = ActiveSide(link)!.Candidates;
+            var index = row.From is null ? candidates.ToList().FindIndex(candidate => candidate.Id == key.Node) : -1;
+            if (candidates.Count < 2 || index < 0 || index == ActiveSide(link)!.Choice)
+            {
+                return false;
+            }
+
+            Choose(link, index);
+            return true;
+        }
+
+        if (key == _selected)
+        {
+            return false;
+        }
+
+        _selected = key;
+        Update(_graph, _text);
+        return true;
+    }
+
+    private void Choose(LinkPlan link, int choice)
+    {
         if (_rightActive && link.Right is not null)
         {
             _rightChoice = choice;
@@ -137,8 +177,7 @@ public sealed class InputPresenter
             _leftChoice = choice;
         }
 
-        Update(_graph, _text);
-        return true;
+        Update(_graph!, _text);
     }
 
     /// <summary>Tab: searches and chooses on the other side of the link. False when not typing a link.</summary>

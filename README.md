@@ -61,8 +61,8 @@ Type in the box at the top of the main window:
 - **Esc** clears the box, then hides the window.
 
 ### Node details
-- In the search, **Down** selects a row and **Up/Down** move the selection, over the nodes found and their links; typing clears the selection. **Enter** then opens the details instead of adding, and so does the **›** button at the end of a row. A link row opens its other node, one level under the node it belongs to.
-- The details show the node's name, type and creation date, then its links. **Up/Down** select a link, and **Enter** or **›** opens the node at its other end, up to 4 levels deep. A node already open in the breadcrumb is greyed.
+- In the search, **Down** selects a row and **Up/Down** move the selection, over the nodes found and their links; a **click** selects a row too, and typing clears the selection. The row under the mouse is highlighted across its width, and the selected one is marked by a bar at its start. **Enter** then opens the details instead of adding, and so do a **double-click** and the **›** button at the end of a row. A link row opens its other node, one level under the node it belongs to. While a link is typed, a click on one of the homonyms chooses it.
+- The details show the node's name, type and creation date, then its links. **Up/Down** or a **click** select a link, and **Enter**, a **double-click** or **›** opens the node at its other end, up to 4 levels deep. A node already open in the breadcrumb is greyed.
 - The breadcrumb at the top shows where you are. Click an item to go back to it; **⌂ Search** returns to the search. **Esc** goes back one level, and from the first level returns to the search as you left it.
 - **F2** or **✎** renames the node in place: **Enter** saves, **Esc** cancels. A name another node already has is allowed, with a warning. The old name stays in the vault's history.
 - A node renamed on two computers before they synced shows a conflict under its name, with a button for each name: click the one to keep, or rename it.

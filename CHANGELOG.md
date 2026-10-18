@@ -12,6 +12,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **Thumbnails and icons**: every node shows an icon in the search results, the links and a dataset's details, by its type and for a dataset by its file's kind (image, text, code, audio, video, archive, PDF). An image dataset shows a thumbnail instead, made once at import and stored encrypted in the vault.
 
 ### Changed
+- **Rows** in the search and the links: highlighted across their width when hovered, the selected one marked by a bar. A click selects a row, a double-click opens its details.
 - **Vault format 3.** kofrenot 0.2 does not open a vault written by this version, and offers the update. Vaults of formats 1 and 2 are read as they are.
 
 ## [0.2] - 2026-10-18

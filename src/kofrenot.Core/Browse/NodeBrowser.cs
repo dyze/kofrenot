@@ -63,6 +63,19 @@ public sealed class NodeBrowser
         return true;
     }
 
+    /// <summary>A click on a link row: selects it, as Up/Down would. False when it changed nothing or is not listed.</summary>
+    public bool Select(LinkRow row)
+    {
+        var index = Details?.Links.ToList().FindIndex(link => link.OtherNode.Id == row.OtherNode.Id && link.Type == row.Type) ?? -1;
+        if (index < 0 || index == _trail[^1].Selected)
+        {
+            return false;
+        }
+
+        _trail[^1].Selected = index;
+        return true;
+    }
+
     /// <summary>Enter: opens the selected link's other node one level deeper. False when it cannot.</summary>
     public bool OpenSelected() =>
         Details is { } details && details.Links.FirstOrDefault(link => link.IsSelected) is { } link && OpenLinked(link.OtherNode);

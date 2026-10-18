@@ -13,8 +13,8 @@ Scope of each planned version. Implemented features move to [CHANGELOG.md](../CH
 
 ## 0.3 (in progress)
 
-1. **Thumbnails.** When a dataset has a visual (e.g. image), a thumbnail is generated at importation. The thumbnails is shown as preview in App.
-2. **Type icons.** A dataset's inner type (its extension) shows the matching icon.
+1. **Vault size**. In settings, number of nodes and links are shown, display also its size.
+2. In "Add a node" window. For types, show a list at right side instead of combo.
 
 ## 0.4 (to define)
 Open: is a collection a root container, or a separate scope? How does it relate to the current vault (0.5)?
@@ -36,11 +36,11 @@ Open: is a collection a root container, or a separate scope? How does it relate 
 Needs the "Sync: no server for now" decision changed ([GOAL.md](GOAL.md#decisions)).
 
 1. **Web server.** Vaults are stored on a dedicated web server. See dedicated concept  [SERVER-CONCEPT.md](SERVER-CONCEPT.md).
-
-## Later (not planned in a version yet)
-1. **Change types.** Change a node's type (e.g. a generic node into a note) and a link's type (or its direction) from the node details.
+2. **Change types.** Change a node's type (e.g. a generic node into a note) and a link's type (or its direction) from the node details.
 	- A new change in the vault, naming what it replaces, as renames do: types changed on two devices before they synced are flagged as a conflict.
 	- Today the type is only chosen on the creation screen.
 	- Only changing from generic to a more specific type might be sufficient for a first version.
-2. Restore previous versions. If a user didn't a mistake he can restore a previews version of the content of his dataset.
+3. **Restore previous versions.** If a user didn't a mistake he can see the list of versions and restore one of them.
+4. **Node links.** User can link nodes using the node details screen.
+5. File drop zone. Main window shows a small zone in which user can drop one or several files. This is a way to secure quickly a set of files. The App, proposes a preview of actions that will be done. node names and types are determined automatically. User acks and app proceeds with actions.
 

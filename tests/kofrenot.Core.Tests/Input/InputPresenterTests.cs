@@ -185,6 +185,64 @@ public sealed class InputPresenterTests
     }
 
     [Fact]
+    public void AClickOnARow_SelectsIt_AsUpDownWould()
+    {
+        var dune = Add("Dune");
+        var herbert = Add("Frank Herbert");
+        Link(dune, herbert);
+        _input.Update(_graph, "dune");
+        var linkRow = _input.Rows.Single(row => row.IsLink);
+
+        Assert.True(_input.Select(linkRow));
+        Assert.Equal(herbert, _input.SelectedRow!.Node);
+        Assert.Equal(dune, _input.SelectedRow.From);
+        Assert.False(_input.Select(linkRow));
+
+        Assert.True(_input.Select(_input.Rows[0]));
+        Assert.True(_input.Rows[0].IsChosen);
+    }
+
+    [Fact]
+    public void AHeader_OrARowNoLongerListed_CannotBeSelected()
+    {
+        var dune = Add("Dune");
+        _graph.Apply(new NodePinned(Guid.NewGuid(), Start, dune.Id));
+        _input.Update(_graph, "");
+        var header = _input.Rows[0];
+        var pinned = _input.Rows[1];
+
+        Assert.False(_input.Select(header));
+        _input.Update(_graph, "nothing like it");
+        Assert.False(_input.Select(pinned));
+        Assert.Null(_input.SelectedRow);
+        Assert.False(new InputPresenter().Select(pinned));
+    }
+
+    [Fact]
+    public void WhileALinkIsTyped_AClickOnAHomonym_ChoosesIt()
+    {
+        Add("Dune", minutes: 1);
+        Add("Dune", minutes: 2);
+        _input.Update(_graph, "Arrakis relates to Dune");
+        var second = _input.Rows[1];
+
+        Assert.True(_input.Select(second));
+        Assert.Equal(new AddChoices(0, 1), _input.Choices);
+        Assert.False(_input.Select(_input.Rows[1]));
+        Assert.Null(_input.SelectedRow);
+    }
+
+    [Fact]
+    public void WhileALinkIsTyped_ARowThatIsNotAHomonym_CannotBeSelected()
+    {
+        var dune = Add("Dune");
+        Link(dune, Add("Frank Herbert"));
+        _input.Update(_graph, "Arrakis relates to Dune");
+
+        Assert.All(_input.Rows, row => Assert.False(_input.Select(row)));
+    }
+
+    [Fact]
     public void AnotherName_ResetsTheChoice()
     {
         Add("Dune", minutes: 1);

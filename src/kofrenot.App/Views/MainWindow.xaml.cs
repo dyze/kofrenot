@@ -176,6 +176,26 @@ public partial class MainWindow : Window
         };
     }
 
+    /// <summary>A click selects a row, as Up/Down would (or chooses a homonym); a double-click opens its details.</summary>
+    private void Result_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        if (sender is not FrameworkElement { DataContext: ResultRow { Node: { } node } row })
+        {
+            return;
+        }
+
+        if (e.ClickCount == 2)
+        {
+            OpenDetails(node, row.From);
+        }
+        else
+        {
+            Presented(_input.Select(row));
+        }
+
+        e.Handled = true;
+    }
+
     private void OpenResult_Click(object sender, RoutedEventArgs e)
     {
         if (sender is FrameworkElement { DataContext: ResultRow { Node: { } node } row })

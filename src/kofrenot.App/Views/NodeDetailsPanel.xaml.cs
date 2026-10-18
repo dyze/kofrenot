@@ -179,6 +179,29 @@ public partial class NodeDetailsPanel : UserControl
         }
     }
 
+    /// <summary>A click selects a link, as Up/Down would; a double-click opens its other node.</summary>
+    private void Link_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        if (sender is not FrameworkElement { DataContext: LinkRow link })
+        {
+            return;
+        }
+
+        if (e.ClickCount == 2)
+        {
+            if (Browser.OpenLinked(link.OtherNode))
+            {
+                Opened();
+            }
+        }
+        else if (Browser.Select(link))
+        {
+            Show();
+        }
+
+        e.Handled = true;
+    }
+
     private void OpenLink_Click(object sender, RoutedEventArgs e)
     {
         if (sender is FrameworkElement { DataContext: LinkRow link } && Browser.OpenLinked(link.OtherNode))
