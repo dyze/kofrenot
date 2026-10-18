@@ -33,9 +33,17 @@ public sealed record ChangesRemoved(Guid Id, DateTimeOffset At, IReadOnlyList<Gu
 public sealed record NodePinned(Guid Id, DateTimeOffset At, Guid Node) : Change(Id, At);
 
 /// <summary>
-/// A new version of the content of the note <see cref="Node"/>, kept in a file of its own named by
-/// <see cref="Change.Id"/> and read only when the note is opened. <see cref="Replaces"/> are the
-/// versions it was written over (none for the first). Two versions replacing the same one, neither
-/// knowing the other (two devices before syncing), make a conflict.
+/// A new version of the content of <see cref="Node"/> (a note's text, a dataset's file), kept in a
+/// file of its own named by <see cref="Change.Id"/> and read only when needed. <see cref="Replaces"/>
+/// are the versions it was written over (none for the first). Two versions replacing the same one,
+/// neither knowing the other (two devices before syncing), make a conflict.
 /// </summary>
-public sealed record NoteEdited(Guid Id, DateTimeOffset At, Guid Node, IReadOnlyList<Guid> Replaces) : Change(Id, At);
+public abstract record ContentEdited(Guid Id, DateTimeOffset At, Guid Node, IReadOnlyList<Guid> Replaces) : Change(Id, At);
+
+/// <summary>A new version of a note's Markdown text.</summary>
+public sealed record NoteEdited(Guid Id, DateTimeOffset At, Guid Node, IReadOnlyList<Guid> Replaces)
+    : ContentEdited(Id, At, Node, Replaces);
+
+/// <summary>A new version of a dataset's file; <see cref="File"/> describes it, so it is known without reading it.</summary>
+public sealed record DatasetEdited(Guid Id, DateTimeOffset At, Guid Node, DatasetFile File, IReadOnlyList<Guid> Replaces)
+    : ContentEdited(Id, At, Node, Replaces);

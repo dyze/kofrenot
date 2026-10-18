@@ -8,12 +8,23 @@ internal static class AtomicFile
 {
     public const string TemporaryExtension = ".tmp";
 
-    public static void Write(string path, byte[] content, bool overwrite)
+    public static void Write(string path, byte[] content, bool overwrite) =>
+        Write(path, output => output.Write(content), overwrite);
+
+    /// <summary>
+    /// Writes the file through <paramref name="write"/>. When it throws, the temporary file is
+    /// deleted and nothing is renamed.
+    /// </summary>
+    public static void Write(string path, Action<Stream> write, bool overwrite)
     {
         var temporary = path + TemporaryExtension;
-        File.WriteAllBytes(temporary, content);
         try
         {
+            using (var output = new FileStream(temporary, FileMode.Create, FileAccess.Write, FileShare.None))
+            {
+                write(output);
+            }
+
             File.Move(temporary, path, overwrite);
         }
         catch

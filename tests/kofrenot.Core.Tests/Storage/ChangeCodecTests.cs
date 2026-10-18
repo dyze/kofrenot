@@ -66,6 +66,50 @@ public sealed class ChangeCodecTests
         Assert.Equal(change.Replaces, decoded.Replaces);
     }
 
+    [Fact]
+    public void ADatasetVersion_RoundTrips_WithItsFile()
+    {
+        var change = new DatasetEdited(Guid.NewGuid(), At, Guid.NewGuid(), new DatasetFile("survey.csv", 52430, new string('0', 64)), [Guid.NewGuid()]);
+
+        var decoded = Assert.IsType<DatasetEdited>(_codec.Decode(change.Id, _codec.Encode(change)));
+
+        Assert.Equal((change.Id, change.At, change.Node, change.File), (decoded.Id, decoded.At, decoded.Node, decoded.File));
+        Assert.Equal(change.Replaces, decoded.Replaces);
+    }
+
+    [Fact]
+    public void ADatasetVersion_HasTheDocumentedShape()
+    {
+        var change = new DatasetEdited(Guid.NewGuid(), At, Guid.NewGuid(), new DatasetFile("survey.csv", 52430, new string('9', 64)), []);
+
+        var json = Encoding.UTF8.GetString(_box.Open("KFC1"u8, _codec.Encode(change), change.Id.ToByteArray()));
+
+        Assert.StartsWith("{\"format\":3,\"op\":\"editDataset\",", json);
+        Assert.Contains($"\"dataset\":{{\"node\":\"{change.Node}\",\"file\":{{\"name\":\"survey.csv\",\"size\":52430,\"sha256\":\"{new string('9', 64)}\"}},\"replaces\":[]}}", json);
+    }
+
+    [Theory]
+    [InlineData("{\"format\":3,\"op\":\"editDataset\",\"at\":\"2026-10-16T09:12:00Z\"}")]
+    [InlineData("{\"format\":3,\"op\":\"editDataset\",\"at\":\"2026-10-16T09:12:00Z\",\"dataset\":{\"node\":\"3f2504e0-4f89-11d3-9a0c-0305e82c3301\",\"replaces\":[]}}")]
+    [InlineData("{\"format\":3,\"op\":\"editDataset\",\"at\":\"2026-10-16T09:12:00Z\",\"dataset\":{\"node\":\"3f2504e0-4f89-11d3-9a0c-0305e82c3301\",\"file\":{\"name\":\"a\",\"size\":1,\"sha256\":\"" + Hash + "\"}}}")]
+    [InlineData("{\"format\":3,\"op\":\"editDataset\",\"at\":\"2026-10-16T09:12:00Z\",\"dataset\":{\"file\":{\"name\":\"a\",\"size\":1,\"sha256\":\"" + Hash + "\"},\"replaces\":[]}}")]
+    [InlineData("{\"format\":3,\"op\":\"editDataset\",\"at\":\"2026-10-16T09:12:00Z\",\"dataset\":{\"node\":\"3f2504e0-4f89-11d3-9a0c-0305e82c3301\",\"file\":{\"size\":1,\"sha256\":\"" + Hash + "\"},\"replaces\":[]}}")]
+    [InlineData("{\"format\":3,\"op\":\"editDataset\",\"at\":\"2026-10-16T09:12:00Z\",\"dataset\":{\"node\":\"3f2504e0-4f89-11d3-9a0c-0305e82c3301\",\"file\":{\"name\":\" \",\"size\":1,\"sha256\":\"" + Hash + "\"},\"replaces\":[]}}")]
+    [InlineData("{\"format\":3,\"op\":\"editDataset\",\"at\":\"2026-10-16T09:12:00Z\",\"dataset\":{\"node\":\"3f2504e0-4f89-11d3-9a0c-0305e82c3301\",\"file\":{\"name\":\"a\",\"size\":-1,\"sha256\":\"" + Hash + "\"},\"replaces\":[]}}")]
+    [InlineData("{\"format\":3,\"op\":\"editDataset\",\"at\":\"2026-10-16T09:12:00Z\",\"dataset\":{\"node\":\"3f2504e0-4f89-11d3-9a0c-0305e82c3301\",\"file\":{\"name\":\"a\",\"size\":1},\"replaces\":[]}}")]
+    [InlineData("{\"format\":3,\"op\":\"editDataset\",\"at\":\"2026-10-16T09:12:00Z\",\"dataset\":{\"node\":\"3f2504e0-4f89-11d3-9a0c-0305e82c3301\",\"file\":{\"name\":\"a\",\"size\":1,\"sha256\":\"abc\"},\"replaces\":[]}}")]
+    [InlineData("{\"format\":3,\"op\":\"editDataset\",\"at\":\"2026-10-16T09:12:00Z\",\"dataset\":{\"node\":\"3f2504e0-4f89-11d3-9a0c-0305e82c3301\",\"file\":{\"name\":\"a\",\"size\":1,\"sha256\":\"" + UpperHash + "\"},\"replaces\":[]}}")]
+    public void AnIncompleteDatasetVersion_IsRefused(string json)
+    {
+        var id = Guid.NewGuid();
+        var data = _box.Seal("KFC1"u8, Encoding.UTF8.GetBytes(json), id.ToByteArray());
+
+        Assert.Throws<InvalidDataException>(() => _codec.Decode(id, data));
+    }
+
+    private const string Hash = "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08";
+    private const string UpperHash = "9F86D081884C7D659A2FEAA0C55AD015A3BF4F1B2B0B822CD15D6C15B0F00A08";
+
     [Theory]
     [InlineData("{\"format\":2,\"op\":\"editNote\",\"at\":\"2026-10-16T09:12:00Z\"}")]
     [InlineData("{\"format\":2,\"op\":\"editNote\",\"at\":\"2026-10-16T09:12:00Z\",\"note\":{\"replaces\":[]}}")]
@@ -102,7 +146,7 @@ public sealed class ChangeCodecTests
 
         var json = Encoding.UTF8.GetString(_box.Open("KFC1"u8, _codec.Encode(change), id.ToByteArray()));
 
-        Assert.StartsWith("{\"format\":2,\"op\":\"addNode\",\"at\":", json);
+        Assert.StartsWith("{\"format\":3,\"op\":\"addNode\",\"at\":", json);
         Assert.Contains("\"name\":\"Dune\"", json);
         Assert.DoesNotContain("link", json);
     }

@@ -1,29 +1,30 @@
 namespace Kofrenot.Core.Graph;
 
 /// <summary>
-/// The content versions of every note. A note's current versions are those no other version
-/// replaces: one normally, several after edits made apart (a conflict). The result does not
-/// depend on the order the changes arrive in.
+/// The content versions of every note, or of every dataset. A node's current versions are those
+/// no other version replaces: one normally, several after edits made apart (a conflict). The
+/// result does not depend on the order the changes arrive in.
 /// </summary>
-internal sealed class NoteVersions
+internal sealed class ContentVersions<T>
+    where T : ContentEdited
 {
-    private readonly Dictionary<Guid, Dictionary<Guid, NoteEdited>> _byNote = [];
+    private readonly Dictionary<Guid, Dictionary<Guid, T>> _byNode = [];
 
     /// <summary>False when this version is already there.</summary>
-    public bool Add(NoteEdited version)
+    public bool Add(T version)
     {
-        if (!_byNote.TryGetValue(version.Node, out var versions))
+        if (!_byNode.TryGetValue(version.Node, out var versions))
         {
-            _byNote[version.Node] = versions = [];
+            _byNode[version.Node] = versions = [];
         }
 
         return versions.TryAdd(version.Id, version);
     }
 
-    /// <summary>The current versions of a note, oldest first; empty before its first save.</summary>
-    public IReadOnlyList<NoteEdited> Current(Guid node)
+    /// <summary>The current versions of a node, oldest first; empty before its first save.</summary>
+    public IReadOnlyList<T> Current(Guid node)
     {
-        if (!_byNote.TryGetValue(node, out var versions))
+        if (!_byNode.TryGetValue(node, out var versions))
         {
             return [];
         }

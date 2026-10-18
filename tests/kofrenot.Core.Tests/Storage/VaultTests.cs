@@ -242,6 +242,41 @@ public sealed class VaultTests : IDisposable
     }
 
     [Fact]
+    public void ADatasetVersion_IsSaved_WithItsFile_AndFoundAgainOnReopening()
+    {
+        var vault = Open();
+        var dataset = AddNode(vault, "Survey");
+        var source = _temp.Sub("survey.csv");
+        File.WriteAllText(source, "a,b\n1,2\n");
+        var version = new DatasetEdited(Guid.NewGuid(), Start, dataset.Id, DatasetFiles.Describe(source), []);
+
+        using (var content = File.OpenRead(source))
+        {
+            vault.Save(version, content);
+        }
+
+        var reopened = Open(snapshot: false);
+        Assert.Equal([version], reopened.Graph.DatasetVersionsOf(dataset.Id).Select(saved => saved with { Replaces = version.Replaces }));
+        var target = _temp.Sub("exported.csv");
+        reopened.Datasets.Export(version.Id, target);
+        Assert.Equal("a,b\n1,2\n", File.ReadAllText(target));
+        Assert.Equal([version.Id], Open().Graph.DatasetVersionsOf(dataset.Id).Select(saved => saved.Id));
+    }
+
+    [Fact]
+    public void ADatasetVersionNotMatchingItsFile_IsNotSaved()
+    {
+        var vault = Open();
+        var dataset = AddNode(vault, "Survey");
+        var version = new DatasetEdited(Guid.NewGuid(), Start, dataset.Id, new DatasetFile("a.csv", 3, new string('0', 64)), []);
+
+        Assert.Throws<IOException>(() => vault.Save(version, new MemoryStream([1, 2, 3])));
+
+        Assert.Empty(vault.Graph.DatasetVersionsOf(dataset.Id));
+        Assert.False(vault.Datasets.Exists(version.Id));
+    }
+
+    [Fact]
     public void TheSnapshot_IsNamedByTheVaultId() =>
         Assert.Equal(Path.Combine(Cache, _header.Id.ToString("N") + ".kfs"), Vault.SnapshotOf(Cache, _header.Id));
 

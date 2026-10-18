@@ -17,6 +17,7 @@ internal sealed record ChangeData(
     ChangeData.AliasData? Alias = null,
     ChangeData.PinData? Pin = null,
     ChangeData.NoteData? Note = null,
+    ChangeData.DatasetData? Dataset = null,
     List<Guid>? Removes = null)
 {
     private const string NodeAddedOp = "addNode";
@@ -26,6 +27,7 @@ internal sealed record ChangeData(
     private const string RemoveOp = "remove";
     private const string NodePinnedOp = "pinNode";
     private const string NoteEditedOp = "editNote";
+    private const string DatasetEditedOp = "editDataset";
 
     public static ChangeData From(Change change) => change switch
     {
@@ -36,6 +38,7 @@ internal sealed record ChangeData(
         ChangesRemoved removal => new(VaultFormat.Current, RemoveOp, removal.At, Removes: [.. removal.Removes]),
         NodePinned pin => new(VaultFormat.Current, NodePinnedOp, pin.At, Pin: new PinData(pin.Node)),
         NoteEdited note => new(VaultFormat.Current, NoteEditedOp, note.At, Note: new NoteData(note.Node, [.. note.Replaces])),
+        DatasetEdited dataset => new(VaultFormat.Current, DatasetEditedOp, dataset.At, Dataset: new DatasetData(dataset.Node, FileData.From(dataset.File), [.. dataset.Replaces])),
         _ => throw new ArgumentOutOfRangeException(nameof(change), change.GetType().Name, "Unknown change"),
     };
 
@@ -59,6 +62,8 @@ internal sealed record ChangeData(
             RemoveOp when Removes is { Count: > 0 } => new ChangesRemoved(id, At, Removes),
             NodePinnedOp when Pin is not null && Pin.Node != Guid.Empty => new NodePinned(id, At, Pin.Node),
             NoteEditedOp when Note is { Replaces: not null } && Note.Node != Guid.Empty => new NoteEdited(id, At, Note.Node, Note.Replaces),
+            DatasetEditedOp when Dataset is { File: { } file, Replaces: { } replaces } && Dataset.Node != Guid.Empty && IsComplete(file)
+                => new DatasetEdited(id, At, Dataset.Node, file.ToFile(), replaces),
             _ => throw new InvalidDataException($"Unknown or incomplete change '{Op}'"),
         };
     }
@@ -76,6 +81,12 @@ internal sealed record ChangeData(
     private static bool IsComplete([NotNullWhen(true)] AliasData? alias) =>
         alias is not null && !string.IsNullOrEmpty(alias.LinkType) && !string.IsNullOrWhiteSpace(alias.Phrase);
 
+    private static bool IsComplete(FileData file) =>
+        file is { Name: not null, Sha256: not null }
+        && !string.IsNullOrWhiteSpace(file.Name)
+        && file.Size >= 0
+        && file.Sha256.Length == 64 && file.Sha256.All(char.IsAsciiHexDigitLower);
+
     /// <summary><c>"rename": { "node": "…", "name": "…", "replaces": ["…"] }</c></summary>
     internal sealed record RenameData(Guid Node, string? Name, List<Guid>? Replaces);
 
@@ -87,4 +98,18 @@ internal sealed record ChangeData(
 
     /// <summary><c>"note": { "node": "…", "replaces": ["…"] }</c>; the content is in the file named by the change id.</summary>
     internal sealed record NoteData(Guid Node, List<Guid>? Replaces);
+
+    /// <summary>
+    /// <c>"dataset": { "node": "…", "file": { "name": "…", "size": 1, "sha256": "…" }, "replaces": ["…"] }</c>;
+    /// the file's content is in the file named by the change id.
+    /// </summary>
+    internal sealed record DatasetData(Guid Node, FileData? File, List<Guid>? Replaces);
+
+    /// <summary><c>"file": { "name": "survey.csv", "size": 52430, "sha256": "9f86…08" }</c></summary>
+    internal sealed record FileData(string? Name, long Size, string? Sha256)
+    {
+        public static FileData From(DatasetFile file) => new(file.Name, file.Size, file.Sha256);
+
+        public DatasetFile ToFile() => new(Name!, Size, Sha256!);
+    }
 }

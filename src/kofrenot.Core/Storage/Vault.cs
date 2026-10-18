@@ -27,6 +27,7 @@ public sealed class Vault
         var box = new SecretBox(masterKey);
         _codec = new ChangeCodec(box);
         Notes = new NoteFiles(folder, box, _log);
+        Datasets = new DatasetFiles(folder, new ChunkedBox(masterKey));
         _snapshot = cacheFolder is null ? null : new SnapshotStore(SnapshotOf(cacheFolder, Id), box, Id, _log);
     }
 
@@ -36,6 +37,9 @@ public sealed class Vault
 
     /// <summary>The content of note versions, read on demand.</summary>
     public NoteFiles Notes { get; }
+
+    /// <summary>The files of dataset versions, read on demand.</summary>
+    public DatasetFiles Datasets { get; }
 
     /// <summary>Opens a vault with its master key: the snapshot, then the change files it lacks.</summary>
     /// <param name="cacheFolder">Where the local snapshot is kept; null for none.</param>
@@ -74,6 +78,18 @@ public sealed class Vault
     public void Save(NoteEdited version, string content)
     {
         Notes.Write(version.Id, content);
+        Append(version);
+    }
+
+    /// <summary>
+    /// Saves a dataset version: its file first (read from <paramref name="content"/>, checked against
+    /// <see cref="DatasetEdited.File"/>), then its change. For a large file, write it with
+    /// <see cref="DatasetFiles.Write"/> off this thread, then <see cref="Append"/> the version.
+    /// </summary>
+    /// <exception cref="IOException">A file cannot be written, or the content is not the one described.</exception>
+    public void Save(DatasetEdited version, Stream content)
+    {
+        Datasets.Write(version, content);
         Append(version);
     }
 
