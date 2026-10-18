@@ -1,5 +1,6 @@
 using System.IO;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
@@ -14,7 +15,8 @@ namespace Kofrenot.UI.Views;
 /// Shows a dataset version's image, read and decoded off the UI thread, in memory only: nothing
 /// decrypted is written to disk. It opens fitted to the window (never enlarged) and follows its
 /// size until zoomed (<see cref="ImageZoom"/>): the wheel zooms around the pointer, +/- around the
-/// middle, 0 fits again. The window is resizable and remembers where it was left.
+/// middle, 0 fits again; a larger image is moved by dragging it with the left button. The window
+/// is resizable and remembers where it was left.
 /// </summary>
 public partial class ImageWindow : Window
 {
@@ -22,6 +24,7 @@ public partial class ImageWindow : Window
     private DatasetEdited? _version;
     private double _zoom = 1;
     private bool _fitting = true;
+    private (Point Start, Vector Offset)? _panFrom;
 
     public ImageWindow() => InitializeComponent();
 
@@ -142,6 +145,69 @@ public partial class ImageWindow : Window
     {
         Step(zoomIn: e.Delta > 0, e.GetPosition(Scroller));
         e.Handled = true;
+    }
+
+    /// <summary>The image is larger than the window: it can be dragged.</summary>
+    private bool CanPan => Scroller.ScrollableWidth > 0 || Scroller.ScrollableHeight > 0;
+
+    // A drag with the left button moves the image: the point grabbed follows the pointer.
+    private void Scroller_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        if (!CanPan || IsOnScrollBar(e))
+        {
+            return;
+        }
+
+        _panFrom = (e.GetPosition(Scroller), new Vector(Scroller.HorizontalOffset, Scroller.VerticalOffset));
+        Scroller.CaptureMouse();
+        Scroller.Cursor = Cursors.ScrollAll;
+        e.Handled = true;
+    }
+
+    private void Scroller_PreviewMouseMove(object sender, MouseEventArgs e)
+    {
+        if (_panFrom is not var (start, offset))
+        {
+            return;
+        }
+
+        var moved = e.GetPosition(Scroller) - start;
+        Scroller.ScrollToHorizontalOffset(offset.X - moved.X);
+        Scroller.ScrollToVerticalOffset(offset.Y - moved.Y);
+        e.Handled = true;
+    }
+
+    private void Scroller_PreviewMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+    {
+        if (_panFrom is not null)
+        {
+            Scroller.ReleaseMouseCapture();
+            e.Handled = true;
+        }
+    }
+
+    private void Scroller_LostMouseCapture(object sender, MouseEventArgs e)
+    {
+        _panFrom = null;
+        ShowPanCursor();
+    }
+
+    // The hand says the image can be moved; it follows the zoom and the window's size.
+    private void Scroller_ScrollChanged(object sender, ScrollChangedEventArgs e)
+    {
+        if (_panFrom is null)
+        {
+            ShowPanCursor();
+        }
+    }
+
+    private void ShowPanCursor() => Scroller.Cursor = CanPan ? Cursors.Hand : null;
+
+    // A press on a scroll bar (its thumb or arrows) is the scroll bar's.
+    private bool IsOnScrollBar(MouseButtonEventArgs e)
+    {
+        var point = e.GetPosition(Scroller);
+        return point.X > Scroller.ViewportWidth || point.Y > Scroller.ViewportHeight;
     }
 
     private void Scroller_SizeChanged(object sender, SizeChangedEventArgs e)
