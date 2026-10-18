@@ -6,14 +6,10 @@ Scope of each planned version. Implemented features move to [CHANGELOG.md](../CH
 | ------- | ----------- | ---------------------------------------------------------------------------------- |
 | 0.1     | Released    | Application shell; nodes and links typed in one box, stored in an encrypted folder |
 | 0.2     | Released    | Notes: link types, notes with content, pinned and recent nodes                     |
-| 0.3     | In progress | Datasets: files stored in the vault, read on demand                                |
+| 0.3     | Released    | Datasets: files stored in the vault, read on demand                                |
 | 0.4     | To define   | Structure: collections, containers, tree view                                      |
 | 0.5     | To define   | Vaults: several vaults, a hot key per vault                                        |
 | 0.6     | To define   | Server: vaults stored on a web server                                              |
-
-## 0.3 (in progress)
-
-Nothing left: what 0.3 adds is in [CHANGELOG.md](../CHANGELOG.md), *[Unreleased]*.
 
 ## 0.4 (to define)
 Open: is a collection a root container, or a separate scope? How does it relate to the current vault (0.5)?

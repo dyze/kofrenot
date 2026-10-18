@@ -4,7 +4,7 @@ All notable changes to kofrenot are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versions follow kofrenot's own `MAJOR.MINOR` scheme ([docs/GOAL.md](docs/GOAL.md#versioning)), not Semantic Versioning. Planned versions: [docs/ROADMAP.md](docs/ROADMAP.md).
 
-## [Unreleased]
+## [0.3] - 2026-10-18
 
 ### Added
 - **Datasets**: a node type holding one file of any kind and size, encrypted in the vault. Chosen on its creation step (or dropped there), then imported again from its details (**Import…**, Ctrl+I, or a file dropped on it) and exported (**Export…**, Ctrl+E, or dragged out). Each import is a new version; files imported on two computers before they synced show a conflict, to keep one version. The file's name, size and date are shown offline; the file itself is read only when viewed or exported. An import shows its progress in percent.
@@ -54,6 +54,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **Update check** once a day against GitHub releases, switchable in About.
 - **Installer and portable zip** (`build\installer.cmd`), self-contained.
 
-[Unreleased]: https://github.com/dyze/kofrenot/compare/0.2...HEAD
+[Unreleased]: https://github.com/dyze/kofrenot/compare/0.3...HEAD
+[0.3]: https://github.com/dyze/kofrenot/compare/0.2...0.3
 [0.2]: https://github.com/dyze/kofrenot/compare/0.1...0.2
 [0.1]: https://github.com/dyze/kofrenot/releases/tag/0.1
