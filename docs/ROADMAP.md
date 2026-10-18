@@ -14,7 +14,6 @@ Scope of each planned version. Implemented features move to [CHANGELOG.md](../CH
 ## 0.3 (in progress)
 
 1. **Vault size**. In settings, number of nodes and links are shown, display also its size.
-2. In "Add a node" window. For types, show a list at right side instead of combo.
 
 ## 0.4 (to define)
 Open: is a collection a root container, or a separate scope? How does it relate to the current vault (0.5)?

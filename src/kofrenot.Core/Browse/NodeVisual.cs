@@ -27,25 +27,23 @@ public sealed record NodeVisual(NodeIcon Icon, Guid? Thumbnail = null)
 {
     public static NodeVisual Of(KnowledgeGraph graph, Node node)
     {
-        if (node.Type == TypeCatalog.Note.Id)
-        {
-            return new NodeVisual(NodeIcon.Note);
-        }
-
-        if (node.Type != TypeCatalog.Dataset.Id)
-        {
-            return new NodeVisual(NodeIcon.Generic);
-        }
-
-        var versions = graph.DatasetVersionsOf(node.Id);
+        var versions = node.Type == TypeCatalog.Dataset.Id ? graph.DatasetVersionsOf(node.Id) : [];
         if (versions.Count == 0)
         {
-            return new NodeVisual(NodeIcon.File);
+            return OfType(node.Type);
         }
 
         var file = versions[^1].File;
         return new NodeVisual(IconOf(DatasetType.Of(file).Category), DatasetType.HasThumbnail(file) ? versions[^1].Id : null);
     }
+
+    /// <summary>The icon of a node type alone (a node without file, or a type on the creation screen).</summary>
+    public static NodeVisual OfType(string typeId) => new(typeId switch
+    {
+        _ when typeId == TypeCatalog.Note.Id => NodeIcon.Note,
+        _ when typeId == TypeCatalog.Dataset.Id => NodeIcon.File,
+        _ => NodeIcon.Generic,
+    });
 
     private static NodeIcon IconOf(DatasetCategory category) => category switch
     {

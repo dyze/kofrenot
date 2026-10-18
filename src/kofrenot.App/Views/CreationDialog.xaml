@@ -44,12 +44,21 @@
           <TextBlock x:Name="NodeName" Style="{StaticResource TitleText}" />
           <TextBlock Style="{StaticResource SecondaryText}" Text="New node" />
         </StackPanel>
-        <ComboBox x:Name="TypeBox"
-                  Grid.Column="1"
-                  VerticalAlignment="Center"
-                  DisplayMemberPath="Name"
-                  FontSize="{StaticResource BodyFontSize}"
-                  SelectionChanged="TypeBox_SelectionChanged" />
+        <!-- The node types, each with its icon: Up/Down or a click choose one. -->
+        <ListBox x:Name="TypeBox"
+                 Grid.Column="1"
+                 VerticalAlignment="Top"
+                 FontSize="{StaticResource BodyFontSize}"
+                 SelectionChanged="TypeBox_SelectionChanged">
+          <ListBox.ItemTemplate>
+            <DataTemplate>
+              <StackPanel Orientation="Horizontal">
+                <local:NodeVisualView Width="20" Height="20" Margin="0,0,8,0" Visual="{Binding Visual}" />
+                <TextBlock VerticalAlignment="Center" Text="{Binding Type.Name}" />
+              </StackPanel>
+            </DataTemplate>
+          </ListBox.ItemTemplate>
+        </ListBox>
       </Grid>
 
       <local:MarkdownBox x:Name="ContentBox" Height="220" Margin="0,12,0,0" Visibility="Collapsed" />

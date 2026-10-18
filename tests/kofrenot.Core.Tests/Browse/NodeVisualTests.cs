@@ -14,6 +14,12 @@ public sealed class NodeVisualTests
     public void ANodeWithoutFile_HasTheIconOfItsType(string type, NodeIcon icon) =>
         Assert.Equal(new NodeVisual(icon), NodeVisual.Of(_graph, Add(type)));
 
+    [Fact]
+    public void ATypeAlone_HasItsIcon() =>
+        Assert.Equal(
+            [NodeIcon.Generic, NodeIcon.Note, NodeIcon.File],
+            TypeCatalog.BuiltIn.NodeTypes.Select(type => NodeVisual.OfType(type.Id).Icon));
+
     [Theory]
     [InlineData("data.json", NodeIcon.Code)]
     [InlineData("notes.md", NodeIcon.Text)]

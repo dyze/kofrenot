@@ -3,11 +3,15 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Interop;
+using Kofrenot.Core.Browse;
 using Kofrenot.Core.Graph;
 using Kofrenot.Core.Input;
 using Kofrenot.UI.Platform;
 
 namespace Kofrenot.UI.Views;
+
+/// <summary>A node type in the creation screen's list, with its icon.</summary>
+public sealed record TypeChoice(NodeType Type, NodeVisual Visual);
 
 /// <summary>
 /// The creation screen, shown by <see cref="VaultSession.Create"/> from anywhere: a view of a
@@ -16,6 +20,7 @@ namespace Kofrenot.UI.Views;
 public partial class CreationDialog : Window
 {
     private readonly CreationForm _form;
+    private readonly IReadOnlyList<TypeChoice> _typeChoices;
     private bool _showing;
     private bool _discardConfirmed;
 
@@ -26,7 +31,8 @@ public partial class CreationDialog : Window
         _form = form;
 
         TitleText.Text = form.Title;
-        TypeBox.ItemsSource = form.Types.NodeTypes;
+        _typeChoices = form.Types.NodeTypes.Select(type => new TypeChoice(type, NodeVisual.OfType(type.Id))).ToList();
+        TypeBox.ItemsSource = _typeChoices;
         LinkTypeBox.ItemsSource = form.Types.Verbs;
         ContentBox.Edited += ContentBox_Edited;
         Loaded += (_, _) => ShowStep();
@@ -54,6 +60,20 @@ public partial class CreationDialog : Window
         if (StepSide is null)
         {
             LinkTypeBox.Focus();
+        }
+        else
+        {
+            FocusType();
+        }
+    }
+
+    // On the chosen type itself, so Up/Down move from it at once; its item exists once laid out.
+    private void FocusType()
+    {
+        TypeBox.UpdateLayout();
+        if (TypeBox.ItemContainerGenerator.ContainerFromItem(TypeBox.SelectedItem) is ListBoxItem item)
+        {
+            item.Focus();
         }
         else
         {
@@ -88,7 +108,7 @@ public partial class CreationDialog : Window
     private void ShowNode(Side side)
     {
         NodeName.Text = _form.NameOf(side);
-        TypeBox.SelectedItem = _form.TypeOf(side);
+        TypeBox.SelectedItem = _typeChoices.First(choice => choice.Type == _form.TypeOf(side));
         ContentBox.Visibility = _form.IsNote(side) ? Visibility.Visible : Visibility.Collapsed;
         ShowFile(side);
 
@@ -114,7 +134,7 @@ public partial class CreationDialog : Window
 
     private void TypeBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        if (_showing || StepSide is not { } side || TypeBox.SelectedItem is not NodeType type)
+        if (_showing || StepSide is not { } side || TypeBox.SelectedItem is not TypeChoice { Type: var type })
         {
             return;
         }

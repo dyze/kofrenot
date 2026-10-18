@@ -13,6 +13,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 - **Rows** in the search and the links: highlighted across their width when hovered, the selected one marked by a bar. A click selects a row, a double-click opens its details.
+- **Creation screen**: a new node's type is chosen in a list on the right, each type with its icon, instead of a combo.
 - **Vault format 3.** kofrenot 0.2 does not open a vault written by this version, and offers the update. Vaults of formats 1 and 2 are read as they are.
 
 ## [0.2] - 2026-10-18
