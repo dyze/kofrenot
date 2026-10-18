@@ -7,23 +7,28 @@ Scope of each planned version. Implemented features move to [CHANGELOG.md](../CH
 | 0.1     | Released    | Application shell; nodes and links typed in one box, stored in an encrypted folder |
 | 0.2     | Released    | Notes: link types, notes with content, pinned and recent nodes                     |
 | 0.3     | Released    | Datasets: files stored in the vault, read on demand                                |
-| 0.4     | To define   | Structure: collections, containers, tree view                                      |
+| 0.4     | To define   | Views: flat and tree views over the graph, shown as tabs                           |
 | 0.5     | To define   | Vaults: several vaults, a hot key per vault                                        |
 | 0.6     | To define   | Server: vaults stored on a web server                                              |
 
-## 0.4 (to define)
-Open: is a collection a root container, or a separate scope? How does it relate to the current vault (0.5)?
+## 0.4
+Views: different ways to look at the same graph. No node has to belong to anything; a view only reads the graph.
 
-==🟠To be discussed. Kofrenot is a knowledge tool able to store any type of information.== 
-==🟠In my original idea, Collections and Containers were a way to propose to user different ways to access nodes. User could create a Collection storing a whole set of files in a tree size way. Another collections could show the list of all memos stored in systems (as GoogleKeep does). The problem is that a node must be then always attached to a Collection (the default one or a custom one).== 
-==🟠Thinking twice, we could maybe propose a flexible display of information showing views. A view would be then defined with a type (flat, treeview...) and a query that would define a root node or may be later something more clever (fetch all nodes of types memo).==
+```
+ [ Search ] [ Files ] [ Memos ] [+]          tabs on top of the main window
+              │          └─ flat: every node of type note
+              └─ tree: from "Projects", following "contains"
+```
 
-1. **Collections** as a node type. Used to order nodes at top level. By default, a collection is created and all new nodes are attached to it. Current collection is shown at top of Main Window.
-	- Uses the link type "contains" (0.2).
-2. **Containers as node type.** Used to order nodes in a tree. Useful for datasets. By default, all new nodes are attached at root.
-	- Link type "contains" used to identify the content.
-3. **Tree view.** User can enable a tree view to navigate thru containers and datasets more easily.
-	- Standard file explore operations are handled: copy, move, delete...
+1. **Views.** A view is a node of type *view*: searchable, pinnable, synced and versioned like any node. It holds a display and a query, kept as versioned content as a note's text.
+	- Displays: *flat* (a list) and *tree*.
+	- Queries: *root node + link type to follow* (tree), or *node type =* (flat). Richer queries come later.
+2. **Tabs.** Views open as tabs on top of the main window. *Search* (today's screen) is always the first tab and cannot be closed; view tabs can be added and closed.
+3. **Tree view.** Navigates from a root node through "contains" links (0.2). No container type: any node with "contains" links holds others.
+	- A node can have several parents: it is shown under each. Cycles are cut.
+	- **Move:** only the link to the parent shown in the tree changes; the node's other parents stay.
+	- **Copy:** copies the node with its whole subtree as new nodes; a copied dataset starts with its current file. What will be copied is shown first.
+	- **Delete:** deletes the node with its whole subtree, after a preview of the consequences (nodes deleted, links removed). A node of the subtree that also has another parent is deleted too: the preview lists those other parents.
 
 ## 0.5 (to define)
 1. **Multiple vaults.** User can register several vaults on his app. 
