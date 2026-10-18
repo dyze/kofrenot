@@ -11,12 +11,15 @@ public sealed class DatasetFiles(string vaultFolder, ChunkedBox box)
 {
     private static ReadOnlySpan<byte> Magic => "KFD1"u8;
 
-    /// <summary>Describes a file to import: its name (without folder), size and SHA-256, reading it once.</summary>
+    /// <summary>
+    /// Describes a file to import: its name (without folder), size and SHA-256, reading it once;
+    /// <paramref name="progress"/> is told the bytes read so far.
+    /// </summary>
     /// <exception cref="IOException">The file cannot be read.</exception>
-    public static DatasetFile Describe(string path)
+    public static DatasetFile Describe(string path, IProgress<long>? progress = null)
     {
         using var file = File.OpenRead(path);
-        using var hashing = new HashingStream(file);
+        using var hashing = new HashingStream(file, progress);
         hashing.CopyTo(Stream.Null);
         return new DatasetFile(Path.GetFileName(path), hashing.Count, hashing.Sha256());
     }
@@ -27,16 +30,16 @@ public sealed class DatasetFiles(string vaultFolder, ChunkedBox box)
     /// <summary>
     /// Writes the file of <paramref name="version"/>, read from <paramref name="content"/> to its
     /// end. Nothing is written when the content is not the file described by the version (changed
-    /// since it was described).
+    /// since it was described). <paramref name="progress"/> is told the bytes read so far.
     /// </summary>
     /// <exception cref="IOException">The file cannot be written, or the content is not the one described.</exception>
-    public void Write(DatasetEdited version, Stream content)
+    public void Write(DatasetEdited version, Stream content, IProgress<long>? progress = null)
     {
         var path = VaultFolder.DatasetFileOf(vaultFolder, version.Id);
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
         AtomicFile.Write(path, output =>
         {
-            using var hashing = new HashingStream(content);
+            using var hashing = new HashingStream(content, progress);
             box.Seal(Magic, hashing, output, version.Id.ToByteArray());
             if (hashing.Count != version.File.Size || hashing.Sha256() != version.File.Sha256)
             {

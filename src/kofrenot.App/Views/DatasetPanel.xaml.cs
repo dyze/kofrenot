@@ -3,6 +3,7 @@ using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Threading;
 using Kofrenot.Core.Browse;
 using Kofrenot.Core.Datasets;
 using Kofrenot.Core.Graph;
@@ -52,7 +53,7 @@ public partial class DatasetPanel : UserControl
     public bool IsReading => View.IsReading;
 
     /// <summary>Saves a version, its file read from the stream opened; false when it could not.</summary>
-    public Func<DatasetEdited, Func<Stream>, Task<bool>>? Save { get; set; }
+    public Func<DatasetEdited, Func<Stream>, IProgress<long>?, Task<bool>>? Save { get; set; }
 
     /// <summary>Exports a version's file to a path; false when it could not.</summary>
     public Func<DatasetEdited, string, Task<bool>>? Export { get; set; }
@@ -179,9 +180,12 @@ public partial class DatasetPanel : UserControl
     private async Task ImportFrom(string path)
     {
         var (graph, node, files) = (_graph!, _node!, _files!);
-        await Run("Reading the file…", async () =>
+        const string Reading = "Reading the file…";
+        const string Importing = "Importing…";
+        await Run(Reading, async () =>
         {
-            var file = await Task.Run(() => DatasetFiles.Describe(path));
+            var size = new FileInfo(path).Length;
+            var file = await Task.Run(() => DatasetFiles.Describe(path, ProgressOf(Reading, size)));
             var state = new DatasetPlanner(graph).Load(node, files.Exists);
             if (new DatasetPlanner(graph).Import(node, file, state) is not { } version)
             {
@@ -189,11 +193,24 @@ public partial class DatasetPanel : UserControl
                 return "This file is the dataset's already: nothing imported.";
             }
 
-            _work = "Importing…";
+            _work = Importing;
             ShowState();
-            return await Save!(version, () => File.OpenRead(path)) ? null : "The file was not imported.";
+            return await Save!(version, () => File.OpenRead(path), ProgressOf(Importing, file.Size)) ? null : "The file was not imported.";
         });
     }
+
+    /// <summary>
+    /// Shows how far a step of the work is, in percent of <paramref name="total"/> bytes. Reports
+    /// arrive later on the UI thread: one arriving after its step is dropped.
+    /// </summary>
+    private Progress<long> ProgressOf(string working, long total) => new(done =>
+    {
+        if (_work?.StartsWith(working, StringComparison.Ordinal) == true)
+        {
+            _work = $"{working} {ByteSize.Percent(done, total)} %";
+            StatusText.Text = _work;
+        }
+    });
 
     private async Task ExportTo(DatasetEdited version, string target) =>
         await Run("Exporting…", async () => await Export!(version, target) ? null : "The file was not exported.");
@@ -202,7 +219,8 @@ public partial class DatasetPanel : UserControl
     {
         var (graph, node, files, state) = (_graph!, _node!, _files!, _state!);
         var version = new DatasetPlanner(graph).Keep(node, kept, state);
-        await Run("Keeping this version…", async () => await Save!(version, () => files.OpenRead(kept.Id)) ? null : "The version was not kept.");
+        const string Keeping = "Keeping this version…";
+        await Run(Keeping, async () => await Save!(version, () => files.OpenRead(kept.Id), ProgressOf(Keeping, kept.File.Size)) ? null : "The version was not kept.");
     }
 
     /// <summary>Runs some work, the panel busy meanwhile; the work returns a message to leave in the status, or null.</summary>
@@ -310,7 +328,11 @@ public partial class DatasetPanel : UserControl
         {
             var dropped = DragExport.Drag(FileRow, latest.File.SafeName, path =>
             {
+                // The export holds the UI thread (Windows needs the file before the drag starts):
+                // the message is drawn first, so a large file does not look frozen.
                 Mouse.OverrideCursor = Cursors.Wait;
+                StatusText.Text = $"Preparing the file to drag ({ByteSize.Format(latest.File.Size)})…";
+                Dispatcher.Invoke(DispatcherPriority.Render, () => { });
                 try
                 {
                     files.Export(latest.Id, path);
@@ -321,6 +343,7 @@ public partial class DatasetPanel : UserControl
                 }
             });
             Log.Info("Action", dropped ? $"Dataset dragged out ({latest.File.Size} bytes)" : "Dataset drag cancelled");
+            ShowState();
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidDataException)
         {

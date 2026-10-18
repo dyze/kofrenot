@@ -14,8 +14,8 @@ public partial class NodeDetailsPanel
     /// <summary>The files of the open vault's datasets; null when no vault is open.</summary>
     public Func<DatasetFiles?>? DatasetFiles { get; set; }
 
-    /// <summary>Saves a dataset version, its file read from the stream opened; false when it could not.</summary>
-    public Func<DatasetEdited, Func<Stream>, Task<bool>>? SaveDataset
+    /// <summary>Saves a dataset version, its file read from the stream opened (the progress told the bytes sealed); false when it could not.</summary>
+    public Func<DatasetEdited, Func<Stream>, IProgress<long>?, Task<bool>>? SaveDataset
     {
         set => DatasetBox.Save = value;
     }

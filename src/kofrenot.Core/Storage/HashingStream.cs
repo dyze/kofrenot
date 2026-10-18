@@ -2,10 +2,16 @@ using System.Security.Cryptography;
 
 namespace Kofrenot.Core.Storage;
 
-/// <summary>Reads another stream, counting and hashing (SHA-256) what goes through.</summary>
-internal sealed class HashingStream(Stream source) : Stream
+/// <summary>
+/// Reads another stream, counting and hashing (SHA-256) what goes through. <c>progress</c> is told
+/// the bytes read so far, once per <see cref="ReportEvery"/> and at the end.
+/// </summary>
+internal sealed class HashingStream(Stream source, IProgress<long>? progress = null) : Stream
 {
+    private const long ReportEvery = 1024 * 1024;
+
     private readonly IncrementalHash _hash = IncrementalHash.CreateHash(HashAlgorithmName.SHA256);
+    private long _reported = -1;
 
     /// <summary>The bytes read so far.</summary>
     public long Count { get; private set; }
@@ -34,6 +40,12 @@ internal sealed class HashingStream(Stream source) : Stream
         var read = source.Read(buffer);
         _hash.AppendData(buffer[..read]);
         Count += read;
+        if (read == 0 ? _reported != Count : Count - _reported >= ReportEvery)
+        {
+            _reported = Count;
+            progress?.Report(Count);
+        }
+
         return read;
     }
 

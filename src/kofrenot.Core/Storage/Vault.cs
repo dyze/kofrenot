@@ -100,11 +100,12 @@ public sealed class Vault
     /// <summary>
     /// Writes the files of a dataset version, not its change: the thumbnail of an image (when
     /// <paramref name="thumbnails"/> makes one), then the file, read from <paramref name="open"/>
-    /// (opened once for each) and checked against <see cref="DatasetEdited.File"/>. It changes
-    /// nothing in memory, so it can run off the thread using the vault.
+    /// (opened once for each) and checked against <see cref="DatasetEdited.File"/>;
+    /// <paramref name="progress"/> is told the bytes of the file sealed so far. It changes nothing
+    /// in memory, so it can run off the thread using the vault.
     /// </summary>
     /// <exception cref="IOException">A file cannot be written, or the content is not the one described.</exception>
-    public void WriteDataset(DatasetEdited version, Func<Stream> open, IThumbnailMaker? thumbnails = null)
+    public void WriteDataset(DatasetEdited version, Func<Stream> open, IThumbnailMaker? thumbnails = null, IProgress<long>? progress = null)
     {
         if (thumbnails is not null && DatasetType.HasThumbnail(version.File))
         {
@@ -116,7 +117,7 @@ public sealed class Vault
         }
 
         using var content = open();
-        Datasets.Write(version, content);
+        Datasets.Write(version, content, progress);
     }
 
     /// <summary>Reads the change files not read yet (written by another app, or copied by the sync tool).</summary>

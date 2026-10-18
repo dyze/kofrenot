@@ -20,4 +20,13 @@ public sealed class ByteSizeTests
     [Fact]
     public void TheCulture_GivesTheDecimalSeparator() =>
         Assert.Equal("1,5 KB", ByteSize.Format(1536, CultureInfo.GetCultureInfo("fr-FR")));
+
+    [Theory]
+    [InlineData(0, 200, 0)]
+    [InlineData(84, 200, 42)]
+    [InlineData(200, 200, 100)]
+    [InlineData(300, 200, 100)]
+    [InlineData(0, 0, 100)]
+    public void APercent_IsBetween0And100(long done, long total, int percent) =>
+        Assert.Equal(percent, ByteSize.Percent(done, total));
 }

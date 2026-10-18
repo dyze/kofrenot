@@ -125,7 +125,49 @@ public sealed class DatasetFilesTests : IDisposable
         Assert.Throws<InvalidDataException>(() => opened.CopyTo(Stream.Null));
     }
 
+    [Fact]
+    public void DescribingAndWriting_TellTheBytesReadSoFar_OncePerMegabyte_AndAtTheEnd()
+    {
+        var path = _temp.Sub("big.bin");
+        File.WriteAllBytes(path, new byte[(3 * 1024 * 1024) + 10]);
+        var described = new Reports();
+
+        var file = DatasetFiles.Describe(path, described);
+        var version = new DatasetEdited(Guid.NewGuid(), At, Guid.NewGuid(), file, []);
+        var written = new Reports();
+        using (var content = File.OpenRead(path))
+        {
+            Files().Write(version, content, written);
+        }
+
+        foreach (var reports in new[] { described.Values, written.Values })
+        {
+            Assert.Equal(file.Size, reports[^1]);
+            Assert.InRange(reports.Count, 3, 5);
+            Assert.Equal(reports.Order(), reports);
+            Assert.Equal(reports.Distinct(), reports);
+        }
+    }
+
+    [Fact]
+    public void AnEmptyFile_TellsItsEnd_Once()
+    {
+        var reports = new Reports();
+
+        DatasetFiles.Describe(Source("empty.txt", string.Empty), reports);
+
+        Assert.Equal([0L], reports.Values);
+    }
+
     public void Dispose() => _temp.Dispose();
+
+    /// <summary>Keeps what it is told, at once (Progress&lt;T&gt; would post it later).</summary>
+    private sealed class Reports : IProgress<long>
+    {
+        public List<long> Values { get; } = [];
+
+        public void Report(long value) => Values.Add(value);
+    }
 
     private DatasetFiles Files() => new(Folder, new ChunkedBox(_key));
 

@@ -159,8 +159,9 @@ public sealed class VaultSession : IDisposable
     /// Saves a dataset version: its files (an image's thumbnail, then the file, read from
     /// <paramref name="open"/>) written off the UI thread, then its change. False when no vault is
     /// open, it closed meanwhile, or a file cannot be read or written (the user is told).
+    /// <paramref name="progress"/> is told the bytes sealed so far.
     /// </summary>
-    public async Task<bool> SaveDataset(Window owner, DatasetEdited version, Func<Stream> open)
+    public async Task<bool> SaveDataset(Window owner, DatasetEdited version, Func<Stream> open, IProgress<long>? progress = null)
     {
         if (Current is not { } vault || !_importing.Add(version.Node))
         {
@@ -170,7 +171,7 @@ public sealed class VaultSession : IDisposable
         Changed?.Invoke();
         try
         {
-            await Task.Run(() => vault.WriteDataset(version, open, _thumbnails));
+            await Task.Run(() => vault.WriteDataset(version, open, _thumbnails, progress));
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidDataException)
         {

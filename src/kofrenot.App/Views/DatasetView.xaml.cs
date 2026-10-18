@@ -15,10 +15,17 @@ namespace Kofrenot.UI.Views;
 /// </summary>
 public partial class DatasetView : UserControl
 {
+    // Shared by every text shown, while kofrenot runs.
+    private static bool _wrapsLines;
+
     private Guid? _shown;
     private int _loading;
 
-    public DatasetView() => InitializeComponent();
+    public DatasetView()
+    {
+        InitializeComponent();
+        ShowWrap();
+    }
 
     /// <summary>Raised when the view starts or stops showing a text, so the details give it room.</summary>
     public event Action? ContentChanged;
@@ -66,6 +73,7 @@ public partial class DatasetView : UserControl
         var hadContent = IsShowing;
         TextView.Text = string.Empty;
         TextView.Visibility = Visibility.Collapsed;
+        WrapBox.Visibility = Visibility.Collapsed;
         MessageText.Text = string.Empty;
         Visibility = Visibility.Collapsed;
         if (hadContent)
@@ -92,6 +100,7 @@ public partial class DatasetView : UserControl
 
             TextView.Text = text.Text;
             TextView.Visibility = Visibility.Visible;
+            WrapBox.Visibility = Visibility.Visible;
             MessageText.Text = text.IsCut ? "Only the beginning is shown: export the file to see all of it." : string.Empty;
             ContentChanged?.Invoke();
             Log.Info("Action", "Dataset viewed (text)");
@@ -104,5 +113,18 @@ public partial class DatasetView : UserControl
                 MessageText.Text = "This file cannot be shown here: export it to open it.";
             }
         }
+    }
+
+    private void WrapBox_Click(object sender, RoutedEventArgs e)
+    {
+        _wrapsLines = WrapBox.IsChecked == true;
+        ShowWrap();
+    }
+
+    private void ShowWrap()
+    {
+        WrapBox.IsChecked = _wrapsLines;
+        TextView.TextWrapping = _wrapsLines ? TextWrapping.Wrap : TextWrapping.NoWrap;
+        TextView.HorizontalScrollBarVisibility = _wrapsLines ? ScrollBarVisibility.Disabled : ScrollBarVisibility.Auto;
     }
 }

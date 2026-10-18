@@ -7,6 +7,10 @@ public static class ByteSize
 {
     private static readonly string[] Units = ["KB", "MB", "GB", "TB"];
 
+    /// <summary>How much of <paramref name="total"/> bytes is <paramref name="done"/>, from 0 to 100 (100 for nothing to do).</summary>
+    public static int Percent(long done, long total) =>
+        total <= 0 ? 100 : (int)Math.Clamp(done * 100 / total, 0, 100);
+
     public static string Format(long bytes, IFormatProvider? culture = null)
     {
         culture ??= CultureInfo.CurrentCulture;

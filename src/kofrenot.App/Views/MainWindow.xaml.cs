@@ -53,7 +53,7 @@ public partial class MainWindow : Window
         DetailsPanel.ReadNote = version => _session.Current?.Notes.Read(version);
         DetailsPanel.SaveNote = (version, content) => _session.SaveNote(this, version, content);
         DetailsPanel.DatasetFiles = () => _session.Current?.Datasets;
-        DetailsPanel.SaveDataset = (version, open) => _session.SaveDataset(this, version, open);
+        DetailsPanel.SaveDataset = (version, open, progress) => _session.SaveDataset(this, version, open, progress);
         DetailsPanel.ExportDataset = (version, target) => _session.ExportDataset(this, version, target);
         DetailsPanel.IsImporting = _session.IsImporting;
         DetailsPanel.ShowImage = ShowImage;

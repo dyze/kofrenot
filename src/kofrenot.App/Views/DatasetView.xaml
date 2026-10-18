@@ -21,10 +21,21 @@
              TextWrapping="NoWrap"
              VerticalScrollBarVisibility="Auto"
              Visibility="Collapsed" />
-    <TextBlock x:Name="MessageText"
-               Grid.Row="1"
-               Margin="0,4,0,0"
-               Style="{StaticResource CaptionText}"
-               TextWrapping="Wrap" />
+    <Grid Grid.Row="1" Margin="0,4,0,0">
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="*" />
+        <ColumnDefinition Width="Auto" />
+      </Grid.ColumnDefinitions>
+      <TextBlock x:Name="MessageText" VerticalAlignment="Center" Style="{StaticResource CaptionText}" TextWrapping="Wrap" />
+      <!-- Long lines (JSON, logs) wrapped instead of scrolled sideways; kept for every text until kofrenot stops. -->
+      <CheckBox x:Name="WrapBox"
+                Grid.Column="1"
+                Margin="12,0,0,0"
+                Content="Wrap lines"
+                FontSize="{StaticResource CaptionFontSize}"
+                Focusable="False"
+                Visibility="Collapsed"
+                Click="WrapBox_Click" />
+    </Grid>
   </Grid>
 </UserControl>
