@@ -28,6 +28,12 @@
             <TextBlock Margin="6,0,0,0" VerticalAlignment="Center" Text="New" />
           </StackPanel>
         </Button>
+        <Button x:Name="EditButton" Margin="0,0,4,0" Padding="8,4" Style="{StaticResource FlatButton}" ToolTip="Open the node selected, to edit it (Enter)" Click="Edit_Click">
+          <StackPanel Orientation="Horizontal">
+            <TextBlock VerticalAlignment="Center" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="12" Text="&#xE70F;" />
+            <TextBlock Margin="6,0,0,0" VerticalAlignment="Center" Text="Edit" />
+          </StackPanel>
+        </Button>
         <Button x:Name="CutButton" Margin="0,0,4,0" Padding="8,4" Style="{StaticResource FlatButton}" ToolTip="Cut the node selected, to move it (Ctrl+X)" Click="Cut_Click">
           <StackPanel Orientation="Horizontal">
             <TextBlock VerticalAlignment="Center" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="12" Text="&#xE8C6;" />
@@ -120,7 +126,13 @@
                FontSize="{StaticResource BodyFontSize}"
                Visibility="Collapsed"
                KeyDown="Content_KeyDown"
-               MouseDoubleClick="Content_MouseDoubleClick">
+               MouseDoubleClick="Content_MouseDoubleClick"
+               SelectionChanged="List_SelectionChanged"
+               ContextMenuOpening="List_ContextMenuOpening">
+        <!-- Filled when it opens: New…, Edit (ViewPanel.Actions). -->
+        <ListBox.ContextMenu>
+          <ContextMenu />
+        </ListBox.ContextMenu>
         <ListBox.ItemTemplate>
           <DataTemplate>
             <StackPanel Orientation="Horizontal">

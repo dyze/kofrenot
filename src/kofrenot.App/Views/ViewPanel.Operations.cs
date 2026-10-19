@@ -166,7 +166,7 @@ public partial class ViewPanel
         }
     }
 
-    /// <summary>The tree's menu: the operations of the node selected; none without one.</summary>
+    /// <summary>The tree's menu: New… (under it) and Edit, then the operations of the node selected; none without one.</summary>
     private void Tree_ContextMenuOpening(object sender, ContextMenuEventArgs e)
     {
         var menu = Tree.ContextMenu!;
@@ -177,6 +177,8 @@ public partial class ViewPanel
             return;
         }
 
+        AddNodeItems(menu);
+        menu.Items.Add(new Separator());
         menu.Items.Add(MenuItemOf("Copy", "Ctrl+C", () => Take(isCut: false)));
         menu.Items.Add(MenuItemOf("Cut", "Ctrl+X", () => Take(isCut: true)));
         menu.Items.Add(MenuItemOf(_taken is { IsCut: true } ? "Move here" : "Paste a copy here", "Ctrl+V", () => Paste(), isEnabled: _taken is not null));

@@ -1,4 +1,5 @@
 using System.Windows;
+using System.Windows.Controls;
 using Kofrenot.Core.Graph;
 using Kofrenot.Core.Input;
 using Kofrenot.Core.Logging;
@@ -7,9 +8,10 @@ using Kofrenot.Core.Views;
 namespace Kofrenot.UI.Views;
 
 /// <summary>
-/// The action bar over a view: New, and in a tree Cut, Copy, Paste and Delete, as their keys do.
-/// New adds a node through the creation screen: in a tree under the node selected (the root when
-/// none), linked through the tree's link type; in a list, of the list's type.
+/// The action bar over a view: New and Edit, and in a tree Cut, Copy, Paste and Delete, as their
+/// keys do; New and Edit are also first in the right-click menus. New adds a node through the
+/// creation screen: in a tree under the node selected (the root when none), linked through the
+/// tree's link type; in a list, of the list's type. Edit opens the node's details, as Enter does.
 /// </summary>
 public partial class ViewPanel
 {
@@ -36,6 +38,7 @@ public partial class ViewPanel
     /// <summary>The operations need a node selected; Paste, a node cut or copied too.</summary>
     private void UpdateActions()
     {
+        EditButton.IsEnabled = SelectedNode is not null;
         var hasSelection = SelectedItem is not null;
         CutButton.IsEnabled = hasSelection;
         CopyButton.IsEnabled = hasSelection;
@@ -43,7 +46,29 @@ public partial class ViewPanel
         PasteButton.IsEnabled = hasSelection && _taken is not null;
     }
 
-    private void New_Click(object sender, RoutedEventArgs e)
+    private void New_Click(object sender, RoutedEventArgs e) => AddNode();
+
+    private void Edit_Click(object sender, RoutedEventArgs e) => OpenSelected();
+
+    private void List_SelectionChanged(object sender, SelectionChangedEventArgs e) => UpdateActions();
+
+    /// <summary>The list's menu: New… and Edit.</summary>
+    private void List_ContextMenuOpening(object sender, ContextMenuEventArgs e)
+    {
+        var menu = List.ContextMenu!;
+        menu.Items.Clear();
+        AddNodeItems(menu);
+    }
+
+    /// <summary>New… and Edit, first in a menu.</summary>
+    private void AddNodeItems(ContextMenu menu)
+    {
+        menu.Items.Add(MenuItemOf("New…", string.Empty, AddNode, isEnabled: CreateNode is not null && (_definition is not null || _listType is not null)));
+        menu.Items.Add(MenuItemOf("Edit", "Enter", () => OpenSelected(), isEnabled: SelectedNode is not null));
+    }
+
+    /// <summary>New: a node on the creation screen, under the node selected in a tree, of the list's type in a list; then selected.</summary>
+    private void AddNode()
     {
         if (_graph is null || _view is null || CreateNode is null)
         {

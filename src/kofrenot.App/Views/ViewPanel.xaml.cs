@@ -207,12 +207,14 @@ public partial class ViewPanel : UserControl
 
     private void Content_MouseDoubleClick(object sender, MouseButtonEventArgs e) => e.Handled = OpenSelected();
 
+    /// <summary>The node selected in the tree or the list, or null.</summary>
+    private Node? SelectedNode => Tree.IsVisible
+        ? (Tree.SelectedItem as TreeViewItem)?.Tag is TreeItem item ? item.Node : null
+        : (List.SelectedItem as ViewRow)?.Node;
+
     private bool OpenSelected()
     {
-        var node = Tree.IsVisible
-            ? (Tree.SelectedItem as TreeViewItem)?.Tag is TreeItem item ? item.Node : null
-            : (List.SelectedItem as ViewRow)?.Node;
-        if (node is null)
+        if (SelectedNode is not { } node)
         {
             return false;
         }
