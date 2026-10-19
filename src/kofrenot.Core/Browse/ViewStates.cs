@@ -3,36 +3,62 @@ using Kofrenot.Core.Views;
 
 namespace Kofrenot.Core.Browse;
 
+/// <summary>How a view was left on this device: the nodes expanded in its tree, and whether it shows details.</summary>
+public sealed class ViewState
+{
+    /// <summary>The <see cref="TreeItem.Key"/> of each node expanded.</summary>
+    public HashSet<string> Expanded { get; set; } = [];
+
+    /// <summary>The details (type, size, modified) are shown next to each node.</summary>
+    public bool ShowsDetails { get; set; }
+}
+
 /// <summary>
-/// The nodes expanded in each tree view, per vault, by <see cref="TreeItem.Key"/>: a view opens
-/// again as it was left, also after a restart. Kept on this device only (<see cref="LocalJsonFile{T}"/>),
-/// holding ids, never names. A path no longer in the tree is ignored.
+/// How each view was left, per vault (<see cref="ViewState"/>): it opens again so, also after a
+/// restart. Kept on this device only (<see cref="LocalJsonFile{T}"/>), holding ids, never names. A
+/// path no longer in the tree is ignored.
 /// </summary>
 public sealed class ViewStates(string path, ILog? log = null)
 {
-    private readonly LocalJsonFile<Dictionary<Guid, Dictionary<Guid, HashSet<string>>>> _file = new(path, "View", "view states", log);
-    private Dictionary<Guid, Dictionary<Guid, HashSet<string>>>? _byVault;
+    private readonly LocalJsonFile<Dictionary<Guid, Dictionary<Guid, ViewState>>> _file = new(path, "View", "view states", log);
+    private Dictionary<Guid, Dictionary<Guid, ViewState>>? _byVault;
 
-    private Dictionary<Guid, Dictionary<Guid, HashSet<string>>> ByVault => _byVault ??= _file.Load();
+    private Dictionary<Guid, Dictionary<Guid, ViewState>> ByVault => _byVault ??= _file.Load();
 
     /// <summary>The keys of the nodes expanded in a view.</summary>
-    public IReadOnlySet<string> ExpandedIn(Guid vault, Guid view) =>
-        ByVault.TryGetValue(vault, out var views) && views.TryGetValue(view, out var expanded) ? expanded : new HashSet<string>();
+    public IReadOnlySet<string> ExpandedIn(Guid vault, Guid view) => Find(vault, view)?.Expanded ?? new HashSet<string>();
 
     /// <summary>A node expanded or collapsed in a view: saved when it changes.</summary>
-    public void SetExpanded(Guid vault, Guid view, string key, bool isExpanded)
+    public void SetExpanded(Guid vault, Guid view, string key, bool isExpanded) =>
+        Change(vault, view, state => isExpanded ? state.Expanded.Add(key) : state.Expanded.Remove(key));
+
+    /// <summary>Whether a view shows the details of its nodes (off by default).</summary>
+    public bool ShowsDetails(Guid vault, Guid view) => Find(vault, view)?.ShowsDetails ?? false;
+
+    public void SetShowsDetails(Guid vault, Guid view, bool showsDetails) => Change(vault, view, state =>
+    {
+        var changed = state.ShowsDetails != showsDetails;
+        state.ShowsDetails = showsDetails;
+        return changed;
+    });
+
+    private ViewState? Find(Guid vault, Guid view) =>
+        ByVault.TryGetValue(vault, out var views) ? views.GetValueOrDefault(view) : null;
+
+    /// <summary>Changes a view's state, then saves it when <paramref name="change"/> says it changed.</summary>
+    private void Change(Guid vault, Guid view, Func<ViewState, bool> change)
     {
         if (!ByVault.TryGetValue(vault, out var views))
         {
             ByVault[vault] = views = [];
         }
 
-        if (!views.TryGetValue(view, out var expanded))
+        if (!views.TryGetValue(view, out var state))
         {
-            views[view] = expanded = [];
+            views[view] = state = new ViewState();
         }
 
-        if (isExpanded ? expanded.Add(key) : expanded.Remove(key))
+        if (change(state))
         {
             _file.Save(ByVault);
         }

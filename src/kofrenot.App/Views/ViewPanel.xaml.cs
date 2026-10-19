@@ -46,6 +46,7 @@ public partial class ViewPanel : UserControl
     {
         // The rows are built again: a name edited in place is given up.
         StopRename();
+        _detailRows.Clear();
         if (_view?.Id != view.Id || _vault != vault)
         {
             _selectedPath = null;
@@ -145,16 +146,20 @@ public partial class ViewPanel : UserControl
     }
 
     /// <param name="isCut">The node cut (Ctrl+X), not pasted yet: shown dimmed.</param>
-    private StackPanel HeaderOf(Node node, bool isCut)
+    /// <summary>A row's content: the node's picture and name, with Details its columns too (<see cref="WithDetails"/>).</summary>
+    private FrameworkElement HeaderOf(Node node, bool isCut)
     {
-        var header = new StackPanel { Orientation = Orientation.Horizontal, Opacity = isCut ? CutOpacity : 1 };
-        header.Children.Add(new NodeVisualView { Width = 24, Height = 24, Margin = new Thickness(0, 1, 10, 1), Visual = NodeVisual.Of(_graph!, node) });
-        header.Children.Add(new TextBlock { Text = node.Name, VerticalAlignment = VerticalAlignment.Center });
+        var name = new StackPanel { Orientation = Orientation.Horizontal };
+        name.Children.Add(new NodeVisualView { Width = 24, Height = 24, Margin = new Thickness(0, 1, 10, 1), Visual = NodeVisual.Of(_graph!, node) });
+        name.Children.Add(new TextBlock { Text = node.Name, VerticalAlignment = VerticalAlignment.Center, TextTrimming = TextTrimming.CharacterEllipsis });
+        FrameworkElement header = ShowsDetails ? WithDetails(node, name) : name;
+        header.Opacity = isCut ? CutOpacity : 1;
         return header;
     }
 
     /// <summary>A row of a list: the node pictured, as in a tree (no focus frame either).</summary>
-    private ListBoxItem RowOf(Node node) => new() { Content = HeaderOf(node, isCut: false), Tag = node, FocusVisualStyle = null };
+    private ListBoxItem RowOf(Node node) =>
+        new() { Content = HeaderOf(node, isCut: false), Tag = node, FocusVisualStyle = null, HorizontalContentAlignment = HorizontalAlignment.Stretch };
 
     private static Node? NodeOf(object? row) => (row as ListBoxItem)?.Tag as Node;
 

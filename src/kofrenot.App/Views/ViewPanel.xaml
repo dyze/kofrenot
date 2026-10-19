@@ -63,6 +63,12 @@
             <TextBlock Margin="6,0,0,0" VerticalAlignment="Center" Text="Delete" />
           </StackPanel>
         </Button>
+        <ToggleButton x:Name="DetailsButton" Margin="8,0,4,0" Padding="8,4" ToolTip="Show the type, size and last change of each node" Click="Details_Click">
+          <StackPanel Orientation="Horizontal">
+            <TextBlock VerticalAlignment="Center" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="12" Text="&#xE8FD;" />
+            <TextBlock Margin="6,0,0,0" VerticalAlignment="Center" Text="Details" />
+          </StackPanel>
+        </ToggleButton>
       </StackPanel>
       <StackPanel Grid.Column="1" Orientation="Horizontal">
         <Grid Width="220">
@@ -94,7 +100,28 @@
     </Grid>
 
     <Grid Grid.Row="1" Background="Transparent">
+      <Grid.RowDefinitions>
+        <RowDefinition Height="Auto" />
+        <RowDefinition Height="*" />
+      </Grid.RowDefinitions>
+
+      <!-- With Details on: the names of the columns each row shows (ViewPanel.Details), aligned with them. -->
+      <!-- Right margin: the room a tree row leaves on its right (ViewPanel.TreeRowRightRoom). -->
+      <Grid x:Name="DetailsHeader" Margin="4,0,24,4" Visibility="Collapsed">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="*" />
+          <ColumnDefinition Width="130" />
+          <ColumnDefinition Width="90" />
+          <ColumnDefinition Width="150" />
+        </Grid.ColumnDefinitions>
+        <TextBlock Style="{StaticResource SecondaryText}" Text="Name" />
+        <TextBlock Grid.Column="1" Style="{StaticResource SecondaryText}" Text="Type" />
+        <TextBlock Grid.Column="2" Margin="0,0,16,0" HorizontalAlignment="Right" Style="{StaticResource SecondaryText}" Text="Size" />
+        <TextBlock Grid.Column="3" Style="{StaticResource SecondaryText}" Text="Modified" />
+      </Grid>
+
       <TextBlock x:Name="MessageText"
+                 Grid.Row="1"
                  MaxWidth="460"
                  HorizontalAlignment="Center"
                  VerticalAlignment="Center"
@@ -105,6 +132,7 @@
 
       <!-- No focus frame around the tree or the list, nor their rows: the selected row shows where the keyboard is. -->
       <TreeView x:Name="Tree"
+                Grid.Row="1"
                 FocusVisualStyle="{x:Null}"
                 Background="Transparent"
                 BorderThickness="0"
@@ -120,7 +148,8 @@
                 DragOver="Tree_DragOver"
                 DragLeave="Tree_DragLeave"
                 Drop="Tree_Drop"
-                ContextMenuOpening="Tree_ContextMenuOpening">
+                ContextMenuOpening="Tree_ContextMenuOpening"
+                SizeChanged="Tree_SizeChanged">
         <!-- Filled when it opens: copy, cut, paste, delete (ViewPanel.Operations). -->
         <TreeView.ContextMenu>
           <ContextMenu />
@@ -128,6 +157,7 @@
       </TreeView>
 
       <ListBox x:Name="List"
+               Grid.Row="1"
                FocusVisualStyle="{x:Null}"
                Background="Transparent"
                BorderThickness="0"

@@ -31,7 +31,7 @@ public partial class ViewPanel
         var header = Tree.Visibility == Visibility.Visible
             ? (Tree.SelectedItem as TreeViewItem)?.Header
             : (List.SelectedItem as ListBoxItem)?.Content;
-        if (IsRenaming || SelectedNode is not { } node || header is not StackPanel { Children: [.., TextBlock name] } row)
+        if (IsRenaming || SelectedNode is not { } node || NamePanelOf(header) is not { Children: [.., TextBlock name] } row)
         {
             return false;
         }

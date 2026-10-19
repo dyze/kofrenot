@@ -61,6 +61,34 @@ public sealed class ViewStatesTests : IDisposable
         Assert.Contains(_log.Entries, entry => entry.Level == LogLevel.Warning && entry.Message.Contains("view states cannot be saved"));
     }
 
+    [Fact]
+    public void Details_AreOffByDefault_AndKeptPerView()
+    {
+        var states = States();
+        Assert.False(states.ShowsDetails(_vault, _view));
+
+        states.SetShowsDetails(_vault, _view, showsDetails: true);
+        states.SetExpanded(_vault, _view, "a", isExpanded: true);
+
+        Assert.True(States().ShowsDetails(_vault, _view));
+        Assert.Single(States().ExpandedIn(_vault, _view));
+        Assert.False(States().ShowsDetails(_vault, Guid.NewGuid()));
+
+        states.SetShowsDetails(_vault, _view, showsDetails: false);
+        Assert.False(States().ShowsDetails(_vault, _view));
+    }
+
+    [Fact]
+    public void TheSameDetails_SaveNothing()
+    {
+        // A folder where the file should be: a save would be logged.
+        Directory.CreateDirectory(FilePath);
+
+        States().SetShowsDetails(_vault, _view, showsDetails: false);
+
+        Assert.DoesNotContain(_log.Entries, entry => entry.Message.Contains("cannot be saved"));
+    }
+
     public void Dispose() => _temp.Dispose();
 
     private ViewStates States() => new(FilePath, _log);
