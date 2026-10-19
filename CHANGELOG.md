@@ -18,6 +18,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **Tabs** at the top of the main window: *Search* first, then the views open on this computer, kept between starts. **+** opens a view, or creates one (**New view…**: its name typed on the creation screen, its type fixed), **×** closes its tab; a new view opens in a tab. **Ctrl+Tab** and **Ctrl+Shift+Tab** select the next and the previous tab, as in Settings. A tree keeps the nodes expanded on this computer, between starts too.
 
 ### Changed
+- **Rename by clicking the name** in a node's details (or F2); leaving it saves, as Enter does. The ✎ button is gone.
 - **Quit is refused** while a note has unsaved changes or a file is being imported, from the tray or when another copy asks: the window shows why.
 - **Vault format 4**, to remove nodes and links, and for views. kofrenot 0.3 does not open a vault written by this version, and offers the update. Vaults of formats 1 to 3 are read as they are.
 

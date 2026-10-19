@@ -61,30 +61,28 @@
       </Grid.ColumnDefinitions>
 
       <StackPanel VerticalAlignment="Top">
-        <!-- The name: F2 or ✎ edits it in place (Enter renames, Esc cancels). Under it, a conflict
+        <!-- The name: a click or F2 edits it in place (Enter or leaving it renames, Esc cancels). Under it, a conflict
              between names given on two devices, each name offered to keep. -->
         <StackPanel Margin="2,14,0,0">
           <Grid>
             <Grid.ColumnDefinitions>
               <ColumnDefinition Width="*" />
               <ColumnDefinition Width="Auto" />
-              <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
-            <TextBlock x:Name="NameText" VerticalAlignment="Center" Style="{StaticResource TitleText}" />
-            <TextBox x:Name="NameBox" FontSize="{StaticResource TitleFontSize}" Visibility="Collapsed" TextChanged="NameBox_TextChanged" />
-            <Button x:Name="EditButton"
-                    Grid.Column="1"
-                    Margin="6,0,0,0"
-                    VerticalAlignment="Center"
-                    Style="{StaticResource FlatButton}"
-                    Content="&#xE70F;"
-                    FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
-                    FontSize="14"
-                    ToolTip="Rename (F2)"
-                    Click="EditButton_Click" />
+            <TextBlock x:Name="NameText"
+                       VerticalAlignment="Center"
+                       Cursor="IBeam"
+                       Style="{StaticResource TitleText}"
+                       ToolTip="Click to rename (F2)"
+                       MouseLeftButtonDown="NameText_MouseLeftButtonDown" />
+            <TextBox x:Name="NameBox"
+                     FontSize="{StaticResource TitleFontSize}"
+                     Visibility="Collapsed"
+                     TextChanged="NameBox_TextChanged"
+                     LostKeyboardFocus="NameBox_LostKeyboardFocus" />
             <!-- Pinned nodes are listed while the input box is empty. Filled pin: pinned. -->
             <Button x:Name="PinButton"
-                    Grid.Column="2"
+                    Grid.Column="1"
                     Margin="2,0,0,0"
                     VerticalAlignment="Center"
                     Style="{StaticResource FlatButton}"
