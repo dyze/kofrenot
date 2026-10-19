@@ -51,6 +51,7 @@ Details: [ARCHITECTURE.md](ARCHITECTURE.md#vault).
 ## Versioning
 - Format `MAJOR.MINOR`, starting at **0.1**, then 0.2, and so on. No `v` prefix, and no 1.0 until I decide.
 - Defined once, in `Directory.Build.props`, stamped into every produced assembly, and shown at the bottom right of the main window.
+- Each build is identified by its git commit (no build number), shown in Settings > About and the log: `0.4 (4e9c313)`, `-dirty` for a build with uncommitted changes.
 - The vault has its own **format** number, raised only by a breaking change. A kofrenot reads the formats up to its own, and asks to be upgraded for a newer one: [ARCHITECTURE.md](ARCHITECTURE.md#format).
 
 What each version contains: [ROADMAP.md](ROADMAP.md).

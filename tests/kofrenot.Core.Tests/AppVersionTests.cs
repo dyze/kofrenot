@@ -31,4 +31,53 @@ public class AppVersionTests
         Assert.NotEqual("unknown", version);
         Assert.DoesNotContain("+", version);
     }
+
+    [Fact]
+    public void FormatWithCommit_ShortensTheCommit()
+    {
+        Assert.Equal("0.4 (4e9c313)", AppVersion.FormatWithCommit("0.4+4e9c3137c078155d"));
+    }
+
+    [Fact]
+    public void FormatWithCommit_MarksADirtyBuild()
+    {
+        Assert.Equal("0.4 (4e9c313-dirty)", AppVersion.FormatWithCommit("0.4+4e9c3137c078155d.dirty"));
+    }
+
+    [Fact]
+    public void FormatWithCommit_KeepsAShortCommitWhole()
+    {
+        Assert.Equal("0.4 (abc)", AppVersion.FormatWithCommit("0.4+abc"));
+    }
+
+    [Theory]
+    [InlineData("0.4")]
+    [InlineData("0.4+")]
+    [InlineData("0.4+.dirty")]
+    public void FormatWithCommit_WithoutCommit_IsTheVersion(string raw)
+    {
+        Assert.Equal("0.4", AppVersion.FormatWithCommit(raw));
+    }
+
+    [Fact]
+    public void FormatWithCommit_MissingVersion_IsUnknown()
+    {
+        Assert.Equal("unknown", AppVersion.FormatWithCommit(null));
+    }
+
+    [Fact]
+    public void BuildOf_BuiltAssembly_StartsWithItsVersion()
+    {
+        var assembly = typeof(AppVersion).Assembly;
+
+        Assert.StartsWith(AppVersion.Of(assembly), AppVersion.BuildOf(assembly));
+    }
+
+    [Fact]
+    public void WithCommitOf_BuiltAssembly_StartsWithItsVersion()
+    {
+        var assembly = typeof(AppVersion).Assembly;
+
+        Assert.StartsWith(AppVersion.Of(assembly), AppVersion.WithCommitOf(assembly));
+    }
 }

@@ -52,7 +52,7 @@ public partial class App : Application
         _logHub = new LogHub(files.Logs, settings.DebugLogging);
         var log = _logHub.Filter;
         var version = AppVersion.Of(typeof(App).Assembly);
-        log.Info("App", $"kofrenot {version} started"
+        log.Info("App", $"kofrenot {AppVersion.WithCommitOf(typeof(App).Assembly)} started"
             + (files.IsPortable ? " (portable)" : string.Empty)
             + (settings.DebugLogging ? " (debug logging on)" : string.Empty));
         log.Debug("App", $"Theme: {settings.Theme}");

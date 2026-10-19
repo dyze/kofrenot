@@ -89,7 +89,7 @@ public partial class SettingsWindow : Window
     /// <summary>The About tab: version, links, changelog, and a row per file with its path and a Show in folder button.</summary>
     private void ShowAbout(AppFiles files)
     {
-        AboutVersionText.Text = $"kofrenot {AppVersion.Of(typeof(SettingsWindow).Assembly)}";
+        AboutVersionText.Text = $"kofrenot {AppVersion.WithCommitOf(typeof(SettingsWindow).Assembly)}";
         ShowUpdateStatus();
         _changelogPath = files.Changelog;
 
