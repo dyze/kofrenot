@@ -61,6 +61,21 @@ public partial class MainWindow
         FocusTab();
     }
 
+    /// <summary>
+    /// Ctrl+Tab / Ctrl+Shift+Tab: the next or previous tab, wrapping around, as in Settings; from
+    /// the details too. False without a vault open: there are no tabs.
+    /// </summary>
+    private bool SwitchTab(int step)
+    {
+        if (_session.Current is not { } vault)
+        {
+            return false;
+        }
+
+        SelectTab(_tabList.Next(vault.Graph, vault.Id, SelectedView(vault)?.Id, step).View);
+        return true;
+    }
+
     /// <summary>The keyboard to the selected tab: the input box, or the view.</summary>
     private void FocusTab()
     {

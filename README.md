@@ -97,7 +97,7 @@ A node of type *View* shows the vault another way, in a tab of its own. Choose o
 | A tree | the node it starts from (type part of its name, **Up/Down** or a click choose among the nodes found) and the link type it follows (*contains* by default) | your projects and what they contain |
 | A list | a node type | every note |
 
-- The **tabs** are at the top of the main window: *Search* first, then the views open on this computer, kept from one start to the next. A **click** selects a tab, **×** closes a view's tab, **+** opens another view, or **New view…** creates one: the creation screen asks its name and what it shows. A view you create opens in a tab at once. A tree opens again with the nodes you left expanded, also after a restart.
+- The **tabs** are at the top of the main window: *Search* first, then the views open on this computer, kept from one start to the next. A **click** selects a tab, and so do **Ctrl+Tab** and **Ctrl+Shift+Tab** (the next and the previous one, from a node's details too); **×** closes a view's tab, **+** opens another view, or **New view…** creates one: the creation screen asks its name and what it shows. A view you create opens in a tab at once. A tree opens again with the nodes you left expanded, also after a restart.
 - In a tree, a node is expanded with its arrow (or **Right**); a node with several parents shows under each; a node that comes back on its own path is not expanded again.
 - **Enter** or a **double-click** opens a node's details; Back returns to the view.
 - **New**, in the bar over a view, adds a node on the creation screen, its name typed there: in a tree, under the node selected (the root when none), linked to it the tree's way (*contains* by default); in a list, of the list's type.

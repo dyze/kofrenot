@@ -297,6 +297,12 @@ public partial class MainWindow : Window
     /// <summary>In the details, their keys (Esc goes back). In the search, Esc clears the input box, then hides the window.</summary>
     private void Window_PreviewKeyDown(object sender, KeyEventArgs e)
     {
+        if (e.Key == Key.Tab && Keyboard.Modifiers.HasFlag(ModifierKeys.Control))
+        {
+            e.Handled = SwitchTab(Keyboard.Modifiers.HasFlag(ModifierKeys.Shift) ? -1 : 1);
+            return;
+        }
+
         if (Keyboard.Modifiers != ModifierKeys.None)
         {
             return;
