@@ -305,6 +305,12 @@ public partial class MainWindow : Window
             return;
         }
 
+        if (ViewContent.IsVisible && ViewContent.CancelCut())
+        {
+            e.Handled = true;
+            return;
+        }
+
         if (InputBox.Text.Length > 0)
         {
             InputBox.Clear();

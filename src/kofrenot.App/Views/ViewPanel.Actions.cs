@@ -64,8 +64,7 @@ public partial class ViewPanel
             _selectedNode = added.Id;
         }
 
-        Show(_vault, _graph, _view);
-        FocusContent();
+        Refresh();
     }
 
     private void Cut_Click(object sender, RoutedEventArgs e) => RunOnSelected(() => Take(isCut: true));

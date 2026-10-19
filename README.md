@@ -106,7 +106,7 @@ A node of type *View* shows the vault another way, in a tab of its own. Choose o
   | Keys | Does |
   | --- | --- |
   | **Ctrl+C**, then **Ctrl+V** on another node | copies the node with everything under it, as new nodes under that one (notes, datasets and views with their latest version), after showing what will be copied |
-  | **Ctrl+X**, then **Ctrl+V** on another node | moves the node there: it leaves the parent it was shown under; its other parents keep it |
+  | **Ctrl+X**, then **Ctrl+V** on another node | moves the node there: it leaves the parent it was shown under; its other parents keep it. Until then it is shown dimmed; **Esc** cancels the cut |
   | **Del** | deletes the node with everything under it, even a node that is also elsewhere, after showing what will be deleted and where else those nodes are |
 
   Or **drag** a node onto another to move it there, holding **Ctrl** to copy it instead; the node under the pointer is highlighted, and the cursor says when it cannot go there. A node cannot move under itself. A note or dataset whose content has not arrived on this computer yet cannot be copied.

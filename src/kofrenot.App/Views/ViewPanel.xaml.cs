@@ -21,6 +21,8 @@ public partial class ViewPanel : UserControl
     // The child of a node not expanded yet: it makes the node expandable.
     private const string NotRead = "…";
 
+    private const double CutOpacity = 0.45;
+
     private KnowledgeGraph? _graph;
     private Guid _vault;
     private CoreTreeView? _tree;
@@ -110,7 +112,7 @@ public partial class ViewPanel : UserControl
     private TreeViewItem ItemOf(TreeItem item)
     {
         var path = item.Key;
-        var view = new TreeViewItem { Header = HeaderOf(item.Node), Tag = item };
+        var view = new TreeViewItem { Header = HeaderOf(item.Node, isCut: _taken is { IsCut: true } taken && taken.Item.Key == path), Tag = item };
         if (item.CanExpand)
         {
             view.Items.Add(NotRead);
@@ -130,9 +132,10 @@ public partial class ViewPanel : UserControl
         return view;
     }
 
-    private StackPanel HeaderOf(Node node)
+    /// <param name="isCut">The node cut (Ctrl+X), not pasted yet: shown dimmed.</param>
+    private StackPanel HeaderOf(Node node, bool isCut)
     {
-        var header = new StackPanel { Orientation = Orientation.Horizontal };
+        var header = new StackPanel { Orientation = Orientation.Horizontal, Opacity = isCut ? CutOpacity : 1 };
         header.Children.Add(new NodeVisualView { Width = 24, Height = 24, Margin = new Thickness(0, 1, 10, 1), Visual = NodeVisual.Of(_graph!, node) });
         header.Children.Add(new TextBlock { Text = node.Name, VerticalAlignment = VerticalAlignment.Center });
         return header;

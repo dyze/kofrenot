@@ -9,8 +9,9 @@ namespace Kofrenot.UI.Views;
 
 /// <summary>
 /// The operations of a tree: copy or cut a node (Ctrl+C, Ctrl+X), paste it under the selected one
-/// (Ctrl+V: a copy, or a move), delete it with its subtree (Del); also in a right-click menu. A copy
-/// and a deletion are shown first; the vault is written through the session.
+/// (Ctrl+V: a copy, or a move), delete it with its subtree (Del); also in a right-click menu. A node
+/// cut is dimmed until pasted, or Esc. A copy and a deletion are shown first; the vault is written
+/// through the session.
 /// </summary>
 public partial class ViewPanel
 {
@@ -49,8 +50,34 @@ public partial class ViewPanel
 
         _taken = (item, isCut);
         Log.Debug("View", isCut ? "Node cut" : "Node copied");
-        UpdateActions();
+
+        // Dims the node cut, or shows again the one cut before.
+        Refresh();
         return true;
+    }
+
+    /// <summary>Esc: forgets the node cut, shown again as it is. False when none was cut.</summary>
+    public bool CancelCut()
+    {
+        if (_taken is not { IsCut: true })
+        {
+            return false;
+        }
+
+        _taken = null;
+        Log.Debug("View", "Cut cancelled");
+        Refresh();
+        return true;
+    }
+
+    /// <summary>Shows the view again, from the graph, the keyboard on the node selected.</summary>
+    private void Refresh()
+    {
+        if (_graph is not null && _view is not null)
+        {
+            Show(_vault, _graph, _view);
+            FocusContent();
+        }
     }
 
     /// <summary>Pastes the node taken under the selected one: moved when it was cut, copied otherwise.</summary>
