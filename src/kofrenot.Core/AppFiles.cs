@@ -63,6 +63,9 @@ public sealed class AppFiles
     /// <summary>The master keys remembered by Windows (DPAPI), by vault.</summary>
     public string RememberedKeys => Path.Combine(DataDirectory, "keys.json");
 
+    /// <summary>The name last read in each vault, protected by Windows (DPAPI), by vault.</summary>
+    public string VaultNames => Path.Combine(DataDirectory, "vault-names.json");
+
     /// <summary>The local snapshot of each vault opened on this device.</summary>
     public string Cache => Path.Combine(DataDirectory, "cache");
 
@@ -82,6 +85,7 @@ public sealed class AppFiles
         new("Expanded nodes in views", ViewStates),
         new("Vault upgrades agreed", VaultUpgrades),
         new("Remembered pass phrases", RememberedKeys),
+        new("Vault names", VaultNames),
         new("Vault snapshots", Cache),
         new("Logs", Logs),
         new("Program", ProgramDirectory),
