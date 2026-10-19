@@ -279,6 +279,7 @@ public sealed class ChangeCodecTests
         var data = _box.Seal("KFC1"u8, Encoding.UTF8.GetBytes(json), id.ToByteArray());
 
         Assert.Equal("Dune", Assert.IsType<NodeAdded>(_codec.Decode(id, data)).Node.Name);
+        Assert.Equal(1, _codec.DecodeWithFormat(id, data).Format);
     }
 
     [Fact]

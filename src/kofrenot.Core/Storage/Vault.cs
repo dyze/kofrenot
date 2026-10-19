@@ -10,7 +10,7 @@ namespace Kofrenot.Core.Storage;
 /// ones. Files are only added, so several apps can use the same folder at once; each one sees the
 /// others' changes at its next <see cref="Refresh"/>. Not thread-safe: use it from one thread.
 /// </summary>
-public sealed class Vault
+public sealed partial class Vault
 {
     private const string Category = "Vault";
 
@@ -25,6 +25,7 @@ public sealed class Vault
     {
         _folder = folder;
         Id = header.Id;
+        Format = header.Format;
         _log = log ?? NullLog.Instance;
         var box = new SecretBox(masterKey);
         _codec = new ChangeCodec(box);
@@ -59,24 +60,27 @@ public sealed class Vault
         var fromSnapshot = vault.LoadSnapshot();
         var read = vault.Refresh();
         vault._log.Info(Category, $"Vault {vault.Id} opened: {vault.Graph.Nodes.Count} nodes, "
-            + $"{vault.Graph.Links.Count} links ({fromSnapshot} changes from the snapshot, {read} read)");
+            + $"{vault.Graph.Links.Count} links ({fromSnapshot} changes from the snapshot, {read} read), format {vault.Format}");
         return vault;
     }
 
     /// <summary>The snapshot file of a vault in <paramref name="cacheFolder"/>.</summary>
     public static string SnapshotOf(string cacheFolder, Guid vault) => Path.Combine(cacheFolder, vault.ToString("N") + ".kfs");
 
-    /// <summary>Writes a change as a new file and applies it.</summary>
+    /// <summary>Writes a change as a new file, in <see cref="VaultFormat.Current"/>, and applies it.</summary>
     /// <exception cref="IOException">The file cannot be written.</exception>
+    /// <exception cref="InvalidOperationException">The upgrade the write makes was not agreed (<see cref="AgreeToUpgrade"/>).</exception>
     public void Append(Change change)
     {
+        EnsureCanWrite();
         var path = VaultFolder.ChangeFileOf(_folder, change.Id);
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
         AtomicFile.Write(path, _codec.Encode(change), overwrite: false);
+        Written(VaultFormat.Current);
         _read[change.Id] = change;
         Graph.Apply(change);
         _log.Debug(Category, $"Change {change.Id} written");
-        _snapshot?.Save(_read.Values);
+        SaveSnapshot();
     }
 
     /// <summary>
@@ -86,6 +90,7 @@ public sealed class Vault
     /// <exception cref="IOException">A file cannot be written.</exception>
     public void Save(NoteEdited version, string content)
     {
+        EnsureCanWrite();
         Notes.Write(version.Id, content);
         Append(version);
     }
@@ -111,6 +116,7 @@ public sealed class Vault
     /// <exception cref="IOException">A file cannot be written, or the content is not the one described.</exception>
     public void WriteDataset(DatasetEdited version, Func<Stream> open, IThumbnailMaker? thumbnails = null, IProgress<long>? progress = null)
     {
+        EnsureCanWrite();
         if (thumbnails is not null && DatasetType.HasThumbnail(version.File))
         {
             using var image = open();
@@ -133,6 +139,7 @@ public sealed class Vault
     /// <exception cref="IOException">A file cannot be read or written.</exception>
     public void WriteCopies(IEnumerable<ContentCopy> copies, IThumbnailMaker? thumbnails = null)
     {
+        EnsureCanWrite();
         foreach (var copy in copies)
         {
             switch (copy.To)
@@ -164,7 +171,7 @@ public sealed class Vault
         Apply(changes);
 
         _log.Debug(Category, $"{changes.Count} new changes read");
-        _snapshot?.Save(_read.Values);
+        SaveSnapshot();
         return changes.Count;
     }
 
@@ -175,9 +182,12 @@ public sealed class Vault
             return 0;
         }
 
-        Apply(snapshot);
-        return snapshot.Count;
+        Written(snapshot.HighestFormat);
+        Apply(snapshot.Changes);
+        return snapshot.Changes.Count;
     }
+
+    private void SaveSnapshot() => _snapshot?.Save(_read.Values, Format);
 
     private void Apply(IEnumerable<Change> changes)
     {
@@ -218,7 +228,9 @@ public sealed class Vault
     {
         try
         {
-            return _codec.Decode(id, File.ReadAllBytes(path));
+            var (change, format) = _codec.DecodeWithFormat(id, File.ReadAllBytes(path));
+            Written(format);
+            return change;
         }
         catch (Exception ex) when (ex is InvalidDataException or IOException or UnauthorizedAccessException)
         {

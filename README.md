@@ -39,6 +39,7 @@ A vault is a folder: on this computer, on a file share, or in a folder a sync to
 - A folder holding other files is refused.
 - Several computers or copies can add to the same vault at once; what the others add appears without a restart.
 - A vault written by a newer kofrenot (on another computer, say) is not opened, or is closed as soon as it is seen: install the latest kofrenot (*Get the latest kofrenot* in the main window).
+- A vault written by an older kofrenot asks first to be upgraded: once this kofrenot changes it, the older one no longer opens it, so update kofrenot on your other computers first. *Not now* leaves the vault unused, and untouched, until *Upgrade and open…* in the main window. The answer is asked once per vault on each computer.
 
 ### Input box
 Type in the box at the top of the main window:
@@ -140,6 +141,7 @@ Everything stays on your computer, in `%LOCALAPPDATA%\kofrenot` (a portable copy
 | `recent.json` | The nodes you last opened, per vault (ids only, no names) |
 | `tabs.json` | The views open as tabs, per vault (ids only, no names) |
 | `view-states.json` | The nodes expanded in each tree view, per vault (ids only, no names) |
+| `vault-upgrades.json` | The vaults whose upgrade you agreed to (ids only, no names) |
 | `keys.json` | Remembered pass phrases (the vault keys, protected by Windows for your account) |
 | `cache\` | One encrypted snapshot per vault opened here, so it opens fast. Safe to delete |
 | `logs\kofrenot.log` | Log, at most 3 files of 1 MB, oldest deleted |

@@ -37,7 +37,7 @@ One namespace per folder (`Kofrenot.Core.Settings`, `Kofrenot.UI.Views`, ...). T
 | *(root)* | `AppVersion`; `RunningCopy` + `AppCopy` (another copy running: same or not, and what the user is told); `QuitRefusal` (why kofrenot must not quit now); `AppFiles` (where every file of kofrenot is, including `keys.json` and the snapshots in `cache\`: the only place their names are written, listed in Settings > About; `AppFiles.For` picks the data folder, see [Portable copy](#portable-copy)); `Changelog` (reads the text shown by Settings > About); `ProjectLinks` (website, issues, releases) |
 | `Settings/` | `SettingsStore` (`settings.json`: theme, debug logging, update check, vault folder, hotkey), `Hotkey`, `SettingsCatalog` (the entries of the Settings window, their tabs, and the search that finds them) |
 | `Graph/` | `Node`, `Link`, `NodeType`, `LinkType`, `LinkVerb` (a link type read one way), `TypeCatalog` (built-in node and link types, link aliases; `LinkName`: how a link reads from one of its nodes), `LinkAliases` (the user's aliases, see [Aliases and removals](#aliases-and-removals)), `RemovableChanges`, `NameKey` (the form names are compared in), `Change` (`NodeAdded`, `LinkAdded`, `NodeRenamed`, `AliasAdded`, `NodePinned`, `ChangesRemoved`, `ContentEdited`: `NoteEdited`, `DatasetEdited`), `DatasetFile` (a dataset version's file: name, size, SHA-256), `NodeNames` + `NameVersion` (a node's current names, see [Renames](#renames)), `ContentVersions` (the current versions of a note or dataset, see [Notes](#notes)), `KnowledgeGraph` (in-memory state, built by applying changes) |
-| `Storage/` | `VaultFormat` (+ `NewerVaultFormatException`), `SecretBox` (AES-GCM seal / open), `ChunkedBox` (AES-GCM over 1 MB chunks, streamed), `KeyWrap` (KDF, wrap / unwrap the master key), `ChangeData` (a change as JSON, shared with the snapshot), `ChangeCodec` (change ⇄ sealed JSON), `VaultHeader`, `VaultFolder` (layout, inspect, create, `SizeOf` + `FolderSize`: its files and bytes, shown in Settings > Vault, measured off the UI thread), `SnapshotStore`, `NoteFiles` (note content, `content/`), `DatasetFiles` (dataset content, `content/`: describe a file, write, export, open), `ThumbnailFiles` (thumbnails, `content/`), `Vault` (open, append, refresh, save a note or a dataset version, `WriteDataset`: its files only, off the UI thread), `AtomicFile` (write as `.tmp`, then rename), `KeyMemory` (remembered master keys, `keys.json`), `ISecretProtector` |
+| `Storage/` | `VaultFormat` (+ `NewerVaultFormatException`, `Since`, `UpgradeQuestion`), `VaultUpgrades` (upgrades agreed, `vault-upgrades.json`, see [Upgrade](#upgrade)), `SecretBox` (AES-GCM seal / open), `ChunkedBox` (AES-GCM over 1 MB chunks, streamed), `KeyWrap` (KDF, wrap / unwrap the master key), `ChangeData` (a change as JSON, shared with the snapshot), `ChangeCodec` (change ⇄ sealed JSON), `VaultHeader`, `VaultFolder` (layout, inspect, create, `SizeOf` + `FolderSize`: its files and bytes, shown in Settings > Vault, measured off the UI thread), `SnapshotStore`, `NoteFiles` (note content, `content/`), `DatasetFiles` (dataset content, `content/`: describe a file, write, export, open), `ThumbnailFiles` (thumbnails, `content/`), `Vault` (open, append, refresh, save a note or a dataset version, `WriteDataset`: its files only, off the UI thread; `Vault.Upgrade`: its format, writes refused until an upgrade is agreed), `AtomicFile` (write as `.tmp`, then rename), `KeyMemory` (remembered master keys, `keys.json`), `ISecretProtector` |
 | `Input/` | `InputParser` (text → `NodeRequest` / `LinkRequest`), `GraphSearch` (`SearchHit`), `AddPlanner` (`AddChoices` → `AddPlan`: `NodePlan`, `LinkPlan`, `PlannedSide`), `InputPresenter` (the input box: preview, result rows, homonym choices), `CreationForm` (the creation screen: steps, types, note content, dataset file, status, what exists), `PlanText` (wording shared by both), `RenamePlanner` (`RenamePlan`: a new name, its problem, homonyms), `AliasPlanner` (`AliasPlan`) |
 | `Browse/` | `NodeBrowser` (the details screen: trail of open nodes, at most 4, the selected link of each), `NodeDetails`, `LinkRow`, `NodeVisual` (`NodeIcon`: how a node is pictured in rows, see [Datasets](#datasets)), `NodeFacts` (type, size, last change: a view's Details), `PinPlanner` (pin or unpin), `RecentNodes` (the nodes last opened on this device), `ViewTabs` and `ViewStates` (the tabs open, the nodes expanded in each tree, on this device), through `LocalJsonFile` |
 | `Notes/` | `NotePlanner` (`NoteState`, `ConflictVersion`: load a note, plan its next version), `MarkdownFormat` (`TextEdit`: the toolbar's Markdown) |
@@ -178,6 +178,26 @@ One number for the whole vault, `VaultFormat.Current`, written in the header and
 - A breaking change (something an older kofrenot would misread or not read) raises `VaultFormat.Current`. The owner decides it first (`CLAUDE.md`). Changes that only add something older versions ignore safely (such as an unknown type, shown by its id) do not.
 - No migration: files are never rewritten, so a vault holds files of several formats, each read as written.
 
+#### Upgrade
+Every file is written in `VaultFormat.Current`, so the first write to a vault of an older format raises it: the older kofrenot then closes it. The user agrees first.
+
+```
+open: unlock, read ─► Vault.Format = highest of header, change files, snapshot
+                               │
+          Format < Current (Vault.NeedsUpgrade), not agreed in vault-upgrades.json?
+             │ yes                                              │ no
+             ▼                                                  ▼
+   VaultFormat.UpgradeQuestion                        AgreeToUpgrade, used
+   [Upgrade and open] ─► VaultUpgrades.Agree, AgreeToUpgrade, used
+   [Not now] ─► unlocked, not used (VaultSession.OlderFormat):
+                the main window offers "Upgrade and open…" (VaultSession.Upgrade:
+                refresh, then ask again unless another device upgraded it)
+```
+
+- `Vault` refuses every write (`Append`, `Save`, `WriteDataset`, `WriteCopies`) with `InvalidOperationException` until `AgreeToUpgrade`: no content file is written ahead of a refusal.
+- `VaultUpgrades` (`vault-upgrades.json`, ids only) keeps the highest format agreed per vault, on this device: asked once, and again only for a newer format.
+- `VaultFormat.Since` names the first kofrenot writing each format, for the question.
+
 ### Encryption
 
 ```
@@ -251,7 +271,7 @@ start ─► snapshot (local) ─► the changes it holds, applied to the graph
 - Encrypted with the master key like a change file (`KFS1` · nonce · ciphertext · tag, AAD = vault id), so it reveals nothing more than the vault.
 - Written as `*.tmp`, then renamed. It is only a cache: deleting it costs one full read.
 - A change file that arrives late, older than changes already applied, is fine: adds do not depend on order, and renames name what they replace (see [Renames](#renames)), so the result is the same in any order.
-- It holds the changes themselves, as in their files (`ChangeData`, `SnapshotStore.Format` 3), so a new kind of change needs nothing more. A snapshot of an older format is not used: every change is read again once.
+- It holds the changes themselves, as in their files (`ChangeData`, `SnapshotStore.Format` 4), so a new kind of change needs nothing more. As they are written again in the current format, it also keeps the highest vault format of their files (`Vault.Format`, see [Format](#format)). A snapshot of an older format is not used: every change is read again once.
 - Ten renames of one node are still ten files, each read once per device; packing them into bigger files is an open question ([GOAL.md](GOAL.md#open-questions), *Packs*).
 
 ### Renames

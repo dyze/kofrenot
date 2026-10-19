@@ -360,6 +360,74 @@ public sealed class VaultTests : IDisposable
     }
 
     [Fact]
+    public void AVaultOfTheCurrentFormat_NeedsNoUpgrade()
+    {
+        var vault = Open();
+
+        Assert.Equal(VaultFormat.Current, vault.Format);
+        Assert.False(vault.NeedsUpgrade);
+        vault.AgreeToUpgrade();
+        Assert.DoesNotContain(_log.Entries, entry => entry.Message.Contains("may be upgraded"));
+    }
+
+    [Fact]
+    public void AnOlderVault_RefusesEveryWrite_UntilItsUpgradeIsAgreed()
+    {
+        WriteChange(NodeAddedJson(format: 3, "Dune"));
+        var vault = Open(snapshot: false, headerFormat: 2);
+        var dataset = NewNode("Arrakis");
+        var note = new NoteEdited(Guid.NewGuid(), Start, dataset.Id, []);
+
+        Assert.Equal(3, vault.Format);
+        Assert.True(vault.NeedsUpgrade);
+        Assert.Throws<InvalidOperationException>(() => AddNode(vault, "Arrakis"));
+        Assert.Throws<InvalidOperationException>(() => vault.Save(note, "text"));
+        Assert.Throws<InvalidOperationException>(() => vault.WriteDataset(ImageVersion(dataset, "a.png", [1]), () => new MemoryStream([1])));
+        Assert.Throws<InvalidOperationException>(() => vault.WriteCopies([]));
+        Assert.Single(Directory.GetFiles(Folder, "*", SearchOption.AllDirectories), path => path.StartsWith(ChangesFolder, StringComparison.Ordinal));
+        Assert.False(vault.Notes.Exists(note.Id));
+
+        vault.AgreeToUpgrade();
+        AddNode(vault, "Arrakis");
+
+        Assert.Equal(VaultFormat.Current, vault.Format);
+        Assert.False(vault.NeedsUpgrade);
+        Assert.Contains(_log.Entries, entry => entry.Level == LogLevel.Info && entry.Message.Contains($"from format 3 to {VaultFormat.Current}"));
+    }
+
+    [Fact]
+    public void AChangeOfTheCurrentFormat_FromAnotherDevice_UpgradesTheVault()
+    {
+        var vault = Open(snapshot: false, headerFormat: 3);
+        Assert.True(vault.NeedsUpgrade);
+
+        WriteChange(NodeAddedJson(VaultFormat.Current, "Dune"));
+        vault.Refresh();
+
+        Assert.False(vault.NeedsUpgrade);
+        Assert.False(Open(snapshot: false, headerFormat: 3).NeedsUpgrade);
+    }
+
+    [Fact]
+    public void TheSnapshot_KeepsTheFormatOfTheFiles()
+    {
+        WriteChange(NodeAddedJson(format: 3, "Dune"));
+        Open(headerFormat: 3);
+        Directory.Delete(ChangesFolder, recursive: true);
+
+        // The snapshot holds its changes in the current format, yet the vault's files are of format 3.
+        var fromSnapshot = Open(headerFormat: 3);
+        Assert.Single(fromSnapshot.Graph.Nodes);
+        Assert.Equal(3, fromSnapshot.Format);
+
+        fromSnapshot.AgreeToUpgrade();
+        AddNode(fromSnapshot, "Arrakis");
+        Directory.Delete(ChangesFolder, recursive: true);
+
+        Assert.Equal(VaultFormat.Current, Open(headerFormat: 3).Format);
+    }
+
+    [Fact]
     public void TheSnapshot_IsNamedByTheVaultId() =>
         Assert.Equal(Path.Combine(Cache, _header.Id.ToString("N") + ".kfs"), Vault.SnapshotOf(Cache, _header.Id));
 
@@ -367,8 +435,11 @@ public sealed class VaultTests : IDisposable
 
     private string ChangesFolder => Path.Combine(Folder, VaultFolder.ChangesFolder);
 
-    private Vault Open(bool snapshot = true) =>
-        Vault.Open(Folder, _header, _key, snapshot ? Cache : null, _log);
+    private Vault Open(bool snapshot = true, int headerFormat = VaultFormat.Current) =>
+        Vault.Open(Folder, _header with { Format = headerFormat }, _key, snapshot ? Cache : null, _log);
+
+    private static string NodeAddedJson(int format, string name) =>
+        $"{{\"format\":{format},\"op\":\"addNode\",\"at\":\"2026-10-16T09:12:00Z\",\"node\":{{\"id\":\"{Guid.NewGuid()}\",\"type\":\"generic\",\"name\":\"{name}\",\"created\":\"2026-10-16T09:12:00Z\"}}}}";
 
     private static Node AddNode(Vault vault, string name)
     {

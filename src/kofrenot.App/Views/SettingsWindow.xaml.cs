@@ -527,6 +527,7 @@ public partial class SettingsWindow : Window
         {
             (null, _) => "None chosen yet. An empty folder becomes a new vault; a folder holding a kofrenot vault opens it.",
             (_, null) when _session.NewerFormat is { } format => $"Closed: written by a newer kofrenot (vault format {format}). Install the latest kofrenot to open it.",
+            (_, null) when _session.OlderFormat is { } older => $"Not used: in format {older}, it needs an upgrade to format {VaultFormat.Current}. Upgrade it from the main window.",
             (_, null) => "Locked: the pass phrase was not given.",
             (_, { } vault) => $"{OpenText(vault)}, measuring its size…",
         };

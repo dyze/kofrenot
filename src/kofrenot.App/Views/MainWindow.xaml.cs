@@ -144,6 +144,11 @@ public partial class MainWindow : Window
             StateText.Text = $"This vault was written by a newer kofrenot (vault format {format}; this one reads up to format {VaultFormat.Current}). Install the latest kofrenot to open it.";
             StateButton.Content = "Get the latest kofrenot";
         }
+        else if (_session.OlderFormat is { } older)
+        {
+            StateText.Text = $"This vault is in format {older}: this kofrenot uses it once upgraded to format {VaultFormat.Current}, which kofrenot older than {VaultFormat.Since(VaultFormat.Current)} no longer opens.";
+            StateButton.Content = "Upgrade and open…";
+        }
         else
         {
             StateText.Text = "The vault is locked.";
@@ -351,6 +356,11 @@ public partial class MainWindow : Window
             {
                 MessageDialog.Inform(this, $"Cannot open {ProjectLinks.Releases}.\n\n{error}");
             }
+        }
+        else if (_session.OlderFormat is not null)
+        {
+            _log.Info("Action", "Upgrade the vault");
+            _session.Upgrade(this);
         }
         else
         {

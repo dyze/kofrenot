@@ -23,7 +23,12 @@ public sealed class ChangeCodec(SecretBox box)
 
     /// <exception cref="InvalidDataException">Damaged, another key or id, or an unknown change.</exception>
     /// <exception cref="NewerVaultFormatException">Written by a newer kofrenot.</exception>
-    public Change Decode(Guid id, byte[] data)
+    public Change Decode(Guid id, byte[] data) => DecodeWithFormat(id, data).Change;
+
+    /// <summary>As <see cref="Decode"/>, with the vault format the change was written in.</summary>
+    /// <exception cref="InvalidDataException">Damaged, another key or id, or an unknown change.</exception>
+    /// <exception cref="NewerVaultFormatException">Written by a newer kofrenot.</exception>
+    public (Change Change, int Format) DecodeWithFormat(Guid id, byte[] data)
     {
         var json = box.Open(Magic, data, id.ToByteArray());
         ChangeData? change;
@@ -36,6 +41,6 @@ public sealed class ChangeCodec(SecretBox box)
             throw new InvalidDataException("The change is not valid JSON", ex);
         }
 
-        return change?.ToChange(id) ?? throw new InvalidDataException("The change is empty");
+        return change is null ? throw new InvalidDataException("The change is empty") : (change.ToChange(id), change.Format);
     }
 }

@@ -15,7 +15,7 @@ namespace Kofrenot.UI;
 /// The vault kofrenot works on: the folder of the settings, opened with its remembered key or
 /// its pass phrase (created when the folder is empty), watched for the changes of other apps.
 /// </summary>
-public sealed class VaultSession : IDisposable
+public sealed partial class VaultSession : IDisposable
 {
     private const string Category = "Vault";
 
@@ -33,6 +33,7 @@ public sealed class VaultSession : IDisposable
         _files = files;
         _keys = keys;
         _log = log;
+        _upgrades = new VaultUpgrades(files.VaultUpgrades, log);
     }
 
     /// <summary>Raised on the UI thread when the vault is opened or closed, or has new changes.</summary>
@@ -58,22 +59,35 @@ public sealed class VaultSession : IDisposable
     /// </summary>
     public int? NewerFormat { get; private set; }
 
-    /// <summary>Opens the vault of the settings, asking its pass phrase unless it is remembered. Does nothing when one is open.</summary>
+    /// <summary>
+    /// Opens the vault of the settings, asking its pass phrase unless it is remembered, then its
+    /// upgrade when it needs one. Does nothing when one is open, or waits for its upgrade (<see cref="Upgrade"/>).
+    /// </summary>
     public void Open(Window owner)
     {
-        if (Current is not null || Folder is not { } folder)
+        if (Current is not null || _notUpgraded is not null || Folder is not { } folder)
         {
             return;
         }
 
         NewerFormat = null;
-        Current = OpenFolder(owner, folder);
-        if (Current is null)
+        if (OpenFolder(owner, folder) is { } vault)
         {
-            Changed?.Invoke();
+            Use(owner, folder, vault);
+        }
+
+        Changed?.Invoke();
+    }
+
+    /// <summary>Makes an unlocked vault the current one, once its upgrade is agreed when it needs one, and watches its folder.</summary>
+    private void Use(Window owner, string folder, Vault vault)
+    {
+        if (!AgreesToUpgrade(owner, vault))
+        {
             return;
         }
 
+        Current = vault;
         try
         {
             _watcher = new VaultWatcher(folder, Refresh);
@@ -82,8 +96,6 @@ public sealed class VaultSession : IDisposable
         {
             _log.Warn(Category, $"The vault folder cannot be watched ({ex.Message}): changes of other apps are read when the window is shown");
         }
-
-        Changed?.Invoke();
     }
 
     /// <summary>Uses another folder: the current vault is closed, then the new one opened.</summary>
@@ -107,12 +119,12 @@ public sealed class VaultSession : IDisposable
         }
         catch (NewerVaultFormatException ex)
         {
-            NeedsUpgrade(ex);
+            NeedsNewerKofrenot(ex);
             Close();
         }
     }
 
-    private void NeedsUpgrade(NewerVaultFormatException ex)
+    private void NeedsNewerKofrenot(NewerVaultFormatException ex)
     {
         NewerFormat = ex.Format;
         _log.Warn(Category, ex.Message);
@@ -332,9 +344,10 @@ public sealed class VaultSession : IDisposable
     {
         _watcher?.Dispose();
         _watcher = null;
-        if (Current is not null)
+        if (Current is not null || _notUpgraded is not null)
         {
             Current = null;
+            _notUpgraded = null;
             _log.Info(Category, "Vault closed");
             Changed?.Invoke();
         }
@@ -384,7 +397,7 @@ public sealed class VaultSession : IDisposable
         }
         catch (NewerVaultFormatException ex)
         {
-            NeedsUpgrade(ex);
+            NeedsNewerKofrenot(ex);
             return null;
         }
         catch (Exception ex) when (ex is InvalidDataException or IOException or UnauthorizedAccessException)
@@ -434,7 +447,7 @@ public sealed class VaultSession : IDisposable
         }
         catch (NewerVaultFormatException ex)
         {
-            NeedsUpgrade(ex);
+            NeedsNewerKofrenot(ex);
             return null;
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Security.Cryptography.CryptographicException)

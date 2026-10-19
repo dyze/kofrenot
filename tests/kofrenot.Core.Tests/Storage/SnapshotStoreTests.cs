@@ -34,10 +34,12 @@ public sealed class SnapshotStoreTests : IDisposable
             new ChangesRemoved(Guid.NewGuid(), Start.AddMinutes(2), [alias.Id]),
         ];
 
-        Store().Save(changes);
-        var loaded = Store().Load();
+        Store().Save(changes, highestFormat: 3);
+        var snapshot = Store().Load();
 
-        Assert.NotNull(loaded);
+        Assert.NotNull(snapshot);
+        Assert.Equal(3, snapshot.HighestFormat);
+        var loaded = snapshot.Changes;
         Assert.Equal(changes.Select(change => (change.Id, change.GetType())), loaded.Select(change => (change.Id, change.GetType())));
         Assert.Equal(dune, Assert.IsType<NodeAdded>(loaded[0]).Node);
         Assert.Equal(alias, loaded[4]);
@@ -47,7 +49,7 @@ public sealed class SnapshotStoreTests : IDisposable
     [Fact]
     public void TheFile_IsEncrypted_WithNoTemporaryFileLeft()
     {
-        Store().Save([new NodeAdded(Guid.NewGuid(), Start, new Node(Guid.NewGuid(), "generic", "Dune", Start))]);
+        Store().Save([new NodeAdded(Guid.NewGuid(), Start, new Node(Guid.NewGuid(), "generic", "Dune", Start))], VaultFormat.Current);
 
         Assert.DoesNotContain("Dune", Encoding.UTF8.GetString(File.ReadAllBytes(FilePath)));
         Assert.Single(Directory.GetFiles(Path.GetDirectoryName(FilePath)!));
@@ -56,7 +58,7 @@ public sealed class SnapshotStoreTests : IDisposable
     [Fact]
     public void ASnapshotOfAnotherVault_IsNotUsed()
     {
-        Store().Save([]);
+        Store().Save([], VaultFormat.Current);
 
         Assert.Null(new SnapshotStore(FilePath, _box, Guid.NewGuid(), _log).Load());
         Assert.Contains(_log.Entries, entry => entry.Level == LogLevel.Warning);
@@ -74,6 +76,8 @@ public sealed class SnapshotStoreTests : IDisposable
     [Theory]
     [InlineData("{\"format\":2,\"changes\":[],\"nodes\":[],\"links\":[],\"renames\":[]}")]
     [InlineData("{\"format\":3}")]
+    [InlineData("{\"format\":3,\"changes\":[]}")]
+    [InlineData("{\"format\":4,\"changes\":[]}")]
     [InlineData("{\"format\":3,\"changes\":[{\"id\":\"3f2504e0-4f89-11d3-9a0c-0305e82c3301\"}]}")]
     [InlineData("{\"format\":3,\"changes\":[{\"id\":\"3f2504e0-4f89-11d3-9a0c-0305e82c3301\",\"change\":{\"format\":2,\"op\":\"unknown\",\"at\":\"2026-10-16T09:12:00Z\"}}]}")]
     [InlineData("null")]
@@ -98,10 +102,19 @@ public sealed class SnapshotStoreTests : IDisposable
     [Fact]
     public void ASnapshotHoldingANewerFormat_IsNotUsed()
     {
-        WriteSnapshot("{\"format\":3,\"changes\":[{\"id\":\"3f2504e0-4f89-11d3-9a0c-0305e82c3301\",\"change\":{\"format\":99,\"op\":\"addNode\",\"at\":\"2026-10-16T09:12:00Z\"}}]}");
+        WriteSnapshot("{\"format\":4,\"highestFormat\":4,\"changes\":[{\"id\":\"3f2504e0-4f89-11d3-9a0c-0305e82c3301\",\"change\":{\"format\":99,\"op\":\"addNode\",\"at\":\"2026-10-16T09:12:00Z\"}}]}");
 
         Assert.Null(Store().Load());
         Assert.Contains(_log.Entries, entry => entry.Message.Contains("newer format"));
+    }
+
+    [Fact]
+    public void ASnapshotOfANewerVaultFormat_IsNotUsed()
+    {
+        WriteSnapshot("{\"format\":4,\"highestFormat\":99,\"changes\":[]}");
+
+        Assert.Null(Store().Load());
+        Assert.Contains(_log.Entries, entry => entry.Message.Contains("newer format (99)"));
     }
 
     [Fact]
@@ -110,7 +123,7 @@ public sealed class SnapshotStoreTests : IDisposable
         // A folder where the file should be: it cannot be written.
         Directory.CreateDirectory(FilePath);
 
-        Store().Save([]);
+        Store().Save([], VaultFormat.Current);
 
         Assert.Contains(_log.Entries, entry => entry.Level == LogLevel.Warning && entry.Message.Contains("cannot be saved"));
     }

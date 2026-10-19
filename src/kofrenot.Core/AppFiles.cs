@@ -57,6 +57,9 @@ public sealed class AppFiles
     /// <summary>The nodes expanded in each tree view on this device, by vault (ids only).</summary>
     public string ViewStates => Path.Combine(DataDirectory, "view-states.json");
 
+    /// <summary>The vault upgrades agreed on this device, by vault (ids only).</summary>
+    public string VaultUpgrades => Path.Combine(DataDirectory, "vault-upgrades.json");
+
     /// <summary>The master keys remembered by Windows (DPAPI), by vault.</summary>
     public string RememberedKeys => Path.Combine(DataDirectory, "keys.json");
 
@@ -77,6 +80,7 @@ public sealed class AppFiles
         new("Recent nodes", RecentNodes),
         new("Open tabs", ViewTabs),
         new("Expanded nodes in views", ViewStates),
+        new("Vault upgrades agreed", VaultUpgrades),
         new("Remembered pass phrases", RememberedKeys),
         new("Vault snapshots", Cache),
         new("Logs", Logs),
