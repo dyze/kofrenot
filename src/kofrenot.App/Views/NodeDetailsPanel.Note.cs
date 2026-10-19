@@ -21,6 +21,9 @@ public partial class NodeDetailsPanel
     /// <summary>Saves the note shown if it was changed: when it is left, or the window hidden.</summary>
     public void LeaveNote() => NoteBox.SaveIfChanged();
 
+    /// <summary>The name of the note shown, when it has unsaved changes; null otherwise.</summary>
+    public string? UnsavedNote => NoteBox.IsDirty ? NoteBox.Node?.Name : null;
+
     private void ShowNote(NodeDetails details)
     {
         var isNote = details.Node.Type == TypeCatalog.Note.Id;

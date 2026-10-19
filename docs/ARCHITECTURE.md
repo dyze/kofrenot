@@ -18,7 +18,7 @@ kofrenot.Core  (no Windows dependency, fully unit-tested on any OS)
    Browse: NodeBrowser · NodeDetails · NodeVisual · PinPlanner · RecentNodes
    Notes: NotePlanner · MarkdownFormat
    Datasets: DatasetPlanner · DatasetType · TextPreview · ByteSize · IThumbnailMaker
-   AppFiles · AppVersion · RunningCopy · Changelog · ProjectLinks
+   AppFiles · AppVersion · RunningCopy · QuitRefusal · Changelog · ProjectLinks
    SettingsStore · SettingsCatalog · Hotkey
    PlacementRules · PlacementStore
    UpdateChecker · UpdateStore · Release
@@ -34,7 +34,7 @@ One namespace per folder (`Kofrenot.Core.Settings`, `Kofrenot.UI.Views`, ...). T
 
 | `kofrenot.Core` | Content |
 | --- | --- |
-| *(root)* | `AppVersion`; `RunningCopy` + `AppCopy` (another copy running: same or not, and the warning); `AppFiles` (where every file of kofrenot is, including `keys.json` and the snapshots in `cache\`: the only place their names are written, listed in Settings > About; `AppFiles.For` picks the data folder, see [Portable copy](#portable-copy)); `Changelog` (reads the text shown by Settings > About); `ProjectLinks` (website, issues, releases) |
+| *(root)* | `AppVersion`; `RunningCopy` + `AppCopy` (another copy running: same or not, and the warning); `QuitRefusal` (why kofrenot must not quit now); `AppFiles` (where every file of kofrenot is, including `keys.json` and the snapshots in `cache\`: the only place their names are written, listed in Settings > About; `AppFiles.For` picks the data folder, see [Portable copy](#portable-copy)); `Changelog` (reads the text shown by Settings > About); `ProjectLinks` (website, issues, releases) |
 | `Settings/` | `SettingsStore` (`settings.json`: theme, debug logging, update check, vault folder, hotkey), `Hotkey`, `SettingsCatalog` (the entries of the Settings window, their tabs, and the search that finds them) |
 | `Graph/` | `Node`, `Link`, `NodeType`, `LinkType`, `LinkVerb` (a link type read one way), `TypeCatalog` (built-in node and link types, link aliases; `LinkName`: how a link reads from one of its nodes), `LinkAliases` (the user's aliases, see [Aliases and removals](#aliases-and-removals)), `RemovableChanges`, `NameKey` (the form names are compared in), `Change` (`NodeAdded`, `LinkAdded`, `NodeRenamed`, `AliasAdded`, `NodePinned`, `ChangesRemoved`, `ContentEdited`: `NoteEdited`, `DatasetEdited`), `DatasetFile` (a dataset version's file: name, size, SHA-256), `NodeNames` + `NameVersion` (a node's current names, see [Renames](#renames)), `ContentVersions` (the current versions of a note or dataset, see [Notes](#notes)), `KnowledgeGraph` (in-memory state, built by applying changes) |
 | `Storage/` | `VaultFormat` (+ `NewerVaultFormatException`), `SecretBox` (AES-GCM seal / open), `ChunkedBox` (AES-GCM over 1 MB chunks, streamed), `KeyWrap` (KDF, wrap / unwrap the master key), `ChangeData` (a change as JSON, shared with the snapshot), `ChangeCodec` (change ⇄ sealed JSON), `VaultHeader`, `VaultFolder` (layout, inspect, create, `SizeOf` + `FolderSize`: its files and bytes, shown in Settings > Vault, measured off the UI thread), `SnapshotStore`, `NoteFiles` (note content, `content/`), `DatasetFiles` (dataset content, `content/`: describe a file, write, export, open), `ThumbnailFiles` (thumbnails, `content/`), `Vault` (open, append, refresh, save a note or a dataset version, `WriteDataset`: its files only, off the UI thread), `AtomicFile` (write as `.tmp`, then rename), `KeyMemory` (remembered master keys, `keys.json`), `ISecretProtector` |

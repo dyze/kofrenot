@@ -46,6 +46,9 @@ public sealed class VaultSession : IDisposable
     /// <summary>A file is being imported into this dataset (<see cref="SaveDataset"/>).</summary>
     public bool IsImporting(Guid dataset) => _importing.Contains(dataset);
 
+    /// <summary>How many files are being imported (<see cref="SaveDataset"/>).</summary>
+    public int ImportsRunning => _importing.Count;
+
     /// <summary>Whether the open vault's key is remembered on this computer.</summary>
     public bool IsRemembered => Current is { } vault && _keys.Has(vault.Id);
 

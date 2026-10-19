@@ -29,7 +29,7 @@ Upgrade: run a newer setup over the old one. Uninstall: *Settings > Apps*. Your 
 
 - **Main window.** Opens at start. Closing it hides it: kofrenot keeps running in the notification area. Starting kofrenot again shows the running copy. Starting *another* copy (installed, portable, or a build) while one runs says which one runs: quit it from its tray icon to use the other.
 - **Hotkey.** Ctrl+Alt+K shows the main window from any program (Settings > General to change it).
-- **Tray icon.** Click: show the main window. Menu: Show, Settings, Log window (ticked while it is open: a click shows or closes it), Quit.
+- **Tray icon.** Click: show the main window. Menu: Show, Settings, Log window (ticked while it is open: a click shows or closes it), Quit. kofrenot does not quit, from the tray or for another copy, while a note has unsaved changes or a file is being imported: its window shows why.
 
 ### Vault
 A vault is a folder: on this computer, on a file share, or in a folder a sync tool copies between computers. Choose it in Settings > Vault, which also shows its nodes, links and size on disk (measured each time the tab is shown).

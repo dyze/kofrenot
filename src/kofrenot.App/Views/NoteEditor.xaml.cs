@@ -41,7 +41,8 @@ public partial class NoteEditor : UserControl
     /// <summary>Typing in the note: the details leave its keys alone.</summary>
     public bool IsEditing => Box.IsKeyboardFocusWithin;
 
-    private bool IsDirty => _state is { IsMissing: false } state && Box.Text != state.Text;
+    /// <summary>The note was changed since it was read or saved.</summary>
+    public bool IsDirty => _state is { IsMissing: false } state && Box.Text != state.Text;
 
     /// <summary>Shows a note, reading its content. The note shown before is saved first if it was changed.</summary>
     /// <param name="read">Reads a version's content; null when its file is not there.</param>

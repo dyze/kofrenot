@@ -114,11 +114,8 @@ public partial class App : Application
             showSettings: () => Dispatcher.BeginInvoke(() => window.ShowSettings()),
             isLogOpen: () => _logWindow is not null,
             toggleLog: ToggleLogWindow,
-            quit: () =>
-            {
-                log.Info("Action", "Quit from the tray");
-                Shutdown();
-            });
+            // After the menu has closed: a refusal shows a dialog.
+            quit: () => Dispatcher.BeginInvoke(() => TryQuit("Quit from the tray")));
 
         window.ShowFromOutside();
 
@@ -208,6 +205,26 @@ public partial class App : Application
         }
 
         window.Activate();
+    }
+
+    /// <summary>
+    /// Quits, unless a note is not saved or a file is being imported: the window then shows why,
+    /// after <paramref name="onRefused"/> (called before the message, which waits for the user).
+    /// </summary>
+    private void TryQuit(string action, Action? onRefused = null)
+    {
+        var log = _logHub!.Filter;
+        if (_window?.WhyNotQuit() is not { } reason)
+        {
+            log.Info("Action", action);
+            Shutdown();
+            return;
+        }
+
+        log.Info("Action", $"{action}: refused, a note is not saved or a file is being imported");
+        onRefused?.Invoke();
+        _window.ShowFromOutside();
+        MessageDialog.Inform(_window, reason);
     }
 
     protected override void OnExit(ExitEventArgs e)
