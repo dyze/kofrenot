@@ -6,7 +6,12 @@ namespace Kofrenot.Core.Settings;
 /// </summary>
 public sealed record VaultLocation(string Folder)
 {
-    private string Key => Folder.TrimEnd('\\', '/').ToUpperInvariant();
+    /// <summary>The folder's own name ("Personal" for <c>D:\Sync\Personal</c>): how a vault is shown before its name is known.</summary>
+    public string FolderName => Path.GetFileName(Trimmed) is { Length: > 0 } name ? name : Folder;
+
+    private string Trimmed => Folder.TrimEnd('\\', '/');
+
+    private string Key => Trimmed.ToUpperInvariant();
 
     public bool Equals(VaultLocation? other) => other is not null && Key == other.Key;
 

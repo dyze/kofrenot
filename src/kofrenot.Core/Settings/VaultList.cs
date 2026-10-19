@@ -34,6 +34,8 @@ public sealed class VaultList
 
     public RegisteredVault? Find(VaultLocation location) => _vaults.FirstOrDefault(vault => vault.Location == location);
 
+    public RegisteredVault? Find(Guid id) => _vaults.FirstOrDefault(vault => vault.Id == id);
+
     /// <summary>Whether this location, or this vault elsewhere, is listed already.</summary>
     public bool IsListed(VaultLocation location, Guid? id) => IsListed(_vaults, location, id);
 

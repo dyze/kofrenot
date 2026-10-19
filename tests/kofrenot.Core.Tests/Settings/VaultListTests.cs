@@ -20,6 +20,14 @@ public sealed class VaultListTests
         Assert.Equal(new VaultLocation(folder).GetHashCode(), new VaultLocation(other).GetHashCode());
     }
 
+    [Theory]
+    [InlineData(@"D:\Sync\Personal", "Personal")]
+    [InlineData(@"D:\Sync\Personal\", "Personal")]
+    [InlineData(@"\\nas\share\Work", "Work")]
+    [InlineData(@"D:\", @"D:\")]
+    public void TheFolderName_IsItsLastPart(string folder, string name) =>
+        Assert.Equal(name, new VaultLocation(folder).FolderName);
+
     [Fact]
     public void AnotherFolder_IsAnotherLocation()
     {
@@ -93,6 +101,8 @@ public sealed class VaultListTests
 
         Assert.Equal([new RegisteredVault(A), new RegisteredVault(B, id)], list.Vaults);
         Assert.Equal(new RegisteredVault(B, id), list.Find(B));
+        Assert.Equal(new RegisteredVault(B, id), list.Find(id));
         Assert.Null(list.Find(C));
+        Assert.Null(list.Find(Guid.NewGuid()));
     }
 }

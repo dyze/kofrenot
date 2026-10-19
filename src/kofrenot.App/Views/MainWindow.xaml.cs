@@ -74,7 +74,9 @@ public partial class MainWindow : Window
         VersionText.Text = $"kofrenot {AppVersion.Of(typeof(MainWindow).Assembly)}";
         ShowUpdateMark();
         _session.Changed += ShowVault;
+        _session.Changed += ShowVaults;
         ShowVault();
+        ShowVaults();
     }
 
     private bool DetailsShown => DetailsPanel.Browser.IsOpen;
@@ -125,7 +127,8 @@ public partial class MainWindow : Window
         TitleText.Visibility = open ? Visibility.Collapsed : Visibility.Visible;
         if (vault is not null)
         {
-            VaultText.Text = $"{_session.Folder} · {vault.Graph.Nodes.Count} nodes · {vault.Graph.Links.Count} links";
+            VaultText.Text = $"{SelectedName} · {vault.Graph.Nodes.Count} nodes · {vault.Graph.Links.Count} links";
+            VaultText.ToolTip = _session.Folder;
             ShowTabs(vault, view);
             ShowInput();
             DetailsPanel.Show();
@@ -133,7 +136,8 @@ public partial class MainWindow : Window
         }
 
         InputPlaceholder.Visibility = Visibility.Collapsed;
-        VaultText.Text = _session.Folder ?? string.Empty;
+        VaultText.Text = SelectedName;
+        VaultText.ToolTip = _session.Folder;
         if (_session.Folder is null)
         {
             StateText.Text = "No vault yet. Choose its folder in Settings > Vault: an empty folder becomes a new vault, encrypted with a pass phrase.";

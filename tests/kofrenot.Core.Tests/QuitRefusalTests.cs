@@ -15,6 +15,15 @@ public sealed class QuitRefusalTests
     }
 
     [Fact]
+    public void SwitchingVaults_IsRefusedForTheSameReasons()
+    {
+        var reason = QuitRefusal.Reason("Dune", importsRunning: 0, QuitRefusal.SwitchVaults);
+
+        Assert.Equal("kofrenot cannot switch vaults now.\n\nThe note \"Dune\" is not saved: save it (Ctrl+S).\n\nThen switch vaults again.", reason);
+        Assert.Null(QuitRefusal.Reason(unsavedNote: null, importsRunning: 0, QuitRefusal.SwitchVaults));
+    }
+
+    [Fact]
     public void OneImport_IsAFile()
     {
         var reason = QuitRefusal.Reason(unsavedNote: null, importsRunning: 1);

@@ -71,7 +71,8 @@ public partial class App : Application
         var placer = new WindowPlacer(new PlacementStore(files.WindowPositions), log);
         var updates = new UpdateChecker(new GitHubReleaseFeed(version), new UpdateStore(files.UpdateCheck), version, log: log);
         var logHub = _logHub;
-        var session = _session = new VaultSession(settings, files, new KeyMemory(files.RememberedKeys, new DpapiProtector(), log), log);
+        var protector = new DpapiProtector();
+        var session = _session = new VaultSession(settings, files, new KeyMemory(files.RememberedKeys, protector, log), new VaultNameMemory(files.VaultNames, protector, log), log);
         _window = new MainWindow(
             settings,
             log,
