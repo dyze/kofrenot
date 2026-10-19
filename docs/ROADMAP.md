@@ -8,23 +8,9 @@ Scope of each planned version. Implemented features move to [CHANGELOG.md](../CH
 | 0.2     | Released    | Notes: link types, notes with content, pinned and recent nodes                     |
 | 0.3     | Released    | Datasets: files stored in the vault, read on demand                                |
 | 0.4     | Released    | Views: flat and tree views over the graph, shown as tabs                           |
-| 0.5     | To define   | Vaults: several vaults, a hot key per vault                                        |
+| 0.5     | Implemented | Vaults: several vaults, a hot key per vault                                        |
 | 0.6     | To define   | Editing: change types, link nodes, restore versions, drop files                    |
 | 0.7     | To define   | Server: vaults stored on a web server                                              |
-
-## 0.5 (to define)
-1. **Multiple vaults.** User can register several vaults on his app. 
-	- Current vault is selected using a combo in main window. Selection is memorized. 
-	- Each vault has his passphrase and is independent for others: one vault open at a time, never searched or linked across vaults.
-	- Switching closes the current vault and opens the chosen one, asking its pass phrase unless remembered; cancel keeps the previous one. At start, the last selected vault opens.
-	- Settings > Vault lists the vaults: add, remove, rename, reorder. Remove only unregisters it (no file touched) and forgets its remembered key. A vault already registered (same vault id) is refused. A vault out of reach stays listed, marked unavailable.
-	- The vault folder of earlier versions becomes the first vault of the list, without asking.
-	- A registered vault is a *location* (today a folder), kept to the minimum, so that a server vault can be added in 0.7 without reworking the list.
-2. **Vault name.** Stored encrypted in the vault, so every device shows the same name: a new change, as renames do, raising the vault format. Named on two devices before they synced: flagged as a conflict.
-	- Before the vault is first opened on this computer, the combo shows its folder name; afterwards the last name read, kept locally, protected by Windows (DPAPI).
-3. **Dedicated hot keys.** User can assign a hot key per vault. e.g. CTRL ALT I for private vault and CTRL ALT P for personal one.
-	- It shows the main window on that vault (switching to it), or hides it when that vault is already shown.
-	- Optional; Ctrl+Alt+K still shows the main window on the current vault.
 
 ## 0.6 (to define)
 1. **Change types.** Change a node's type (e.g. a generic node into a note) and a link's type (or its direction) from the node details.

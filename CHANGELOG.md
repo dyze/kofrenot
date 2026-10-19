@@ -6,6 +6,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+- **Vaults**
+  - **Several vaults**: add as many as you like in Settings > Vault (*Add...*), order them (*Up*, *Down*), and *Remove* one from the list (its folder is not touched; its remembered pass phrase is forgotten on this computer). One is open at a time, and they never mix.
+  - **Vault box** at the top left of the main window, with two vaults or more: switches to the vault chosen, asking its pass phrase unless remembered; cancelled, the previous vault comes back. The last vault chosen opens at start. A vault whose folder cannot be reached is marked *unavailable*.
+  - **Vault name**: *Rename* in Settings > Vault. Stored, encrypted, in the vault, so every computer shows it; a locked vault shows the last name seen on this computer. Named differently on two computers before they synced, both names are shown: renaming keeps one.
+  - **Hotkey per vault** (optional, Settings > Vault): shows the main window on that vault, switching to it; pressed again while it is in front, it hides it.
+
+### Changed
+- **Vault**
+  - **Vault format 5**, for the vault's name. kofrenot 0.4 does not open a vault written by this version, and offers the update; this version asks before upgrading a vault of format 4 or older.
+  - **Settings > Vault** lists the vaults, instead of one vault folder. The vault folder of 0.4 becomes the first vault of the list.
+  - A vault opened before whose folder is missing (a file share offline) is said to be out of reach, instead of offering to create a new vault there.
+
 ## [0.4] - 2026-10-19
 
 ### Added

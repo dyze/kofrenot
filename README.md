@@ -28,15 +28,19 @@ Upgrade: run a newer setup over the old one. Uninstall: *Settings > Apps*. Your 
 ## Usage
 
 - **Main window.** Opens at start. Closing it hides it: kofrenot keeps running in the notification area. Starting kofrenot again shows the running copy. Starting *another* copy (installed, portable, or another build: version, commit or uncommitted changes) while one runs names both, and offers to close the running one and start this one; *Show the running one* keeps it. A copy of 0.3 or older cannot be asked to close: quit it from its tray icon.
-- **Hotkey.** Ctrl+Alt+K shows the main window from any program (Settings > General to change it).
+- **Hotkey.** Ctrl+Alt+K shows the main window from any program (Settings > General to change it). Each vault can have its own hotkey too (see [Vaults](#vault)).
 - **Tray icon.** Click: show the main window. Menu: Show, Settings, Log window (ticked while it is open: a click shows or closes it), Quit. kofrenot does not quit, from the tray or for another copy, while a note has unsaved changes or a file is being imported: its window shows why.
 
 ### Vault
-A vault is a folder: on this computer, on a file share, or in a folder a sync tool copies between computers. Choose it in Settings > Vault, which also shows its nodes, links and size on disk (measured each time the tab is shown).
+A vault is a folder: on this computer, on a file share, or in a folder a sync tool copies between computers. Add it in Settings > Vault, which also shows the open vault's nodes, links and size on disk (measured each time the tab is shown).
 
 - An **empty folder** becomes a new vault: kofrenot asks a pass phrase twice. Everything in it is encrypted with that pass phrase: **if it is lost, the vault cannot be read**.
-- A **vault folder** asks for its pass phrase at start, unless *Remember pass phrase on this computer* was ticked (kept by Windows for your account; Settings > Vault > *Forget* removes it).
-- A folder holding other files is refused.
+- A **vault folder** asks for its pass phrase when opened, unless *Remember pass phrase on this computer* was ticked (kept by Windows for your account; Settings > Vault > *Forget* removes it).
+- A folder holding other files is refused, and so is a vault in the list already.
+- **Several vaults**: add as many as you like; one is open at a time, and they never mix (no search or link across vaults). With two or more, a box at the top left of the main window switches between them: the open vault is closed, then the chosen one opened (its pass phrase asked unless remembered; cancelled, the previous one comes back). The note shown is saved first; not while a file is being imported. kofrenot opens the last vault chosen at start. A vault whose folder cannot be reached is marked *unavailable*.
+- **Name**: Settings > Vault > *Rename*, for the open vault. The name is stored, encrypted, in the vault, so every computer shows it; locked, a vault shows the last name seen on this computer (or its folder's name). Named differently on two computers before they synced, both names are shown there: rename it to keep one.
+- **Hotkey per vault** (optional, Settings > Vault): shows the main window on that vault, switching to it; pressed again while it is in front, it hides it.
+- **Remove** takes a vault out of the list and forgets its pass phrase on this computer: its folder is not touched, so it can be added again.
 - Several computers or copies can add to the same vault at once; what the others add appears without a restart.
 - A vault written by a newer kofrenot (on another computer, say) is not opened, or is closed as soon as it is seen: install the latest kofrenot (*Get the latest kofrenot* in the main window).
 - A vault written by an older kofrenot asks first to be upgraded: once this kofrenot changes it, the older one no longer opens it, so update kofrenot on your other computers first. *Not now* leaves the vault unused, and untouched, until *Upgrade and open…* in the main window. The answer is asked once per vault on each computer.
@@ -123,7 +127,7 @@ Gear button in the main window, or tray menu > Settings. A dialog over the main 
 | Tab | Options |
 | --- | --- |
 | General | Hotkey that shows kofrenot (click the box, then press the new shortcut; *Default*: Ctrl+Alt+K); main window position: centered on the mouse's monitor (default), at the mouse, or where you left it. Its size is kept, and it always stays fully on screen |
-| Vault | Vault folder (*Choose...*, *Explore to*), whether it is open; the remembered pass phrase (*Forget*) |
+| Vault | The vaults, in the order of the main window's box: *Add...*, *Remove*, *Up*, *Down*. For the one chosen in the list: its name (*Rename*, when open), its hotkey (click the box, then press the shortcut; *None*), its folder (*Explore to*), whether it is open; the remembered pass phrase (*Forget*) |
 | Link types | Each link type, both ways, with its phrases. Add your own aliases (for example `-` for *relates to*): pick the link type, type the phrase, *Add*; × removes one. They are stored in the vault, so every device has them. A phrase in use is refused, and node names containing it are warned about (the input box would read them as links) |
 | Appearance | Theme: follow Windows (default), light or dark |
 | Logging | Detailed (debug) logging; open the log window |
@@ -143,6 +147,7 @@ Everything stays on your computer, in `%LOCALAPPDATA%\kofrenot` (a portable copy
 | `view-states.json` | The nodes expanded in each tree view, per vault (ids only, no names) |
 | `vault-upgrades.json` | The vaults whose upgrade you agreed to (ids only, no names) |
 | `keys.json` | Remembered pass phrases (the vault keys, protected by Windows for your account) |
+| `vault-names.json` | The last name seen in each vault, to show it while locked (protected by Windows for your account) |
 | `cache\` | One encrypted snapshot per vault opened here, so it opens fast. Safe to delete |
 | `logs\kofrenot.log` | Log, at most 3 files of 1 MB, oldest deleted |
 

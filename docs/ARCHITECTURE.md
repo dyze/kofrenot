@@ -5,7 +5,7 @@
 ```
 kofrenot.App   (WPF, Windows only)
 │  main window (input box, node details, note editor, dataset panel), creation dialog, settings window, pass phrase dialog, log window, changelog window, tray icon
-│  VaultSession (opens, watches and adds to the vault through the creation dialog)
+│  VaultSession (the registered vaults; opens one, watches it and adds to it through the creation dialog)
 │  adapters: SerilogFileLog, SingleInstance, NativeWindows + WindowPlacer (window positions), GitHubReleaseFeed, Browser,
 │            DpapiProtector, GlobalHotkey, VaultWatcher
 │
@@ -13,13 +13,13 @@ kofrenot.App   (WPF, Windows only)
 │
 kofrenot.Core  (no Windows dependency, fully unit-tested on any OS)
    Graph: KnowledgeGraph · Node · Link · TypeCatalog · LinkAliases · Change
-   Storage: Vault · VaultFolder · VaultFormat · SecretBox · ChunkedBox · KeyWrap · SnapshotStore · NoteFiles · DatasetFiles · ThumbnailFiles · KeyMemory
+   Storage: Vault · VaultFolder · VaultFormat · SecretBox · ChunkedBox · KeyWrap · SnapshotStore · NoteFiles · DatasetFiles · ThumbnailFiles · KeyMemory · VaultNameMemory
    Input: InputParser · GraphSearch · AddPlanner · InputPresenter · CreationForm
    Browse: NodeBrowser · NodeDetails · NodeVisual · NodeFacts · PinPlanner · RecentNodes · ViewTabs · ViewStates
    Notes: NotePlanner · MarkdownFormat
    Datasets: DatasetPlanner · DatasetType · TextPreview · ByteSize · IThumbnailMaker
    AppFiles · AppVersion · RunningCopy · QuitRefusal · Changelog · ProjectLinks
-   SettingsStore · SettingsCatalog · Hotkey
+   SettingsStore · SettingsCatalog · Hotkey · VaultList
    PlacementRules · PlacementStore
    UpdateChecker · UpdateStore · Release
    ILog · RingLog · CompositeLog · FilteredLog
@@ -34,11 +34,11 @@ One namespace per folder (`Kofrenot.Core.Settings`, `Kofrenot.UI.Views`, ...). T
 
 | `kofrenot.Core` | Content |
 | --- | --- |
-| *(root)* | `AppVersion`; `RunningCopy` + `AppCopy` (another copy running: same or not, and what the user is told); `QuitRefusal` (why kofrenot must not quit now); `AppFiles` (where every file of kofrenot is, including `keys.json` and the snapshots in `cache\`: the only place their names are written, listed in Settings > About; `AppFiles.For` picks the data folder, see [Portable copy](#portable-copy)); `Changelog` (reads the text shown by Settings > About); `ProjectLinks` (website, issues, releases) |
-| `Settings/` | `SettingsStore` (`settings.json`: theme, debug logging, update check, vault folder, hotkey), `Hotkey`, `SettingsCatalog` (the entries of the Settings window, their tabs, and the search that finds them) |
-| `Graph/` | `Node`, `Link`, `NodeType`, `LinkType`, `LinkVerb` (a link type read one way), `TypeCatalog` (built-in node and link types, link aliases; `LinkName`: how a link reads from one of its nodes), `LinkAliases` (the user's aliases, see [Aliases and removals](#aliases-and-removals)), `RemovableChanges`, `NameKey` (the form names are compared in), `Change` (`NodeAdded`, `LinkAdded`, `NodeRenamed`, `AliasAdded`, `NodePinned`, `ChangesRemoved`, `ContentEdited`: `NoteEdited`, `DatasetEdited`), `DatasetFile` (a dataset version's file: name, size, SHA-256), `NodeNames` + `NameVersion` (a node's current names, see [Renames](#renames)), `ContentVersions` (the current versions of a note or dataset, see [Notes](#notes)), `KnowledgeGraph` (in-memory state, built by applying changes) |
-| `Storage/` | `VaultFormat` (+ `NewerVaultFormatException`, `Since`, `UpgradeQuestion`), `VaultUpgrades` (upgrades agreed, `vault-upgrades.json`, see [Upgrade](#upgrade)), `SecretBox` (AES-GCM seal / open), `ChunkedBox` (AES-GCM over 1 MB chunks, streamed), `KeyWrap` (KDF, wrap / unwrap the master key), `ChangeData` (a change as JSON, shared with the snapshot), `ChangeCodec` (change ⇄ sealed JSON), `VaultHeader`, `VaultFolder` (layout, inspect, create, `SizeOf` + `FolderSize`: its files and bytes, shown in Settings > Vault, measured off the UI thread), `SnapshotStore`, `NoteFiles` (note content, `content/`), `DatasetFiles` (dataset content, `content/`: describe a file, write, export, open), `ThumbnailFiles` (thumbnails, `content/`), `Vault` (open, append, refresh, save a note or a dataset version, `WriteDataset`: its files only, off the UI thread; `Vault.Upgrade`: its format, writes refused until an upgrade is agreed), `AtomicFile` (write as `.tmp`, then rename), `KeyMemory` (remembered master keys, `keys.json`), `ISecretProtector` |
-| `Input/` | `InputParser` (text → `NodeRequest` / `LinkRequest`), `GraphSearch` (`SearchHit`), `AddPlanner` (`AddChoices` → `AddPlan`: `NodePlan`, `LinkPlan`, `PlannedSide`), `InputPresenter` (the input box: preview, result rows, homonym choices), `CreationForm` (the creation screen: steps, types, note content, dataset file, status, what exists), `PlanText` (wording shared by both), `RenamePlanner` (`RenamePlan`: a new name, its problem, homonyms), `AliasPlanner` (`AliasPlan`) |
+| *(root)* | `AppVersion`; `RunningCopy` + `AppCopy` (another copy running: same or not, and what the user is told); `QuitRefusal` (why kofrenot must not quit, or switch vaults, now); `AppFiles` (where every file of kofrenot is, including `keys.json` and the snapshots in `cache\`: the only place their names are written, listed in Settings > About; `AppFiles.For` picks the data folder, see [Portable copy](#portable-copy)); `Changelog` (reads the text shown by Settings > About); `ProjectLinks` (website, issues, releases) |
+| `Settings/` | `SettingsStore` (`settings.json`: theme, debug logging, update check, the registered vaults and the one selected, hotkey; `IsHotkeyTaken`), `Hotkey`, `VaultList` + `RegisteredVault` + `VaultLocation` (see [Registered vaults](#registered-vaults)), `SettingsCatalog` (the entries of the Settings window, their tabs, and the search that finds them) |
+| `Graph/` | `Node`, `Link`, `NodeType`, `LinkType`, `LinkVerb` (a link type read one way), `TypeCatalog` (built-in node and link types, link aliases; `LinkName`: how a link reads from one of its nodes), `LinkAliases` (the user's aliases, see [Aliases and removals](#aliases-and-removals)), `RemovableChanges`, `NameKey` (the form names are compared in), `Change` (`NodeAdded`, `LinkAdded`, `NodeRenamed`, `AliasAdded`, `NodePinned`, `ChangesRemoved`, `ContentEdited`: `NoteEdited`, `DatasetEdited`, `ViewEdited`; `VaultNamed`), `DatasetFile` (a dataset version's file: name, size, SHA-256), `CurrentVersions` + `IReplacing` (the versions no other replaces: shared by names, contents and the vault's name), `NodeNames` + `NameVersion` (a node's current names, see [Renames](#renames)), `ContentVersions` (the current versions of a note or dataset, see [Notes](#notes)), `KnowledgeGraph` (in-memory state, built by applying changes) |
+| `Storage/` | `VaultFormat` (+ `NewerVaultFormatException`, `Since`, `UpgradeQuestion`), `VaultUpgrades` (upgrades agreed, `vault-upgrades.json`, see [Upgrade](#upgrade)), `SecretBox` (AES-GCM seal / open), `ChunkedBox` (AES-GCM over 1 MB chunks, streamed), `KeyWrap` (KDF, wrap / unwrap the master key), `ChangeData` (a change as JSON, shared with the snapshot), `ChangeCodec` (change ⇄ sealed JSON), `VaultHeader`, `VaultFolder` (layout, inspect, create, `SizeOf` + `FolderSize`: its files and bytes, shown in Settings > Vault, measured off the UI thread), `SnapshotStore`, `NoteFiles` (note content, `content/`), `DatasetFiles` (dataset content, `content/`: describe a file, write, export, open), `ThumbnailFiles` (thumbnails, `content/`), `Vault` (open, append, refresh, save a note or a dataset version, `WriteDataset`: its files only, off the UI thread; `Vault.Upgrade`: its format, writes refused until an upgrade is agreed), `AtomicFile` (write as `.tmp`, then rename), `KeyMemory` (remembered master keys, `keys.json`) and `VaultNameMemory` (the last name read in each vault, `vault-names.json`), both through `ProtectedStore`, `ISecretProtector` |
+| `Input/` | `InputParser` (text → `NodeRequest` / `LinkRequest`), `GraphSearch` (`SearchHit`), `AddPlanner` (`AddChoices` → `AddPlan`: `NodePlan`, `LinkPlan`, `PlannedSide`), `InputPresenter` (the input box: preview, result rows, homonym choices), `CreationForm` (the creation screen: steps, types, note content, dataset file, status, what exists), `PlanText` (wording shared by both), `RenamePlanner` (`RenamePlan`: a new name, its problem, homonyms), `VaultNamePlanner` (`VaultNamePlan`), `AliasPlanner` (`AliasPlan`) |
 | `Browse/` | `NodeBrowser` (the details screen: trail of open nodes, at most 4, the selected link of each), `NodeDetails`, `LinkRow`, `NodeVisual` (`NodeIcon`: how a node is pictured in rows, see [Datasets](#datasets)), `NodeFacts` (type, size, last change: a view's Details), `PinPlanner` (pin or unpin), `RecentNodes` (the nodes last opened on this device), `ViewTabs` and `ViewStates` (the tabs open, the nodes expanded in each tree, on this device), through `LocalJsonFile` |
 | `Notes/` | `NotePlanner` (`NoteState`, `ConflictVersion`: load a note, plan its next version), `MarkdownFormat` (`TextEdit`: the toolbar's Markdown) |
 | `Datasets/` | `DatasetPlanner` (`DatasetState`, `DatasetChoice`: load a dataset, plan an import or the version kept from a conflict), `ByteSize` (sizes as shown: 1.2 MB), `DatasetType` (`DatasetCategory`, `DatasetViewer`: the inner type, from the extension, its category and viewer), `IThumbnailMaker` (implemented by App), `TextPreview` (the beginning of a text, for the viewer), `ImageZoom` (the image window's zoom: fit, steps, percent) |
@@ -48,10 +48,10 @@ One namespace per folder (`Kofrenot.Core.Settings`, `Kofrenot.UI.Views`, ...). T
 
 | `kofrenot.App` | Content |
 | --- | --- |
-| *(root)* | `App.xaml`: startup and wiring; `VaultSession` (the open vault: create, unlock, watch, `Create` (creation dialog, then add), forget the remembered key) |
-| `Views/` | Windows: `MainWindow` (input box, shows `InputPresenter`), `NodeDetailsPanel` (in the main window, shows a `NodeBrowser`; `NoteEditor` for a note, `DatasetPanel` for a dataset: import, export, drag in and out, and `DatasetView`, its viewer), `NodeVisualView` + `ThumbnailCache` (a node's picture in rows), `CreationDialog` (shows a `CreationForm`, one step at a time; the node types in a list with their icons (`TypeChoice`), the focus starting on the chosen one; the link type in a combo, as it has six entries), `MarkdownBox` (note text and toolbar), `SharedStyles` (the type scale: title, heading, body, secondary, caption, footer; shared buttons), `SettingsWindow` (tabs General, Vault, Link types (`LinkTypesSection`), Appearance, Logging, About), `PassphraseDialog`, `ImageWindow` (a dataset's image), `LogWindow`, `ChangelogWindow` (Settings > About > *Show changelog*); `MessageDialog` (messages and questions in the app's theme, instead of the Windows `MessageBox`); `AppTheme` |
+| *(root)* | `App.xaml`: startup and wiring; `App.Hotkeys` (the hotkey that shows kofrenot, and the vaults'); `VaultSession` (the open vault: create, unlock, watch, `Create` (creation dialog, then add); `VaultSession.Vaults`: switch, register, unregister, move, name, forget a remembered key) |
+| `Views/` | Windows: `MainWindow` (input box, shows `InputPresenter`; `MainWindow.Vaults`: the vault box, `VaultChoice`, and a vault's hotkey), `NodeDetailsPanel` (in the main window, shows a `NodeBrowser`; `NoteEditor` for a note, `DatasetPanel` for a dataset: import, export, drag in and out, and `DatasetView`, its viewer), `NodeVisualView` + `ThumbnailCache` (a node's picture in rows), `CreationDialog` (shows a `CreationForm`, one step at a time; the node types in a list with their icons (`TypeChoice`), the focus starting on the chosen one; the link type in a combo, as it has six entries), `MarkdownBox` (note text and toolbar), `SharedStyles` (the type scale: title, heading, body, secondary, caption, footer; shared buttons), `SettingsWindow` (tabs General, Vault (`VaultsSection`), Link types (`LinkTypesSection`), Appearance, Logging, About; `HotkeyCapture`: the shortcut pressed in a hotkey box), `PassphraseDialog`, `ImageWindow` (a dataset's image), `LogWindow`, `ChangelogWindow` (Settings > About > *Show changelog*); `MessageDialog` (messages and questions in the app's theme, instead of the Windows `MessageBox`); `AppTheme` |
 | `Tray/` | `TrayIcon` |
-| `Platform/` | Implementations of the `Core` interfaces (`GitHubReleaseFeed`, `DpapiProtector`), `WpfThumbnailMaker` (`IThumbnailMaker`), `DragExport`, `Browser` (opens web pages), `SingleInstance`, `GlobalHotkey` (`RegisterHotKey`), `VaultWatcher` (`FileSystemWatcher`), and window placement (`NativeWindows`, `WindowPlacer`) |
+| `Platform/` | Implementations of the `Core` interfaces (`GitHubReleaseFeed`, `DpapiProtector`), `WpfThumbnailMaker` (`IThumbnailMaker`), `DragExport`, `Browser` (opens web pages), `SingleInstance`, `GlobalHotkey` (`RegisterHotKey`, several by id), `VaultWatcher` (`FileSystemWatcher`), and window placement (`NativeWindows`, `WindowPlacer`) |
 | `Logging/` | `LogHub`, `SerilogFileLog` |
 | `Assets/` | `kofrenot.ico` (drawn by `build/make_icon.py`) |
 
@@ -84,16 +84,16 @@ App.OnStartup
  ├─ AppTheme
  ├─ SingleInstance.TryClaim ── another copy runs? ─► see the list below
  ├─ LogHub
- ├─ VaultSession (KeyMemory + DpapiProtector)
+ ├─ VaultSession (KeyMemory + VaultNameMemory + DpapiProtector)
  ├─ MainWindow (+ WindowPlacer "Main") ─► UpdateChecker (background, once a day)
- ├─ GlobalHotkey (Ctrl+Alt+K by default) ─► MainWindow shown
+ ├─ GlobalHotkey: Ctrl+Alt+K by default ─► MainWindow shown; each vault's ─► MainWindow.ToggleVault
  ├─ TrayIcon: Show · Settings · Log window · Quit
  ├─ MainWindow shown
- └─ once idle: VaultSession.Open ─► remembered key, or PassphraseDialog (create / unlock) ─► Vault.Open + VaultWatcher
+ └─ once idle: VaultSession.Open (the selected vault) ─► remembered key, or PassphraseDialog (create / unlock) ─► Vault.Open + VaultWatcher
 ```
 
 - Closing the main window (or Esc with an empty input box) hides it; kofrenot keeps running in the notification area until *Quit* (`ShutdownMode=OnExplicitShutdown`).
-- A hotkey another program already uses is not registered: logged as a warning at start, refused in Settings > General (the previous one stays).
+- A hotkey another program already uses is not registered: logged as a warning at start, refused in Settings > General or > Vault (the previous one stays). A hotkey kofrenot has already (the main one, another vault's) is refused too (`SettingsStore.IsHotkeyTaken`). The vaults' hotkeys are registered again when the list changes (`App.RegisterVaultHotkeys`, ids after the main one's).
 - One copy runs at a time (they would write the same files): the first owns the mutex `Local\kofrenot-single-instance` and waits on the events `Local\kofrenot-show-window` and `Local\kofrenot-quit`. A copy started while another runs finds it (`SingleInstance.FindRunning`: its process, exe and full build `0.4+<commit>[.dirty]`), and decides:
 
   ```
@@ -155,7 +155,20 @@ Model and principles: [GOAL.md](GOAL.md#data-model).
 - **Folders by the id's first two characters**, so no folder holds too many files.
 - An unreadable file (corrupt, wrong key, still being copied) is skipped and logged once as a warning, then tried again at each refresh; the others still load. Other files (`desktop.ini`, ...) are ignored.
 - A header or change file in a newer format: see [Format](#format).
-- `VaultFolder.Inspect`: a new vault is only created in an empty (or missing) folder; a folder holding other files is refused, so nothing of the user's is mixed with it.
+- `VaultFolder.Inspect`: a new vault is only created in an empty (or missing) folder; a folder holding other files is refused, so nothing of the user's is mixed with it. A missing folder of a vault opened before (its id known) is out of reach, never a new vault.
+
+### Registered vaults
+The vaults kofrenot knows are in `settings.json`, in the user's order, with the one selected: one vault is open at a time, and vaults never mix.
+
+```
+settings.json  "vaults": [{ "folder", "id"?, "hotkey"? }], "selectedVault": "<folder>"
+               "vaultFolder": the selected one too, for a kofrenot 0.4 started again; read alone (0.4) ─► the only vault
+```
+
+- `VaultLocation` is where a vault is: only a folder for now (compared ignoring case and a trailing separator), so a server can be another kind later. `RegisteredVault` adds its id, null until its header is read (`VaultSession.Identify`), and its optional hotkey. `VaultList` is immutable and lists each location and id once.
+- Switching (`VaultSession.SwitchTo`) closes the open vault, then opens the selected one. When it does not open (pass phrase cancelled, not a vault, an error), the vault open before is used again, without asking its pass phrase. The main window refuses to switch while a file is being imported or a note cannot be saved (`QuitRefusal`).
+- `Register` (Settings > Vault > *Add...*) refuses a folder holding other files, and a vault listed already, by folder or by the id in its header; a new vault whose creation is cancelled is not added. `Unregister` forgets the vault's key and name on this device; its folder is not touched.
+- **Name**: a `nameVault` change, encrypted like the others, replacing the current names (`CurrentVersions`), as renames do: two names made apart are a conflict, shown in Settings > Vault, resolved by naming again (`VaultNamePlanner`). `VaultNameMemory` keeps the last name read on this device (`vault-names.json`, protected by DPAPI like `keys.json`), so a locked vault shows it; otherwise its folder's name. A server listing the vaults will know their ids only: see [SERVER-CONCEPT.md](SERVER-CONCEPT.md).
 
 ### Format
 One number for the whole vault, `VaultFormat.Current`, written in the header and in every change file (`format`). It is not the app version: it only changes when what is written in a vault breaks.
@@ -166,6 +179,7 @@ One number for the whole vault, `VaultFormat.Current`, written in the header and
 | 2 | 0.2 | directed links (`contains`, `is-a`): a 0.1 app would read them as symmetric; `addAlias`, `pinNode`, `remove`, `editNote` with the `content/` files |
 | 3 | 0.3 | `editDataset` with its chunked `.kfd` content files: a 0.2 app does not know them |
 | 4 | 0.4 | `remove` of nodes and links: a 0.3 app would still show them; `editView` |
+| 5 | 0.5 | `nameVault`: a 0.4 app cannot read it |
 
 | Found | This kofrenot |
 | --- | --- |
@@ -470,7 +484,7 @@ search                                    details, level 2 of 4
 - `Core` writes through `ILog` (`log.Info(category, message)`); only `App` knows Serilog.
 - Category: the area (`App`, `Action`, `Settings`, `Window`, `Update`, ...).
 - **Info**: every action the user triggers, start/stop. **Warning/Error**: failures. **Debug**: details.
-- Never logged: node names, note or file content, typed text, keys, pass phrases. Ids and counts are fine.
+- Never logged: node and vault names, note or file content, typed text, keys, pass phrases. Ids and counts are fine.
 - Local only: 3 files x 1 MB, plus the last 1000 entries in memory for the log window.
 - The file is never restarted: each start appends to `kofrenot.log`, and a new file begins only at 1 MB. Every entry is flushed at once, so what happened before a crash stays in the file. The log window shows the current run only.
 

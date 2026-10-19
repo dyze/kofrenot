@@ -18,7 +18,7 @@ Basically the vault only stores files so such server could be used for purposes 
 * User can sign in:
 	* Possible only when unlocked
 * User can create a vault:
-	* the server knows it by its id only: its name stays encrypted in the vault ([ROADMAP.md](ROADMAP.md) 0.5)
+	* the server knows it by its id only: its name stays encrypted in the vault ([ARCHITECTURE.md](ARCHITECTURE.md#registered-vaults))
 	* to decide: how a device that never unlocked a vault shows its name: a placeholder (id, size) until unlocked once, or a copy of the name encrypted with an account key, stored by the server without reading it
 * User can delete and clear a vault. User validation required. Server sends a random phrase that user must key and sent to server thru another command.
 * User can list his vaults
