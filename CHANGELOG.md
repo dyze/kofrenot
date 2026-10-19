@@ -6,24 +6,33 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.4] - 2026-10-19
+
 ### Added
-- **Views**: a node type showing the vault another way: a tree from a node, through a link type (*contains* by default), or a list of the nodes of a type. Chosen on its creation step; kept in the vault, so every device has it, and it works offline. In a tree, a node with several parents shows under each, and a cycle is cut. Enter or a double-click opens a node's details; Back returns to the view.
-- **Edit from a view**: **Edit**, in the bar over a view and in its right-click menu, opens the node selected in its details, as Enter does.
-- **Details in a view**: a toggle on the bar shows the type, size and last change of each node in columns, as in a file explorer; kept per view on this computer. A node's details also show its last change (*Modified*).
-- **Rename in a view**: **Rename** (or F2), in the bar over a view and in its right-click menu, edits the name of the node selected in place; Enter or a click elsewhere saves it, Esc cancels. As everywhere a name is set, an empty name is refused.
-- **Find in a view**: a search box over a view goes to the nodes whose name matches, in the whole tree, without hiding the others; Enter (or ↓) goes to the next one, Shift+Enter to the previous, Ctrl+F gets to it.
-- **New node from a view**: **New**, in the bar over a view and in its right-click menu, adds a node, its name typed on the creation screen: in a tree, under the node selected, linked the tree's way; in a list, of the list's type. It goes first among the recent nodes, as does a view made with **New view…**.
-- **Edit a view**: change what a view shows from its details (**Edit…**) or **⚙** on its tab, when selected. Each change is a new version; edits made on two computers before they synced are resolved by saving.
-- **Tree operations**: in a tree view, copy (Ctrl+C), cut (Ctrl+X) and paste (Ctrl+V) a node under another one, or delete it (Del), also from a bar of buttons over the view or a right-click menu; or drag a node onto another to move it (Ctrl held: copy it). A node cut is dimmed until pasted (Esc cancels). A copy takes the whole subtree as new nodes; a move keeps the node's other parents; a deletion takes the whole subtree. A copy and a deletion show first what they will do.
-- **Vault upgrade asked first**: a vault written by an older kofrenot is used only once its upgrade is agreed, since the older kofrenot no longer opens it after a change. *Not now* leaves it unused and untouched; *Upgrade and open…* in the main window asks again. Asked once per vault on each computer.
-- **Build commit** in Settings > About and the startup log line: `0.4 (4e9c313)`, with `-dirty` for a build with uncommitted changes. The main window still shows the version alone.
-- **Replace a running copy**: starting kofrenot while another build of it runs (another version, commit or uncommitted changes, or another exe) names both, and offers to close the running one and start this one. A copy of 0.3 or older cannot be asked to close: the message says to quit it from the tray.
-- **Tabs** at the top of the main window: *Search* first, then the views open on this computer, kept between starts. **+** opens a view, or creates one (**New view…**: its name typed on the creation screen, its type fixed), **×** closes its tab; a new view opens in a tab. **Ctrl+Tab** and **Ctrl+Shift+Tab** select the next and the previous tab, as in Settings. A tree keeps the nodes expanded on this computer, between starts too.
+- **Views**
+  - **Views**: a node type showing the vault another way: a tree from a node, through a link type (*contains* by default), or a list of the nodes of a type. Chosen on its creation step; kept in the vault, so every device has it, and it works offline. In a tree, a node with several parents shows under each, and a cycle is cut. Enter or a double-click opens a node's details; Back returns to the view. A tree keeps the nodes expanded on this computer, between starts too.
+  - **Tabs** at the top of the main window: *Search* first, then the views open on this computer, kept between starts. **+** opens a view, or creates one (**New view…**: its name typed on the creation screen, its type fixed), **×** closes its tab; a new view opens in a tab. **Ctrl+Tab** and **Ctrl+Shift+Tab** select the next and the previous tab, as in Settings.
+  - **Edit a view**: change what a view shows from its details (**Edit…**) or **⚙** on its tab, when selected. Each change is a new version; edits made on two computers before they synced are resolved by saving.
+  - **Find in a view**: a search box over a view goes to the nodes whose name matches, in the whole tree, without hiding the others; Enter (or ↓) goes to the next one, Shift+Enter to the previous, Ctrl+F gets to it.
+  - **Details in a view**: a toggle on the bar shows the type, size and last change of each node in columns, as in a file explorer; kept per view on this computer. A node's details also show its last change (*Modified*).
+- **Nodes in a view**, from the bar over a view and its right-click menu
+  - **New**: adds a node, its name typed on the creation screen: in a tree, under the node selected, linked the tree's way; in a list, of the list's type. It goes first among the recent nodes, as does a view made with **New view…**.
+  - **Edit**: opens the node selected in its details, as Enter does.
+  - **Rename** (or F2): edits the name of the node selected in place; Enter or a click elsewhere saves it, Esc cancels. As everywhere a name is set, an empty name is refused.
+  - **Tree operations**: in a tree view, copy (Ctrl+C), cut (Ctrl+X) and paste (Ctrl+V) a node under another one, or delete it (Del); or drag a node onto another to move it (Ctrl held: copy it). A node cut is dimmed until pasted (Esc cancels). A copy takes the whole subtree as new nodes; a move keeps the node's other parents; a deletion takes the whole subtree. A copy and a deletion show first what they will do.
+- **Vault**
+  - **Vault upgrade asked first**: a vault written by an older kofrenot is used only once its upgrade is agreed, since the older kofrenot no longer opens it after a change. *Not now* leaves it unused and untouched; *Upgrade and open…* in the main window asks again. Asked once per vault on each computer.
+- **App**
+  - **Build commit** in Settings > About and the startup log line: `0.4 (4e9c313)`, with `-dirty` for a build with uncommitted changes. The main window still shows the version alone.
+  - **Replace a running copy**: starting kofrenot while another build of it runs (another version, commit or uncommitted changes, or another exe) names both, and offers to close the running one and start this one. A copy of 0.3 or older cannot be asked to close: the message says to quit it from the tray.
 
 ### Changed
-- **Rename by clicking the name** in a node's details (or F2); leaving it saves, as Enter does. The ✎ button is gone.
-- **Quit is refused** while a note has unsaved changes or a file is being imported, from the tray or when another copy asks: the window shows why.
-- **Vault format 4**, to remove nodes and links, and for views. kofrenot 0.3 does not open a vault written by this version, and offers the update. Vaults of formats 1 to 3 are read as they are.
+- **Node details**
+  - **Rename by clicking the name** in a node's details (or F2); leaving it saves, as Enter does. The ✎ button is gone.
+- **Vault**
+  - **Vault format 4**, to remove nodes and links, and for views. kofrenot 0.3 does not open a vault written by this version, and offers the update. Vaults of formats 1 to 3 are read as they are.
+- **App**
+  - **Quit is refused** while a note has unsaved changes or a file is being imported, from the tray or when another copy asks: the window shows why.
 
 ## [0.3] - 2026-10-18
 
@@ -75,7 +84,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **Update check** once a day against GitHub releases, switchable in About.
 - **Installer and portable zip** (`build\installer.cmd`), self-contained.
 
-[Unreleased]: https://github.com/dyze/kofrenot/compare/0.3...HEAD
+[Unreleased]: https://github.com/dyze/kofrenot/compare/0.4...HEAD
+[0.4]: https://github.com/dyze/kofrenot/compare/0.3...0.4
 [0.3]: https://github.com/dyze/kofrenot/compare/0.2...0.3
 [0.2]: https://github.com/dyze/kofrenot/compare/0.1...0.2
 [0.1]: https://github.com/dyze/kofrenot/releases/tag/0.1

@@ -7,20 +7,9 @@ Scope of each planned version. Implemented features move to [CHANGELOG.md](../CH
 | 0.1     | Released    | Application shell; nodes and links typed in one box, stored in an encrypted folder |
 | 0.2     | Released    | Notes: link types, notes with content, pinned and recent nodes                     |
 | 0.3     | Released    | Datasets: files stored in the vault, read on demand                                |
-| 0.4     | To define   | Views: flat and tree views over the graph, shown as tabs                           |
+| 0.4     | Released    | Views: flat and tree views over the graph, shown as tabs                           |
 | 0.5     | To define   | Vaults: several vaults, a hot key per vault                                        |
 | 0.6     | To define   | Server: vaults stored on a web server                                              |
-
-## 0.4
-Views: different ways to look at the same graph. No node has to belong to anything; a view only reads the graph.
-
-```
- [ Search ] [ Files ] [ Memos ] [+]          tabs on top of the main window
-              │          └─ flat: every node of type note
-              └─ tree: from "Projects", following "contains"
-```
-
-Every feature of 0.4 is in [CHANGELOG.md](../CHANGELOG.md) (`[Unreleased]`): views and their editing, tabs, tree navigation, and tree operations (copy, move, delete, drag and drop).
 
 ## 0.5 (to define)
 1. **Multiple vaults.** User can register several vaults on his app. 
