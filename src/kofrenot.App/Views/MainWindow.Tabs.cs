@@ -94,6 +94,15 @@ public partial class MainWindow
         }
     }
 
+    /// <summary>⚙ on the selected view's tab: edits what it shows.</summary>
+    private void EditTab_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is FrameworkElement { DataContext: TabRow { Tab.View: { } view } })
+        {
+            _session.EditView(this, view);
+        }
+    }
+
     private void CloseTab_Click(object sender, RoutedEventArgs e)
     {
         if (sender is not FrameworkElement { DataContext: TabRow { Tab.View: { } view } row } || _session.Current is not { } vault)

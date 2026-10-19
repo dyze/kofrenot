@@ -27,8 +27,8 @@
     <Grid>
       <TextBlock x:Name="TitleText" VerticalAlignment="Center" Style="{StaticResource HeadingText}" Text="kofrenot" />
 
-      <!-- The tabs: the search, then the views open on this device. A click selects one, × closes
-           a view's tab, + opens a view in a new tab. -->
+      <!-- The tabs: the search, then the views open on this device. A click selects one, ⚙ edits
+           the selected view, × closes a view's tab, + opens a view in a new tab. -->
       <StackPanel x:Name="TabStrip" Margin="0,0,56,0" VerticalAlignment="Center" Orientation="Horizontal" Visibility="Collapsed">
         <ItemsControl x:Name="TabsList" Focusable="False">
           <ItemsControl.ItemsPanel>
@@ -42,6 +42,16 @@
                 <Grid>
                   <StackPanel Orientation="Horizontal">
                     <TextBlock x:Name="TabText" VerticalAlignment="Center" FontSize="{StaticResource BodyFontSize}" Text="{Binding Name}" />
+                    <Button x:Name="EditButton"
+                            Margin="6,0,0,0"
+                            Padding="4,2"
+                            Style="{StaticResource FlatButton}"
+                            FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
+                            FontSize="10"
+                            Content="&#xE713;"
+                            ToolTip="Edit what this view shows"
+                            Visibility="Collapsed"
+                            Click="EditTab_Click" />
                     <Button x:Name="CloseButton"
                             Margin="6,0,0,0"
                             Padding="4,2"
@@ -65,9 +75,11 @@
                 <DataTrigger Binding="{Binding IsSelected}" Value="True">
                   <Setter TargetName="Underline" Property="Visibility" Value="Visible" />
                   <Setter TargetName="TabText" Property="FontWeight" Value="SemiBold" />
+                  <Setter TargetName="EditButton" Property="Visibility" Value="Visible" />
                 </DataTrigger>
                 <DataTrigger Binding="{Binding Tab.IsSearch}" Value="True">
                   <Setter TargetName="CloseButton" Property="Visibility" Value="Collapsed" />
+                  <Setter TargetName="EditButton" Property="Visibility" Value="Collapsed" />
                 </DataTrigger>
               </DataTemplate.Triggers>
             </DataTemplate>

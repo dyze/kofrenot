@@ -75,7 +75,7 @@ public partial class ViewPanel : UserControl
 
                 break;
             default:
-                ShowMessage("This view has no definition yet: right-click here, then Edit view….");
+                ShowMessage("This view has no definition yet: ⚙ on its tab says what it shows.");
                 break;
         }
     }
