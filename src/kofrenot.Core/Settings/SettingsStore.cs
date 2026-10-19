@@ -25,8 +25,8 @@ public enum MainWindowPosition
 
 /// <summary>
 /// User settings persisted as JSON: the theme, where the main window appears, whether the log
-/// records debug entries, whether to check for updates, the vault folder and the hotkey. A
-/// missing, corrupt or partial file means defaults for whatever cannot be read.
+/// records debug entries, whether to check for updates, the registered vaults and the one selected,
+/// and the hotkey. A missing, corrupt or partial file means defaults for whatever cannot be read.
 /// </summary>
 public sealed class SettingsStore
 {
@@ -45,7 +45,7 @@ public sealed class SettingsStore
         MainWindowPosition = Enum.TryParse<MainWindowPosition>(data?.MainWindowPosition, ignoreCase: true, out var position) && Enum.IsDefined(position)
             ? position
             : MainWindowPosition.Centered;
-        VaultFolder = data?.VaultFolder is { } folder && !string.IsNullOrWhiteSpace(folder) ? folder : null;
+        (Vaults, SelectedVault) = VaultsOf(data);
         Hotkey = Hotkey.TryParse(data?.Hotkey, out var hotkey) ? hotkey : Hotkey.Default;
     }
 
@@ -60,8 +60,11 @@ public sealed class SettingsStore
     /// <summary>When on, kofrenot asks GitHub once a day for a newer release. On by default.</summary>
     public bool CheckForUpdates { get; private set; }
 
-    /// <summary>The folder of the vault to open, or null when none is chosen yet.</summary>
-    public string? VaultFolder { get; private set; }
+    /// <summary>The registered vaults, in the user's order.</summary>
+    public VaultList Vaults { get; private set; }
+
+    /// <summary>The vault to open, one of <see cref="Vaults"/>; null when none is registered.</summary>
+    public VaultLocation? SelectedVault { get; private set; }
 
     /// <summary>The global shortcut that shows kofrenot. Ctrl+Alt+K by default.</summary>
     public Hotkey Hotkey { get; private set; }
@@ -90,9 +93,27 @@ public sealed class SettingsStore
         Save();
     }
 
-    public void SetVaultFolder(string? folder)
+    /// <summary>Keeps the selected vault while it is still listed; otherwise none is selected.</summary>
+    public void SetVaults(VaultList vaults)
     {
-        VaultFolder = folder;
+        Vaults = vaults;
+        if (SelectedVault is { } selected && vaults.Find(selected) is null)
+        {
+            SelectedVault = null;
+        }
+
+        Save();
+    }
+
+    /// <exception cref="ArgumentException"><paramref name="location"/> is not registered.</exception>
+    public void SelectVault(VaultLocation? location)
+    {
+        if (location is not null && Vaults.Find(location) is null)
+        {
+            throw new ArgumentException("Not a registered vault", nameof(location));
+        }
+
+        SelectedVault = location;
         Save();
     }
 
@@ -110,8 +131,39 @@ public sealed class SettingsStore
             Directory.CreateDirectory(directory);
         }
 
-        var data = new SettingsData(DebugLogging, Theme.ToString(), CheckForUpdates, VaultFolder, Hotkey.ToString(), MainWindowPosition.ToString());
+        // VaultFolder still names the selected vault, for a kofrenot 0.4 started again.
+        var data = new SettingsData(DebugLogging, Theme.ToString(), CheckForUpdates, SelectedVault?.Folder, Hotkey.ToString(), MainWindowPosition.ToString())
+        {
+            Vaults = [.. Vaults.Vaults.Select(vault => new VaultData(vault.Location.Folder, vault.Id, vault.Hotkey?.ToString()))],
+            SelectedVault = SelectedVault?.Folder,
+        };
         File.WriteAllText(_path, JsonSerializer.Serialize(data));
+    }
+
+    /// <summary>
+    /// The vaults stored, entries without a folder skipped. A file of kofrenot 0.4 or older has a
+    /// single vault folder instead: it becomes the only vault, selected.
+    /// </summary>
+    private static (VaultList Vaults, VaultLocation? Selected) VaultsOf(SettingsData? data)
+    {
+        if (data?.Vaults is null)
+        {
+            return data?.VaultFolder is { } folder && !string.IsNullOrWhiteSpace(folder)
+                ? (new VaultList([new RegisteredVault(new VaultLocation(folder))]), new VaultLocation(folder))
+                : (VaultList.Empty, null);
+        }
+
+        var vaults = new VaultList(data.Vaults
+            .OfType<VaultData>()
+            .Where(vault => !string.IsNullOrWhiteSpace(vault.Folder))
+            .Select(vault => new RegisteredVault(
+                new VaultLocation(vault.Folder!),
+                vault.Id is { } id && id != Guid.Empty ? id : null,
+                Hotkey.TryParse(vault.Hotkey, out var hotkey) ? hotkey : null)));
+        var selected = data.SelectedVault is { } chosen && vaults.Find(new VaultLocation(chosen)) is { } found
+            ? found.Location
+            : vaults.Vaults.FirstOrDefault()?.Location;
+        return (vaults, selected);
     }
 
     private static SettingsData? Load(string path)
@@ -134,5 +186,13 @@ public sealed class SettingsStore
         bool? CheckForUpdates = null,
         string? VaultFolder = null,
         string? Hotkey = null,
-        string? MainWindowPosition = null);
+        string? MainWindowPosition = null)
+    {
+        public List<VaultData?>? Vaults { get; init; }
+
+        public string? SelectedVault { get; init; }
+    }
+
+    /// <param name="Folder">Missing in a damaged file: the entry is skipped.</param>
+    internal sealed record VaultData(string? Folder, Guid? Id, string? Hotkey);
 }

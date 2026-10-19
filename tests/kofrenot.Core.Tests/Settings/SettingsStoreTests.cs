@@ -14,18 +14,97 @@ public sealed class SettingsStoreTests : IDisposable
         Assert.Equal(ThemeChoice.System, store.Theme);
         Assert.False(store.DebugLogging);
         Assert.True(store.CheckForUpdates);
-        Assert.Null(store.VaultFolder);
+        Assert.Empty(store.Vaults.Vaults);
+        Assert.Null(store.SelectedVault);
         Assert.Equal(Hotkey.Default, store.Hotkey);
     }
 
     [Fact]
-    public void TheVaultFolder_IsPersisted_AndCanBeCleared()
+    public void TheVaults_AndTheSelectedOne_ArePersisted()
     {
-        new SettingsStore(FilePath).SetVaultFolder(@"D:\Sync\kofrenot");
-        Assert.Equal(@"D:\Sync\kofrenot", new SettingsStore(FilePath).VaultFolder);
+        var first = new RegisteredVault(new VaultLocation(@"D:\Sync\private"), Guid.NewGuid(), new Hotkey(HotkeyModifiers.Ctrl | HotkeyModifiers.Alt, "I"));
+        var second = new RegisteredVault(new VaultLocation(@"D:\Sync\personal"));
+        var store = new SettingsStore(FilePath);
+        store.SetVaults(new VaultList([first, second]));
+        store.SelectVault(second.Location);
 
-        new SettingsStore(FilePath).SetVaultFolder(null);
-        Assert.Null(new SettingsStore(FilePath).VaultFolder);
+        var reloaded = new SettingsStore(FilePath);
+
+        Assert.Equal([first, second], reloaded.Vaults.Vaults);
+        Assert.Equal(second.Location, reloaded.SelectedVault);
+    }
+
+    [Fact]
+    public void AVaultFolderOfAnEarlierVersion_BecomesTheOnlyVault_Selected()
+    {
+        Directory.CreateDirectory(_directory);
+        File.WriteAllText(FilePath, "{\"VaultFolder\":\"D:\\\\Sync\\\\kofrenot\"}");
+
+        var store = new SettingsStore(FilePath);
+
+        var vault = Assert.Single(store.Vaults.Vaults);
+        Assert.Equal(new RegisteredVault(new VaultLocation(@"D:\Sync\kofrenot")), vault);
+        Assert.Equal(vault.Location, store.SelectedVault);
+    }
+
+    [Fact]
+    public void TheSelectedVault_IsStillWrittenAsTheVaultFolder_ForAnEarlierVersion()
+    {
+        var store = new SettingsStore(FilePath);
+        store.SetVaults(new VaultList([new RegisteredVault(new VaultLocation(@"D:\a")), new RegisteredVault(new VaultLocation(@"D:\b"))]));
+        store.SelectVault(new VaultLocation(@"D:\b"));
+
+        Assert.Contains("\"VaultFolder\":\"D:\\\\b\"", File.ReadAllText(FilePath));
+    }
+
+    [Theory]
+    [InlineData("{\"Vaults\":[{\"Folder\":\"D:\\\\a\"}],\"SelectedVault\":\"D:\\\\elsewhere\"}")]
+    [InlineData("{\"Vaults\":[{\"Folder\":\"D:\\\\a\"}]}")]
+    [InlineData("{\"Vaults\":[{\"Folder\":\"D:\\\\a\"}],\"VaultFolder\":\"D:\\\\b\"}")]
+    public void ASelectedVaultNotListed_SelectsTheFirst(string json)
+    {
+        Directory.CreateDirectory(_directory);
+        File.WriteAllText(FilePath, json);
+
+        Assert.Equal(new VaultLocation(@"D:\a"), new SettingsStore(FilePath).SelectedVault);
+    }
+
+    [Fact]
+    public void DamagedVaultEntries_AreSkipped_AndAnInvalidIdOrHotkeyIsNone()
+    {
+        Directory.CreateDirectory(_directory);
+        File.WriteAllText(
+            FilePath,
+            "{\"Vaults\":[null,{\"Folder\":\" \"},{\"Id\":\"" + Guid.NewGuid() + "\"},"
+            + "{\"Folder\":\"D:\\\\a\",\"Id\":\"00000000-0000-0000-0000-000000000000\",\"Hotkey\":\"K\"}]}");
+
+        var vault = Assert.Single(new SettingsStore(FilePath).Vaults.Vaults);
+
+        Assert.Equal(new RegisteredVault(new VaultLocation(@"D:\a")), vault);
+    }
+
+    [Fact]
+    public void TheSelectedVault_IsNoneOnceRemoved()
+    {
+        var location = new VaultLocation(@"D:\a");
+        var store = new SettingsStore(FilePath);
+        store.SetVaults(new VaultList([new RegisteredVault(location)]));
+        store.SelectVault(location);
+
+        store.SetVaults(store.Vaults.Remove(location));
+
+        Assert.Null(store.SelectedVault);
+        Assert.Null(new SettingsStore(FilePath).SelectedVault);
+    }
+
+    [Fact]
+    public void AVaultNotRegistered_CannotBeSelected()
+    {
+        var store = new SettingsStore(FilePath);
+
+        Assert.Throws<ArgumentException>(() => store.SelectVault(new VaultLocation(@"D:\a")));
+        store.SelectVault(null);
+        Assert.Null(store.SelectedVault);
     }
 
     [Fact]
@@ -50,7 +129,7 @@ public sealed class SettingsStoreTests : IDisposable
         var store = new SettingsStore(FilePath);
 
         Assert.Equal(Hotkey.Default, store.Hotkey);
-        Assert.Null(store.VaultFolder);
+        Assert.Empty(store.Vaults.Vaults);
     }
 
     [Fact]

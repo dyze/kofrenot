@@ -42,7 +42,7 @@ public sealed partial class VaultSession : IDisposable
     /// <summary>The open vault, or null (none chosen, locked, or cannot be opened).</summary>
     public Vault? Current { get; private set; }
 
-    public string? Folder => _settings.VaultFolder;
+    public string? Folder => _settings.SelectedVault?.Folder;
 
     /// <summary>A file is being imported into this dataset (<see cref="SaveDataset"/>).</summary>
     public bool IsImporting(Guid dataset) => _importing.Contains(dataset);
@@ -102,7 +102,13 @@ public sealed partial class VaultSession : IDisposable
     public void SwitchTo(Window owner, string folder)
     {
         Close();
-        _settings.SetVaultFolder(folder);
+        var location = new VaultLocation(folder);
+        if (_settings.Vaults.Find(location) is null)
+        {
+            _settings.SetVaults(_settings.Vaults.Add(new RegisteredVault(location)));
+        }
+
+        _settings.SelectVault(location);
         _log.Info("Settings", $"Vault folder: {folder}");
         Open(owner);
     }
