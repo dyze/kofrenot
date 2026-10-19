@@ -24,6 +24,7 @@ public sealed class KnowledgeGraph
     private readonly ContentVersions<NoteEdited> _notes = new();
     private readonly ContentVersions<DatasetEdited> _datasets = new();
     private readonly ContentVersions<ViewEdited> _views = new();
+    private readonly Dictionary<Guid, VaultNamed> _vaultNames = [];
 
     public KnowledgeGraph(TypeCatalog? types = null)
     {
@@ -58,6 +59,7 @@ public sealed class KnowledgeGraph
         NoteEdited version => _notes.Add(version),
         DatasetEdited version => _datasets.Add(version),
         ViewEdited version => _views.Add(version),
+        VaultNamed name => _vaultNames.TryAdd(name.Id, name),
         _ => throw new ArgumentOutOfRangeException(nameof(change), change.GetType().Name, "Unknown change"),
     };
 
@@ -78,6 +80,15 @@ public sealed class KnowledgeGraph
 
     /// <summary>The current definitions of a view, oldest first, as <see cref="NoteVersionsOf"/>.</summary>
     public IReadOnlyList<ViewEdited> ViewVersionsOf(Guid node) => _views.Current(node);
+
+    /// <summary>
+    /// The current names of the vault, oldest first: none before it is named, one, or several when
+    /// it was named on two devices before they synced (a conflict).
+    /// </summary>
+    public IReadOnlyList<VaultNamed> VaultNames => CurrentVersions.Of(_vaultNames.Values);
+
+    /// <summary>The vault's name shown: the latest current one; null before it is named.</summary>
+    public string? VaultName => VaultNames.LastOrDefault()?.Name;
 
     /// <summary>The pins of a node: several when it was pinned on two devices. Unpinning removes them all.</summary>
     public IReadOnlyList<Guid> PinsOf(Guid node) =>

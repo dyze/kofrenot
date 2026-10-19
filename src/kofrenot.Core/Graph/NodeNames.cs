@@ -2,8 +2,8 @@ namespace Kofrenot.Core.Graph;
 
 /// <summary>
 /// The names of one node: the name it was added with, then its renames. Its current names are
-/// those no rename replaces: one normally, several after renames made apart (a conflict). The
-/// result does not depend on the order the changes arrive in.
+/// those no rename replaces (<see cref="CurrentVersions"/>): one normally, several after renames
+/// made apart (a conflict).
 /// </summary>
 internal sealed class NodeNames
 {
@@ -20,20 +20,17 @@ internal sealed class NodeNames
     /// <summary>The current names, oldest first.</summary>
     public IReadOnlyList<NameVersion> Current()
     {
-        var replaced = _renames.Values.SelectMany(rename => rename.Replaces).ToHashSet();
-        var versions = _renames.Values.Select(rename => new NameVersion(rename.Id, rename.Name, rename.At));
+        var versions = _renames.Values.Select(rename => new Named(rename.Id, rename.At, rename.Name, rename.Replaces));
         if (Added is { } node)
         {
-            versions = versions.Prepend(new NameVersion(node.Id, node.Name, node.Created));
+            versions = versions.Prepend(new Named(node.Id, node.Created, node.Name, []));
         }
 
-        return versions
-            .Where(version => !replaced.Contains(version.Id))
-            .OrderBy(version => version.At)
-            .ThenBy(version => version.Id)
-            .ToList();
+        return CurrentVersions.Of(versions).Select(named => new NameVersion(named.Id, named.Name, named.At)).ToList();
     }
 
     /// <summary>The name shown: the latest current one.</summary>
     public string Shown(Node added) => Current().LastOrDefault()?.Name ?? added.Name;
+
+    private sealed record Named(Guid Id, DateTimeOffset At, string Name, IReadOnlyList<Guid> Replaces) : IReplacing;
 }

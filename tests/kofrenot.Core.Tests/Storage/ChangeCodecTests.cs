@@ -48,6 +48,31 @@ public sealed class ChangeCodecTests
     }
 
     [Fact]
+    public void AVaultName_RoundTrips()
+    {
+        var change = new VaultNamed(Guid.NewGuid(), At, "Personal", [Guid.NewGuid()]);
+
+        var decoded = Assert.IsType<VaultNamed>(_codec.Decode(change.Id, _codec.Encode(change)));
+
+        Assert.Equal((change.Id, change.At, change.Name), (decoded.Id, decoded.At, decoded.Name));
+        Assert.Equal(change.Replaces, decoded.Replaces);
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData(",\"vault\":{\"replaces\":[]}")]
+    [InlineData(",\"vault\":{\"name\":\" \",\"replaces\":[]}")]
+    [InlineData(",\"vault\":{\"name\":\"Personal\"}")]
+    public void AnIncompleteVaultName_IsRefused(string vault)
+    {
+        var id = Guid.NewGuid();
+        var json = "{\"format\":5,\"op\":\"nameVault\",\"at\":\"2026-10-16T09:12:00Z\"" + vault + "}";
+        var data = _box.Seal("KFC1"u8, Encoding.UTF8.GetBytes(json), id.ToByteArray());
+
+        Assert.Throws<InvalidDataException>(() => _codec.Decode(id, data));
+    }
+
+    [Fact]
     public void APin_RoundTrips()
     {
         var change = new NodePinned(Guid.NewGuid(), At, Guid.NewGuid());

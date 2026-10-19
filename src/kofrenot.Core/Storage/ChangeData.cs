@@ -19,7 +19,8 @@ internal sealed record ChangeData(
     ChangeData.NoteData? Note = null,
     ChangeData.DatasetData? Dataset = null,
     ChangeData.ViewData? View = null,
-    List<Guid>? Removes = null)
+    List<Guid>? Removes = null,
+    ChangeData.VaultNameData? Vault = null)
 {
     private const string NodeAddedOp = "addNode";
     private const string LinkAddedOp = "addLink";
@@ -30,6 +31,7 @@ internal sealed record ChangeData(
     private const string NoteEditedOp = "editNote";
     private const string DatasetEditedOp = "editDataset";
     private const string ViewEditedOp = "editView";
+    private const string VaultNamedOp = "nameVault";
 
     public static ChangeData From(Change change) => change switch
     {
@@ -42,6 +44,7 @@ internal sealed record ChangeData(
         NoteEdited note => new(VaultFormat.Current, NoteEditedOp, note.At, Note: new NoteData(note.Node, [.. note.Replaces])),
         DatasetEdited dataset => new(VaultFormat.Current, DatasetEditedOp, dataset.At, Dataset: new DatasetData(dataset.Node, FileData.From(dataset.File), [.. dataset.Replaces])),
         ViewEdited view => new(VaultFormat.Current, ViewEditedOp, view.At, View: ViewData.From(view)),
+        VaultNamed name => new(VaultFormat.Current, VaultNamedOp, name.At, Vault: new VaultNameData(name.Name, [.. name.Replaces])),
         _ => throw new ArgumentOutOfRangeException(nameof(change), change.GetType().Name, "Unknown change"),
     };
 
@@ -69,6 +72,8 @@ internal sealed record ChangeData(
                 => new DatasetEdited(id, At, Dataset.Node, file.ToFile(), replaces),
             ViewEditedOp when View is { Replaces: { } replaces } && View.Node != Guid.Empty && View.ToDefinition() is { } definition
                 => new ViewEdited(id, At, View.Node, definition, replaces),
+            VaultNamedOp when Vault is { Name: { } name, Replaces: { } replaces } && !string.IsNullOrWhiteSpace(name)
+                => new VaultNamed(id, At, name, replaces),
             _ => throw new InvalidDataException($"Unknown or incomplete change '{Op}'"),
         };
     }
@@ -134,6 +139,9 @@ internal sealed record ChangeData(
             _ => null,
         };
     }
+
+    /// <summary><c>"vault": { "name": "Personal", "replaces": ["…"] }</c></summary>
+    internal sealed record VaultNameData(string? Name, List<Guid>? Replaces);
 
     /// <summary><c>"query": { "root": "…", "linkType": "contains" }</c> or <c>"query": { "nodeType": "note" }</c></summary>
     internal sealed record QueryData(Guid? Root = null, string? LinkType = null, string? NodeType = null);

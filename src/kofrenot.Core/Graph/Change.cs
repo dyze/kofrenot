@@ -18,6 +18,13 @@ public sealed record LinkAdded(Guid Id, DateTimeOffset At, Link Link) : Change(I
 public sealed record NodeRenamed(Guid Id, DateTimeOffset At, Guid Node, string Name, IReadOnlyList<Guid> Replaces) : Change(Id, At);
 
 /// <summary>
+/// Names the vault itself, encrypted like any change, so every device shows the same name.
+/// <see cref="Replaces"/> are the names it was given over (none for the first). Two names
+/// replacing the same one, neither knowing the other (two devices before syncing), make a conflict.
+/// </summary>
+public sealed record VaultNamed(Guid Id, DateTimeOffset At, string Name, IReadOnlyList<Guid> Replaces) : Change(Id, At), IReplacing;
+
+/// <summary>
 /// Adds <see cref="Phrase"/> as an alias of a link type (<see cref="LinkType"/> is its id), read
 /// one way: forward, or reverse when <see cref="IsReverse"/>. Removed by a <see cref="ChangesRemoved"/>.
 /// </summary>
@@ -39,7 +46,7 @@ public sealed record NodePinned(Guid Id, DateTimeOffset At, Guid Node) : Change(
 /// are the versions it was written over (none for the first). Two versions replacing the same one,
 /// neither knowing the other (two devices before syncing), make a conflict.
 /// </summary>
-public abstract record ContentEdited(Guid Id, DateTimeOffset At, Guid Node, IReadOnlyList<Guid> Replaces) : Change(Id, At);
+public abstract record ContentEdited(Guid Id, DateTimeOffset At, Guid Node, IReadOnlyList<Guid> Replaces) : Change(Id, At), IReplacing;
 
 /// <summary>A new version of a note's Markdown text.</summary>
 public sealed record NoteEdited(Guid Id, DateTimeOffset At, Guid Node, IReadOnlyList<Guid> Replaces)

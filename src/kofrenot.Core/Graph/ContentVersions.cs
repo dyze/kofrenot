@@ -1,9 +1,7 @@
 namespace Kofrenot.Core.Graph;
 
 /// <summary>
-/// The content versions of every note, or of every dataset. A node's current versions are those
-/// no other version replaces: one normally, several after edits made apart (a conflict). The
-/// result does not depend on the order the changes arrive in.
+/// The content versions of every note, or of every dataset, and each node's current ones (<see cref="CurrentVersions"/>).
 /// </summary>
 internal sealed class ContentVersions<T>
     where T : ContentEdited
@@ -22,18 +20,6 @@ internal sealed class ContentVersions<T>
     }
 
     /// <summary>The current versions of a node, oldest first; empty before its first save.</summary>
-    public IReadOnlyList<T> Current(Guid node)
-    {
-        if (!_byNode.TryGetValue(node, out var versions))
-        {
-            return [];
-        }
-
-        var replaced = versions.Values.SelectMany(version => version.Replaces).ToHashSet();
-        return versions.Values
-            .Where(version => !replaced.Contains(version.Id))
-            .OrderBy(version => version.At)
-            .ThenBy(version => version.Id)
-            .ToList();
-    }
+    public IReadOnlyList<T> Current(Guid node) =>
+        _byNode.TryGetValue(node, out var versions) ? CurrentVersions.Of(versions.Values) : [];
 }
