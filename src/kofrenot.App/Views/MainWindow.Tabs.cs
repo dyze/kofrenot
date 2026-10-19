@@ -154,7 +154,7 @@ public partial class MainWindow
     private void CreateView()
     {
         _log.Info("Action", "New view");
-        if (_session.CreateNode(this, TypeCatalog.View) is { } added && added.NewNodes.FirstOrDefault() is { } view)
+        if (RecordRecent(_session.CreateNode(this, TypeCatalog.View)) is { } added && added.NewNodes.FirstOrDefault() is { } view)
         {
             OpenTab(view);
         }

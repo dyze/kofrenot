@@ -66,7 +66,7 @@ public partial class MainWindow : Window
         DetailsPanel.EditView = view => _session.EditView(this, view);
         ViewContent.Log = log;
         ViewContent.States = viewStates;
-        ViewContent.CreateNode = (type, under) => _session.CreateNode(this, type, under);
+        ViewContent.CreateNode = (type, under) => RecordRecent(_session.CreateNode(this, type, under));
         ViewContent.Write = (changes, action) => _session.Write(this, changes, action);
         ViewContent.Copy = plan => _session.Copy(this, plan);
         ViewContent.ContentExists = version => _session.Current?.HasContent(version) ?? false;
@@ -264,14 +264,8 @@ public partial class MainWindow : Window
     private bool AddInput()
     {
         if (_input is { Plan.CanAdd: true, Request: { } request }
-            && _session.Create(this, request, _input.Choices) is { } added
-            && _session.Current is { } vault)
+            && RecordRecent(_session.Create(this, request, _input.Choices)) is { } added)
         {
-            foreach (var node in added.Nodes.Reverse())
-            {
-                _recent.Opened(vault.Id, node.Id);
-            }
-
             InputBox.Clear();
 
             // A new view opens in a tab.
@@ -284,6 +278,20 @@ public partial class MainWindow : Window
 
         InputBox.Focus();
         return true;
+    }
+
+    /// <summary>Puts the nodes of a creation, new or existing, first among the recent ones, the first typed on top. Returns the creation.</summary>
+    private AddPlan? RecordRecent(AddPlan? added)
+    {
+        if (added is not null && _session.Current is { } vault)
+        {
+            foreach (var node in added.Nodes.Reverse())
+            {
+                _recent.Opened(vault.Id, node.Id);
+            }
+        }
+
+        return added;
     }
 
     /// <summary>In the details, their keys (Esc goes back). In the search, Esc clears the input box, then hides the window.</summary>
