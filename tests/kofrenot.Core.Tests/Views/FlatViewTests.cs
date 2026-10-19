@@ -31,6 +31,21 @@ public sealed class FlatViewTests
         Assert.Empty(view.Nodes);
     }
 
+    [Fact]
+    public void Find_GivesTheMatchingNodes_InTheOrderShown()
+    {
+        var shopping = Add("Shopping list", TypeCatalog.Note.Id);
+        var ideas = Add("Ideas", TypeCatalog.Note.Id);
+        var lists = Add("Lists to do", TypeCatalog.Note.Id);
+        Add("List of books", TypeCatalog.Generic.Id);
+
+        var view = new FlatView(_graph, new FlatDefinition(TypeCatalog.Note.Id));
+
+        Assert.Equal([lists, shopping], view.Find("list"));
+        Assert.Empty(view.Find(""));
+        Assert.DoesNotContain(ideas, view.Find("list"));
+    }
+
     private Node Add(string name, string type, int minutes = 0)
     {
         var node = new Node(Guid.NewGuid(), type, name, Start.AddMinutes(minutes));

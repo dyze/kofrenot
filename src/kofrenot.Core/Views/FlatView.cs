@@ -1,4 +1,5 @@
 using Kofrenot.Core.Graph;
+using Kofrenot.Core.Input;
 
 namespace Kofrenot.Core.Views;
 
@@ -6,4 +7,11 @@ namespace Kofrenot.Core.Views;
 public sealed class FlatView(KnowledgeGraph graph, FlatDefinition definition)
 {
     public IReadOnlyList<Node> Nodes => NodeOrder.ByName(graph.Nodes.Where(node => node.Type == definition.NodeType));
+
+    /// <summary>The nodes whose name matches <paramref name="text"/> (<see cref="GraphSearch.MatcherOf"/>), in the order shown.</summary>
+    public IReadOnlyList<Node> Find(string text)
+    {
+        var matches = GraphSearch.MatcherOf(text);
+        return Nodes.Where(node => matches(node.Name)).ToList();
+    }
 }

@@ -118,6 +118,53 @@ public sealed class TreeViewTests
         Assert.Same(alpha, Assert.Single(tree.ChildrenOf(tree.Root!)).Node);
     }
 
+    [Fact]
+    public void Find_SearchesTheWholeTree_InTheOrderShown()
+    {
+        var (projects, books, herbert, heroes) = (Add("Projects"), Add("Books"), Add("Frank Herbert"), Add("Heroes"));
+        Contains(projects, books);
+        Contains(books, herbert);
+        Contains(projects, heroes);
+
+        var found = Tree(projects.Id).Find("her");
+
+        Assert.Equal([herbert, heroes], found.Select(item => item.Node));
+        Assert.Equal([projects.Id, books.Id, herbert.Id], found[0].Path);
+        Assert.Equal([$"{projects.Id}", $"{projects.Id}/{books.Id}"], found[0].AncestorKeys);
+        Assert.Empty(Tree(projects.Id).Root!.AncestorKeys);
+    }
+
+    [Fact]
+    public void Find_GivesEachPlace_OfANodeWithSeveralParents_AndCutsCycles()
+    {
+        var (projects, alpha, beta, shared) = (Add("Projects"), Add("Alpha"), Add("Beta"), Add("Shared"));
+        Contains(projects, alpha);
+        Contains(projects, beta);
+        Contains(alpha, shared);
+        Contains(beta, shared);
+        Contains(shared, projects);
+
+        var found = Tree(projects.Id).Find("shar");
+
+        Assert.Equal([$"{projects.Id}/{alpha.Id}/{shared.Id}", $"{projects.Id}/{beta.Id}/{shared.Id}"], found.Select(item => item.Key));
+        // The root again under each place of Shared, where the cycle is cut: shown, not expanded further.
+        var roots = Tree(projects.Id).Find("projects");
+        Assert.Equal(3, roots.Count);
+        Assert.All(roots.Skip(1), item => Assert.False(item.CanExpand));
+    }
+
+    [Fact]
+    public void Find_IgnoresAccents_AndFindsNothingWithoutText()
+    {
+        var (projects, ete) = (Add("Projects"), Add("Été"));
+        Contains(projects, ete);
+
+        Assert.Equal([ete], Tree(projects.Id).Find("ete").Select(item => item.Node));
+        Assert.Empty(Tree(projects.Id).Find("  "));
+        Assert.Empty(Tree(projects.Id).Find("nothing"));
+        Assert.Empty(Tree(Guid.NewGuid()).Find("projects"));
+    }
+
     private TreeView Tree(Guid root) => new(_graph, new TreeDefinition(root, TypeCatalog.Contains.Id));
 
     private Node Add(string name)

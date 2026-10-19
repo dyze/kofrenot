@@ -57,7 +57,7 @@ public partial class ViewPanel
     }
 
     /// <summary>Esc: forgets the node cut, shown again as it is. False when none was cut.</summary>
-    public bool CancelCut()
+    private bool CancelCut()
     {
         if (_taken is not { IsCut: true })
         {

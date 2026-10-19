@@ -319,7 +319,7 @@ public partial class MainWindow : Window
             return;
         }
 
-        if (ViewContent.IsVisible && ViewContent.CancelCut())
+        if (ViewContent.IsVisible && ViewContent.HandleEscape())
         {
             e.Handled = true;
             return;

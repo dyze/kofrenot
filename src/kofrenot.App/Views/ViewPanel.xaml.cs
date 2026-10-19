@@ -27,6 +27,7 @@ public partial class ViewPanel : UserControl
     private Guid _vault;
     private CoreTreeView? _tree;
     private TreeDefinition? _definition;
+    private FlatView? _list;
     private Node? _view;
     private string? _selectedPath;
     private Guid? _selectedNode;
@@ -50,6 +51,7 @@ public partial class ViewPanel : UserControl
         {
             _selectedPath = null;
             _selectedNode = null;
+            ClearSearch();
         }
 
         _vault = vault;
@@ -57,6 +59,7 @@ public partial class ViewPanel : UserControl
         _graph = graph;
         _definition = null;
         _listType = null;
+        _list = null;
         switch (new ViewPlanner(graph).Load(view).Definition)
         {
             case TreeDefinition definition when new CoreTreeView(graph, definition) is { Root: { } root } tree:
@@ -71,7 +74,8 @@ public partial class ViewPanel : UserControl
                 break;
             case FlatDefinition definition:
                 _listType = graph.Types.FindNodeType(definition.NodeType);
-                var rows = new FlatView(graph, definition).Nodes.Select(node => new ViewRow(node, NodeVisual.Of(graph, node))).ToList();
+                _list = new FlatView(graph, definition);
+                var rows = _list.Nodes.Select(node => new ViewRow(node, NodeVisual.Of(graph, node))).ToList();
                 List.ItemsSource = rows;
                 List.SelectedItem = rows.FirstOrDefault(row => row.Node.Id == _selectedNode);
                 ShowOnly(List);
@@ -87,6 +91,7 @@ public partial class ViewPanel : UserControl
         }
 
         ShowActions();
+        RefreshFound();
     }
 
     /// <summary>Gives the keyboard to the tree or the list, on its selected node (the first one by default).</summary>
@@ -188,6 +193,11 @@ public partial class ViewPanel : UserControl
         if (e.Key == Key.Enter && Keyboard.Modifiers == ModifierKeys.None)
         {
             e.Handled = OpenSelected();
+        }
+        else if (e.Key == Key.F && Keyboard.Modifiers == ModifierKeys.Control)
+        {
+            FocusSearch();
+            e.Handled = true;
         }
         else if (sender == Tree)
         {

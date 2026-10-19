@@ -29,6 +29,13 @@ public static class GraphSearch
             .ToList();
     }
 
+    /// <summary>Whether a name matches the typed text, as in <see cref="Find"/>; an empty text matches nothing.</summary>
+    public static Func<string, bool> MatcherOf(string text)
+    {
+        var query = NameKey.Of(text);
+        return name => query.Length > 0 && WordStartOf(NameKey.Of(name), query) >= 0;
+    }
+
     // Where the query starts a word of the key, or -1.
     private static int WordStartOf(string key, string query)
     {
