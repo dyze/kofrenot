@@ -98,7 +98,9 @@
                  TextWrapping="Wrap"
                  Visibility="Collapsed" />
 
+      <!-- No focus frame around the tree or the list, nor their rows: the selected row shows where the keyboard is. -->
       <TreeView x:Name="Tree"
+                FocusVisualStyle="{x:Null}"
                 Background="Transparent"
                 BorderThickness="0"
                 FontSize="{StaticResource BodyFontSize}"
@@ -121,6 +123,7 @@
       </TreeView>
 
       <ListBox x:Name="List"
+               FocusVisualStyle="{x:Null}"
                Background="Transparent"
                BorderThickness="0"
                FontSize="{StaticResource BodyFontSize}"
@@ -133,6 +136,11 @@
         <ListBox.ContextMenu>
           <ContextMenu />
         </ListBox.ContextMenu>
+        <ListBox.ItemContainerStyle>
+          <Style TargetType="ListBoxItem" BasedOn="{StaticResource {x:Type ListBoxItem}}">
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+          </Style>
+        </ListBox.ItemContainerStyle>
         <ListBox.ItemTemplate>
           <DataTemplate>
             <StackPanel Orientation="Horizontal">

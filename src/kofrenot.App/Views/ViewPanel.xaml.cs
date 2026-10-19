@@ -95,9 +95,15 @@ public partial class ViewPanel : UserControl
     }
 
     /// <summary>Gives the keyboard to the tree or the list, on its selected node (the first one by default).</summary>
+    /// <remarks>
+    /// By what is shown (<see cref="UIElement.Visibility"/>), not <see cref="UIElement.IsVisible"/>, which
+    /// waits for the layout: the view may just have been shown again (Esc from the details). Laid out
+    /// first, so the row exists and takes the keyboard, not the tree itself.
+    /// </remarks>
     public void FocusContent()
     {
-        if (Tree.IsVisible)
+        UpdateLayout();
+        if (Tree.Visibility == Visibility.Visible)
         {
             var item = Tree.SelectedItem as TreeViewItem ?? Tree.Items.OfType<TreeViewItem>().FirstOrDefault();
             if (item is not null)
@@ -106,7 +112,7 @@ public partial class ViewPanel : UserControl
                 item.Focus();
             }
         }
-        else if (List.IsVisible)
+        else if (List.Visibility == Visibility.Visible)
         {
             List.SelectedIndex = Math.Max(List.SelectedIndex, 0);
             List.UpdateLayout();
@@ -117,7 +123,8 @@ public partial class ViewPanel : UserControl
     private TreeViewItem ItemOf(TreeItem item)
     {
         var path = item.Key;
-        var view = new TreeViewItem { Header = HeaderOf(item.Node, isCut: _taken is { IsCut: true } taken && taken.Item.Key == path), Tag = item };
+        // No focus frame: it would surround the item with everything expanded under it; the selection shows the keyboard.
+        var view = new TreeViewItem { Header = HeaderOf(item.Node, isCut: _taken is { IsCut: true } taken && taken.Item.Key == path), Tag = item, FocusVisualStyle = null };
         if (item.CanExpand)
         {
             view.Items.Add(NotRead);
@@ -208,7 +215,7 @@ public partial class ViewPanel : UserControl
     private void Content_MouseDoubleClick(object sender, MouseButtonEventArgs e) => e.Handled = OpenSelected();
 
     /// <summary>The node selected in the tree or the list, or null.</summary>
-    private Node? SelectedNode => Tree.IsVisible
+    private Node? SelectedNode => Tree.Visibility == Visibility.Visible
         ? (Tree.SelectedItem as TreeViewItem)?.Tag is TreeItem item ? item.Node : null
         : (List.SelectedItem as ViewRow)?.Node;
 

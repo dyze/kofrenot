@@ -76,10 +76,10 @@ public partial class MainWindow
         return true;
     }
 
-    /// <summary>The keyboard to the selected tab: the input box, or the view.</summary>
+    /// <summary>The keyboard to the selected tab: the input box, or the view (by what is shown: the layout may not have run yet).</summary>
     private void FocusTab()
     {
-        if (ViewContent.IsVisible)
+        if (ViewContent.Visibility == Visibility.Visible)
         {
             ViewContent.FocusContent();
         }
