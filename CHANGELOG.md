@@ -12,7 +12,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **Tree operations**: in a tree view, copy (Ctrl+C), cut (Ctrl+X) and paste (Ctrl+V) a node under another one, or delete it (Del), also from a right-click menu; or drag a node onto another to move it (Ctrl held: copy it). A copy takes the whole subtree as new nodes; a move keeps the node's other parents; a deletion takes the whole subtree. A copy and a deletion show first what they will do.
 - **Build commit** in Settings > About and the startup log line: `0.4 (4e9c313)`, with `-dirty` for a build with uncommitted changes. The main window still shows the version alone.
 - **Replace a running copy**: starting kofrenot while another build of it runs (another version, commit or uncommitted changes, or another exe) names both, and offers to close the running one and start this one. A copy of 0.3 or older cannot be asked to close: the message says to quit it from the tray.
-- **Tabs** at the top of the main window: *Search* first, then the views open on this computer, kept between starts. **+** opens a view, **×** closes its tab; a new view opens in a tab.
+- **Tabs** at the top of the main window: *Search* first, then the views open on this computer, kept between starts. **+** opens a view, **×** closes its tab; a new view opens in a tab. A tree keeps the nodes expanded on this computer, between starts too.
 
 ### Changed
 - **Quit is refused** while a note has unsaved changes or a file is being imported, from the tray or when another copy asks: the window shows why.

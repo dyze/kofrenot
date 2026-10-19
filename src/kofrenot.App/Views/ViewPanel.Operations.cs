@@ -60,8 +60,8 @@ public partial class ViewPanel
             return false;
         }
 
-        _expanded.Add(PathOf(target));
-        _selectedPath = PathOf(target);
+        SetExpanded(target.Key, isExpanded: true);
+        _selectedPath = target.Key;
         if (taken.IsCut)
         {
             Move(taken.Item, target.Node);
@@ -117,7 +117,7 @@ public partial class ViewPanel
         var preview = OperationPreview.Delete(plan, _graph.Types);
         if (MessageDialog.Confirm(Owner, preview.Summary, "Delete", lines: preview.Lines))
         {
-            _selectedPath = item.Parent is null ? null : string.Join('/', item.Path.SkipLast(1));
+            _selectedPath = item.ParentKey;
             if (Write?.Invoke([plan.Change], $"Nodes deleted ({plan.Nodes.Count})") == true && _taken is { } taken && plan.Nodes.Contains(taken.Item.Node))
             {
                 _taken = null;

@@ -67,8 +67,8 @@ public partial class ViewPanel
             return;
         }
 
-        _expanded.Add(PathOf(onto));
-        _selectedPath = PathOf(onto);
+        SetExpanded(onto.Key, isExpanded: true);
+        _selectedPath = onto.Key;
         if (effect == DragDropEffects.Copy)
         {
             _ = CopyUnder(dragged.Node, onto.Node);

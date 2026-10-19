@@ -41,7 +41,7 @@ public partial class MainWindow
         DetailsPanel.HomeLabel = $"⌂ {selected?.Name ?? Tab.Search.Name}";
         if (selected is not null && !DetailsShown)
         {
-            ViewContent.Show(vault.Graph, selected);
+            ViewContent.Show(vault.Id, vault.Graph, selected);
         }
     }
 

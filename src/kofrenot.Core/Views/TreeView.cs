@@ -11,6 +11,14 @@ public sealed record TreeItem(Node Node, IReadOnlyList<Guid> Path, bool CanExpan
 {
     /// <summary>The node it is shown under, or null for the root.</summary>
     public Guid? Parent => Path.Count > 1 ? Path[^2] : null;
+
+    /// <summary>The path as one text, the ids joined by '/': what tells this item from the node's others.</summary>
+    public string Key => KeyOf(Path);
+
+    /// <summary>The <see cref="Key"/> of the item it is shown under, or null for the root.</summary>
+    public string? ParentKey => Parent is null ? null : KeyOf(Path.SkipLast(1));
+
+    private static string KeyOf(IEnumerable<Guid> path) => string.Join('/', path);
 }
 
 /// <summary>

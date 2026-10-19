@@ -46,6 +46,9 @@ public sealed class TreeViewTests
         Assert.Equal([alpha, beta], children.Select(child => child.Node));
         Assert.All(children, child => Assert.Equal(projects.Id, child.Parent));
         Assert.Equal([projects.Id, alpha.Id], children[0].Path);
+        Assert.Equal($"{projects.Id}/{alpha.Id}", children[0].Key);
+        Assert.Equal(tree.Root.Key, children[0].ParentKey);
+        Assert.Null(tree.Root.ParentKey);
     }
 
     [Fact]

@@ -13,16 +13,16 @@ public sealed record ViewRow(Node Node, NodeVisual Visual);
 
 /// <summary>
 /// A view tab's content, read from the graph at each <see cref="Show"/>: a tree, whose children
-/// are read when a node is expanded, or a list. A refresh keeps the nodes expanded and the one
-/// selected, by their path.
+/// are read when a node is expanded, or a list. The nodes expanded are kept on this device
+/// (<see cref="ViewStates"/>); a refresh also keeps the one selected, by its path.
 /// </summary>
 public partial class ViewPanel : UserControl
 {
     // The child of a node not expanded yet: it makes the node expandable.
     private const string NotRead = "…";
 
-    private readonly HashSet<string> _expanded = [];
     private KnowledgeGraph? _graph;
+    private Guid _vault;
     private CoreTreeView? _tree;
     private TreeDefinition? _definition;
     private Node? _view;
@@ -39,15 +39,18 @@ public partial class ViewPanel : UserControl
     /// <summary>Asks to open a node's details.</summary>
     public event Action<Node>? OpenNode;
 
-    public void Show(KnowledgeGraph graph, Node view)
+    /// <summary>The nodes expanded in each view, kept on this device.</summary>
+    public ViewStates? States { get; set; }
+
+    public void Show(Guid vault, KnowledgeGraph graph, Node view)
     {
-        if (_view?.Id != view.Id)
+        if (_view?.Id != view.Id || _vault != vault)
         {
-            _expanded.Clear();
             _selectedPath = null;
             _selectedNode = null;
         }
 
+        _vault = vault;
         _view = view;
         _graph = graph;
         _definition = null;
@@ -102,7 +105,7 @@ public partial class ViewPanel : UserControl
 
     private TreeViewItem ItemOf(TreeItem item)
     {
-        var path = PathOf(item);
+        var path = item.Key;
         var view = new TreeViewItem { Header = HeaderOf(item.Node), Tag = item };
         if (item.CanExpand)
         {
@@ -114,7 +117,7 @@ public partial class ViewPanel : UserControl
             view.IsSelected = true;
         }
 
-        if (item.CanExpand && _expanded.Contains(path))
+        if (item.CanExpand && IsExpanded(path))
         {
             Fill(view);
             view.IsExpanded = true;
@@ -151,7 +154,7 @@ public partial class ViewPanel : UserControl
         if (e.OriginalSource is TreeViewItem { Tag: TreeItem item } view)
         {
             Fill(view);
-            _expanded.Add(PathOf(item));
+            SetExpanded(item.Key, isExpanded: true);
         }
     }
 
@@ -159,7 +162,7 @@ public partial class ViewPanel : UserControl
     {
         if (e.OriginalSource is TreeViewItem { Tag: TreeItem item })
         {
-            _expanded.Remove(PathOf(item));
+            SetExpanded(item.Key, isExpanded: false);
         }
     }
 
@@ -167,7 +170,7 @@ public partial class ViewPanel : UserControl
     {
         if (Tree.SelectedItem is TreeViewItem { Tag: TreeItem item })
         {
-            _selectedPath = PathOf(item);
+            _selectedPath = item.Key;
         }
     }
 
@@ -214,5 +217,13 @@ public partial class ViewPanel : UserControl
         MessageText.Visibility = Visibility.Visible;
     }
 
-    private static string PathOf(TreeItem item) => string.Join('/', item.Path);
+    private bool IsExpanded(string key) => _view is not null && States?.ExpandedIn(_vault, _view.Id).Contains(key) == true;
+
+    private void SetExpanded(string key, bool isExpanded)
+    {
+        if (_view is not null)
+        {
+            States?.SetExpanded(_vault, _view.Id, key, isExpanded);
+        }
+    }
 }

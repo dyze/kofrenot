@@ -39,7 +39,7 @@ public partial class MainWindow : Window
     /// <param name="recent">The nodes last opened on this device, listed while the input box is empty.</param>
     /// <param name="tabs">The views open as tabs on this device.</param>
     /// <param name="createSettings">Creates the Settings window, shown as a dialog over this one.</param>
-    public MainWindow(SettingsStore settings, ILog log, UpdateChecker updates, VaultSession session, RecentNodes recent, ViewTabs tabs, Func<SettingsWindow> createSettings, Func<ImageWindow> createImageWindow)
+    public MainWindow(SettingsStore settings, ILog log, UpdateChecker updates, VaultSession session, RecentNodes recent, ViewTabs tabs, ViewStates viewStates, Func<SettingsWindow> createSettings, Func<ImageWindow> createImageWindow)
     {
         _settings = settings;
         _log = log;
@@ -65,6 +65,7 @@ public partial class MainWindow : Window
         DetailsPanel.ShowImage = ShowImage;
         DetailsPanel.EditView = view => _session.EditView(this, view);
         ViewContent.Log = log;
+        ViewContent.States = viewStates;
         ViewContent.Write = (changes, action) => _session.Write(this, changes, action);
         ViewContent.Copy = plan => _session.Copy(this, plan);
         ViewContent.ContentExists = version => _session.Current?.HasContent(version) ?? false;
