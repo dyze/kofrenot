@@ -39,6 +39,8 @@ Needs the "Sync: no server for now" decision changed ([GOAL.md](GOAL.md#decision
 3. **Restore previous versions.** If a user didn't a mistake he can see the list of versions and restore one of them.
 4. **Node links.** User can link nodes using the node details screen.
 5. **File drop zone.** Main window shows a small zone in which user can drop one or several files. This is a way to secure quickly a set of files. The App, proposes a preview of actions that will be done. node names and types are determined automatically. User acks and app proceeds with actions.
-6. **pinned for off line.** When a node is pinned for off line access, its content is already downloaded to be sure it is always accessible w/o access to vault storage. 
-7. **Pack vault.** Pack a vault to reduce its size of number of file.
+6. Tree view accepts dropped files too.
+7. User can drag datasets from tree view to a PC folder.
+8. **pinned for off line.** When a node is pinned for off line access, its content is already downloaded to be sure it is always accessible w/o access to vault storage. 
+9. **Pack vault.** Pack a vault to reduce its size of number of file.
 
