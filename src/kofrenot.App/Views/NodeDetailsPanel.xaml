@@ -120,14 +120,18 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
           </Grid.RowDefinitions>
           <TextBlock Opacity="0.7" Text="Type" />
           <TextBlock x:Name="TypeText" Grid.Column="1" />
           <TextBlock Grid.Row="1" Opacity="0.7" Text="Created" />
           <TextBlock x:Name="CreatedText" Grid.Row="1" Grid.Column="1" />
+          <!-- The latest of its creation, its names and its content versions (NodeFacts), as a view's Details. -->
+          <TextBlock Grid.Row="2" Opacity="0.7" Text="Modified" />
+          <TextBlock x:Name="ModifiedText" Grid.Row="2" Grid.Column="1" />
           <!-- A view: what it shows, and Edit… to change it. -->
-          <TextBlock x:Name="ShowsLabel" Grid.Row="2" Margin="0,4,0,0" VerticalAlignment="Center" Opacity="0.7" Text="Shows" Visibility="Collapsed" />
-          <StackPanel x:Name="ShowsPanel" Grid.Row="2" Grid.Column="1" Margin="0,4,0,0" Orientation="Horizontal" Visibility="Collapsed">
+          <TextBlock x:Name="ShowsLabel" Grid.Row="3" Margin="0,4,0,0" VerticalAlignment="Center" Opacity="0.7" Text="Shows" Visibility="Collapsed" />
+          <StackPanel x:Name="ShowsPanel" Grid.Row="3" Grid.Column="1" Margin="0,4,0,0" Orientation="Horizontal" Visibility="Collapsed">
             <TextBlock x:Name="ShowsText" VerticalAlignment="Center" TextWrapping="Wrap" />
             <Button Margin="10,0,0,0" Padding="10,2" Content="Edit…" Click="EditView_Click" />
           </StackPanel>

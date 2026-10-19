@@ -71,7 +71,8 @@ public partial class NodeDetailsPanel : UserControl
             .ToList();
         NameText.Text = details.Name;
         TypeText.Text = details.Type;
-        CreatedText.Text = details.Node.Created.ToLocalTime().ToString("yyyy-MM-dd HH:mm", CultureInfo.CurrentCulture);
+        CreatedText.Text = DateOf(details.Node.Created);
+        ModifiedText.Text = Browser.Graph is { } graph ? DateOf(NodeFacts.Of(graph, details.Node).Modified) : string.Empty;
         LinksHeader.Text = details.Links.Count == 0 ? "No links" : $"Links ({details.Links.Count})";
         LinksList.ItemsSource = details.Links;
         ConflictNames.ItemsSource = details.NameConflict;
@@ -135,6 +136,8 @@ public partial class NodeDetailsPanel : UserControl
                 return false;
         }
     }
+
+    private static string DateOf(DateTimeOffset at) => at.ToLocalTime().ToString("yyyy-MM-dd HH:mm", CultureInfo.CurrentCulture);
 
     private void GoBackTo(int depth)
     {
