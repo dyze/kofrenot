@@ -25,7 +25,7 @@ public partial class MessageDialog : Window
     }
 
     /// <param name="lines">Details listed under the message.</param>
-    public static void Inform(Window owner, string message, IReadOnlyList<string>? lines = null) =>
+    public static void Inform(Window? owner, string message, IReadOnlyList<string>? lines = null) =>
         new MessageDialog(owner, message, lines).ShowDialog();
 
     /// <summary>Asks a question, its details in <paramref name="lines"/>: true when the user chose <paramref name="yes"/>.</summary>

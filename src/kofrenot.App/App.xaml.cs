@@ -24,6 +24,9 @@ public partial class App : Application
     private VaultSession? _session;
     private GlobalHotkey? _hotkey;
 
+    // How long the copy running may take to quit when this one replaces it.
+    private static readonly TimeSpan ReplaceTimeout = TimeSpan.FromSeconds(10);
+
     // Set at startup; a closed window cannot be shown again, so each opening creates a new one.
     private Func<LogWindow>? _createLogWindow;
 
@@ -36,25 +39,28 @@ public partial class App : Application
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData));
         var settings = new SettingsStore(files.Settings);
 
-        // Another copy is running: this one leaves, after showing it or warning about it.
-        _singleInstance = SingleInstance.TryClaim(() => Dispatcher.BeginInvoke(() => _window?.ShowFromOutside()));
+        // Before any window (the dialogs about another copy too) or the tray menu is created.
+        AppTheme.ApplyToTrayMenu(settings.Theme);
+        AppTheme.Apply(settings.Theme);
+
+        _singleInstance = ClaimSingleInstance(out var replaced);
         if (_singleInstance is null)
         {
-            AppTheme.Apply(settings.Theme);
-            ShowOrWarnAboutRunningCopy();
             Shutdown(0);
             return;
         }
 
-        // Before any window or the tray menu is created.
-        AppTheme.ApplyToTrayMenu(settings.Theme);
-        AppTheme.Apply(settings.Theme);
         _logHub = new LogHub(files.Logs, settings.DebugLogging);
         var log = _logHub.Filter;
         var version = AppVersion.Of(typeof(App).Assembly);
         log.Info("App", $"kofrenot {AppVersion.WithCommitOf(typeof(App).Assembly)} started"
             + (files.IsPortable ? " (portable)" : string.Empty)
             + (settings.DebugLogging ? " (debug logging on)" : string.Empty));
+        if (replaced is not null)
+        {
+            log.Info("App", $"Replaced {replaced.Describe()}");
+        }
+
         log.Debug("App", $"Theme: {settings.Theme}");
 
         DispatcherUnhandledException += (_, args) =>
@@ -124,19 +130,64 @@ public partial class App : Application
     }
 
     /// <summary>
-    /// The same copy is running (started again): it shows its window. Another copy (installed,
-    /// portable or a build): this one says which, instead of silently showing the other. Nothing
-    /// is stopped; the user may still show the running one.
+    /// The instance guard when this copy runs; null when it leaves. Another copy running: the same
+    /// copy (started again) shows its window. Another one (installed, portable or a build) is named,
+    /// and closed for this one to start (it is then <paramref name="replaced"/>) or shown, as the
+    /// user chooses. A copy of 0.3 or older cannot be asked to close: the user quits it.
     /// </summary>
-    private static void ShowOrWarnAboutRunningCopy()
+    private SingleInstance? ClaimSingleInstance(out AppCopy? replaced)
     {
-        var starting = new AppCopy(Environment.ProcessPath ?? AppContext.BaseDirectory, AppVersion.Of(typeof(App).Assembly));
-        if (SingleInstance.FindRunning() is not { } running || running.IsSameAs(starting)
-            || MessageDialog.Confirm(null, RunningCopy.Warning(starting, running), "Show the running one", "Close"))
+        replaced = null;
+        if (SingleInstance.TryClaim(OnShowRequested, OnQuitRequested) is { } claimed)
+        {
+            return claimed;
+        }
+
+        var starting = new AppCopy(Environment.ProcessPath ?? AppContext.BaseDirectory, AppVersion.BuildOf(typeof(App).Assembly) ?? string.Empty);
+        if (SingleInstance.FindRunning() is not { } running || running.IsSameAs(starting))
         {
             SingleInstance.ShowRunning();
+            return null;
         }
+
+        if (!SingleInstance.CanAskToQuit())
+        {
+            if (MessageDialog.Confirm(null, RunningCopy.Warning(starting, running), "Show the running one", "Close"))
+            {
+                SingleInstance.ShowRunning();
+            }
+
+            return null;
+        }
+
+        if (!MessageDialog.Confirm(null, RunningCopy.ReplaceQuestion(starting, running), "Close it, start this one", "Show the running one"))
+        {
+            SingleInstance.ShowRunning();
+            return null;
+        }
+
+        var (guard, outcome) = SingleInstance.TryReplace(OnShowRequested, OnQuitRequested, ReplaceTimeout);
+        switch (outcome)
+        {
+            case ReplaceOutcome.Replaced:
+                replaced = running;
+                break;
+            case ReplaceOutcome.Refused:
+                MessageDialog.Inform(null, RunningCopy.Refused);
+                break;
+            case ReplaceOutcome.NotClosed:
+                MessageDialog.Inform(null, RunningCopy.NotClosed);
+                break;
+        }
+
+        return guard;
     }
+
+    // Called on a background thread by SingleInstance.
+    private void OnShowRequested() => Dispatcher.BeginInvoke(() => _window?.ShowFromOutside());
+
+    private void OnQuitRequested() => Dispatcher.BeginInvoke(() =>
+        TryQuit("Quit: replaced by another kofrenot", onRefused: () => _singleInstance?.RefuseQuit()));
 
     /// <summary>Registers a new hotkey. One that another program already uses: <paramref name="current"/> is registered again.</summary>
     private bool ApplyHotkey(Hotkey wanted, Hotkey current)

@@ -27,7 +27,7 @@ Upgrade: run a newer setup over the old one. Uninstall: *Settings > Apps*. Your 
 
 ## Usage
 
-- **Main window.** Opens at start. Closing it hides it: kofrenot keeps running in the notification area. Starting kofrenot again shows the running copy. Starting *another* copy (installed, portable, or a build) while one runs says which one runs: quit it from its tray icon to use the other.
+- **Main window.** Opens at start. Closing it hides it: kofrenot keeps running in the notification area. Starting kofrenot again shows the running copy. Starting *another* copy (installed, portable, or another build: version, commit or uncommitted changes) while one runs names both, and offers to close the running one and start this one; *Show the running one* keeps it. A copy of 0.3 or older cannot be asked to close: quit it from its tray icon.
 - **Hotkey.** Ctrl+Alt+K shows the main window from any program (Settings > General to change it).
 - **Tray icon.** Click: show the main window. Menu: Show, Settings, Log window (ticked while it is open: a click shows or closes it), Quit. kofrenot does not quit, from the tray or for another copy, while a note has unsaved changes or a file is being imported: its window shows why.
 

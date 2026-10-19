@@ -34,7 +34,7 @@ One namespace per folder (`Kofrenot.Core.Settings`, `Kofrenot.UI.Views`, ...). T
 
 | `kofrenot.Core` | Content |
 | --- | --- |
-| *(root)* | `AppVersion`; `RunningCopy` + `AppCopy` (another copy running: same or not, and the warning); `QuitRefusal` (why kofrenot must not quit now); `AppFiles` (where every file of kofrenot is, including `keys.json` and the snapshots in `cache\`: the only place their names are written, listed in Settings > About; `AppFiles.For` picks the data folder, see [Portable copy](#portable-copy)); `Changelog` (reads the text shown by Settings > About); `ProjectLinks` (website, issues, releases) |
+| *(root)* | `AppVersion`; `RunningCopy` + `AppCopy` (another copy running: same or not, and what the user is told); `QuitRefusal` (why kofrenot must not quit now); `AppFiles` (where every file of kofrenot is, including `keys.json` and the snapshots in `cache\`: the only place their names are written, listed in Settings > About; `AppFiles.For` picks the data folder, see [Portable copy](#portable-copy)); `Changelog` (reads the text shown by Settings > About); `ProjectLinks` (website, issues, releases) |
 | `Settings/` | `SettingsStore` (`settings.json`: theme, debug logging, update check, vault folder, hotkey), `Hotkey`, `SettingsCatalog` (the entries of the Settings window, their tabs, and the search that finds them) |
 | `Graph/` | `Node`, `Link`, `NodeType`, `LinkType`, `LinkVerb` (a link type read one way), `TypeCatalog` (built-in node and link types, link aliases; `LinkName`: how a link reads from one of its nodes), `LinkAliases` (the user's aliases, see [Aliases and removals](#aliases-and-removals)), `RemovableChanges`, `NameKey` (the form names are compared in), `Change` (`NodeAdded`, `LinkAdded`, `NodeRenamed`, `AliasAdded`, `NodePinned`, `ChangesRemoved`, `ContentEdited`: `NoteEdited`, `DatasetEdited`), `DatasetFile` (a dataset version's file: name, size, SHA-256), `NodeNames` + `NameVersion` (a node's current names, see [Renames](#renames)), `ContentVersions` (the current versions of a note or dataset, see [Notes](#notes)), `KnowledgeGraph` (in-memory state, built by applying changes) |
 | `Storage/` | `VaultFormat` (+ `NewerVaultFormatException`), `SecretBox` (AES-GCM seal / open), `ChunkedBox` (AES-GCM over 1 MB chunks, streamed), `KeyWrap` (KDF, wrap / unwrap the master key), `ChangeData` (a change as JSON, shared with the snapshot), `ChangeCodec` (change ⇄ sealed JSON), `VaultHeader`, `VaultFolder` (layout, inspect, create, `SizeOf` + `FolderSize`: its files and bytes, shown in Settings > Vault, measured off the UI thread), `SnapshotStore`, `NoteFiles` (note content, `content/`), `DatasetFiles` (dataset content, `content/`: describe a file, write, export, open), `ThumbnailFiles` (thumbnails, `content/`), `Vault` (open, append, refresh, save a note or a dataset version, `WriteDataset`: its files only, off the UI thread), `AtomicFile` (write as `.tmp`, then rename), `KeyMemory` (remembered master keys, `keys.json`), `ISecretProtector` |
@@ -81,9 +81,9 @@ Publishing is self-contained, so the PC needs no .NET runtime (installing one ne
 ```
 App.OnStartup
  ├─ AppFiles.For ─► SettingsStore
- ├─ SingleInstance.TryClaim ── another copy runs? ─► the same exe and version: ask it to show its window
- │                                                 another copy: warn (RunningCopy), show it on request; exit
- ├─ AppTheme ─► LogHub
+ ├─ AppTheme
+ ├─ SingleInstance.TryClaim ── another copy runs? ─► see the list below
+ ├─ LogHub
  ├─ VaultSession (KeyMemory + DpapiProtector)
  ├─ MainWindow (+ WindowPlacer "Main") ─► UpdateChecker (background, once a day)
  ├─ GlobalHotkey (Ctrl+Alt+K by default) ─► MainWindow shown
@@ -94,7 +94,20 @@ App.OnStartup
 
 - Closing the main window (or Esc with an empty input box) hides it; kofrenot keeps running in the notification area until *Quit* (`ShutdownMode=OnExplicitShutdown`).
 - A hotkey another program already uses is not registered: logged as a warning at start, refused in Settings > General (the previous one stays).
-- One copy runs at a time (they would write the same files). A copy started while another runs finds it (`SingleInstance.FindRunning`: its process, exe and version). Another exe or version (installed, portable, a build) gets a warning naming both (`RunningCopy.Warning`), with *Show the running one* or *Close*; nothing is stopped. The settings are read first, for the theme of that warning.
+- One copy runs at a time (they would write the same files): the first owns the mutex `Local\kofrenot-single-instance` and waits on the events `Local\kofrenot-show-window` and `Local\kofrenot-quit`. A copy started while another runs finds it (`SingleInstance.FindRunning`: its process, exe and full build `0.4+<commit>[.dirty]`), and decides:
+
+  ```
+  same exe and build ─► set show event, exit
+  other copy ─ quit event exists? ─ no (≤ 0.3) ─► RunningCopy.Warning: Show the running one / Close; exit
+                    │ yes
+     RunningCopy.ReplaceQuestion ─ Show the running one ─► set show event, exit
+                    │ Close it, start this one
+     set quit event ─► running copy: QuitRefusal.Reason?
+                          │ none: quits, frees the mutex ─► this copy runs (10 s at most, else NotClosed)
+                          │ a reason: shows it in its window, sets Local\kofrenot-quit-refused ─► Refused; exit
+  ```
+
+  The path counts, not only the build: a portable copy keeps its data in its own folder. The settings are read first, for the theme of these dialogs.
 - Settings is a modal dialog over the main window. The log window can be opened in front of it and stays open after it closes.
 
 ## Portable copy
