@@ -8,8 +8,8 @@ using Kofrenot.Core.Views;
 namespace Kofrenot.UI.Views;
 
 /// <summary>
-/// The action bar over a view: New and Edit, and in a tree Cut, Copy, Paste and Delete, as their
-/// keys do; New and Edit are also first in the right-click menus. New adds a node through the
+/// The action bar over a view: New, Edit and Rename, and in a tree Cut, Copy, Paste and Delete, as
+/// their keys do; New, Edit and Rename are also first in the right-click menus. New adds a node through the
 /// creation screen: in a tree under the node selected (the root when none), linked through the
 /// tree's link type; in a list, of the list's type. Edit opens the node's details, as Enter does.
 /// </summary>
@@ -39,6 +39,7 @@ public partial class ViewPanel
     private void UpdateActions()
     {
         EditButton.IsEnabled = SelectedNode is not null;
+        RenameButton.IsEnabled = SelectedNode is not null;
         var hasSelection = SelectedItem is not null;
         CutButton.IsEnabled = hasSelection;
         CopyButton.IsEnabled = hasSelection;
@@ -50,6 +51,8 @@ public partial class ViewPanel
 
     private void Edit_Click(object sender, RoutedEventArgs e) => OpenSelected();
 
+    private void Rename_Click(object sender, RoutedEventArgs e) => StartRename();
+
     private void List_SelectionChanged(object sender, SelectionChangedEventArgs e) => UpdateActions();
 
     /// <summary>The list's menu: New… and Edit.</summary>
@@ -60,11 +63,13 @@ public partial class ViewPanel
         AddNodeItems(menu);
     }
 
-    /// <summary>New… and Edit, first in a menu.</summary>
+    /// <summary>New…, Edit and Rename, first in a menu.</summary>
     private void AddNodeItems(ContextMenu menu)
     {
         menu.Items.Add(MenuItemOf("New…", string.Empty, AddNode, isEnabled: CreateNode is not null && (_definition is not null || _listType is not null)));
         menu.Items.Add(MenuItemOf("Edit", "Enter", () => OpenSelected(), isEnabled: SelectedNode is not null));
+        // Once the menu has closed and given the keyboard back, so the box keeps it.
+        menu.Items.Add(MenuItemOf("Rename", "F2", () => Dispatcher.BeginInvoke(StartRename, System.Windows.Threading.DispatcherPriority.Input), isEnabled: SelectedNode is not null));
     }
 
     /// <summary>New: a node on the creation screen, under the node selected in a tree, of the list's type in a list; then selected.</summary>

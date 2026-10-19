@@ -30,6 +30,20 @@ public sealed class CreationNewNodeTests
         Assert.Equal("Dune", Assert.IsType<NodeAdded>(Assert.Single(form.Plan.Changes)).Node.Name);
     }
 
+    [Theory]
+    [InlineData("")]
+    [InlineData("   ")]
+    public void AnEmptyName_CannotBeAdded(string name)
+    {
+        var form = CreationForm.NewNode(_graph, clock: _clock);
+        form.Name = "Dune";
+
+        form.Name = name;
+
+        Assert.False(form.CanAdd);
+        Assert.Equal("Type its name.", form.Status);
+    }
+
     [Fact]
     public void ANameThatExists_IsWarnedAbout()
     {

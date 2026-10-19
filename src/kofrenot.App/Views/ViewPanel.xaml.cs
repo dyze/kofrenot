@@ -8,9 +8,6 @@ using CoreTreeView = Kofrenot.Core.Views.TreeView;
 
 namespace Kofrenot.UI.Views;
 
-/// <summary>A node in a view's list, with its picture.</summary>
-public sealed record ViewRow(Node Node, NodeVisual Visual);
-
 /// <summary>
 /// A view tab's content, read from the graph at each <see cref="Show"/>: a tree, whose children
 /// are read when a node is expanded, or a list. The nodes expanded are kept on this device
@@ -47,6 +44,8 @@ public partial class ViewPanel : UserControl
 
     public void Show(Guid vault, KnowledgeGraph graph, Node view)
     {
+        // The rows are built again: a name edited in place is given up.
+        StopRename();
         if (_view?.Id != view.Id || _vault != vault)
         {
             _selectedPath = null;
@@ -75,9 +74,10 @@ public partial class ViewPanel : UserControl
             case FlatDefinition definition:
                 _listType = graph.Types.FindNodeType(definition.NodeType);
                 _list = new FlatView(graph, definition);
-                var rows = _list.Nodes.Select(node => new ViewRow(node, NodeVisual.Of(graph, node))).ToList();
-                List.ItemsSource = rows;
-                List.SelectedItem = rows.FirstOrDefault(row => row.Node.Id == _selectedNode);
+                var rows = _list.Nodes.Select(RowOf).ToList();
+                List.Items.Clear();
+                rows.ForEach(row => List.Items.Add(row));
+                List.SelectedItem = rows.FirstOrDefault(row => NodeOf(row)?.Id == _selectedNode);
                 ShowOnly(List);
                 if (rows.Count == 0)
                 {
@@ -116,7 +116,7 @@ public partial class ViewPanel : UserControl
         {
             List.SelectedIndex = Math.Max(List.SelectedIndex, 0);
             List.UpdateLayout();
-            (List.ItemContainerGenerator.ContainerFromIndex(List.SelectedIndex) as ListBoxItem)?.Focus();
+            (List.SelectedItem as ListBoxItem)?.Focus();
         }
     }
 
@@ -152,6 +152,11 @@ public partial class ViewPanel : UserControl
         header.Children.Add(new TextBlock { Text = node.Name, VerticalAlignment = VerticalAlignment.Center });
         return header;
     }
+
+    /// <summary>A row of a list: the node pictured, as in a tree (no focus frame either).</summary>
+    private ListBoxItem RowOf(Node node) => new() { Content = HeaderOf(node, isCut: false), Tag = node, FocusVisualStyle = null };
+
+    private static Node? NodeOf(object? row) => (row as ListBoxItem)?.Tag as Node;
 
     /// <summary>Reads the children of a node, once.</summary>
     private void Fill(TreeViewItem view)
@@ -197,7 +202,17 @@ public partial class ViewPanel : UserControl
 
     private void Content_KeyDown(object sender, KeyEventArgs e)
     {
-        if (e.Key == Key.Enter && Keyboard.Modifiers == ModifierKeys.None)
+        // While renaming, the keys are the box's.
+        if (IsRenaming)
+        {
+            return;
+        }
+
+        if (e.Key == Key.F2 && Keyboard.Modifiers == ModifierKeys.None)
+        {
+            e.Handled = StartRename();
+        }
+        else if (e.Key == Key.Enter && Keyboard.Modifiers == ModifierKeys.None)
         {
             e.Handled = OpenSelected();
         }
@@ -212,12 +227,13 @@ public partial class ViewPanel : UserControl
         }
     }
 
-    private void Content_MouseDoubleClick(object sender, MouseButtonEventArgs e) => e.Handled = OpenSelected();
+    // In a name being edited, a double-click selects a word.
+    private void Content_MouseDoubleClick(object sender, MouseButtonEventArgs e) => e.Handled = !IsRenaming && OpenSelected();
 
     /// <summary>The node selected in the tree or the list, or null.</summary>
     private Node? SelectedNode => Tree.Visibility == Visibility.Visible
         ? (Tree.SelectedItem as TreeViewItem)?.Tag is TreeItem item ? item.Node : null
-        : (List.SelectedItem as ViewRow)?.Node;
+        : NodeOf(List.SelectedItem);
 
     private bool OpenSelected()
     {

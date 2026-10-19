@@ -28,9 +28,14 @@ public partial class ViewPanel
         SearchBox.SelectAll();
     }
 
-    /// <summary>Esc in a view: clears the search, else forgets the node cut. False when there was neither.</summary>
+    /// <summary>Esc in a view: cancels a rename, else clears the search, else forgets the node cut. False when there was none.</summary>
     public bool HandleEscape()
     {
+        if (CancelRename())
+        {
+            return true;
+        }
+
         if (SearchBox.Text.Length > 0 || SearchBox.IsKeyboardFocusWithin)
         {
             SearchBox.Clear();
@@ -142,9 +147,9 @@ public partial class ViewPanel
             Tree.UpdateLayout();
             (Tree.SelectedItem as TreeViewItem)?.BringIntoView();
         }
-        else if (List.ItemsSource is IEnumerable<ViewRow> rows && rows.FirstOrDefault(row => row.Node.Id == occurrence.Node.Id) is { } row)
+        else if (List.Items.OfType<ListBoxItem>().FirstOrDefault(row => NodeOf(row)?.Id == occurrence.Node.Id) is { } row)
         {
-            _selectedNode = row.Node.Id;
+            _selectedNode = occurrence.Node.Id;
             List.SelectedItem = row;
             List.ScrollIntoView(row);
         }

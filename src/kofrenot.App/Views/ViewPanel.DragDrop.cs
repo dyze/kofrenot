@@ -22,8 +22,9 @@ public partial class ViewPanel
 
     private void Tree_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
-        _dragStart = e.GetPosition(Tree);
-        _dragged = TreeViewItemAt(e.OriginalSource)?.Tag as TreeItem;
+        // In a name being edited, the mouse selects text: no drag.
+        _dragStart = IsRenaming ? null : e.GetPosition(Tree);
+        _dragged = IsRenaming ? null : TreeViewItemAt(e.OriginalSource)?.Tag as TreeItem;
     }
 
     /// <summary>Starts the drag once the mouse has moved far enough, the button held.</summary>

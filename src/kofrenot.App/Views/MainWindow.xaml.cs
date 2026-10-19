@@ -67,6 +67,7 @@ public partial class MainWindow : Window
         ViewContent.Log = log;
         ViewContent.States = viewStates;
         ViewContent.CreateNode = (type, under) => RecordRecent(_session.CreateNode(this, type, under));
+        ViewContent.Rename = rename => _session.Rename(this, rename);
         ViewContent.Write = (changes, action) => _session.Write(this, changes, action);
         ViewContent.Copy = plan => _session.Copy(this, plan);
         ViewContent.ContentExists = version => _session.Current?.HasContent(version) ?? false;
