@@ -117,6 +117,14 @@ public sealed class SettingsStore
         Save();
     }
 
+    /// <summary>
+    /// Whether <paramref name="hotkey"/> is kofrenot's own already: the hotkey that shows it, or
+    /// another vault's. <paramref name="forVault"/> is the vault it is wanted for; null for the
+    /// hotkey that shows kofrenot.
+    /// </summary>
+    public bool IsHotkeyTaken(Hotkey hotkey, VaultLocation? forVault) =>
+        (forVault is not null && hotkey == Hotkey) || Vaults.UsesHotkey(hotkey, forVault);
+
     public void SetHotkey(Hotkey hotkey)
     {
         Hotkey = hotkey;

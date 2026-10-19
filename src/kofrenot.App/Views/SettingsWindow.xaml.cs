@@ -55,6 +55,7 @@ public partial class SettingsWindow : Window
     /// <param name="session">The vaults: added, removed, ordered and named here, and their remembered pass phrases forgotten.</param>
     /// <param name="whyNotSwitch">Why the open vault cannot be closed now (a file being imported, a note not saved), or null.</param>
     /// <param name="applyHotkey">Registers a new hotkey; false when another program uses it (the old one then stays).</param>
+    /// <param name="applyVaultHotkey">Gives a vault a new hotkey, or none; false when another program uses it (the old one then stays).</param>
     /// <param name="openLog">Opens the log window in front of this dialog.</param>
     public SettingsWindow(
         SettingsStore settings,
@@ -64,6 +65,7 @@ public partial class SettingsWindow : Window
         VaultSession session,
         Func<string?> whyNotSwitch,
         Func<Hotkey, bool> applyHotkey,
+        Func<VaultLocation, Hotkey?, bool> applyVaultHotkey,
         Action<Window> openLog)
     {
         _settings = settings;
@@ -76,6 +78,8 @@ public partial class SettingsWindow : Window
         InitializeComponent();
         Vaults.Log = _log;
         Vaults.WhyNotSwitch = whyNotSwitch;
+        Vaults.Settings = settings;
+        Vaults.ApplyHotkey = applyVaultHotkey;
         Vaults.Session = session;
         LinkTypes.Session = session;
         session.Changed += ShowVault;
@@ -460,21 +464,9 @@ public partial class SettingsWindow : Window
     /// <summary>The key pressed with its modifiers becomes the hotkey, when it can be one.</summary>
     private void HotkeyBox_PreviewKeyDown(object sender, KeyEventArgs e)
     {
-        // Alt combinations arrive as the System key.
-        var key = e.Key == Key.System ? e.SystemKey : e.Key;
-        if (key == Key.Tab || key == Key.Escape)
-        {
-            return;
-        }
-
-        e.Handled = true;
-        if (Hotkey.TryParse($"{ModifiersOf(Keyboard.Modifiers)}+{KeyName(key)}", out var hotkey))
+        if (HotkeyCapture.Read(e, hint => HotkeyStatusText.Text = hint) is { } hotkey)
         {
             ApplyHotkey(hotkey);
-        }
-        else if (KeyName(key) is not null)
-        {
-            HotkeyStatusText.Text = "Use Ctrl, Alt or Win with a letter, a digit or F1 to F24.";
         }
     }
 
@@ -485,6 +477,12 @@ public partial class SettingsWindow : Window
         if (hotkey == _settings.Hotkey)
         {
             HotkeyStatusText.Text = string.Empty;
+            return;
+        }
+
+        if (_settings.IsHotkeyTaken(hotkey, forVault: null))
+        {
+            HotkeyStatusText.Text = $"{hotkey} is the hotkey of a vault: {_settings.Hotkey} is kept.";
             return;
         }
 
@@ -508,21 +506,6 @@ public partial class SettingsWindow : Window
             ShowMessage(ex.Message);
         }
     }
-
-    private static string ModifiersOf(ModifierKeys modifiers) =>
-        string.Join('+', new[] { (ModifierKeys.Control, "Ctrl"), (ModifierKeys.Alt, "Alt"), (ModifierKeys.Shift, "Shift"), (ModifierKeys.Windows, "Win") }
-            .Where(modifier => modifiers.HasFlag(modifier.Item1))
-            .Select(modifier => modifier.Item2));
-
-    /// <summary>The name <see cref="Hotkey"/> reads for a WPF key, or null for a key it cannot use.</summary>
-    private static string? KeyName(Key key) => key switch
-    {
-        >= Key.A and <= Key.Z => key.ToString(),
-        >= Key.D0 and <= Key.D9 => ((char)('0' + (key - Key.D0))).ToString(),
-        >= Key.NumPad0 and <= Key.NumPad9 => ((char)('0' + (key - Key.NumPad0))).ToString(),
-        >= Key.F1 and <= Key.F24 => key.ToString(),
-        _ => null,
-    };
 
     /// <summary>The Vault and Link types tabs, shown again when the vault changes (opened, switched, named).</summary>
     private void ShowVault()

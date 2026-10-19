@@ -36,6 +36,10 @@ public sealed class VaultList
 
     public RegisteredVault? Find(Guid id) => _vaults.FirstOrDefault(vault => vault.Id == id);
 
+    /// <summary>Whether a vault other than the one at <paramref name="except"/> has this hotkey.</summary>
+    public bool UsesHotkey(Hotkey hotkey, VaultLocation? except = null) =>
+        _vaults.Any(vault => vault.Hotkey == hotkey && vault.Location != except);
+
     /// <summary>Whether this location, or this vault elsewhere, is listed already.</summary>
     public bool IsListed(VaultLocation location, Guid? id) => IsListed(_vaults, location, id);
 

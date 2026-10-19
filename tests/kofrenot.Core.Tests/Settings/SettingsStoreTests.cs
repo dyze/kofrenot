@@ -98,6 +98,22 @@ public sealed class SettingsStoreTests : IDisposable
     }
 
     [Fact]
+    public void AHotkey_IsTaken_ByTheMainOneOrAnotherVault()
+    {
+        var ctrlAltI = new Hotkey(HotkeyModifiers.Ctrl | HotkeyModifiers.Alt, "I");
+        var ctrlAltP = new Hotkey(HotkeyModifiers.Ctrl | HotkeyModifiers.Alt, "P");
+        var store = new SettingsStore(FilePath);
+        store.SetVaults(new VaultList([new RegisteredVault(new VaultLocation(@"D:\a"), Hotkey: ctrlAltI), new RegisteredVault(new VaultLocation(@"D:\b"))]));
+
+        Assert.True(store.IsHotkeyTaken(Hotkey.Default, new VaultLocation(@"D:\b")));
+        Assert.True(store.IsHotkeyTaken(ctrlAltI, new VaultLocation(@"D:\b")));
+        Assert.True(store.IsHotkeyTaken(ctrlAltI, forVault: null));
+        Assert.False(store.IsHotkeyTaken(ctrlAltI, new VaultLocation(@"D:\a")));
+        Assert.False(store.IsHotkeyTaken(ctrlAltP, new VaultLocation(@"D:\b")));
+        Assert.False(store.IsHotkeyTaken(Hotkey.Default, forVault: null));
+    }
+
+    [Fact]
     public void AVaultNotRegistered_CannotBeSelected()
     {
         var store = new SettingsStore(FilePath);

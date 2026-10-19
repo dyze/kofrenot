@@ -30,6 +30,12 @@ public partial class VaultsSection : UserControl
     /// <summary>Why the open vault cannot be closed now (a file being imported, a note not saved), or null.</summary>
     public Func<string?> WhyNotSwitch { private get; set; } = () => null;
 
+    /// <summary>Where the hotkeys are, to refuse one kofrenot already has.</summary>
+    public SettingsStore? Settings { private get; set; }
+
+    /// <summary>Gives a vault a new hotkey, or none; false when another program uses it (the old one then stays).</summary>
+    public Func<VaultLocation, Hotkey?, bool> ApplyHotkey { private get; set; } = (_, _) => false;
+
     /// <summary>The vaults shown; set once by the Settings window.</summary>
     public VaultSession Session
     {
@@ -91,6 +97,9 @@ public partial class VaultsSection : UserControl
         NameBox.IsEnabled = open;
         NameBox.Text = session.NameOf(vault);
         ShowNamePlan();
+        HotkeyBox.Text = vault.Hotkey?.ToString() ?? string.Empty;
+        ClearHotkeyButton.IsEnabled = vault.Hotkey is not null;
+        HotkeyStatusText.Text = string.Empty;
         ShowStatus(session, vault, open);
 
         var remembered = session.IsRemembered(vault);
@@ -237,6 +246,49 @@ public partial class VaultsSection : UserControl
         session.Unregister(Owner, vault.Location);
         VaultList.SelectedItem = null;
         Show();
+    }
+
+    private void HotkeyBox_PreviewKeyDown(object sender, KeyEventArgs e)
+    {
+        if (HotkeyCapture.Read(e, hint => HotkeyStatusText.Text = hint) is { } hotkey)
+        {
+            SetHotkey(hotkey);
+        }
+    }
+
+    private void ClearHotkeyButton_Click(object sender, RoutedEventArgs e) => SetHotkey(null);
+
+    /// <summary>Gives the vault chosen a new hotkey, or none; refused when kofrenot or another program has it already.</summary>
+    private void SetHotkey(Hotkey? hotkey)
+    {
+        if (Chosen is not { } vault || hotkey == vault.Hotkey)
+        {
+            return;
+        }
+
+        if (hotkey is not null && Settings?.IsHotkeyTaken(hotkey, vault.Location) == true)
+        {
+            HotkeyStatusText.Text = $"{hotkey} is kofrenot's already: the hotkey that shows it, or another vault's.";
+            return;
+        }
+
+        try
+        {
+            if (!ApplyHotkey(vault.Location, hotkey))
+            {
+                Log.Warn("Settings", $"Hotkey {hotkey} is used by another program");
+                HotkeyStatusText.Text = $"{hotkey} is used by another program.";
+                return;
+            }
+
+            Log.Info("Settings", $"Hotkey of vault {vault.Id}: {hotkey?.ToString() ?? "none"}");
+            Show();
+        }
+        catch (Exception ex) when (ex is UnauthorizedAccessException or IOException)
+        {
+            Log.Error("Settings", "Cannot change the hotkey", ex);
+            MessageDialog.Inform(Owner, ex.Message);
+        }
     }
 
     private void UpButton_Click(object sender, RoutedEventArgs e) => Move(-1);

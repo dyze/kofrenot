@@ -62,6 +62,27 @@ public partial class MainWindow
     }
 
     /// <summary>
+    /// A vault's hotkey: shows this window on that vault, switching to it; hides the window when
+    /// it is in front showing that vault already.
+    /// </summary>
+    public void ToggleVault(VaultLocation target)
+    {
+        if (IsVisible && IsActive && WindowState != WindowState.Minimized && _settingsDialog is null && target == _session.Selected?.Location)
+        {
+            DetailsPanel.LeaveNote();
+            Hide();
+            _log.Debug("Window", "Hidden (vault hotkey)");
+            return;
+        }
+
+        ShowFromOutside();
+        if (_settingsDialog is null && target != _session.Selected?.Location)
+        {
+            SwitchTo(target);
+        }
+    }
+
+    /// <summary>
     /// Why the open vault cannot be closed for another now: a file is being imported, or the note
     /// shown could not be saved (it is saved first, as when the window is hidden). Null otherwise.
     /// </summary>

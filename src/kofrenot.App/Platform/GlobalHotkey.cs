@@ -6,22 +6,21 @@ using Kofrenot.Core.Settings;
 namespace Kofrenot.UI.Platform;
 
 /// <summary>
-/// A shortcut that works from any program (Windows' <c>RegisterHotKey</c>), received by a window
-/// of kofrenot. One at a time: registering another releases the previous one.
+/// Shortcuts that work from any program (Windows' <c>RegisterHotKey</c>), received by a window of
+/// kofrenot, each by an id: registering an id again releases its previous shortcut.
 /// </summary>
 public sealed class GlobalHotkey : IDisposable
 {
     private const int WmHotkey = 0x0312;
     private const uint ModNoRepeat = 0x4000;
-    private const int Id = 1;
 
     private readonly IntPtr _window;
     private readonly HwndSource _source;
-    private readonly Action _pressed;
-    private bool _registered;
+    private readonly Action<int> _pressed;
+    private readonly HashSet<int> _registered = [];
 
-    /// <param name="pressed">Called on the window's thread.</param>
-    public GlobalHotkey(Window window, Action pressed)
+    /// <param name="pressed">Called on the window's thread with the id of the hotkey pressed.</param>
+    public GlobalHotkey(Window window, Action<int> pressed)
     {
         _window = new WindowInteropHelper(window).EnsureHandle();
         _source = HwndSource.FromHwnd(_window);
@@ -29,17 +28,34 @@ public sealed class GlobalHotkey : IDisposable
         _pressed = pressed;
     }
 
-    /// <summary>Registers the hotkey. False when another program already uses it: the previous one is then released.</summary>
-    public bool Register(Hotkey hotkey)
+    /// <summary>Registers the hotkey of <paramref name="id"/>. False when another program already uses it: the previous one is then released.</summary>
+    public bool Register(int id, Hotkey hotkey)
     {
-        Unregister();
-        _registered = RegisterHotKey(_window, Id, (uint)hotkey.Modifiers | ModNoRepeat, VirtualKeyOf(hotkey.Key));
-        return _registered;
+        Unregister(id);
+        if (!RegisterHotKey(_window, id, (uint)hotkey.Modifiers | ModNoRepeat, VirtualKeyOf(hotkey.Key)))
+        {
+            return false;
+        }
+
+        _registered.Add(id);
+        return true;
+    }
+
+    public void Unregister(int id)
+    {
+        if (_registered.Remove(id))
+        {
+            UnregisterHotKey(_window, id);
+        }
     }
 
     public void Dispose()
     {
-        Unregister();
+        foreach (var id in _registered.ToList())
+        {
+            Unregister(id);
+        }
+
         _source.RemoveHook(Hook);
     }
 
@@ -47,20 +63,11 @@ public sealed class GlobalHotkey : IDisposable
     private static uint VirtualKeyOf(string key) =>
         key.Length == 1 ? key[0] : 0x70u + uint.Parse(key[1..], System.Globalization.CultureInfo.InvariantCulture) - 1;
 
-    private void Unregister()
-    {
-        if (_registered)
-        {
-            UnregisterHotKey(_window, Id);
-            _registered = false;
-        }
-    }
-
     private IntPtr Hook(IntPtr window, int message, IntPtr wParam, IntPtr lParam, ref bool handled)
     {
-        if (message == WmHotkey && wParam.ToInt32() == Id)
+        if (message == WmHotkey && _registered.Contains(wParam.ToInt32()))
         {
-            _pressed();
+            _pressed(wParam.ToInt32());
             handled = true;
         }
 

@@ -83,7 +83,7 @@ public partial class App : Application
             new ViewStates(files.ViewStates, log),
             createSettings: () =>
             {
-                var created = new SettingsWindow(settings, logHub, files, updates, session, () => _window?.WhyNotSwitch(), wanted => ApplyHotkey(wanted, settings.Hotkey), openLog: OpenLogWindow);
+                var created = new SettingsWindow(settings, logHub, files, updates, session, () => _window?.WhyNotSwitch(), wanted => ApplyHotkey(wanted, settings.Hotkey), (vault, wanted) => ApplyVaultHotkey(settings, vault, wanted, log), openLog: OpenLogWindow);
                 placer.Attach(created, "Settings", RestoreMode.SizeOverOwner);
                 return created;
             },
@@ -96,15 +96,25 @@ public partial class App : Application
         var window = _window;
         placer.Attach(window, "Main", RestoreMode.PositionAndSize);
 
-        var hotkey = _hotkey = new GlobalHotkey(window, () =>
+        var hotkey = _hotkey = new GlobalHotkey(window, id =>
         {
+            if (_vaultHotkeys.TryGetValue(id, out var vault))
+            {
+                log.Debug("Action", "Vault hotkey pressed");
+                window.ToggleVault(vault);
+                return;
+            }
+
             log.Debug("Action", "Hotkey pressed");
             window.ShowFromOutside();
         });
-        if (!hotkey.Register(settings.Hotkey))
+        if (!hotkey.Register(MainHotkeyId, settings.Hotkey))
         {
             log.Warn("App", $"Hotkey {settings.Hotkey} is used by another program: change it in Settings > General");
         }
+
+        RegisterVaultHotkeys(settings, log);
+        session.Changed += () => RegisterVaultHotkeys(settings, log);
 
         _createLogWindow = () =>
         {
@@ -190,18 +200,6 @@ public partial class App : Application
 
     private void OnQuitRequested() => Dispatcher.BeginInvoke(() =>
         TryQuit("Quit: replaced by another kofrenot", onRefused: () => _singleInstance?.RefuseQuit()));
-
-    /// <summary>Registers a new hotkey. One that another program already uses: <paramref name="current"/> is registered again.</summary>
-    private bool ApplyHotkey(Hotkey wanted, Hotkey current)
-    {
-        if (_hotkey is null || _hotkey.Register(wanted))
-        {
-            return _hotkey is not null;
-        }
-
-        _hotkey.Register(current);
-        return false;
-    }
 
     /// <summary>The tray's Log window item: closes the log window when it is open, else opens it.</summary>
     private void ToggleLogWindow()

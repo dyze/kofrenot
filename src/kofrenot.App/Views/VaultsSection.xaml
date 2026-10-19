@@ -43,6 +43,19 @@
       </StackPanel>
       <TextBlock x:Name="NameStatusText" Margin="110,4,0,0" Opacity="0.7" TextWrapping="Wrap" />
 
+      <!-- Focus the box, then press the shortcut: it shows kofrenot on this vault, or hides it. -->
+      <StackPanel Margin="0,10,0,0" Orientation="Horizontal">
+        <TextBlock Width="110" VerticalAlignment="Center" Text="Hotkey" />
+        <TextBox x:Name="HotkeyBox"
+                 Width="160"
+                 IsReadOnly="True"
+                 IsReadOnlyCaretVisible="True"
+                 ToolTip="Click, then press the shortcut that shows kofrenot on this vault: Ctrl, Alt or Win with a letter, a digit or F1 to F24"
+                 PreviewKeyDown="HotkeyBox_PreviewKeyDown" />
+        <Button x:Name="ClearHotkeyButton" Margin="8,0,0,0" Padding="12,4" Content="None" ToolTip="No hotkey for this vault" Click="ClearHotkeyButton_Click" />
+      </StackPanel>
+      <TextBlock x:Name="HotkeyStatusText" Margin="110,4,0,0" Opacity="0.7" TextWrapping="Wrap" />
+
       <StackPanel Margin="0,10,0,0" Orientation="Horizontal">
         <TextBlock Width="110" VerticalAlignment="Center" Text="Folder" />
         <Button x:Name="ExploreButton" Padding="12,4" Content="Explore to" ToolTip="Opens the vault folder in File Explorer" Click="ExploreButton_Click" />
