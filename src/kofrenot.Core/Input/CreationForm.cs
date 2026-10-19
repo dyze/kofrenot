@@ -36,7 +36,7 @@ public sealed partial class CreationForm
 
     public bool IsLink => _request is LinkRequest;
 
-    public string Title => IsLink ? "Add a link" : "Add a node";
+    public string Title => IsLink ? "Add a link" : Under is { } under ? $"Add a node under “{under.Parent.Name}”" : "Add a node";
 
     /// <summary>The type of the node, or of the left side's node when it is new.</summary>
     /// <exception cref="InvalidOperationException">Set when the type is fixed (<see cref="IsTypeFixed"/>).</exception>

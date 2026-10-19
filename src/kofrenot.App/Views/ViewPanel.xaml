@@ -8,53 +8,94 @@
     <ResourceDictionary Source="SharedStyles.xaml" />
   </UserControl.Resources>
 
-  <Grid Background="Transparent">
-    <TextBlock x:Name="MessageText"
-               MaxWidth="460"
-               HorizontalAlignment="Center"
-               VerticalAlignment="Center"
-               Opacity="0.8"
-               TextAlignment="Center"
-               TextWrapping="Wrap"
-               Visibility="Collapsed" />
+  <Grid>
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="*" />
+    </Grid.RowDefinitions>
 
-    <TreeView x:Name="Tree"
-              Background="Transparent"
-              BorderThickness="0"
-              FontSize="{StaticResource BodyFontSize}"
-              Visibility="Collapsed"
-              KeyDown="Content_KeyDown"
-              MouseDoubleClick="Content_MouseDoubleClick"
-              SelectedItemChanged="Tree_SelectedItemChanged"
-              PreviewMouseRightButtonDown="Tree_PreviewMouseRightButtonDown"
-              PreviewMouseLeftButtonDown="Tree_PreviewMouseLeftButtonDown"
-              PreviewMouseMove="Tree_PreviewMouseMove"
-              AllowDrop="True"
-              DragOver="Tree_DragOver"
-              DragLeave="Tree_DragLeave"
-              Drop="Tree_Drop"
-              ContextMenuOpening="Tree_ContextMenuOpening">
-      <!-- Filled when it opens: copy, cut, paste, delete (ViewPanel.Operations). -->
-      <TreeView.ContextMenu>
-        <ContextMenu />
-      </TreeView.ContextMenu>
-    </TreeView>
+    <!-- The actions on the view (ViewPanel.Actions): New, and in a tree the operations on the node selected. -->
+    <StackPanel x:Name="ActionBar" Margin="0,0,0,8" Orientation="Horizontal" Visibility="Collapsed">
+      <Button x:Name="NewButton" Margin="0,0,4,0" Padding="8,4" Style="{StaticResource FlatButton}" ToolTip="Add a node (in a tree: under the node selected)" Click="New_Click">
+        <StackPanel Orientation="Horizontal">
+          <TextBlock VerticalAlignment="Center" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="12" Text="&#xE710;" />
+          <TextBlock Margin="6,0,0,0" VerticalAlignment="Center" Text="New" />
+        </StackPanel>
+      </Button>
+      <Button x:Name="CutButton" Margin="0,0,4,0" Padding="8,4" Style="{StaticResource FlatButton}" ToolTip="Cut the node selected, to move it (Ctrl+X)" Click="Cut_Click">
+        <StackPanel Orientation="Horizontal">
+          <TextBlock VerticalAlignment="Center" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="12" Text="&#xE8C6;" />
+          <TextBlock Margin="6,0,0,0" VerticalAlignment="Center" Text="Cut" />
+        </StackPanel>
+      </Button>
+      <Button x:Name="CopyButton" Margin="0,0,4,0" Padding="8,4" Style="{StaticResource FlatButton}" ToolTip="Copy the node selected, with everything under it (Ctrl+C)" Click="Copy_Click">
+        <StackPanel Orientation="Horizontal">
+          <TextBlock VerticalAlignment="Center" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="12" Text="&#xE8C8;" />
+          <TextBlock Margin="6,0,0,0" VerticalAlignment="Center" Text="Copy" />
+        </StackPanel>
+      </Button>
+      <Button x:Name="PasteButton" Margin="0,0,4,0" Padding="8,4" Style="{StaticResource FlatButton}" ToolTip="Paste under the node selected: moved when cut, a copy otherwise (Ctrl+V)" Click="Paste_Click">
+        <StackPanel Orientation="Horizontal">
+          <TextBlock VerticalAlignment="Center" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="12" Text="&#xE77F;" />
+          <TextBlock Margin="6,0,0,0" VerticalAlignment="Center" Text="Paste" />
+        </StackPanel>
+      </Button>
+      <Button x:Name="DeleteButton" Margin="0,0,4,0" Padding="8,4" Style="{StaticResource FlatButton}" ToolTip="Delete the node selected, with everything under it (Del)" Click="Delete_Click">
+        <StackPanel Orientation="Horizontal">
+          <TextBlock VerticalAlignment="Center" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="12" Text="&#xE74D;" />
+          <TextBlock Margin="6,0,0,0" VerticalAlignment="Center" Text="Delete" />
+        </StackPanel>
+      </Button>
+    </StackPanel>
 
-    <ListBox x:Name="List"
-             Background="Transparent"
-             BorderThickness="0"
-             FontSize="{StaticResource BodyFontSize}"
-             Visibility="Collapsed"
-             KeyDown="Content_KeyDown"
-             MouseDoubleClick="Content_MouseDoubleClick">
-      <ListBox.ItemTemplate>
-        <DataTemplate>
-          <StackPanel Orientation="Horizontal">
-            <local:NodeVisualView Width="24" Height="24" Margin="0,1,10,1" Visual="{Binding Visual}" />
-            <TextBlock VerticalAlignment="Center" Text="{Binding Node.Name}" />
-          </StackPanel>
-        </DataTemplate>
-      </ListBox.ItemTemplate>
-    </ListBox>
+    <Grid Grid.Row="1" Background="Transparent">
+      <TextBlock x:Name="MessageText"
+                 MaxWidth="460"
+                 HorizontalAlignment="Center"
+                 VerticalAlignment="Center"
+                 Opacity="0.8"
+                 TextAlignment="Center"
+                 TextWrapping="Wrap"
+                 Visibility="Collapsed" />
+
+      <TreeView x:Name="Tree"
+                Background="Transparent"
+                BorderThickness="0"
+                FontSize="{StaticResource BodyFontSize}"
+                Visibility="Collapsed"
+                KeyDown="Content_KeyDown"
+                MouseDoubleClick="Content_MouseDoubleClick"
+                SelectedItemChanged="Tree_SelectedItemChanged"
+                PreviewMouseRightButtonDown="Tree_PreviewMouseRightButtonDown"
+                PreviewMouseLeftButtonDown="Tree_PreviewMouseLeftButtonDown"
+                PreviewMouseMove="Tree_PreviewMouseMove"
+                AllowDrop="True"
+                DragOver="Tree_DragOver"
+                DragLeave="Tree_DragLeave"
+                Drop="Tree_Drop"
+                ContextMenuOpening="Tree_ContextMenuOpening">
+        <!-- Filled when it opens: copy, cut, paste, delete (ViewPanel.Operations). -->
+        <TreeView.ContextMenu>
+          <ContextMenu />
+        </TreeView.ContextMenu>
+      </TreeView>
+
+      <ListBox x:Name="List"
+               Background="Transparent"
+               BorderThickness="0"
+               FontSize="{StaticResource BodyFontSize}"
+               Visibility="Collapsed"
+               KeyDown="Content_KeyDown"
+               MouseDoubleClick="Content_MouseDoubleClick">
+        <ListBox.ItemTemplate>
+          <DataTemplate>
+            <StackPanel Orientation="Horizontal">
+              <local:NodeVisualView Width="24" Height="24" Margin="0,1,10,1" Visual="{Binding Visual}" />
+              <TextBlock VerticalAlignment="Center" Text="{Binding Node.Name}" />
+            </StackPanel>
+          </DataTemplate>
+        </ListBox.ItemTemplate>
+      </ListBox>
+    </Grid>
   </Grid>
 </UserControl>

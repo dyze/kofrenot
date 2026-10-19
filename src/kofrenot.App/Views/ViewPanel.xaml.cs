@@ -54,6 +54,7 @@ public partial class ViewPanel : UserControl
         _view = view;
         _graph = graph;
         _definition = null;
+        _listType = null;
         switch (new ViewPlanner(graph).Load(view).Definition)
         {
             case TreeDefinition definition when new CoreTreeView(graph, definition) is { Root: { } root } tree:
@@ -67,6 +68,7 @@ public partial class ViewPanel : UserControl
                 ShowMessage("The node this tree starts from is not there: removed, or not synced yet.");
                 break;
             case FlatDefinition definition:
+                _listType = graph.Types.FindNodeType(definition.NodeType);
                 var rows = new FlatView(graph, definition).Nodes.Select(node => new ViewRow(node, NodeVisual.Of(graph, node))).ToList();
                 List.ItemsSource = rows;
                 List.SelectedItem = rows.FirstOrDefault(row => row.Node.Id == _selectedNode);
@@ -81,6 +83,8 @@ public partial class ViewPanel : UserControl
                 ShowMessage("This view has no definition yet: ⚙ on its tab says what it shows.");
                 break;
         }
+
+        ShowActions();
     }
 
     /// <summary>Gives the keyboard to the tree or the list, on its selected node (the first one by default).</summary>
@@ -172,6 +176,8 @@ public partial class ViewPanel : UserControl
         {
             _selectedPath = item.Key;
         }
+
+        UpdateActions();
     }
 
     private void Content_KeyDown(object sender, KeyEventArgs e)

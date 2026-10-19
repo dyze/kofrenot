@@ -66,6 +66,7 @@ public partial class MainWindow : Window
         DetailsPanel.EditView = view => _session.EditView(this, view);
         ViewContent.Log = log;
         ViewContent.States = viewStates;
+        ViewContent.CreateNode = (type, under) => _session.CreateNode(this, type, under);
         ViewContent.Write = (changes, action) => _session.Write(this, changes, action);
         ViewContent.Copy = plan => _session.Copy(this, plan);
         ViewContent.ContentExists = version => _session.Current?.HasContent(version) ?? false;

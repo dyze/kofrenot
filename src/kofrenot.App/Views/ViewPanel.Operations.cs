@@ -49,6 +49,7 @@ public partial class ViewPanel
 
         _taken = (item, isCut);
         Log.Debug("View", isCut ? "Node cut" : "Node copied");
+        UpdateActions();
         return true;
     }
 

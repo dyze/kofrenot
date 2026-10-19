@@ -376,7 +376,7 @@ MainWindow ── TabStrip (TabRow) ── Search: input box, results, details
                                 └─ a view: ViewPanel (WPF TreeView, or ListBox) ──Enter──► details, Back ► the view
 ```
 
-- `ViewPanel` builds a `TreeViewItem` per `TreeItem`, with a placeholder child until expanded (children read then). A refresh (`Show`, at each change of the vault) keeps the expanded paths and the selection.
+- `ViewPanel` builds a `TreeViewItem` per `TreeItem`, with a placeholder child until expanded (children read then). A refresh (`Show`, at each change of the vault) keeps the expanded paths (`ViewStates`) and the selection.
 - The details opened from a view go back to it (`NodeDetailsPanel.HomeLabel` names it); selecting another tab leaves them (the note saved).
 - The creation screen's view step (`CreationForm.IsView`, `ViewDraft`): a tree needs its root, found by `ViewDraft.FindRoots` (the search, 8 nodes); `CanLeaveStep` and `CanAdd` wait for it. `ViewsToSave` gives each new view's first `editView`, appended after the plan's changes; the main window then opens it in a tab.
 - Editing a view later: `VaultSession.EditView` (from **Edit…** in the details, `NodeDetailsPanel.View`, or **⚙** on the selected tab, `MainWindow.Tabs`) loads it (`ViewPlanner.Load`: versions, latest definition, conflict), shows `ViewDialog`, then saves `ViewPlanner.Save`: a version replacing every version loaded, or nothing when unchanged. `ViewDraft.Of` turns a saved definition back into a draft (a root gone is to choose again; an unknown type kept by its id); `ViewDraft.Describe` says it in a sentence.
@@ -392,6 +392,7 @@ MainWindow ── TabStrip (TabRow) ── Search: input box, results, details
 
 - A copied note's or dataset's content is written again under the new version: `Vault.WriteCopies(plan.Contents)` first (it touches no memory, so a large dataset can be sealed off the UI thread), then each change is appended (`VaultSession.Copy`). Stopped halfway, it leaves versions of nodes not added: never shown.
 - In the app, `ViewPanel.Operations` keeps the node taken (Ctrl+C or Ctrl+X, in memory, not the Windows clipboard) and pastes it under the selected one (Ctrl+V); Del deletes. `OperationPreview` gives the text shown first (`MessageDialog.Confirm` with its lines): a deletion and a copy are confirmed, a refused move or a copy of content not synced (`Vault.HasContent`) is only told. After a change the tree keeps the target expanded and selected.
+- The bar over a view (`ViewPanel.Actions`): Cut, Copy, Paste and Delete run the same operations, enabled with a node selected (Paste: with one taken too). **New** opens `CreationForm.NewNode` through `VaultSession.CreateNode`: in a tree with `Under` (`ParentLink`: the node selected, or the root, and the tree's link type), whose `LinksToSave` adds the link from it with the new node; in a list with the list's type fixed. The new node is then selected.
 - Drag and drop (`ViewPanel.DragDrop`): the drag starts past the system's minimum distance, carrying the `TreeItem` (format `kofrenot.TreeItem`, inside kofrenot only). Over a node, `MovePlanner.CanMove` gives the cursor (move, or none when refused); Ctrl held is a copy. The drop runs the same move or copy as Ctrl+V.
 
 ### Input

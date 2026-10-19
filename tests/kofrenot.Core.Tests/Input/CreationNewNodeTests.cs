@@ -45,7 +45,7 @@ public sealed class CreationNewNodeTests
     [Fact]
     public void AFixedType_IsTheNodesType_AndCannotChange()
     {
-        var form = CreationForm.NewNode(_graph, TypeCatalog.Note, _clock);
+        var form = CreationForm.NewNode(_graph, TypeCatalog.Note, clock: _clock);
         form.Name = "Memo";
 
         Assert.True(form.IsTypeFixed);
@@ -57,7 +57,7 @@ public sealed class CreationNewNodeTests
     [Fact]
     public void ANewView_StillNeedsItsDefinition()
     {
-        var form = CreationForm.NewNode(_graph, TypeCatalog.View, _clock);
+        var form = CreationForm.NewNode(_graph, TypeCatalog.View, clock: _clock);
 
         form.Name = "Files";
 
@@ -72,5 +72,30 @@ public sealed class CreationNewNodeTests
 
         Assert.False(form.IsNameEditable);
         Assert.Throws<InvalidOperationException>(() => form.Name = "Arrakis");
+    }
+
+    [Fact]
+    public void ANodeUnderAParent_IsLinkedFromIt()
+    {
+        var projects = new Node(Guid.NewGuid(), TypeCatalog.Generic.Id, "Projects", _clock.Now);
+        _graph.Add(projects);
+        var form = CreationForm.NewNode(_graph, under: new ParentLink(projects, TypeCatalog.Contains.Id), clock: _clock);
+        form.Name = "kofrenot";
+
+        var added = Assert.Single(form.Plan.NewNodes);
+        var link = Assert.Single(form.LinksToSave()).Link;
+
+        Assert.Equal("Add a node under “Projects”", form.Title);
+        Assert.Equal((TypeCatalog.Contains.Id, projects.Id, added.Id), (link.Type, link.From, link.To));
+    }
+
+    [Fact]
+    public void WithoutParent_NoLinkIsAdded()
+    {
+        var form = CreationForm.NewNode(_graph, clock: _clock);
+        form.Name = "Dune";
+
+        Assert.Equal("Add a node", form.Title);
+        Assert.Empty(form.LinksToSave());
     }
 }

@@ -128,8 +128,9 @@ public sealed class VaultSession : IDisposable
 
     /// <summary>As <see cref="Create(Window, InputRequest, AddChoices?)"/>, for one new node whose name is typed on the creation screen.</summary>
     /// <param name="type">The new node's type, fixed; chosen on the screen when null.</param>
-    public AddPlan? CreateNode(Window owner, NodeType? type = null) =>
-        Current is { } vault ? Create(owner, vault, CreationForm.NewNode(vault.Graph, type)) : null;
+    /// <param name="under">In a tree: the node it is added under.</param>
+    public AddPlan? CreateNode(Window owner, NodeType? type = null, ParentLink? under = null) =>
+        Current is { } vault ? Create(owner, vault, CreationForm.NewNode(vault.Graph, type, under)) : null;
 
     private AddPlan? Create(Window owner, Vault vault, CreationForm form)
     {
@@ -141,7 +142,7 @@ public sealed class VaultSession : IDisposable
 
         var notes = form.NotesToSave();
         var withNotes = notes.Count > 0 ? $", {notes.Count} with content" : string.Empty;
-        var added = Append(owner, vault, [.. form.Plan.Changes, .. form.ViewsToSave()], form.Plan switch
+        var added = Append(owner, vault, [.. form.Plan.Changes, .. form.LinksToSave(), .. form.ViewsToSave()], form.Plan switch
         {
             LinkPlan link => $"Link added ({link.Type.Id}, {(link.Left.IsNew ? 1 : 0) + (link.Right?.IsNew == true ? 1 : 0)} new nodes{withNotes})",
             NodePlan node => $"Node added ({node.Type.Id}{(node.NeedsConfirmation ? ", a duplicate" : string.Empty)}{withNotes})",
