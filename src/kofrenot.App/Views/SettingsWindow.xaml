@@ -139,36 +139,7 @@
         <StackPanel Tag="{x:Static settings:SettingsCatalog.VaultTab}">
           <TextBlock Text="{x:Static settings:SettingsCatalog.VaultTab}" Style="{StaticResource SectionHeader}" />
 
-          <StackPanel Tag="{x:Static settings:SettingsCatalog.VaultFolderId}" Margin="0,10,0,0">
-            <TextBlock Text="Vault folder" />
-            <Grid Margin="0,4,0,0">
-              <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="Auto" />
-              </Grid.ColumnDefinitions>
-              <TextBox x:Name="VaultFolderBox" IsReadOnly="True" VerticalAlignment="Center" />
-              <Button Grid.Column="1" Margin="8,0,0,0" Padding="12,4" Content="Choose..." Click="ChooseVaultButton_Click" />
-              <Button x:Name="ExploreVaultButton"
-                      Grid.Column="2"
-                      Margin="8,0,0,0"
-                      Padding="12,4"
-                      Content="Explore to"
-                      ToolTip="Opens the vault folder in File Explorer"
-                      Click="ExploreVaultButton_Click" />
-            </Grid>
-            <TextBlock x:Name="VaultStatusText" Margin="0,6,0,0" Opacity="0.7" TextWrapping="Wrap" />
-          </StackPanel>
-
-          <StackPanel Tag="{x:Static settings:SettingsCatalog.RememberedPassPhraseId}" Margin="0,16,0,0" Orientation="Horizontal">
-            <TextBlock x:Name="RememberedText" VerticalAlignment="Center" />
-            <Button x:Name="ForgetButton"
-                    Margin="12,0,0,0"
-                    Padding="12,4"
-                    Content="Forget"
-                    ToolTip="The pass phrase will be asked at the next start"
-                    Click="ForgetButton_Click" />
-          </StackPanel>
+          <local:VaultsSection x:Name="Vaults" Tag="{x:Static settings:SettingsCatalog.VaultsId}" />
         </StackPanel>
 
         <StackPanel Tag="{x:Static settings:SettingsCatalog.LinkTypesTab}">

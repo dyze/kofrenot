@@ -22,8 +22,7 @@ public static class SettingsCatalog
 
     public const string HotkeyId = "Hotkey";
     public const string MainWindowPositionId = "MainWindowPosition";
-    public const string VaultFolderId = "VaultFolder";
-    public const string RememberedPassPhraseId = "RememberedPassPhrase";
+    public const string VaultsId = "Vaults";
     public const string LinkAliasesId = "LinkAliases";
     public const string ThemeId = "Theme";
     public const string DebugLoggingId = "DebugLogging";
@@ -39,8 +38,9 @@ public static class SettingsCatalog
     [
         new(HotkeyId, GeneralTab, "Hotkey that shows kofrenot", ["shortcut", "keyboard", "summon", "ctrl", "alt", "global"]),
         new(MainWindowPositionId, GeneralTab, "Main window position", ["place", "where", "mouse", "center", "centre", "monitor", "screen", "window"]),
-        new(VaultFolderId, VaultTab, "Vault folder", ["database", "folder", "sync", "dropbox", "share", "nodes", "open", "create"]),
-        new(RememberedPassPhraseId, VaultTab, "Remembered pass phrase", ["password", "passphrase", "forget", "remember", "unlock", "secret"]),
+        new(VaultsId, VaultTab, "Vaults: name, folder, remembered pass phrase", [
+            "database", "folder", "sync", "dropbox", "share", "nodes", "open", "create", "add", "remove", "several", "order", "name", "rename",
+            "password", "passphrase", "forget", "remember", "unlock", "secret"]),
         new(LinkAliasesId, LinkTypesTab, "Link types and their aliases", ["alias", "phrase", "relates", "contains", "instance", "reverse", "input"]),
         new(ThemeId, AppearanceTab, "Theme", ["dark", "light", "mode", "color", "colour"]),
         new(DebugLoggingId, LoggingTab, "Detailed (debug) logging", ["log", "verbose", "trace"]),

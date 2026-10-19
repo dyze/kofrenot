@@ -1,0 +1,64 @@
+<UserControl x:Class="Kofrenot.UI.Views.VaultsSection"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <!-- Settings > Vault: the registered vaults, in the order of the main window's vault box. The
+       buttons act on the vault chosen in the list: its name (only when open), its folder, its
+       remembered pass phrase. -->
+  <StackPanel Margin="0,10,0,0">
+    <TextBlock x:Name="HintText"
+               Margin="0,0,0,8"
+               Opacity="0.7"
+               TextWrapping="Wrap"
+               Text="No vault yet. Add one: an empty folder becomes a new vault, encrypted with a pass phrase; a folder holding a kofrenot vault adds it." />
+    <Grid>
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="*" />
+        <ColumnDefinition Width="Auto" />
+      </Grid.ColumnDefinitions>
+
+      <ListBox x:Name="VaultList" Height="150" SelectionChanged="VaultList_SelectionChanged">
+        <ListBox.ItemTemplate>
+          <DataTemplate>
+            <StackPanel Margin="0,2">
+              <TextBlock FontWeight="SemiBold" Text="{Binding Title}" />
+              <TextBlock Opacity="0.7" Text="{Binding Folder}" TextTrimming="CharacterEllipsis" />
+            </StackPanel>
+          </DataTemplate>
+        </ListBox.ItemTemplate>
+      </ListBox>
+
+      <StackPanel Grid.Column="1" Margin="8,0,0,0">
+        <Button Padding="12,4" Content="Add..." ToolTip="An empty folder becomes a new vault; a folder holding a kofrenot vault adds it" Click="AddButton_Click" />
+        <Button x:Name="RemoveButton" Margin="0,6,0,0" Padding="12,4" Content="Remove" ToolTip="Takes the vault out of the list: its folder is not touched" Click="RemoveButton_Click" />
+        <Button x:Name="UpButton" Margin="0,6,0,0" Padding="12,4" Content="Up" Click="UpButton_Click" />
+        <Button x:Name="DownButton" Margin="0,6,0,0" Padding="12,4" Content="Down" Click="DownButton_Click" />
+      </StackPanel>
+    </Grid>
+
+    <StackPanel x:Name="DetailsPanel" Margin="0,12,0,0">
+      <StackPanel Orientation="Horizontal">
+        <TextBlock Width="110" VerticalAlignment="Center" Text="Name" />
+        <TextBox x:Name="NameBox" Width="220" KeyDown="NameBox_KeyDown" TextChanged="NameBox_TextChanged" />
+        <Button x:Name="RenameButton" Margin="8,0,0,0" Padding="12,4" Content="Rename" Click="RenameButton_Click" />
+      </StackPanel>
+      <TextBlock x:Name="NameStatusText" Margin="110,4,0,0" Opacity="0.7" TextWrapping="Wrap" />
+
+      <StackPanel Margin="0,10,0,0" Orientation="Horizontal">
+        <TextBlock Width="110" VerticalAlignment="Center" Text="Folder" />
+        <Button x:Name="ExploreButton" Padding="12,4" Content="Explore to" ToolTip="Opens the vault folder in File Explorer" Click="ExploreButton_Click" />
+      </StackPanel>
+
+      <TextBlock x:Name="StatusText" Margin="0,10,0,0" Opacity="0.7" TextWrapping="Wrap" />
+
+      <StackPanel Margin="0,10,0,0" Orientation="Horizontal">
+        <TextBlock x:Name="RememberedText" VerticalAlignment="Center" />
+        <Button x:Name="ForgetButton"
+                Margin="12,0,0,0"
+                Padding="12,4"
+                Content="Forget"
+                ToolTip="The pass phrase will be asked when the vault is opened again"
+                Click="ForgetButton_Click" />
+      </StackPanel>
+    </StackPanel>
+  </StackPanel>
+</UserControl>

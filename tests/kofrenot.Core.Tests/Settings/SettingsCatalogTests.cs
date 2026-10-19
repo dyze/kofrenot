@@ -79,8 +79,9 @@ public class SettingsCatalogTests
 
     [Theory]
     [InlineData("shortcut", SettingsCatalog.HotkeyId)]
-    [InlineData("dropbox", SettingsCatalog.VaultFolderId)]
-    [InlineData("password", SettingsCatalog.RememberedPassPhraseId)]
+    [InlineData("dropbox", SettingsCatalog.VaultsId)]
+    [InlineData("password", SettingsCatalog.VaultsId)]
+    [InlineData("rename", SettingsCatalog.VaultsId)]
     public void Find_FindsTheVaultAndHotkeySettings(string query, string id)
     {
         Assert.Equal(id, Assert.Single(SettingsCatalog.Find(query)).Id);

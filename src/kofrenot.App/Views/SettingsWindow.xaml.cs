@@ -45,7 +45,6 @@ public partial class SettingsWindow : Window
     private readonly SettingsStore _settings;
     private readonly LogHub _logHub;
     private readonly ILog _log;
-    private int _measuringSize;
     private readonly Action<Window> _openLog;
     private readonly UpdateChecker _updates;
     private readonly VaultSession _session;
@@ -53,7 +52,8 @@ public partial class SettingsWindow : Window
     private string _changelogPath = string.Empty;
     private bool _loading;
 
-    /// <param name="session">The vault: its folder can be changed here, and its remembered pass phrase forgotten.</param>
+    /// <param name="session">The vaults: added, removed, ordered and named here, and their remembered pass phrases forgotten.</param>
+    /// <param name="whyNotSwitch">Why the open vault cannot be closed now (a file being imported, a note not saved), or null.</param>
     /// <param name="applyHotkey">Registers a new hotkey; false when another program uses it (the old one then stays).</param>
     /// <param name="openLog">Opens the log window in front of this dialog.</param>
     public SettingsWindow(
@@ -62,6 +62,7 @@ public partial class SettingsWindow : Window
         AppFiles files,
         UpdateChecker updates,
         VaultSession session,
+        Func<string?> whyNotSwitch,
         Func<Hotkey, bool> applyHotkey,
         Action<Window> openLog)
     {
@@ -73,7 +74,12 @@ public partial class SettingsWindow : Window
         _session = session;
         _applyHotkey = applyHotkey;
         InitializeComponent();
-        ShowVault();
+        Vaults.Log = _log;
+        Vaults.WhyNotSwitch = whyNotSwitch;
+        Vaults.Session = session;
+        LinkTypes.Session = session;
+        session.Changed += ShowVault;
+        Closed += (_, _) => session.Changed -= ShowVault;
 
         ThemeComboBox.ItemsSource = ThemeOptions;
         PositionComboBox.ItemsSource = PositionOptions;
@@ -518,112 +524,11 @@ public partial class SettingsWindow : Window
         _ => null,
     };
 
-    /// <summary>The Vault tab: the folder, whether the vault is open, and its remembered pass phrase.</summary>
+    /// <summary>The Vault and Link types tabs, shown again when the vault changes (opened, switched, named).</summary>
     private void ShowVault()
     {
-        VaultFolderBox.Text = _session.Folder ?? string.Empty;
-        ExploreVaultButton.IsEnabled = _session.Folder is not null;
-        VaultStatusText.Text = (_session.Folder, _session.Current) switch
-        {
-            (null, _) => "None chosen yet. An empty folder becomes a new vault; a folder holding a kofrenot vault opens it.",
-            (_, null) when _session.NewerFormat is { } format => $"Closed: written by a newer kofrenot (vault format {format}). Install the latest kofrenot to open it.",
-            (_, null) when _session.OlderFormat is { } older => $"Not used: in format {older}, it needs an upgrade to format {VaultFormat.Current}. Upgrade it from the main window.",
-            (_, null) => "Locked: the pass phrase was not given.",
-            (_, { } vault) => $"{OpenText(vault)}, measuring its size…",
-        };
-        if (_session is { Current: { } open, Folder: { } openFolder })
-        {
-            _ = ShowVaultSize(open, openFolder);
-        }
-
-        var remembered = _session.IsRemembered;
-        RememberedText.Text = remembered ? "The pass phrase is remembered on this computer." : "The pass phrase is not remembered.";
-        ForgetButton.IsEnabled = remembered;
+        Vaults.Show();
         LinkTypes.Session = _session;
-    }
-
-    private static string OpenText(Vault vault) => $"Open: {vault.Graph.Nodes.Count} nodes, {vault.Graph.Links.Count} links";
-
-    /// <summary>Measures the vault folder off the UI thread (it may be a slow file share), then adds it to the status.</summary>
-    private async Task ShowVaultSize(Vault vault, string folder)
-    {
-        var measuring = ++_measuringSize;
-        string size;
-        try
-        {
-            size = (await Task.Run(() => VaultFolder.SizeOf(folder))).Describe();
-        }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-        {
-            _log.Warn("Settings", $"The vault folder cannot be measured ({ex.GetType().Name})");
-            size = "its size cannot be measured";
-        }
-
-        // The tab may show another vault, or a newer measure, by now.
-        if (measuring == _measuringSize && _session.Current == vault)
-        {
-            VaultStatusText.Text = $"{OpenText(vault)} · {size}.";
-        }
-    }
-
-    private void ChooseVaultButton_Click(object sender, RoutedEventArgs e)
-    {
-        var dialog = new Microsoft.Win32.OpenFolderDialog { Title = "Vault folder" };
-        if (_session.Folder is { } folder && Directory.Exists(folder))
-        {
-            dialog.InitialDirectory = folder;
-        }
-
-        if (dialog.ShowDialog(this) != true || dialog.FolderName == _session.Folder)
-        {
-            return;
-        }
-
-        try
-        {
-            _session.SwitchTo(this, dialog.FolderName);
-        }
-        catch (Exception ex) when (ex is UnauthorizedAccessException or IOException)
-        {
-            _log.Error("Settings", "Cannot change the vault folder", ex);
-            ShowMessage(ex.Message);
-        }
-
-        ShowVault();
-    }
-
-    private void ExploreVaultButton_Click(object sender, RoutedEventArgs e)
-    {
-        if (_session.Folder is not { } folder)
-        {
-            return;
-        }
-
-        try
-        {
-            Process.Start(new ProcessStartInfo("explorer.exe", $"\"{folder}\""));
-            _log.Info("Action", $"Explore to the vault folder: {folder}");
-        }
-        catch (Exception ex) when (ex is System.ComponentModel.Win32Exception or IOException)
-        {
-            _log.Error("Action", $"Cannot open {folder}", ex);
-            ShowMessage(ex.Message);
-        }
-    }
-
-    private void ForgetButton_Click(object sender, RoutedEventArgs e)
-    {
-        try
-        {
-            _session.Forget();
-        }
-        catch (Exception ex) when (ex is UnauthorizedAccessException or IOException)
-        {
-            _log.Error("Settings", "Cannot forget the pass phrase", ex);
-            ShowMessage(ex.Message);
-        }
-
-        ShowVault();
     }
 
     private void ShowMessage(string message) => MessageDialog.Inform(this, message);

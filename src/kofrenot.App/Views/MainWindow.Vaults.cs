@@ -62,13 +62,19 @@ public partial class MainWindow
     }
 
     /// <summary>
-    /// Switches to another registered vault, the note shown saved first (as when the window is
-    /// hidden); not while a file is being imported, or a note could not be saved.
+    /// Why the open vault cannot be closed for another now: a file is being imported, or the note
+    /// shown could not be saved (it is saved first, as when the window is hidden). Null otherwise.
     /// </summary>
-    private void SwitchTo(VaultLocation target)
+    public string? WhyNotSwitch()
     {
         DetailsPanel.LeaveNote();
-        if (QuitRefusal.Reason(DetailsPanel.UnsavedNote, _session.ImportsRunning, QuitRefusal.SwitchVaults) is { } reason)
+        return QuitRefusal.Reason(DetailsPanel.UnsavedNote, _session.ImportsRunning, QuitRefusal.SwitchVaults);
+    }
+
+    /// <summary>Switches to another registered vault, unless <see cref="WhyNotSwitch"/>.</summary>
+    private void SwitchTo(VaultLocation target)
+    {
+        if (WhyNotSwitch() is { } reason)
         {
             _log.Info("Action", "Switch vaults: refused, a note is not saved or a file is being imported");
             ShowVaults();

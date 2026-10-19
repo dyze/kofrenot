@@ -83,7 +83,7 @@ public partial class App : Application
             new ViewStates(files.ViewStates, log),
             createSettings: () =>
             {
-                var created = new SettingsWindow(settings, logHub, files, updates, session, wanted => ApplyHotkey(wanted, settings.Hotkey), openLog: OpenLogWindow);
+                var created = new SettingsWindow(settings, logHub, files, updates, session, () => _window?.WhyNotSwitch(), wanted => ApplyHotkey(wanted, settings.Hotkey), openLog: OpenLogWindow);
                 placer.Attach(created, "Settings", RestoreMode.SizeOverOwner);
                 return created;
             },

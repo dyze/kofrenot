@@ -46,31 +46,11 @@ public sealed partial class VaultSession : IDisposable
     /// <summary>The open vault, or null (none chosen, locked, or cannot be opened).</summary>
     public Vault? Current { get; private set; }
 
-    /// <summary>The registered vaults, in the user's order.</summary>
-    public IReadOnlyList<RegisteredVault> Vaults => _settings.Vaults.Vaults;
-
-    /// <summary>The vault to open, or open; null when none is registered.</summary>
-    public RegisteredVault? Selected => _settings.SelectedVault is { } location ? _settings.Vaults.Find(location) : null;
-
-    public string? Folder => Selected?.Location.Folder;
-
-    /// <summary>
-    /// The name a vault is shown by: its name when open, else the last one read in it on this
-    /// computer, else its folder's name.
-    /// </summary>
-    public string NameOf(RegisteredVault vault) =>
-        (Current is { } open && open.Id == vault.Id ? open.Graph.VaultName : null)
-        ?? (vault.Id is { } id ? _names.Recall(id) : null)
-        ?? vault.Location.FolderName;
-
     /// <summary>A file is being imported into this dataset (<see cref="SaveDataset"/>).</summary>
     public bool IsImporting(Guid dataset) => _importing.Contains(dataset);
 
     /// <summary>How many files are being imported (<see cref="SaveDataset"/>).</summary>
     public int ImportsRunning => _importing.Count;
-
-    /// <summary>Whether the open vault's key is remembered on this computer.</summary>
-    public bool IsRemembered => Current is { } vault && _keys.Has(vault.Id);
 
     /// <summary>
     /// The format of the vault when it was written by a newer kofrenot: it stays closed until
@@ -116,48 +96,6 @@ public sealed partial class VaultSession : IDisposable
         {
             _log.Warn(Category, $"The vault folder cannot be watched ({ex.Message}): changes of other apps are read when the window is shown");
         }
-    }
-
-    /// <summary>Uses another folder: registered when it is not, then opened as <see cref="SwitchTo(Window, VaultLocation)"/>.</summary>
-    public void SwitchTo(Window owner, string folder)
-    {
-        var location = new VaultLocation(folder);
-        if (_settings.Vaults.Find(location) is null)
-        {
-            _settings.SetVaults(_settings.Vaults.Add(new RegisteredVault(location)));
-            _log.Info("Settings", $"Vault registered: {folder}");
-        }
-
-        SwitchTo(owner, location);
-    }
-
-    /// <summary>
-    /// Closes the open vault, then opens the registered one at <paramref name="target"/>, selected
-    /// from now on. When it cannot be opened (its pass phrase cancelled, not a vault, an error),
-    /// the vault open before is used again.
-    /// </summary>
-    public void SwitchTo(Window owner, VaultLocation target)
-    {
-        if (target == _settings.SelectedVault && (Current is not null || _notUpgraded is not null))
-        {
-            return;
-        }
-
-        var (before, beforeVault) = (_settings.SelectedVault, Current);
-        Close();
-        _settings.SelectVault(target);
-        _log.Info("Action", $"Switch to vault {Selected?.Id?.ToString() ?? "not opened yet"}");
-        Open(owner);
-        if (Current is not null || _notUpgraded is not null || NewerFormat is not null || before is null || beforeVault is null)
-        {
-            return;
-        }
-
-        _log.Info(Category, $"Vault {beforeVault.Id} used again");
-        _settings.SelectVault(before);
-        Use(owner, before.Folder, beforeVault);
-        Refresh();
-        Changed?.Invoke();
     }
 
     /// <summary>Reads the changes other apps have added. A change written by a newer kofrenot closes the vault.</summary>
@@ -383,34 +321,6 @@ public sealed partial class VaultSession : IDisposable
         {
             KeepName();
             Changed?.Invoke();
-        }
-    }
-
-    /// <summary>Keeps the open vault's name on this computer, to show it while the vault is locked.</summary>
-    private void KeepName()
-    {
-        if (Current is { Graph.VaultName: { } name } vault && name != _keptName)
-        {
-            _names.Remember(vault.Id, name);
-            _keptName = name;
-        }
-    }
-
-    /// <summary>Records the selected vault's id, read in its header, when it is not known yet (a vault of an earlier version).</summary>
-    private void Identify(VaultHeader header)
-    {
-        if (Selected is { Id: null } selected && _settings.Vaults.Find(header.Id) is null)
-        {
-            _settings.SetVaults(_settings.Vaults.With(selected.Location, vault => vault with { Id = header.Id }));
-        }
-    }
-
-    /// <summary>Forgets the open vault's remembered key: its pass phrase is asked at the next start.</summary>
-    public void Forget()
-    {
-        if (Current is { } vault)
-        {
-            _keys.Forget(vault.Id);
         }
     }
 

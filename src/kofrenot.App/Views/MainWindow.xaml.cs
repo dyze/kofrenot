@@ -140,7 +140,7 @@ public partial class MainWindow : Window
         VaultText.ToolTip = _session.Folder;
         if (_session.Folder is null)
         {
-            StateText.Text = "No vault yet. Choose its folder in Settings > Vault: an empty folder becomes a new vault, encrypted with a pass phrase.";
+            StateText.Text = "No vault yet. Add one in Settings > Vault: an empty folder becomes a new vault, encrypted with a pass phrase.";
             StateButton.Content = "Open settings";
         }
         else if (_session.NewerFormat is { } format)
