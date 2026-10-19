@@ -39,10 +39,19 @@ public sealed partial class CreationForm
     public string Title => IsLink ? "Add a link" : "Add a node";
 
     /// <summary>The type of the node, or of the left side's node when it is new.</summary>
+    /// <exception cref="InvalidOperationException">Set when the type is fixed (<see cref="IsTypeFixed"/>).</exception>
     public NodeType LeftType
     {
         get => _choices.LeftType ?? TypeCatalog.Generic;
-        set => Replan(_request, _choices with { LeftType = value });
+        set
+        {
+            if (IsTypeFixed)
+            {
+                throw new InvalidOperationException("The type of this node is fixed.");
+            }
+
+            Replan(_request, _choices with { LeftType = value });
+        }
     }
 
     /// <summary>The type of the right side's node when it is new.</summary>
@@ -68,7 +77,7 @@ public sealed partial class CreationForm
     /// <summary>What Add does, or why it cannot.</summary>
     public string Status => Plan is LinkPlan link && _text.Problem(link) is { } problem
         ? problem
-        : $"Adds {_text.Additions(Plan)}.";
+        : HasName ? $"Adds {_text.Additions(Plan)}." : "Type its name.";
 
     /// <summary>A node whose name exists already: Add makes another one. Null otherwise.</summary>
     public string? Warning => PlanText.Duplicate(Plan) is { } duplicate

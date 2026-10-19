@@ -21,8 +21,8 @@ public sealed partial class CreationForm
     /// <summary>False on a new view's step while its definition is not complete.</summary>
     public bool CanLeaveStep => Step.Side is not { } side || !IsView(side) || _views[side].Definition is not null;
 
-    /// <summary>The plan can be added, and every new view has its definition.</summary>
-    public bool CanAdd => Plan.CanAdd && NewSides.All(side => !IsView(side) || _views[side].Definition is not null);
+    /// <summary>The plan can be added, its node has a name, and every new view has its definition.</summary>
+    public bool CanAdd => Plan.CanAdd && HasName && NewSides.All(side => !IsView(side) || _views[side].Definition is not null);
 
     /// <summary>The first version of each new view, as <see cref="NotesToSave"/>.</summary>
     public IReadOnlyList<ViewEdited> ViewsToSave() =>

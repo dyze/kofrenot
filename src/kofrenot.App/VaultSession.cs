@@ -123,14 +123,16 @@ public sealed class VaultSession : IDisposable
     /// says. The plan added; null when no vault is open, or the user cancels, or it cannot be written.
     /// </summary>
     /// <param name="choices">The homonyms already chosen (by the input box); the types default to generic.</param>
-    public AddPlan? Create(Window owner, InputRequest request, AddChoices? choices = null)
-    {
-        if (Current is not { } vault)
-        {
-            return null;
-        }
+    public AddPlan? Create(Window owner, InputRequest request, AddChoices? choices = null) =>
+        Current is { } vault ? Create(owner, vault, new CreationForm(vault.Graph, request, choices)) : null;
 
-        var form = new CreationForm(vault.Graph, request, choices);
+    /// <summary>As <see cref="Create(Window, InputRequest, AddChoices?)"/>, for one new node whose name is typed on the creation screen.</summary>
+    /// <param name="type">The new node's type, fixed; chosen on the screen when null.</param>
+    public AddPlan? CreateNode(Window owner, NodeType? type = null) =>
+        Current is { } vault ? Create(owner, vault, CreationForm.NewNode(vault.Graph, type)) : null;
+
+    private AddPlan? Create(Window owner, Vault vault, CreationForm form)
+    {
         if (!CreationDialog.Ask(owner, form))
         {
             _log.Info("Action", "Creation cancelled");

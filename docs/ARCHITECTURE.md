@@ -410,6 +410,7 @@ text ──InputParser──► NodeRequest(name) | LinkRequest(left, verb, righ
 
 - `VaultSession.Create(owner, request, choices)` opens the creation dialog over any window, so later features can reuse it. It returns false when cancelled or not written.
 - The dialog only shows a `CreationForm`. Each type change makes a new plan, so a different link type can turn `AlreadyLinked` into a link that can be added. Only a new node gets a step (`CreationForm.Steps`): an existing node keeps its type.
+- A creation without typed text (`CreationForm.NewNode`, from **New view…**) is one node request: `IsNameEditable`, the name typed on the screen (`Name`; `CanAdd` waits for one), and with a type given, `IsTypeFixed`: the type list is hidden, and changing it throws.
 - Nothing is written before the last step. `NotesToSave` gives the first version of each new note with content, for its `NodeAdded`, and `DatasetsToSave` each new dataset's with a file chosen (by a file dialog or a drop on its step); the dialog asks before discarding typed content or a chosen file.
 - The types offered come from `TypeCatalog`: node type *generic*; link types *relates to* (symmetric), *contains* and *is a*. The creation screen offers each link type both ways (`TypeCatalog.Verbs`): a `LinkVerb` is a type read forward or reverse, and a reverse verb links from the right node to the left one.
 

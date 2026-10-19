@@ -33,7 +33,7 @@
       <TextBlock x:Name="StepText" HorizontalAlignment="Right" VerticalAlignment="Center" Style="{StaticResource SecondaryText}" />
     </Grid>
 
-    <!-- A new node: its name, its type, and the content of a note. -->
+    <!-- A new node: its name (typed here when nothing was typed before), its type (unless fixed), and the content of a note. -->
     <StackPanel x:Name="NodePanel" Grid.Row="1" Margin="0,14,0,0">
       <Grid>
         <Grid.ColumnDefinitions>
@@ -42,7 +42,12 @@
         </Grid.ColumnDefinitions>
         <StackPanel VerticalAlignment="Center">
           <TextBlock x:Name="NodeName" Style="{StaticResource TitleText}" />
-          <TextBlock Style="{StaticResource SecondaryText}" Text="New node" />
+          <TextBox x:Name="NameBox"
+                   Margin="0,0,12,4"
+                   FontSize="{StaticResource BodyFontSize}"
+                   Visibility="Collapsed"
+                   TextChanged="NameBox_TextChanged" />
+          <TextBlock x:Name="NewText" Style="{StaticResource SecondaryText}" Text="New node" />
         </StackPanel>
         <!-- The node types, each with its icon: Up/Down or a click choose one. -->
         <ListBox x:Name="TypeBox"

@@ -34,6 +34,10 @@ public partial class CreationDialog : Window
         _typeChoices = form.Types.NodeTypes.Select(type => new TypeChoice(type, NodeVisual.OfType(type.Id))).ToList();
         TypeBox.ItemsSource = _typeChoices;
         LinkTypeBox.ItemsSource = form.Types.Verbs;
+        NodeName.Visibility = form.IsNameEditable ? Visibility.Collapsed : Visibility.Visible;
+        NameBox.Visibility = form.IsNameEditable ? Visibility.Visible : Visibility.Collapsed;
+        TypeBox.Visibility = form.IsTypeFixed ? Visibility.Collapsed : Visibility.Visible;
+        NewText.Text = form.IsTypeFixed ? $"New node ({form.LeftType.Name})" : "New node";
         ViewEditor.Setup(form.Types, form.FindRoots);
         ViewEditor.Changed += ViewEditor_Changed;
         ContentBox.Edited += ContentBox_Edited;
@@ -63,6 +67,10 @@ public partial class CreationDialog : Window
         if (StepSide is null)
         {
             LinkTypeBox.Focus();
+        }
+        else if (_form.IsNameEditable)
+        {
+            NameBox.Focus();
         }
         else
         {
@@ -137,6 +145,15 @@ public partial class CreationDialog : Window
                 : StepSide is { } datasetSide && _form.IsDataset(datasetSide)
                     ? "Choose its file, or drop it here; it can also be imported later. Enter: next step."
                     : "Enter: next step.";
+
+    private void NameBox_TextChanged(object sender, TextChangedEventArgs e)
+    {
+        if (_form.IsNameEditable)
+        {
+            _form.Name = NameBox.Text;
+            ShowForm();
+        }
+    }
 
     private void TypeBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {

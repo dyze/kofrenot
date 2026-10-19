@@ -122,7 +122,7 @@ public partial class MainWindow
         }
     }
 
-    /// <summary>+ lists the views not open yet: choosing one opens it in a new tab.</summary>
+    /// <summary>+ lists the views not open yet, then New view…: choosing one opens it in a new tab.</summary>
     private void AddTab_Click(object sender, RoutedEventArgs e)
     {
         if (_session.Current is not { } vault)
@@ -139,12 +139,25 @@ public partial class MainWindow
             menu.Items.Add(item);
         }
 
-        if (menu.Items.Count == 0)
+        if (menu.Items.Count > 0)
         {
-            menu.Items.Add(new MenuItem { Header = "No other view: add a node of type View", IsEnabled = false });
+            menu.Items.Add(new Separator());
         }
 
+        var create = new MenuItem { Header = "New view…" };
+        create.Click += (_, _) => CreateView();
+        menu.Items.Add(create);
         menu.IsOpen = true;
+    }
+
+    /// <summary>New view…: the creation screen for a view, its name typed there; it then opens in a tab.</summary>
+    private void CreateView()
+    {
+        _log.Info("Action", "New view");
+        if (_session.CreateNode(this, TypeCatalog.View) is { } added && added.NewNodes.FirstOrDefault() is { } view)
+        {
+            OpenTab(view);
+        }
     }
 
     private void ViewContent_OpenNode(Node node) => OpenDetails(node, from: null);
