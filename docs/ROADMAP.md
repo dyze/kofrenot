@@ -2,15 +2,15 @@
 
 Scope of each planned version. Implemented features move to [CHANGELOG.md](../CHANGELOG.md). The goal, principles, non-goals and open questions are in [GOAL.md](GOAL.md). The features are sorted by priority.
 
-| Version | Status      | Theme                                                                              |
-| ------- | ----------- | ---------------------------------------------------------------------------------- |
-| 0.1     | Released    | Application shell; nodes and links typed in one box, stored in an encrypted folder |
-| 0.2     | Released    | Notes: link types, notes with content, pinned and recent nodes                     |
-| 0.3     | Released    | Datasets: files stored in the vault, read on demand                                |
-| 0.4     | Released    | Views: flat and tree views over the graph, shown as tabs                           |
-| 0.5     | Released    | Vaults: several vaults, a hot key per vault; change types, link nodes              |
-| 0.6     | To define   | Server: vaults stored on a web server, shared with other users                     |
-| 0.7     | To define   | Editing: restore versions, drop files                                              |
+| Version | Status    | Theme                                                                              |
+| ------- | --------- | ---------------------------------------------------------------------------------- |
+| 0.1     | Released  | Application shell; nodes and links typed in one box, stored in an encrypted folder |
+| 0.2     | Released  | Notes: link types, notes with content, pinned and recent nodes                     |
+| 0.3     | Released  | Datasets: files stored in the vault, read on demand                                |
+| 0.4     | Released  | Views: flat and tree views over the graph, shown as tabs                           |
+| 0.5     | Released  | Vaults: several vaults, a hot key per vault; change types, link nodes              |
+| 0.6     | To define | Server: vaults stored on a web server, shared with other users                     |
+| 0.7     | To define | Editing: restore versions, drop files                                              |
 
 ## 0.6 (to define)
 Design: [SERVER-CONCEPT.md](SERVER-CONCEPT.md). Decisions: [GOAL.md](GOAL.md#decisions).
@@ -30,3 +30,5 @@ Design: [SERVER-CONCEPT.md](SERVER-CONCEPT.md). Decisions: [GOAL.md](GOAL.md#dec
 
 ## Later
 1. **Pack vault.** Pack a vault to reduce its size and number of files (needs deletes on the server).
+2. **Re-encrypt on pack.** Packed files are encrypted again with the latest vault key, so old key epochs can be dropped ([Rotation](SERVER-CONCEPT.md#rotation)).
+3. **Move a vault between folder and server.** A folder vault is uploaded to a new server store (or a server vault saved to a folder) without re-encrypting its files: its vault key is wrapped for the account's identity, and its id is kept.
