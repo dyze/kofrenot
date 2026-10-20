@@ -20,7 +20,7 @@ public class SettingsCatalogTests
     public void Tabs_AreInTheirDisplayOrder()
     {
         Assert.Equal(
-            new[] { SettingsCatalog.GeneralTab, SettingsCatalog.VaultTab, SettingsCatalog.LinkTypesTab, SettingsCatalog.AppearanceTab, SettingsCatalog.LoggingTab, SettingsCatalog.AboutTab },
+            new[] { SettingsCatalog.GeneralTab, SettingsCatalog.KeyBindingsTab, SettingsCatalog.VaultTab, SettingsCatalog.LinkTypesTab, SettingsCatalog.AppearanceTab, SettingsCatalog.LoggingTab, SettingsCatalog.AboutTab },
             SettingsCatalog.Tabs);
     }
 
@@ -78,7 +78,8 @@ public class SettingsCatalogTests
     }
 
     [Theory]
-    [InlineData("shortcut", SettingsCatalog.HotkeyId)]
+    [InlineData("summon", SettingsCatalog.HotkeyId)]
+    [InlineData("bindings", SettingsCatalog.KeyBindingsId)]
     [InlineData("dropbox", SettingsCatalog.VaultsId)]
     [InlineData("password", SettingsCatalog.VaultsId)]
     [InlineData("rename", SettingsCatalog.VaultsId)]

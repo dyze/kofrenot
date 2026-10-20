@@ -14,6 +14,7 @@ public sealed record SettingInfo(string Id, string Tab, string Label, IReadOnlyL
 public static class SettingsCatalog
 {
     public const string GeneralTab = "General";
+    public const string KeyBindingsTab = "Key bindings";
     public const string VaultTab = "Vault";
     public const string LinkTypesTab = "Link types";
     public const string AppearanceTab = "Appearance";
@@ -22,6 +23,7 @@ public static class SettingsCatalog
 
     public const string HotkeyId = "Hotkey";
     public const string MainWindowPositionId = "MainWindowPosition";
+    public const string KeyBindingsId = "KeyBindings";
     public const string VaultsId = "Vaults";
     public const string LinkAliasesId = "LinkAliases";
     public const string ThemeId = "Theme";
@@ -32,12 +34,13 @@ public static class SettingsCatalog
     public const string FilesId = "Files";
 
     /// <summary>The tabs, in the order they are shown.</summary>
-    public static IReadOnlyList<string> Tabs { get; } = [GeneralTab, VaultTab, LinkTypesTab, AppearanceTab, LoggingTab, AboutTab];
+    public static IReadOnlyList<string> Tabs { get; } = [GeneralTab, KeyBindingsTab, VaultTab, LinkTypesTab, AppearanceTab, LoggingTab, AboutTab];
 
     public static IReadOnlyList<SettingInfo> All { get; } =
     [
         new(HotkeyId, GeneralTab, "Hotkey that shows kofrenot", ["shortcut", "keyboard", "summon", "ctrl", "alt", "global"]),
         new(MainWindowPositionId, GeneralTab, "Main window position", ["place", "where", "mouse", "center", "centre", "monitor", "screen", "window"]),
+        new(KeyBindingsId, KeyBindingsTab, "Key bindings: every shortcut", ["keys", "keyboard", "hotkey", "ctrl", "alt", "esc", "enter"]),
         new(VaultsId, VaultTab, "Vaults: name, folder, remembered pass phrase", [
             "database", "folder", "sync", "dropbox", "share", "nodes", "open", "create", "add", "remove", "several", "order", "name", "rename",
             "password", "passphrase", "forget", "remember", "unlock", "secret"]),

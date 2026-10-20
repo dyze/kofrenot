@@ -76,6 +76,8 @@ public partial class SettingsWindow : Window
         _session = session;
         _applyHotkey = applyHotkey;
         InitializeComponent();
+        KeyBindingsList.Settings = settings;
+        KeyBindingsList.NameOf = session.NameOf;
         Vaults.Log = _log;
         Vaults.WhyNotSwitch = whyNotSwitch;
         Vaults.Settings = settings;

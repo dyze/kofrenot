@@ -136,6 +136,12 @@
           </StackPanel>
         </StackPanel>
 
+        <StackPanel Tag="{x:Static settings:SettingsCatalog.KeyBindingsTab}">
+          <TextBlock Text="{x:Static settings:SettingsCatalog.KeyBindingsTab}" Style="{StaticResource SectionHeader}" />
+
+          <local:KeyBindingsSection x:Name="KeyBindingsList" Tag="{x:Static settings:SettingsCatalog.KeyBindingsId}" />
+        </StackPanel>
+
         <StackPanel Tag="{x:Static settings:SettingsCatalog.VaultTab}">
           <TextBlock Text="{x:Static settings:SettingsCatalog.VaultTab}" Style="{StaticResource SectionHeader}" />
 
