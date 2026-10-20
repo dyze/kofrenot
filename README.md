@@ -39,8 +39,8 @@ A vault is a folder: on this computer, on a file share, or in a folder a sync to
 - A folder holding other files is refused, and so is a vault in the list already.
 - **Several vaults**: add as many as you like; one is open at a time, and they never mix (no search or link across vaults). With two or more, a box at the top left of the main window switches between them: the open vault is closed, then the chosen one opened (its pass phrase asked unless remembered; cancelled, the previous one comes back). The note shown is saved first; not while a file is being imported. kofrenot opens the last vault chosen at start. A vault whose folder cannot be reached is marked *unavailable*.
 - **Name**: Settings > Vault > *Rename*, for the open vault. The name is stored, encrypted, in the vault, so every computer shows it; locked, a vault shows the last name seen on this computer (or its folder's name). Named differently on two computers before they synced, both names are shown there: rename it to keep one.
-- **Hotkey per vault** (optional, Settings > Vault): shows the main window on that vault, switching to it; pressed again while it is in front, it hides it. In the main window, **Ctrl+1** to **Ctrl+9** switch to the vault at that place in the list. The window's title (and the taskbar) shows the vault's name.
-- **Lock** (the padlock next to the vault box, or **Ctrl+L**) closes the open vault without removing it; **Unlock** asks its pass phrase again, unless it is remembered on this computer.
+- **Hotkey per vault** (optional, Settings > Vault): shows the main window on that vault, switching to it; pressed again while it is in front, it hides it. In the main window, **Ctrl+1** to **Ctrl+9** switch to the vault at that place in the list. The window's title (and the taskbar) is the vault's name.
+- **Lock** (the padlock next to the vault box, or **Ctrl+L**) closes the open vault and keeps it locked, also when you come back to it and after a restart (🔒 in the vault box), until **Unlock**, which always asks its pass phrase, even when it is remembered.
 - **Remove** takes a vault out of the list and forgets its pass phrase on this computer: its folder is not touched, so it can be added again.
 - Several computers or copies can add to the same vault at once; what the others add appears without a restart.
 - A vault written by a newer kofrenot (on another computer, say) is not opened, or is closed as soon as it is seen: install the latest kofrenot (*Get the latest kofrenot* in the main window).
@@ -73,8 +73,8 @@ Type in the box at the top of the main window:
 - A **click on the name**, or **F2**, renames the node in place: **Enter** or a click elsewhere saves, **Esc** cancels. A name that cannot be saved (empty, or with a link phrase such as *relates to*) is refused by Enter, and given up when you click elsewhere. A name another node already has is allowed, with a warning. The old name stays in the vault's history.
 - A node renamed on two computers before they synced shows a conflict under its name, with a button for each name: click the one to keep, or rename it.
 - The **pin** button next to the name pins the node (filled pin) or unpins it. Pins are stored in the vault, so every device lists them.
-- **Change to…**, next to the type of a *generic* node, makes it a note, a dataset or a view (a view asks what it shows first). Changed differently on two computers before they synced, both types are shown: click the one to keep.
-- **Link** box, under the links: type as in the input box, after the node's name (`relates to Frank Herbert`, `contains Chapter 1`); **Enter** shows the creation screen (the other node is added if needed), **Esc** clears.
+- The **type** of a *generic* node is a combo: choose note, dataset or view to make it one, after a warning, as it cannot be undone (a view then asks what it shows). Changed differently on two computers before they synced, both types are shown: click the one to keep.
+- **+ Link** next to *Links* (or **Ctrl+K**) shows a box over the links: type as in the input box, after the node's name (`relates to Frank Herbert`, `contains Chapter 1`); **Enter** shows the creation screen (the other node is added if needed), **Esc** clears, then hides it.
 - **Right-click a link**, then **Change link type**: every link type, each way it reads, the current one checked. The link is replaced by the new one.
 
 ### Notes
@@ -121,7 +121,7 @@ A node of type *View* shows the vault another way, in a tab of its own. Choose o
   | **Del** | deletes the node with everything under it, even a node that is also elsewhere, after showing what will be deleted and where else those nodes are |
 
   Or **drag** a node onto another to move it there, holding **Ctrl** to copy it instead; the node under the pointer is highlighted, and the cursor says when it cannot go there. A node cannot move under itself. A note or dataset whose content has not arrived on this computer yet cannot be copied.
-- **Drag a dataset out** of a tree to a folder (or any program that takes files): its file is exported only when it leaves kofrenot, so moving it in the tree stays instant. **Drop a file** from elsewhere on a node of a tree: the creation screen proposes a new dataset with that file, under that node. One file at a time.
+- **Drag a dataset out** of a tree to a folder (or any program that takes files): its file is exported only when it leaves kofrenot, so moving it in the tree stays instant. **Drop a file** from elsewhere on a node of a tree: the creation screen proposes a new dataset with that file, named after it (full file name), under that node. One file at a time.
 - A view is a node like the others: found by the search, pinned, linked, synced. Its definition is kept in the vault.
 - **Edit what a view shows**: **Edit…** next to *Shows* in its details, or **⚙** on its tab, when selected. Each change is a new version; a view edited on two computers before they synced shows the latest definition, and saving keeps yours.
 
@@ -131,6 +131,7 @@ Gear button in the main window, or tray menu > Settings. A dialog over the main 
 
 | Tab | Options |
 | --- | --- |
+| Key bindings | Every shortcut, by area (main window, input box, node details, notes, datasets, views, creation screen, image window, Settings), with the global hotkeys: read only |
 | General | Hotkey that shows kofrenot (click the box, then press the new shortcut; *Default*: Ctrl+Alt+K); main window position: centered on the mouse's monitor (default), at the mouse, or where you left it. Its size is kept, and it always stays fully on screen |
 | Vault | The vaults, in the order of the main window's box: *Add...*, *Remove*, *Up*, *Down*. For the one chosen in the list: its name (*Rename*, when open), its hotkey (click the box, then press the shortcut; *None*), its folder (*Explore to*), whether it is open; the remembered pass phrase (*Forget*) |
 | Link types | Each link type, both ways, with its phrases. Add your own aliases (for example `-` for *relates to*): pick the link type, type the phrase, *Add*; × removes one. They are stored in the vault, so every device has them. A phrase in use is refused, and node names containing it are warned about (the input box would read them as links) |

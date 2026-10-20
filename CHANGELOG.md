@@ -7,20 +7,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [Unreleased]
 
 ### Added
+- **Settings**
+  - **Key bindings** tab: every shortcut, by area, with the global hotkeys.
 - **Vaults**
   - **Several vaults**: add as many as you like in Settings > Vault (*Add...*), order them (*Up*, *Down*), and *Remove* one from the list (its folder is not touched; its remembered pass phrase is forgotten on this computer). One is open at a time, and they never mix.
   - **Vault box** at the top left of the main window, with two vaults or more: switches to the vault chosen, asking its pass phrase unless remembered; cancelled, the previous vault comes back. The last vault chosen opens at start. A vault whose folder cannot be reached is marked *unavailable*.
   - **Vault name**: *Rename* in Settings > Vault. Stored, encrypted, in the vault, so every computer shows it; a locked vault shows the last name seen on this computer. Named differently on two computers before they synced, both names are shown: renaming keeps one.
   - **Hotkey per vault** (optional, Settings > Vault): shows the main window on that vault, switching to it; pressed again while it is in front, it hides it.
-  - **Ctrl+1 to Ctrl+9** switch to the vault at that place in the list; the window's title shows the vault's name.
-  - **Lock** (padlock next to the vault box, or Ctrl+L): closes the open vault without removing it; Unlock opens it again.
+  - **Ctrl+1 to Ctrl+9** switch to the vault at that place in the list; the window's title is the vault's name.
+  - **Lock** (padlock next to the vault box, or Ctrl+L): the vault stays locked, also when you come back to it and after a restart, until Unlock, which always asks its pass phrase.
 - **Node details**
-  - **Change to…**: a generic node becomes a note, a dataset or a view. Changed differently on two computers before they synced, both types are shown, to keep one.
-  - **Link box**: links the node to another one, typed as in the input box after its name (`contains Chapter 1`).
+  - **Type combo**: a generic node becomes a note, a dataset or a view, after a warning (it cannot be undone). Changed differently on two computers before they synced, both types are shown, to keep one.
+  - **+ Link** (Ctrl+K): links the node to another one, typed as in the input box after its name (`contains Chapter 1`).
   - **Change link type**: right-click a link to change its type or its direction.
 - **Views**
   - **Drag a dataset out** of a tree to a folder; its file is exported only when it leaves kofrenot.
-  - **Drop a file** on a node of a tree: a new dataset with that file, under that node.
+  - **Drop a file** on a node of a tree: a new dataset with that file, named after it, under that node.
 
 ### Changed
 - **Vault**
