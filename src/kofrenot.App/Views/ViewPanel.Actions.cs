@@ -18,8 +18,8 @@ public partial class ViewPanel
     // The type of the nodes a list shows, when the vault knows it; null for a tree.
     private NodeType? _listType;
 
-    /// <summary>Adds a node on the creation screen: its fixed type, or null; the node it goes under, or null. The plan added, or null.</summary>
-    public Func<NodeType?, ParentLink?, AddPlan?>? CreateNode { get; set; }
+    /// <summary>Adds a node on the creation screen: its fixed type, or null; the node it goes under, or null; a file dropped for a dataset, or null. The plan added, or null.</summary>
+    public Func<NodeType?, ParentLink?, string?, AddPlan?>? CreateNode { get; set; }
 
     /// <summary>Shows the bar for what the view shows: a tree, a list, or nothing (a message).</summary>
     private void ShowActions()
@@ -86,13 +86,13 @@ public partial class ViewPanel
         Log.Info("Action", "New node from a view");
         if (_definition is { } definition && (SelectedItem ?? _tree?.Root) is { } parent)
         {
-            if (CreateNode(null, new ParentLink(parent.Node, definition.LinkType))?.NewNodes is [var added, ..])
+            if (CreateNode(null, new ParentLink(parent.Node, definition.LinkType), null)?.NewNodes is [var added, ..])
             {
                 SetExpanded(parent.Key, isExpanded: true);
                 _selectedPath = $"{parent.Key}/{added.Id}";
             }
         }
-        else if (_listType is { } type && CreateNode(type, null)?.NewNodes is [var added, ..])
+        else if (_listType is { } type && CreateNode(type, null, null)?.NewNodes is [var added, ..])
         {
             _selectedNode = added.Id;
         }

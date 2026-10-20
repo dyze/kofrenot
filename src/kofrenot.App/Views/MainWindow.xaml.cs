@@ -69,7 +69,8 @@ public partial class MainWindow : Window
         DetailsPanel.AddLink = (request, choices) => RecordRecent(_session.Create(this, request, choices)) is not null;
         ViewContent.Log = log;
         ViewContent.States = viewStates;
-        ViewContent.CreateNode = (type, under) => RecordRecent(_session.CreateNode(this, type, under));
+        ViewContent.CreateNode = (type, under, file) => RecordRecent(_session.CreateNode(this, type, under, file));
+        ViewContent.DatasetFiles = () => _session.Current?.Datasets;
         ViewContent.Rename = rename => _session.Rename(this, rename);
         ViewContent.Write = (changes, action) => _session.Write(this, changes, action);
         ViewContent.Copy = plan => _session.Copy(this, plan);

@@ -133,12 +133,13 @@ public sealed partial class VaultSession : IDisposable
     /// <summary>As <see cref="Create(Window, InputRequest, AddChoices?)"/>, for one new node whose name is typed on the creation screen.</summary>
     /// <param name="type">The new node's type, fixed; chosen on the screen when null.</param>
     /// <param name="under">In a tree: the node it is added under.</param>
-    public AddPlan? CreateNode(Window owner, NodeType? type = null, ParentLink? under = null) =>
-        Current is { } vault ? Create(owner, vault, CreationForm.NewNode(vault.Graph, type, under)) : null;
+    /// <param name="file">A file dropped for a new dataset, chosen on the screen.</param>
+    public AddPlan? CreateNode(Window owner, NodeType? type = null, ParentLink? under = null, string? file = null) =>
+        Current is { } vault ? Create(owner, vault, CreationForm.NewNode(vault.Graph, type, under), file) : null;
 
-    private AddPlan? Create(Window owner, Vault vault, CreationForm form)
+    private AddPlan? Create(Window owner, Vault vault, CreationForm form, string? file = null)
     {
-        if (!CreationDialog.Ask(owner, form))
+        if (!CreationDialog.Ask(owner, form, file))
         {
             _log.Info("Action", "Creation cancelled");
             return null;

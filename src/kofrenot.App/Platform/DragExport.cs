@@ -33,6 +33,38 @@ internal static class DragExport
         }
     }
 
+    /// <summary>
+    /// Drags data of kofrenot's own (<paramref name="format"/>, <paramref name="data"/>) that also
+    /// offers a file, exported only if another program asks for it (<see cref="LazyFileDrop"/>).
+    /// </summary>
+    /// <param name="export">Writes the file to the path given.</param>
+    /// <returns>The effect of the drop, and whether the file was exported (dragged out).</returns>
+    /// <exception cref="IOException">The file cannot be exported.</exception>
+    public static (DragDropEffects Effect, bool DraggedOut) Drag(DependencyObject source, string format, object data, string fileName, Action<string> export, DragDropEffects allowed)
+    {
+        DeleteLeftovers();
+        var folder = Path.Combine(Root, Guid.NewGuid().ToString("N"));
+        var lazy = new LazyFileDrop(format, data, () =>
+        {
+            Directory.CreateDirectory(folder);
+            var path = Path.Combine(folder, fileName);
+            export(path);
+            return path;
+        });
+        try
+        {
+            var effect = DragDrop.DoDragDrop(source, new DataObject(lazy), allowed);
+            return (effect, lazy.WasMade);
+        }
+        finally
+        {
+            if (Directory.Exists(folder))
+            {
+                TryDelete(folder);
+            }
+        }
+    }
+
     private static void DeleteLeftovers()
     {
         if (Directory.Exists(Root))

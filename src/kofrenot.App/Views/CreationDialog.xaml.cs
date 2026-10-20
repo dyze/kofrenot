@@ -45,7 +45,17 @@ public partial class CreationDialog : Window
     }
 
     /// <summary>Shows the screen: true when the user added (the form then holds the plan and the notes), false when cancelled.</summary>
-    public static bool Ask(Window owner, CreationForm form) => new CreationDialog(owner, form).ShowDialog() == true;
+    /// <param name="file">A file dropped for the new dataset: chosen once the dialog shows.</param>
+    public static bool Ask(Window owner, CreationForm form, string? file = null)
+    {
+        var dialog = new CreationDialog(owner, form);
+        if (file is not null)
+        {
+            dialog.Loaded += (_, _) => _ = dialog.Choose(file);
+        }
+
+        return dialog.ShowDialog() == true;
+    }
 
     private Side? StepSide => _form.Step.Side;
 
