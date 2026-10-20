@@ -8,7 +8,7 @@ Scope of each planned version. Implemented features move to [CHANGELOG.md](../CH
 | 0.2     | Released    | Notes: link types, notes with content, pinned and recent nodes                     |
 | 0.3     | Released    | Datasets: files stored in the vault, read on demand                                |
 | 0.4     | Released    | Views: flat and tree views over the graph, shown as tabs                           |
-| 0.5     | Implemented | Vaults: several vaults, a hot key per vault; change types, link nodes              |
+| 0.5     | Released    | Vaults: several vaults, a hot key per vault; change types, link nodes              |
 | 0.6     | To define   | Editing: restore versions, drop files                                              |
 | 0.7     | To define   | Server: vaults stored on a web server                                              |
 

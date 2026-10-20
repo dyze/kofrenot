@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.5] - 2026-10-20
+
 ### Added
 - **Settings**
   - **Key bindings** tab: every shortcut, by area, with the global hotkeys.
@@ -108,7 +110,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **Update check** once a day against GitHub releases, switchable in About.
 - **Installer and portable zip** (`build\installer.cmd`), self-contained.
 
-[Unreleased]: https://github.com/dyze/kofrenot/compare/0.4...HEAD
+[Unreleased]: https://github.com/dyze/kofrenot/compare/0.5...HEAD
+[0.5]: https://github.com/dyze/kofrenot/compare/0.4...0.5
 [0.4]: https://github.com/dyze/kofrenot/compare/0.3...0.4
 [0.3]: https://github.com/dyze/kofrenot/compare/0.2...0.3
 [0.2]: https://github.com/dyze/kofrenot/compare/0.1...0.2

@@ -11,7 +11,7 @@ A private, self-hosted knowledge system: store, organize, search, version and sh
 
 ## Status
 
-Version 0.4: nodes and links typed in one box (directed link types, your own aliases), notes with Markdown content, datasets (files of any size, with thumbnails and a viewer for images and texts), views (trees and lists over the graph, in tabs, where nodes are added, renamed, copied, moved and deleted), pinned and recent nodes, all stored encrypted in a folder. What comes next: [docs/ROADMAP.md](docs/ROADMAP.md).
+Version 0.5: nodes and links typed in one box (directed link types, your own aliases), notes with Markdown content, datasets (files of any size, with thumbnails and a viewer for images and texts), views (trees and lists over the graph, in tabs, where nodes are added, renamed, copied, moved and deleted, and files dropped), pinned and recent nodes, all stored encrypted in folders: several vaults, each with its name, lock and hotkey. What comes next: [docs/ROADMAP.md](docs/ROADMAP.md).
 
 ## Install
 
