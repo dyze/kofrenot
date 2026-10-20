@@ -64,6 +64,7 @@ public partial class MainWindow : Window
         DetailsPanel.IsImporting = _session.IsImporting;
         DetailsPanel.ShowImage = ShowImage;
         DetailsPanel.EditView = view => _session.EditView(this, view);
+        DetailsPanel.Retype = retype => _session.Retype(this, retype);
         ViewContent.Log = log;
         ViewContent.States = viewStates;
         ViewContent.CreateNode = (type, under) => RecordRecent(_session.CreateNode(this, type, under));

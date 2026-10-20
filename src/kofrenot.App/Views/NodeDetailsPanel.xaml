@@ -109,6 +109,24 @@
               </ItemsControl.ItemTemplate>
             </ItemsControl>
           </StackPanel>
+
+          <StackPanel x:Name="TypeConflictPanel" Margin="0,6,0,0" Visibility="Collapsed">
+            <TextBlock Foreground="{DynamicResource SystemFillColorCautionBrush}"
+                       TextWrapping="Wrap"
+                       Text="Type changed on two devices before they synced. Keep:" />
+            <ItemsControl x:Name="ConflictTypes">
+              <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                  <WrapPanel />
+                </ItemsPanelTemplate>
+              </ItemsControl.ItemsPanel>
+              <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                  <Button Margin="0,4,8,0" Padding="10,2" Focusable="False" Content="{Binding Name}" Click="KeepType_Click" />
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </StackPanel>
         </StackPanel>
 
         <Grid Margin="2,8,0,0">
@@ -123,7 +141,17 @@
             <RowDefinition Height="Auto" />
           </Grid.RowDefinitions>
           <TextBlock Opacity="0.7" Text="Type" />
-          <TextBlock x:Name="TypeText" Grid.Column="1" />
+          <!-- A generic node: Change to… gives it a more specific type (note, dataset, view). -->
+          <StackPanel Grid.Column="1" Orientation="Horizontal">
+            <TextBlock x:Name="TypeText" VerticalAlignment="Center" />
+            <Button x:Name="ChangeTypeButton"
+                    Margin="10,0,0,0"
+                    Padding="10,2"
+                    Content="Change to…"
+                    ToolTip="Make this node a note, a dataset or a view"
+                    Visibility="Collapsed"
+                    Click="ChangeTypeButton_Click" />
+          </StackPanel>
           <TextBlock Grid.Row="1" Opacity="0.7" Text="Created" />
           <TextBlock x:Name="CreatedText" Grid.Row="1" Grid.Column="1" />
           <!-- The latest of its creation, its names and its content versions (NodeFacts), as a view's Details. -->

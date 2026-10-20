@@ -258,6 +258,39 @@ public sealed partial class VaultSession : IDisposable
             && Append(owner, vault, [version], loaded.IsConflict ? $"View edited (a conflict of {loaded.Versions.Count} versions resolved)" : "View edited");
     }
 
+    /// <summary>
+    /// Gives a node another type. A view asks first what it shows, and its first version is written
+    /// with the type. False when no vault is open, the user cancels, or it cannot be written (the user is told).
+    /// </summary>
+    public bool Retype(Window owner, NodeRetyped retype)
+    {
+        if (Current is not { } vault || vault.Graph.FindNode(retype.Node) is not { } node)
+        {
+            return false;
+        }
+
+        IReadOnlyList<Change> changes = [retype];
+        if (retype.Type == TypeCatalog.View.Id)
+        {
+            var view = node with { Type = retype.Type };
+            var planner = new ViewPlanner(vault.Graph);
+            var loaded = planner.Load(view);
+            if (ViewDialog.Ask(owner, vault.Graph, view, loaded) is not { } definition)
+            {
+                _log.Info("Action", "Node type change cancelled");
+                return false;
+            }
+
+            if (planner.Save(view, definition, loaded) is { } version)
+            {
+                changes = [retype, version];
+            }
+        }
+
+        var resolved = retype.Replaces.Count > 1 ? $", a conflict of {retype.Replaces.Count} types resolved" : string.Empty;
+        return Current == vault && Append(owner, vault, changes, $"Node type changed ({node.Type} → {retype.Type}{resolved})");
+    }
+
     /// <summary>Writes changes planned elsewhere (a move, a deletion), in their order, as <see cref="Write(Window, Change, string)"/>.</summary>
     public bool Write(Window owner, IReadOnlyList<Change> changes, string action) =>
         Current is { } vault && Append(owner, vault, changes, action);
