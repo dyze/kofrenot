@@ -45,6 +45,7 @@ public partial class NodeDetailsPanel : UserControl
     public void Open(KnowledgeGraph graph, Node node, Node? from = null)
     {
         Browser.Open(graph, node, from);
+        LinkBox.Clear();
         if (from is not null)
         {
             Visited?.Invoke(from);
@@ -104,6 +105,11 @@ public partial class NodeDetailsPanel : UserControl
         if (_editing)
         {
             return HandleEditKey(key);
+        }
+
+        if (LinkBox.IsKeyboardFocusWithin)
+        {
+            return HandleLinkKey(key);
         }
 
         if (HandleDatasetKey(key))

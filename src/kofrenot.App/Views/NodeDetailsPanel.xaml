@@ -22,6 +22,7 @@
       <RowDefinition x:Name="NoteRow" Height="Auto" />
       <RowDefinition Height="Auto" />
       <RowDefinition Height="*" />
+      <RowDefinition Height="Auto" />
     </Grid.RowDefinitions>
 
     <ItemsControl x:Name="Breadcrumb" FontSize="{StaticResource SecondaryFontSize}">
@@ -209,5 +210,20 @@
         </ItemsControl.ItemTemplate>
       </ItemsControl>
     </ScrollViewer>
+
+    <!-- Links this node: typed as in the input box, after its name ("relates to Frank Herbert");
+         Enter shows the creation screen, Esc clears. -->
+    <StackPanel Grid.Row="5" Margin="0,10,0,0">
+      <Grid>
+        <TextBox x:Name="LinkBox" Padding="8,4" TextChanged="LinkBox_TextChanged" />
+        <TextBlock x:Name="LinkPlaceholder"
+                   Margin="11,0,0,0"
+                   VerticalAlignment="Center"
+                   IsHitTestVisible="False"
+                   Opacity="0.5"
+                   Text="Link: relates to Frank Herbert" />
+      </Grid>
+      <TextBlock x:Name="LinkPreviewText" Margin="2,4,0,0" Opacity="0.7" TextWrapping="Wrap" Visibility="Collapsed" />
+    </StackPanel>
   </Grid>
 </UserControl>
