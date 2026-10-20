@@ -12,10 +12,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   - **Vault box** at the top left of the main window, with two vaults or more: switches to the vault chosen, asking its pass phrase unless remembered; cancelled, the previous vault comes back. The last vault chosen opens at start. A vault whose folder cannot be reached is marked *unavailable*.
   - **Vault name**: *Rename* in Settings > Vault. Stored, encrypted, in the vault, so every computer shows it; a locked vault shows the last name seen on this computer. Named differently on two computers before they synced, both names are shown: renaming keeps one.
   - **Hotkey per vault** (optional, Settings > Vault): shows the main window on that vault, switching to it; pressed again while it is in front, it hides it.
+  - **Ctrl+1 to Ctrl+9** switch to the vault at that place in the list; the window's title shows the vault's name.
+  - **Lock** (padlock next to the vault box, or Ctrl+L): closes the open vault without removing it; Unlock opens it again.
+- **Node details**
+  - **Change to…**: a generic node becomes a note, a dataset or a view. Changed differently on two computers before they synced, both types are shown, to keep one.
+  - **Link box**: links the node to another one, typed as in the input box after its name (`contains Chapter 1`).
+  - **Change link type**: right-click a link to change its type or its direction.
+- **Views**
+  - **Drag a dataset out** of a tree to a folder; its file is exported only when it leaves kofrenot.
+  - **Drop a file** on a node of a tree: a new dataset with that file, under that node.
 
 ### Changed
 - **Vault**
-  - **Vault format 5**, for the vault's name. kofrenot 0.4 does not open a vault written by this version, and offers the update; this version asks before upgrading a vault of format 4 or older.
+  - **Vault format 5**, for the vault's name and type changes. kofrenot 0.4 does not open a vault written by this version, and offers the update; this version asks before upgrading a vault of format 4 or older.
   - **Settings > Vault** lists the vaults, instead of one vault folder. The vault folder of 0.4 becomes the first vault of the list.
   - A vault opened before whose folder is missing (a file share offline) is said to be out of reach, instead of offering to create a new vault there.
 
