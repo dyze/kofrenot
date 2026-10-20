@@ -52,8 +52,9 @@ public sealed class TypeCatalog
     /// How a link reads from one of its nodes: "contains" from its <see cref="Link.From"/> node,
     /// "contained by" from its <see cref="Link.To"/> node. Its type's id when this version does not know it.
     /// </summary>
-    public string LinkName(Link link, Guid seenFrom) =>
-        FindLinkType(link.Type) is { } type
-            ? new LinkVerb(type, IsReverse: !type.IsSymmetric && seenFrom != link.From).Name
-            : link.Type;
+    public string LinkName(Link link, Guid seenFrom) => VerbOf(link, seenFrom)?.Name ?? link.Type;
+
+    /// <summary>The way a link reads from one of its nodes; null when this version does not know its type.</summary>
+    public LinkVerb? VerbOf(Link link, Guid seenFrom) =>
+        FindLinkType(link.Type) is { } type ? new LinkVerb(type, IsReverse: !type.IsSymmetric && seenFrom != link.From) : null;
 }

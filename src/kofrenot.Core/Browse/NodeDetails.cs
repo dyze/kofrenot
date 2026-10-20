@@ -14,4 +14,4 @@ public sealed record NodeDetails(Node Node, string Name, string Type, IReadOnlyL
 /// A link of the node shown: its type, and the node at the other end with its picture. <see cref="CanOpen"/>: that
 /// node can be opened one level deeper (not at the last level, and not already in the trail).
 /// </summary>
-public sealed record LinkRow(string Type, string Other, Node OtherNode, bool CanOpen, bool IsSelected, NodeVisual Visual);
+public sealed record LinkRow(string Type, string Other, Node OtherNode, bool CanOpen, bool IsSelected, NodeVisual Visual, Link Link);

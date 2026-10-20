@@ -177,7 +177,7 @@
       <ItemsControl x:Name="LinksList" Grid.IsSharedSizeScope="True">
         <ItemsControl.ItemTemplate>
           <DataTemplate>
-            <Border x:Name="Frame" Margin="0,1" Style="{StaticResource RowFrame}" MouseLeftButtonDown="Link_MouseLeftButtonDown">
+            <Border x:Name="Frame" Margin="0,1" Style="{StaticResource RowFrame}" MouseLeftButtonDown="Link_MouseLeftButtonDown" MouseRightButtonUp="Link_MouseRightButtonUp">
               <Grid>
                 <Border x:Name="SelectionBar" Style="{StaticResource RowSelectionBar}" />
                 <Grid x:Name="Row">

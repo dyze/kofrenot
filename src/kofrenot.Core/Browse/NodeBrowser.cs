@@ -121,7 +121,7 @@ public sealed class NodeBrowser
         var rows = links.Select((link, index) =>
         {
             var other = graph.FindNode(link.Other(node.Id))!;
-            return new LinkRow(graph.Types.LinkName(link, node.Id), text.NodeLabel(other), other, CanOpen(other), index == level.Selected, NodeVisual.Of(graph, other));
+            return new LinkRow(graph.Types.LinkName(link, node.Id), text.NodeLabel(other), other, CanOpen(other), index == level.Selected, NodeVisual.Of(graph, other), link);
         });
         var names = graph.NamesOf(node.Id);
         IReadOnlyList<string> conflict = names.Count > 1 ? names.Select(version => version.Name).ToList() : [];

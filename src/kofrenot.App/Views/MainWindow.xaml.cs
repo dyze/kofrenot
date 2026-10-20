@@ -65,6 +65,7 @@ public partial class MainWindow : Window
         DetailsPanel.ShowImage = ShowImage;
         DetailsPanel.EditView = view => _session.EditView(this, view);
         DetailsPanel.Retype = retype => _session.Retype(this, retype);
+        DetailsPanel.WriteChanges = (changes, action) => _session.Write(this, changes, action);
         ViewContent.Log = log;
         ViewContent.States = viewStates;
         ViewContent.CreateNode = (type, under) => RecordRecent(_session.CreateNode(this, type, under));
