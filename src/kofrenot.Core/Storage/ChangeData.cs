@@ -20,7 +20,8 @@ internal sealed record ChangeData(
     ChangeData.DatasetData? Dataset = null,
     ChangeData.ViewData? View = null,
     List<Guid>? Removes = null,
-    ChangeData.VaultNameData? Vault = null)
+    ChangeData.VaultNameData? Vault = null,
+    ChangeData.RetypeData? Retype = null)
 {
     private const string NodeAddedOp = "addNode";
     private const string LinkAddedOp = "addLink";
@@ -32,6 +33,7 @@ internal sealed record ChangeData(
     private const string DatasetEditedOp = "editDataset";
     private const string ViewEditedOp = "editView";
     private const string VaultNamedOp = "nameVault";
+    private const string NodeRetypedOp = "retypeNode";
 
     public static ChangeData From(Change change) => change switch
     {
@@ -45,6 +47,7 @@ internal sealed record ChangeData(
         DatasetEdited dataset => new(VaultFormat.Current, DatasetEditedOp, dataset.At, Dataset: new DatasetData(dataset.Node, FileData.From(dataset.File), [.. dataset.Replaces])),
         ViewEdited view => new(VaultFormat.Current, ViewEditedOp, view.At, View: ViewData.From(view)),
         VaultNamed name => new(VaultFormat.Current, VaultNamedOp, name.At, Vault: new VaultNameData(name.Name, [.. name.Replaces])),
+        NodeRetyped retype => new(VaultFormat.Current, NodeRetypedOp, retype.At, Retype: new RetypeData(retype.Node, retype.Type, [.. retype.Replaces])),
         _ => throw new ArgumentOutOfRangeException(nameof(change), change.GetType().Name, "Unknown change"),
     };
 
@@ -74,6 +77,8 @@ internal sealed record ChangeData(
                 => new ViewEdited(id, At, View.Node, definition, replaces),
             VaultNamedOp when Vault is { Name: { } name, Replaces: { } replaces } && !string.IsNullOrWhiteSpace(name)
                 => new VaultNamed(id, At, name, replaces),
+            NodeRetypedOp when Retype is { Type: { Length: > 0 } type, Replaces: { Count: > 0 } replaces } && Retype.Node != Guid.Empty
+                => new NodeRetyped(id, At, Retype.Node, type, replaces),
             _ => throw new InvalidDataException($"Unknown or incomplete change '{Op}'"),
         };
     }
@@ -139,6 +144,9 @@ internal sealed record ChangeData(
             _ => null,
         };
     }
+
+    /// <summary><c>"retype": { "node": "…", "type": "note", "replaces": ["…"] }</c></summary>
+    internal sealed record RetypeData(Guid Node, string? Type, List<Guid>? Replaces);
 
     /// <summary><c>"vault": { "name": "Personal", "replaces": ["…"] }</c></summary>
     internal sealed record VaultNameData(string? Name, List<Guid>? Replaces);

@@ -24,6 +24,15 @@ public sealed class NodeFactsTests
     }
 
     [Fact]
+    public void ARetype_ChangesIt_AndItsType()
+    {
+        var node = Add(TypeCatalog.Generic.Id);
+        _graph.Apply(new NodeRetyped(Guid.NewGuid(), Start.AddMinutes(4), node.Id, TypeCatalog.Note.Id, [node.Id]));
+
+        Assert.Equal(new NodeFacts("Note", null, Start.AddMinutes(4)), NodeFacts.Of(_graph, _graph.FindNode(node.Id)!));
+    }
+
+    [Fact]
     public void ANote_ChangesWithItsContent()
     {
         var note = Add(TypeCatalog.Note.Id);

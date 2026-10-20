@@ -228,6 +228,31 @@ public sealed class NodeBrowserTests
     }
 
     [Fact]
+    public void ATypeConflict_ListsTheTypes_OldestFirst()
+    {
+        var dune = Add("Dune");
+        _graph.Apply(new NodeRetyped(Guid.NewGuid(), Start.AddMinutes(2), dune.Id, "dataset", [dune.Id]));
+        _graph.Apply(new NodeRetyped(Guid.NewGuid(), Start.AddMinutes(1), dune.Id, "note", [dune.Id]));
+
+        _browser.Open(_graph, dune);
+
+        Assert.Equal([TypeCatalog.Note, TypeCatalog.Dataset], _browser.Details!.TypeConflict);
+        Assert.Equal("Dataset", _browser.Details.Type);
+    }
+
+    [Fact]
+    public void ATypeUnknownToThisVersion_InAConflict_IsShownByItsId()
+    {
+        var dune = Add("Dune");
+        _graph.Apply(new NodeRetyped(Guid.NewGuid(), Start.AddMinutes(1), dune.Id, "book", [dune.Id]));
+        _graph.Apply(new NodeRetyped(Guid.NewGuid(), Start.AddMinutes(2), dune.Id, "note", [dune.Id]));
+
+        _browser.Open(_graph, dune);
+
+        Assert.Equal(["book", "Note"], _browser.Details!.TypeConflict.Select(type => type.Name));
+    }
+
+    [Fact]
     public void ALinkAddedElsewhere_AppearsInTheDetails()
     {
         var dune = Add("Dune");

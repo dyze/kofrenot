@@ -18,6 +18,13 @@ public sealed record LinkAdded(Guid Id, DateTimeOffset At, Link Link) : Change(I
 public sealed record NodeRenamed(Guid Id, DateTimeOffset At, Guid Node, string Name, IReadOnlyList<Guid> Replaces) : Change(Id, At);
 
 /// <summary>
+/// Gives <see cref="Node"/> another type (<see cref="Type"/>, a node type id). <see cref="Replaces"/>
+/// are the types it was given over: the retypes, or the node's id for its type as added. Two
+/// retypes that replace the same type, neither knowing the other, make a type conflict.
+/// </summary>
+public sealed record NodeRetyped(Guid Id, DateTimeOffset At, Guid Node, string Type, IReadOnlyList<Guid> Replaces) : Change(Id, At), IReplacing;
+
+/// <summary>
 /// Names the vault itself, encrypted like any change, so every device shows the same name.
 /// <see cref="Replaces"/> are the names it was given over (none for the first). Two names
 /// replacing the same one, neither knowing the other (two devices before syncing), make a conflict.

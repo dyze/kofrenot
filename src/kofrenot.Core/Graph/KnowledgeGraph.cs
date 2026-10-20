@@ -16,6 +16,7 @@ public sealed class KnowledgeGraph
 {
     private readonly Dictionary<Guid, Node> _nodes = [];
     private readonly Dictionary<Guid, NodeNames> _names = [];
+    private readonly NodeTypes _types = new();
     private readonly Dictionary<string, List<Node>> _nodesByName = [];
     private readonly LinkIndex _links;
     private readonly HashSet<Guid> _removed = [];
@@ -53,6 +54,7 @@ public sealed class KnowledgeGraph
         NodeAdded added => Add(added.Node),
         LinkAdded added => Add(added.Link),
         NodeRenamed renamed => Rename(renamed),
+        NodeRetyped retyped => Retype(retyped),
         AliasAdded alias => Aliases.Add(alias),
         ChangesRemoved removal => Remove(removal),
         NodePinned pin => _pins.Add(pin),
@@ -130,11 +132,44 @@ public sealed class KnowledgeGraph
         names.Added = node;
         if (!_removed.Contains(node.Id))
         {
-            var shown = names.Shown(node);
-            Show(shown == node.Name ? node : node with { Name = shown });
+            Show(Shown(node));
         }
 
         return true;
+    }
+
+    /// <summary>Gives a node another type (from a change or a snapshot). False when the retype is already there.</summary>
+    public bool Retype(NodeRetyped retype)
+    {
+        if (!_types.Add(retype))
+        {
+            return false;
+        }
+
+        if (_nodes.TryGetValue(retype.Node, out var node))
+        {
+            Hide(node);
+            Show(Shown(_names[retype.Node].Added!));
+        }
+
+        return true;
+    }
+
+    /// <summary>
+    /// The current types of a node, oldest first: one, or several when its type was changed on two
+    /// devices before they synced (a conflict). Empty for an unknown node.
+    /// </summary>
+    public IReadOnlyList<TypeVersion> TypesOf(Guid node) =>
+        _names.TryGetValue(node, out var names) && names.Added is { } added ? _types.Current(added) : [];
+
+    /// <summary>The retypes of a node, whatever they replace: when it last changed.</summary>
+    public IEnumerable<NodeRetyped> RetypesOf(Guid node) => _types.Of(node);
+
+    /// <summary><paramref name="added"/> as shown: its current name and type.</summary>
+    private Node Shown(Node added)
+    {
+        var (name, type) = (_names[added.Id].Shown(added), _types.Shown(added));
+        return name == added.Name && type == added.Type ? added : added with { Name = name, Type = type };
     }
 
     /// <summary>Renames a node (from a change or a snapshot). False when the rename is already there.</summary>
@@ -149,7 +184,7 @@ public sealed class KnowledgeGraph
         if (_nodes.TryGetValue(rename.Node, out var node))
         {
             Hide(node);
-            Show(node with { Name = names.Shown(names.Added!) });
+            Show(Shown(names.Added!));
         }
 
         return true;

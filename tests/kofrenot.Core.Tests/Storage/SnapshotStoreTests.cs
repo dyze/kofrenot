@@ -33,6 +33,7 @@ public sealed class SnapshotStoreTests : IDisposable
             alias,
             new ChangesRemoved(Guid.NewGuid(), Start.AddMinutes(2), [alias.Id]),
             new VaultNamed(Guid.NewGuid(), Start.AddMinutes(3), "Personal", []),
+            new NodeRetyped(Guid.NewGuid(), Start.AddMinutes(4), dune.Id, "note", [dune.Id]),
         ];
 
         Store().Save(changes, highestFormat: 3);
@@ -46,6 +47,7 @@ public sealed class SnapshotStoreTests : IDisposable
         Assert.Equal(alias, loaded[4]);
         Assert.Equal([alias.Id], Assert.IsType<ChangesRemoved>(loaded[5]).Removes);
         Assert.Equal("Personal", Assert.IsType<VaultNamed>(loaded[6]).Name);
+        Assert.Equal("note", Assert.IsType<NodeRetyped>(loaded[7]).Type);
     }
 
     [Fact]

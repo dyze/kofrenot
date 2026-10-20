@@ -73,6 +73,33 @@ public sealed class ChangeCodecTests
     }
 
     [Fact]
+    public void ARetype_RoundTrips()
+    {
+        var change = new NodeRetyped(Guid.NewGuid(), At, Guid.NewGuid(), "note", [Guid.NewGuid()]);
+
+        var decoded = Assert.IsType<NodeRetyped>(_codec.Decode(change.Id, _codec.Encode(change)));
+
+        Assert.Equal((change.Id, change.At, change.Node, change.Type), (decoded.Id, decoded.At, decoded.Node, decoded.Type));
+        Assert.Equal(change.Replaces, decoded.Replaces);
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData(",\"retype\":{\"type\":\"note\",\"replaces\":[\"" + Node + "\"]}")]
+    [InlineData(",\"retype\":{\"node\":\"" + Node + "\",\"replaces\":[\"" + Node + "\"]}")]
+    [InlineData(",\"retype\":{\"node\":\"" + Node + "\",\"type\":\"\",\"replaces\":[\"" + Node + "\"]}")]
+    [InlineData(",\"retype\":{\"node\":\"" + Node + "\",\"type\":\"note\",\"replaces\":[]}")]
+    [InlineData(",\"retype\":{\"node\":\"" + Node + "\",\"type\":\"note\"}")]
+    public void AnIncompleteRetype_IsRefused(string retype)
+    {
+        var id = Guid.NewGuid();
+        var json = "{\"format\":5,\"op\":\"retypeNode\",\"at\":\"2026-10-16T09:12:00Z\"" + retype + "}";
+        var data = _box.Seal("KFC1"u8, Encoding.UTF8.GetBytes(json), id.ToByteArray());
+
+        Assert.Throws<InvalidDataException>(() => _codec.Decode(id, data));
+    }
+
+    [Fact]
     public void APin_RoundTrips()
     {
         var change = new NodePinned(Guid.NewGuid(), At, Guid.NewGuid());

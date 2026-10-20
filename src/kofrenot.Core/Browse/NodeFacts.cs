@@ -8,13 +8,14 @@ namespace Kofrenot.Core.Browse;
 /// (a dataset's: its file's kind, "PNG file"), a dataset's size, and when it last changed.
 /// </summary>
 /// <param name="Size">The latest file's size in bytes, for a dataset with a file; null otherwise.</param>
-/// <param name="Modified">The latest of its creation, its names and its content versions.</param>
+/// <param name="Modified">The latest of its creation, its names, its types and its content versions.</param>
 public sealed record NodeFacts(string Type, long? Size, DateTimeOffset Modified)
 {
     public static NodeFacts Of(KnowledgeGraph graph, Node node)
     {
         var file = graph.DatasetVersionsOf(node.Id) is [.., var latest] ? latest.File : null;
         var modified = graph.NamesOf(node.Id).Select(name => name.At)
+            .Concat(graph.RetypesOf(node.Id).Select(retype => retype.At))
             .Concat(graph.NoteVersionsOf(node.Id).Select(version => version.At))
             .Concat(graph.DatasetVersionsOf(node.Id).Select(version => version.At))
             .Concat(graph.ViewVersionsOf(node.Id).Select(version => version.At))

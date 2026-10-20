@@ -7,7 +7,8 @@ namespace Kofrenot.Core.Browse;
 /// <param name="Type">The type's name, or its id when this version does not know it.</param>
 /// <param name="NameConflict">The names given on two devices before they synced, oldest first; empty without a conflict.</param>
 /// <param name="IsPinned">Listed while the input box is empty.</param>
-public sealed record NodeDetails(Node Node, string Name, string Type, IReadOnlyList<LinkRow> Links, IReadOnlyList<string> NameConflict, bool IsPinned);
+/// <param name="TypeConflict">The types given on two devices before they synced, oldest first; empty without a conflict.</param>
+public sealed record NodeDetails(Node Node, string Name, string Type, IReadOnlyList<LinkRow> Links, IReadOnlyList<string> NameConflict, bool IsPinned, IReadOnlyList<NodeType> TypeConflict);
 
 /// <summary>
 /// A link of the node shown: its type, and the node at the other end with its picture. <see cref="CanOpen"/>: that
