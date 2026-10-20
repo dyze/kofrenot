@@ -41,7 +41,12 @@ public partial class CreationDialog : Window
         ViewEditor.Setup(form.Types, form.FindRoots);
         ViewEditor.Changed += ViewEditor_Changed;
         ContentBox.Edited += ContentBox_Edited;
-        Loaded += (_, _) => ShowStep();
+        Loaded += (_, _) =>
+        {
+            // A name given (a dropped file's) is typed already, selected to be replaced at once.
+            NameBox.Text = form.IsNameEditable ? form.Name : string.Empty;
+            ShowStep();
+        };
     }
 
     /// <summary>Shows the screen: true when the user added (the form then holds the plan and the notes), false when cancelled.</summary>
@@ -81,6 +86,7 @@ public partial class CreationDialog : Window
         else if (_form.IsNameEditable)
         {
             NameBox.Focus();
+            NameBox.SelectAll();
         }
         else
         {

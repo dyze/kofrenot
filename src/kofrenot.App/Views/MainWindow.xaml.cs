@@ -130,7 +130,7 @@ public partial class MainWindow : Window
         TabStrip.Visibility = open ? Visibility.Visible : Visibility.Collapsed;
         TitleText.Visibility = open ? Visibility.Collapsed : Visibility.Visible;
         LockButton.Visibility = open ? Visibility.Visible : Visibility.Collapsed;
-        Title = SelectedName.Length > 0 ? $"{SelectedName} – kofrenot" : "kofrenot";
+        Title = SelectedName.Length > 0 ? SelectedName : "kofrenot";
         if (vault is not null)
         {
             VaultText.Text = $"{SelectedName} · {vault.Graph.Nodes.Count} nodes · {vault.Graph.Links.Count} links";

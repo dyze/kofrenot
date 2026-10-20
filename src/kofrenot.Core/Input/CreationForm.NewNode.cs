@@ -11,10 +11,10 @@ public sealed record ParentLink(Node Parent, string LinkType);
 /// </summary>
 public sealed partial class CreationForm
 {
-    /// <summary>One new node, its name empty until typed; <paramref name="type"/> fixed, or chosen when null.</summary>
+    /// <summary>One new node, its name typed (<paramref name="name"/> to begin with, or empty); <paramref name="type"/> fixed, or chosen when null.</summary>
     /// <param name="under">In a tree: the node it is added under, linked from it.</param>
-    public static CreationForm NewNode(KnowledgeGraph graph, NodeType? type = null, ParentLink? under = null, TimeProvider? clock = null) =>
-        new(graph, new NodeRequest(string.Empty), new AddChoices(LeftType: type), clock)
+    public static CreationForm NewNode(KnowledgeGraph graph, NodeType? type = null, ParentLink? under = null, string? name = null, TimeProvider? clock = null) =>
+        new(graph, new NodeRequest(name?.Trim() ?? string.Empty), new AddChoices(LeftType: type), clock)
         {
             IsNameEditable = true,
             IsTypeFixed = type is not null,

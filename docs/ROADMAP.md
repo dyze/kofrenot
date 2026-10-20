@@ -23,3 +23,4 @@ Needs the "Sync: no server for now" decision changed ([GOAL.md](GOAL.md#decision
 1. **Web server.** Vaults are stored on a dedicated web server. See dedicated concept  [SERVER-CONCEPT.md](SERVER-CONCEPT.md).
 2. **pinned for off line.** When a node is pinned for off line access, its content is already downloaded to be sure it is always accessible w/o access to vault storage. 
 3. **Pack vault.** Pack a vault to reduce its size of number of file.
+4. Share complete vaults to other users.

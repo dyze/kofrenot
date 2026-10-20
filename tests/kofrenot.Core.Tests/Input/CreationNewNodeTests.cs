@@ -18,6 +18,20 @@ public sealed class CreationNewNodeTests
     }
 
     [Fact]
+    public void ANameGiven_IsTypedAlready_AndCanBeChanged()
+    {
+        var form = CreationForm.NewNode(_graph, TypeCatalog.Dataset, name: " report-2026.pdf ", clock: _clock);
+
+        Assert.Equal("report-2026.pdf", form.Name);
+        Assert.True(form.CanAdd);
+        Assert.Equal("report-2026.pdf", Assert.IsType<NodeAdded>(Assert.Single(form.Plan.Changes)).Node.Name);
+
+        form.Name = "Report";
+
+        Assert.Equal("Report", form.Name);
+    }
+
+    [Fact]
     public void ATypedName_IsTrimmed_AndPlansTheNode()
     {
         var form = CreationForm.NewNode(_graph, clock: _clock);
