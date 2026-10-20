@@ -2,7 +2,13 @@
 
 The server is **Kofre** (`Kofre.Server`): generic, kofrenot is one of its clients.
 
-Planned for 0.6 ([ROADMAP.md](ROADMAP.md#06-to-define)), not implemented. Decisions: [GOAL.md](GOAL.md#decisions).
+Planned, not implemented. Decisions: [GOAL.md](GOAL.md#decisions). Built in steps ([ROADMAP.md](ROADMAP.md)):
+
+| Version | Parts of this design |
+| --- | --- |
+| 0.6 | [Accounts](#accounts), stores with their owner only, [Delete](#delete), files and feed of the [REST API](#rest-api-sketch); [Client sync](#client-sync) with every file downloaded; today's keys (format 5) |
+| 0.7 | Members and roles, account data, [Fence](#fence), [Keys](#keys) (identity, [Sharing](#sharing), [Rotation](#rotation), [Format 6](#format-6)) |
+| 0.8 | Content on demand and pinned nodes ([Client sync](#client-sync)), batch download, uploads in parts |
 
 ## Principles
 - **Generic and blind.** The server stores *stores*: sets of files addressed by path, with their members. It never sees a key, a name or a content, and knows nothing of kofrenot: other apps can use it.

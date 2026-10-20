@@ -9,20 +9,29 @@ Scope of each planned version. Implemented features move to [CHANGELOG.md](../CH
 | 0.3     | Released  | Datasets: files stored in the vault, read on demand                                |
 | 0.4     | Released  | Views: flat and tree views over the graph, shown as tabs                           |
 | 0.5     | Released  | Vaults: several vaults, a hot key per vault; change types, link nodes              |
-| 0.6     | To define | Server: vaults stored on a web server, shared with other users                     |
-| 0.7     | To define | Editing: restore versions, drop files                                              |
+| 0.6     | To define | Server: own vaults stored on a web server, synced across devices                   |
+| 0.7     | To define | Sharing: identities, recovery key, vaults shared with other users                  |
+| 0.8     | To define | Large vaults: content on demand, pinned for offline, faster transfers              |
+| 0.9     | To define | Editing: restore versions, drop files                                              |
 
 ## 0.6 (to define)
-Design: [SERVER-CONCEPT.md](SERVER-CONCEPT.md). Decisions: [GOAL.md](GOAL.md#decisions).
+The server's MVP: one user, their own vaults, several devices. Design: [SERVER-CONCEPT.md](SERVER-CONCEPT.md). Decisions: [GOAL.md](GOAL.md#decisions).
 
-1. **Web server.** A generic, write-once store of files on Linux: accounts approved by the admin, stores with members (reader, writer, owner), REST API with tokens.
-2. **Server vaults.** A vault is a folder (as today) or a store on a server, mirrored in a local folder: offline first, content downloaded on demand.
-3. **Identity and recovery key.** Vault keys are wrapped for an identity (key pair) unlocked by the pass phrase or a recovery key shown once. Same for folder vaults (format 6, existing vaults upgraded without rewriting a file).
-4. **Share complete vaults** with other users, after checking the key's fingerprint.
-5. **Remove a member.** Server access removed at once, then key rotation: files added later are unreadable to them.
-6. **Pinned for offline.** When a node is pinned for offline access, its content is downloaded ahead, so it is always readable without access to the vault storage.
+1. **Web server.** A generic, write-once store of files on Linux: accounts approved by the admin, stores (owner only), REST API with tokens, feed of added files, delete to a trash and restore.
+2. **Server vaults.** A vault is a folder (as today) or a store on a server, mirrored in a local folder: every file is downloaded, changes are queued while offline.
+3. **Move a folder vault to a server.** Its files are uploaded as they are into a new store; its id is kept.
 
 ## 0.7 (to define)
+1. **Identity and recovery key.** Vault keys are wrapped for an identity (key pair) unlocked by the pass phrase or a recovery key shown once. Same for folder and server vaults (format 6, existing vaults upgraded without rewriting a file).
+2. **Share complete vaults** with other users (reader, writer, owner), after checking the key's fingerprint.
+3. **Remove a member.** Server access removed at once, then key rotation and fence: files added later are unreadable to them.
+
+## 0.8 (to define)
+1. **Content on demand.** A server vault downloads change files at once, content only when shown or exported.
+2. **Pinned for offline.** When a node is pinned for offline access, its content is downloaded ahead, so it is always readable without access to the vault storage.
+3. **Faster transfers.** Many small files downloaded in one stream; big files uploaded in parts, resumable.
+
+## 0.9 (to define)
 1. **Restore previous versions.** If a user made a mistake he can see the list of versions and restore one of them.
 2. **File drop zone.** Main window shows a small zone in which user can drop one or several files. This is a way to secure quickly a set of files. The App, proposes a preview of actions that will be done. node names and types are determined automatically. User acks and app proceeds with actions.
 3. Tree view accepts several dropped files too, with the same preview (one file: 0.5).
@@ -31,4 +40,4 @@ Design: [SERVER-CONCEPT.md](SERVER-CONCEPT.md). Decisions: [GOAL.md](GOAL.md#dec
 ## Later
 1. **Pack vault.** Pack a vault to reduce its size and number of files (needs deletes on the server).
 2. **Re-encrypt on pack.** Packed files are encrypted again with the latest vault key, so old key epochs can be dropped ([Rotation](SERVER-CONCEPT.md#rotation)).
-3. **Move a vault between folder and server.** A folder vault is uploaded to a new server store (or a server vault saved to a folder) without re-encrypting its files: its vault key is wrapped for the account's identity, and its id is kept.
+3. **Move a server vault to a folder.** Its files are saved as they are into a folder vault; its id is kept.
