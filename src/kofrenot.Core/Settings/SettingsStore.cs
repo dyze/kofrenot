@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace Kofrenot.Core.Settings;
 
@@ -142,7 +143,7 @@ public sealed class SettingsStore
         // VaultFolder still names the selected vault, for a kofrenot 0.4 started again.
         var data = new SettingsData(DebugLogging, Theme.ToString(), CheckForUpdates, SelectedVault?.Folder, Hotkey.ToString(), MainWindowPosition.ToString())
         {
-            Vaults = [.. Vaults.Vaults.Select(vault => new VaultData(vault.Location.Folder, vault.Id, vault.Hotkey?.ToString()))],
+            Vaults = [.. Vaults.Vaults.Select(vault => new VaultData(vault.Location.Folder, vault.Id, vault.Hotkey?.ToString(), vault.IsLocked ? true : null))],
             SelectedVault = SelectedVault?.Folder,
         };
         File.WriteAllText(_path, JsonSerializer.Serialize(data));
@@ -167,7 +168,8 @@ public sealed class SettingsStore
             .Select(vault => new RegisteredVault(
                 new VaultLocation(vault.Folder!),
                 vault.Id is { } id && id != Guid.Empty ? id : null,
-                Hotkey.TryParse(vault.Hotkey, out var hotkey) ? hotkey : null)));
+                Hotkey.TryParse(vault.Hotkey, out var hotkey) ? hotkey : null,
+                vault.Locked == true)));
         var selected = data.SelectedVault is { } chosen && vaults.Find(new VaultLocation(chosen)) is { } found
             ? found.Location
             : vaults.Vaults.FirstOrDefault()?.Location;
@@ -202,5 +204,10 @@ public sealed class SettingsStore
     }
 
     /// <param name="Folder">Missing in a damaged file: the entry is skipped.</param>
-    internal sealed record VaultData(string? Folder, Guid? Id, string? Hotkey);
+    /// <param name="Locked">Written only when locked.</param>
+    internal sealed record VaultData(
+        string? Folder,
+        Guid? Id,
+        string? Hotkey,
+        [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] bool? Locked = null);
 }

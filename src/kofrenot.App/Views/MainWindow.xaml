@@ -62,7 +62,7 @@
               FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
               FontSize="14"
               Content="&#xE72E;"
-              ToolTip="Lock the vault (Ctrl+L). Unlock asks its pass phrase again, unless it is remembered on this computer"
+              ToolTip="Lock the vault (Ctrl+L): it stays locked, also after a restart, until Unlock, which asks its pass phrase"
               Visibility="Collapsed"
               Click="LockButton_Click" />
       </StackPanel>

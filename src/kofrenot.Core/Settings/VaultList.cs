@@ -2,9 +2,10 @@ namespace Kofrenot.Core.Settings;
 
 /// <summary>
 /// A vault the user registered: its location, its id once its header was read (null for a vault
-/// of an earlier version not opened since), and its optional hotkey.
+/// of an earlier version not opened since), its optional hotkey, and whether it is locked: not
+/// opened, even with a remembered key, until it is unlocked with its pass phrase.
 /// </summary>
-public sealed record RegisteredVault(VaultLocation Location, Guid? Id = null, Hotkey? Hotkey = null);
+public sealed record RegisteredVault(VaultLocation Location, Guid? Id = null, Hotkey? Hotkey = null, bool IsLocked = false);
 
 /// <summary>
 /// The registered vaults, in the user's order. Each location and each vault id is listed once.

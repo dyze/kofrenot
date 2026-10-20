@@ -30,6 +30,9 @@ public sealed partial class VaultSession : IDisposable
     private VaultWatcher? _watcher;
     private string? _keptName;
 
+    // Set while a locked vault is unlocked: its pass phrase is asked, even when remembered.
+    private bool _askPassPhrase;
+
     public VaultSession(SettingsStore settings, AppFiles files, KeyMemory keys, VaultNameMemory names, ILog log)
     {
         _settings = settings;
@@ -60,11 +63,11 @@ public sealed partial class VaultSession : IDisposable
 
     /// <summary>
     /// Opens the vault of the settings, asking its pass phrase unless it is remembered, then its
-    /// upgrade when it needs one. Does nothing when one is open, or waits for its upgrade (<see cref="Upgrade"/>).
+    /// upgrade when it needs one. Does nothing when one is open, waits for its upgrade (<see cref="Upgrade"/>), or is locked (<see cref="Unlock(Window)"/>).
     /// </summary>
     public void Open(Window owner)
     {
-        if (Current is not null || _notUpgraded is not null || Folder is not { } folder)
+        if (Current is not null || _notUpgraded is not null || IsLocked || Folder is not { } folder)
         {
             return;
         }
@@ -431,7 +434,7 @@ public sealed partial class VaultSession : IDisposable
             return null;
         }
 
-        if (_keys.Recall(header.Id) is { } remembered)
+        if (!_askPassPhrase && _keys.Recall(header.Id) is { } remembered)
         {
             _log.Info(Category, $"Vault {header.Id} unlocked with the remembered pass phrase");
             return Open(owner, folder, header, remembered, remember: false);

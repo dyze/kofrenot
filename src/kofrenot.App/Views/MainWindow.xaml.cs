@@ -161,7 +161,7 @@ public partial class MainWindow : Window
         }
         else
         {
-            StateText.Text = "The vault is locked.";
+            StateText.Text = _session.IsLocked ? "The vault is locked: Unlock asks its pass phrase." : "The vault is locked.";
             StateButton.Content = "Unlock";
         }
     }
@@ -381,7 +381,7 @@ public partial class MainWindow : Window
         else
         {
             _log.Info("Action", "Unlock");
-            _session.Open(this);
+            _session.Unlock(this);
         }
     }
 

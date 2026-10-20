@@ -41,13 +41,52 @@ public sealed partial class VaultSession
         }
     }
 
-    /// <summary>Closes the open vault, still selected: <see cref="Open"/> unlocks it again.</summary>
+    /// <summary>The selected vault is locked: not opened, even with a remembered key, until <see cref="Unlock(Window)"/>.</summary>
+    public bool IsLocked => Selected is { IsLocked: true };
+
+    /// <summary>
+    /// Closes the open vault and keeps it locked, also after a restart and when switching back to it,
+    /// until <see cref="Unlock(Window)"/>.
+    /// </summary>
     public void Lock()
     {
-        if (Current is { } vault)
+        if (Current is not { } vault || Selected is not { } selected)
         {
-            _log.Info("Action", $"Vault {vault.Id} locked");
-            Close();
+            return;
+        }
+
+        _settings.SetVaults(_settings.Vaults.With(selected.Location, locked => locked with { IsLocked = true }));
+        _log.Info("Action", $"Vault {vault.Id} locked");
+        Close();
+    }
+
+    /// <summary>
+    /// Opens the selected vault. A locked one asks its pass phrase, even when it is remembered, and
+    /// stays locked when it is not given.
+    /// </summary>
+    public void Unlock(Window owner)
+    {
+        if (Selected is not { IsLocked: true } selected)
+        {
+            Open(owner);
+            return;
+        }
+
+        _settings.SetVaults(_settings.Vaults.With(selected.Location, vault => vault with { IsLocked = false }));
+        _askPassPhrase = true;
+        try
+        {
+            Open(owner);
+        }
+        finally
+        {
+            _askPassPhrase = false;
+        }
+
+        if (Current is null && _notUpgraded is null)
+        {
+            _settings.SetVaults(_settings.Vaults.With(selected.Location, vault => vault with { IsLocked = true }));
+            Changed?.Invoke();
         }
     }
 
@@ -68,7 +107,7 @@ public sealed partial class VaultSession
         _settings.SelectVault(target);
         _log.Info("Action", $"Switch to vault {Selected?.Id?.ToString() ?? "not opened yet"}");
         Open(owner);
-        if (Current is not null || _notUpgraded is not null || NewerFormat is not null || before is null || beforeVault is null)
+        if (Current is not null || _notUpgraded is not null || NewerFormat is not null || IsLocked || before is null || beforeVault is null)
         {
             return;
         }

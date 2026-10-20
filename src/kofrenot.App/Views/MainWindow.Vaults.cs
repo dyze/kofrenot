@@ -30,7 +30,7 @@ public partial class MainWindow
         _showingVaults = true;
         try
         {
-            var choices = vaults.Select(vault => new VaultChoice(vault, _session.NameOf(vault))).ToList();
+            var choices = vaults.Select(vault => new VaultChoice(vault, vault.IsLocked ? $"🔒 {_session.NameOf(vault)}" : _session.NameOf(vault))).ToList();
             VaultBox.ItemsSource = choices;
             VaultBox.SelectedItem = choices.FirstOrDefault(choice => choice.Vault.Location == _session.Selected?.Location);
         }

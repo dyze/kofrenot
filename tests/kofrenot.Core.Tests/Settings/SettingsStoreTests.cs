@@ -98,6 +98,27 @@ public sealed class SettingsStoreTests : IDisposable
     }
 
     [Fact]
+    public void ALockedVault_StaysLocked_AndAnUnlockedOneWritesNoMark()
+    {
+        var store = new SettingsStore(FilePath);
+        store.SetVaults(new VaultList([new RegisteredVault(new VaultLocation(@"D:\a"), IsLocked: true), new RegisteredVault(new VaultLocation(@"D:\b"))]));
+
+        var reloaded = new SettingsStore(FilePath);
+
+        Assert.Equal([true, false], reloaded.Vaults.Vaults.Select(vault => vault.IsLocked));
+        Assert.Equal(1, File.ReadAllText(FilePath).Split("\"Locked\"").Length - 1);
+    }
+
+    [Fact]
+    public void AVaultOfAnEarlierFile_IsUnlocked()
+    {
+        Directory.CreateDirectory(_directory);
+        File.WriteAllText(FilePath, "{\"Vaults\":[{\"Folder\":\"D:\\\\a\"}]}");
+
+        Assert.False(Assert.Single(new SettingsStore(FilePath).Vaults.Vaults).IsLocked);
+    }
+
+    [Fact]
     public void AHotkey_IsTaken_ByTheMainOneOrAnotherVault()
     {
         var ctrlAltI = new Hotkey(HotkeyModifiers.Ctrl | HotkeyModifiers.Alt, "I");

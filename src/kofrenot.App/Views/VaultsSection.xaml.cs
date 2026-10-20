@@ -113,6 +113,7 @@ public partial class VaultsSection : UserControl
         StatusText.Text = (selected, session.Current) switch
         {
             (_, { } current) when open => $"{OpenText(current)}, measuring its size…",
+            (_, _) when vault.IsLocked => "Locked: Unlock in the main window asks its pass phrase.",
             (false, _) => "Not open. Choose it in the main window to open it.",
             (_, _) when session.NewerFormat is { } format => $"Closed: written by a newer kofrenot (vault format {format}). Install the latest kofrenot to open it.",
             (_, _) when session.OlderFormat is { } older => $"Not used: in format {older}, it needs an upgrade to format {VaultFormat.Current}. Upgrade it from the main window.",
