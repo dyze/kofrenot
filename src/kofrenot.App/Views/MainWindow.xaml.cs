@@ -319,6 +319,13 @@ public partial class MainWindow : Window
             return;
         }
 
+        if (Keyboard.Modifiers == ModifierKeys.Control && e.Key == Key.K && DetailsShown && DetailsPanel.IsVisible)
+        {
+            DetailsPanel.StartLink();
+            e.Handled = true;
+            return;
+        }
+
         if (Keyboard.Modifiers == ModifierKeys.Control && HandleVaultKey(e.Key))
         {
             e.Handled = true;

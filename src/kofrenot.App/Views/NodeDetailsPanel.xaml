@@ -22,7 +22,6 @@
       <RowDefinition x:Name="NoteRow" Height="Auto" />
       <RowDefinition Height="Auto" />
       <RowDefinition Height="*" />
-      <RowDefinition Height="Auto" />
     </Grid.RowDefinitions>
 
     <ItemsControl x:Name="Breadcrumb" FontSize="{StaticResource SecondaryFontSize}">
@@ -172,7 +171,33 @@
 
     <local:NoteEditor x:Name="NoteBox" Grid.Row="2" Visibility="Collapsed" />
 
-    <TextBlock x:Name="LinksHeader" Grid.Row="3" Margin="2,18,0,4" FontWeight="SemiBold" />
+    <StackPanel Grid.Row="3" Margin="0,18,0,4">
+      <StackPanel Orientation="Horizontal">
+        <TextBlock x:Name="LinksHeader" Margin="2,0,0,0" VerticalAlignment="Center" FontWeight="SemiBold" />
+        <Button Margin="10,0,0,0"
+                Padding="8,1"
+                Style="{StaticResource FlatButton}"
+                Focusable="False"
+                Content="+ Link"
+                ToolTip="Link this node to another one (Ctrl+K)"
+                Click="AddLinkButton_Click" />
+      </StackPanel>
+
+      <!-- Shown by + Link or Ctrl+K: typed as in the input box, after the node's name
+           ("relates to Frank Herbert"); Enter shows the creation screen, Esc clears then hides. -->
+      <StackPanel x:Name="LinkRow" Margin="0,6,0,0" Visibility="Collapsed">
+        <Grid>
+          <TextBox x:Name="LinkBox" Padding="8,4" TextChanged="LinkBox_TextChanged" />
+          <TextBlock x:Name="LinkPlaceholder"
+                     Margin="11,0,0,0"
+                     VerticalAlignment="Center"
+                     IsHitTestVisible="False"
+                     Opacity="0.5"
+                     Text="relates to Frank Herbert" />
+        </Grid>
+        <TextBlock x:Name="LinkPreviewText" Margin="2,4,0,0" Opacity="0.7" TextWrapping="Wrap" />
+      </StackPanel>
+    </StackPanel>
 
     <ScrollViewer Grid.Row="4" VerticalScrollBarVisibility="Auto" Focusable="False">
       <ItemsControl x:Name="LinksList" Grid.IsSharedSizeScope="True">
@@ -210,20 +235,5 @@
         </ItemsControl.ItemTemplate>
       </ItemsControl>
     </ScrollViewer>
-
-    <!-- Links this node: typed as in the input box, after its name ("relates to Frank Herbert");
-         Enter shows the creation screen, Esc clears. -->
-    <StackPanel Grid.Row="5" Margin="0,10,0,0">
-      <Grid>
-        <TextBox x:Name="LinkBox" Padding="8,4" TextChanged="LinkBox_TextChanged" />
-        <TextBlock x:Name="LinkPlaceholder"
-                   Margin="11,0,0,0"
-                   VerticalAlignment="Center"
-                   IsHitTestVisible="False"
-                   Opacity="0.5"
-                   Text="Link: relates to Frank Herbert" />
-      </Grid>
-      <TextBlock x:Name="LinkPreviewText" Margin="2,4,0,0" Opacity="0.7" TextWrapping="Wrap" Visibility="Collapsed" />
-    </StackPanel>
   </Grid>
 </UserControl>
