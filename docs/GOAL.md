@@ -41,12 +41,29 @@ Details: [ARCHITECTURE.md](ARCHITECTURE.md#vault).
 
 ## Principles
 - **Private and self-hosted.** The data lives in the user's own folders. No third-party cloud required.
-- **Secure.** Everything in the vault, names included, is encrypted; only the header (format, key parameters) is plain.
+- **Robust and secure, first.** The vault holds what matters to the user: no data lost, corrupted or readable by others, whatever the sync tool, the other apps or a crash do. A feature that weakens this is not done. Everything in the vault, names included, is encrypted; only the header (format, key parameters) is plain. How: [Robust and secure](#robust-and-secure).
 - **Offline first.** Every device has the full vault: browsing, searching and adding work without a network.
 - **Content on demand.** A note's or dataset's content is read only when needed, never kept in memory or in the snapshot. Fetching it from a server, and keeping it offline on request, come with the server.
 - **Versioned.** Changes are kept, never overwritten.
 - **Conflicts are easy.** Files are only added, so the only conflicts are in the meaning (the same name added twice, or a node renamed on two devices before they synced): they are shown, not resolved silently.
 - **Logic in Core.** The domain is plain .NET in `kofrenot.Core`, independent of Windows and of the UI.
+
+## Robust and secure
+What could go wrong, and how it is addressed today:
+
+| Risk | Addressed by | Status |
+| --- | --- | --- |
+| Half-written file (crash, sync tool reading early) | Written as `*.tmp`, then renamed; `.tmp` files ignored ([Folder](ARCHITECTURE.md#folder)) | Implemented |
+| Two writers on one file | Each change is a new file named by a random id, never overwritten | Implemented |
+| File locked or still being copied | Skipped, logged once, read again at the next refresh ([Folder](ARCHITECTURE.md#folder)) | Implemented; retry on a timer: [ROADMAP.md](ROADMAP.md#06-to-define) |
+| Files arriving in any order (a link before its node, a change before its content) | Kept until what they refer to arrives; the result does not depend on the order, and a removal wins ([Local snapshot](ARCHITECTURE.md#local-snapshot)) | Implemented |
+| Concurrent edits on two devices | Shown as conflicts, never merged silently ([Renames](ARCHITECTURE.md#renames), [Notes](ARCHITECTURE.md#notes)) | Implemented |
+| A vault written by a newer kofrenot | Not misread: the vault closes and asks for an upgrade ([Format](ARCHITECTURE.md#format)) | Implemented |
+| Two copies of the app writing the same local files | One copy per Windows session ([Startup](ARCHITECTURE.md#startup-and-windows)) | Implemented |
+| Someone reading or changing the files | AES-256-GCM per file, the file id as AAD: a changed, swapped or cut file fails to open ([Encryption](ARCHITECTURE.md#encryption)) | Implemented |
+| Pass phrase guessed | PBKDF2-SHA256, 600 000 iterations; the remembered key protected by Windows (DPAPI) | Implemented |
+| Secrets leaking through logs or caches | No content, search text, key or pass phrase logged; the snapshot is encrypted and stays local ([Logging](ARCHITECTURE.md#logging)) | Implemented |
+| The sync tool holding a `.tmp` during its rename | The save fails with an error, nothing lost | Not tested with Dropbox |
 
 ## Versioning
 - Format `MAJOR.MINOR`, starting at **0.1**, then 0.2, and so on. No `v` prefix, and no 1.0 until I decide.

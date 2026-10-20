@@ -16,6 +16,7 @@ Scope of each planned version. Implemented features move to [CHANGELOG.md](../CH
 1. **Restore previous versions.** If a user made a mistake he can see the list of versions and restore one of them.
 2. **File drop zone.** Main window shows a small zone in which user can drop one or several files. This is a way to secure quickly a set of files. The App, proposes a preview of actions that will be done. node names and types are determined automatically. User acks and app proceeds with actions.
 3. Tree view accepts several dropped files too, with the same preview (one file: 0.5).
+4. **Retry unreadable change files.** A change file skipped because it was locked or still being copied is read again a few seconds later, not only at the next sync event or when the window is shown ([GOAL.md](GOAL.md#robust-and-secure)).
 
 ## 0.7 (to define)
 Needs the "Sync: no server for now" decision changed ([GOAL.md](GOAL.md#decisions)).
