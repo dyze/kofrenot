@@ -1,50 +1,174 @@
-# Principles
+# kofrenot: server concept
 
-Vaults are stored on a dedicated web server. It doesn't know what is inside vault files.
-Basically the vault only stores files so such server could be used for purposes other than Kofrenot.
+The server is **Kofre** (`Kofre.Server`): generic, kofrenot is one of its clients.
 
-* Server handles multiple users.
-	* Each user has his set of vaults.
-* Several roles: admin & user
-* No web site exposed. Client App interacts with server using a REST API.
-* No admin UI for now. Admin unlocks accessing data files.
+Planned for 0.6 ([ROADMAP.md](ROADMAP.md#06-to-define)), not implemented. Decisions: [GOAL.md](GOAL.md#decisions).
 
-# REST API
+## Principles
+- **Generic and blind.** The server stores *stores*: sets of files addressed by path, with their members. It never sees a key, a name or a content, and knows nothing of kofrenot: other apps can use it.
+- **Write-once.** A file, once uploaded, is never replaced or deleted: an upload on an existing path is refused. Only a whole store can be deleted, into a trash first ([Delete](#delete)). (Packing, later, will need deletes: [ROADMAP.md](ROADMAP.md).)
+- **Offline first, unchanged.** A server vault is mirrored in a local folder: every change file is downloaded, content only when needed or pinned. `Vault` keeps reading a folder.
+- **Folder vaults stay.** A vault is a folder (as today) or a server store; both use the same keys and files ([Keys](#keys)).
+- **REST only.** No web site, no admin UI: the admin edits the server's JSON files.
 
-* User can sign up:
-	* email and password are given
-	* email must be verified, email is sent to user inviting him to click on a validation link.
-	* admin must unlock user account
-* User can sign in:
-	* Possible only when unlocked
-* User can create a vault:
-	* the server knows it by its id only: its name stays encrypted in the vault ([ARCHITECTURE.md](ARCHITECTURE.md#registered-vaults))
-	* to decide: how a device that never unlocked a vault shows its name: a placeholder (id, size) until unlocked once, or a copy of the name encrypted with an account key, stored by the server without reading it
-* User can delete and clear a vault. User validation required. Server sends a random phrase that user must key and sent to server thru another command.
-* User can list his vaults
-* User can get statistics on a vault: occupied disk space, number of files...
-* User can interacts with content of a vault:
-	* list files
-	* download/upload files
-	* lock whole vault during upload or packing?
+## Generic by design
+The server is a product of its own, used by kofrenot as one client among others, and may move to its own repository.
 
-# Techs
+| Rule | So that |
+| --- | --- |
+| No kofrenot term in its API, code, files or docs (no vault, node, identity, key epoch): only accounts, stores, members, files, feed, fence | Any app can use it |
+| Paths, file contents and account data are opaque: no format read, no file name pattern assumed | It never depends on a client's format |
+| Every behavior a client may not want is optional per store (the [fence](#fence)) | A simple client ignores it |
+| Its own project, solution folder, tests and docs; no reference to `kofrenot.Core`, and no shared code with it | It moves to another repository as is |
+| kofrenot only talks to it over HTTP (`ServerStore`, in Core) | Server and client evolve apart, through the API |
+| The API is versioned (`/v1/…`) | Clients of other versions keep working |
 
-* .NET. Kestrel?
-* Database: 
-	* json files
-	* sensitive data is encrypted. encryption key on server config file is ok.
-	* models:
-		* users
-		* user vaults
-* Security:
-	* JSON Web Token (JWT)
-	* Token refreshed reguarly
+What is kofrenot's (vault layout, identity, keys, rotation) is in this document for kofrenot, not in the server.
 
+```
+ kofrenot                                  Server (Linux, Kestrel behind nginx/Caddy for HTTPS)
+┌──────────────────────────────┐        ┌──────────────────────────────────────┐
+│ Vault ─ reads a local folder │        │ accounts.json  (admin approves here) │
+│   ▲                          │ HTTPS  │ stores/<id>/                         │
+│ IVaultStore                  │ REST   │   store.json   members, fence        │
+│   ├ FolderStore (as today)   │◄──────►│   feed.jsonl   seq → path, size      │
+│   └ ServerStore: mirror +    │  JWT   │   files/...    the client's files    │
+│     outbox, content on demand│        └──────────────────────────────────────┘
+└──────────────────────────────┘
+```
 
-# File transfer
+## Accounts
+Two secrets, never mixed:
 
-* Vaults can content a lot of small files.
-* To reduce transfer durations, several files can be transmitted at once.
-* In the opposite, if a file is huge, it can be split to several chunk during transfer.
+| Secret | Unlocks | Server sees |
+| --- | --- | --- |
+| **Password** | Signing in (tokens) | A PBKDF2 hash |
+| **Pass phrase** (+ recovery key) | kofrenot's identity, kept wrapped in the account data ([Keys](#keys)) | Never |
 
+- **Sign up:** email + password. The account waits until the admin sets `"approved": true` in `accounts.json`. No email is sent.
+- **Sign in:** approved accounts only. Returns an **access token** (JWT, 15 min: the user id only) and a **refresh token** (30 days, stored hashed, revoked by a password change or a disabled account).
+- **Access is checked at every request** against the store's members, not in the token: a removed member gets `403` at once.
+
+## Stores and members
+
+| Role | Read | Upload | Members, fence, delete, restore |
+| --- | --- | --- | --- |
+| reader | ✔ | | |
+| writer | ✔ | ✔ | |
+| owner | ✔ | ✔ | ✔ |
+
+- The creator is owner. The server knows a store by its id: the vault's name stays in its encrypted changes.
+- **Fence:** optional, see [Fence](#fence).
+- **Statistics:** disk space, number of files.
+
+### Delete
+No single call destroys data for good:
+
+```
+DELETE /v1/stores/{id}          + password  ─► in the trash: 403 for members, hidden from lists
+POST   /v1/stores/{id}/restore  + password  ─► back as it was (the admin can also restore in the JSON)
+after N days (config, 30 by default)        ─► purged from disk
+```
+
+- **Password again** (`X-Password` header) for every destructive call: a stolen token alone cannot delete.
+- **"Are you sure?" is the client's**: kofrenot asks the user to type the vault's name. The server knows nothing of it.
+- No *clear*: delete, create and add the members again.
+
+### Fence
+An optional number per store, to stop writers that are behind: the server compares numbers and knows nothing of what they mean.
+
+| Store fence | Upload without `Store-Fence` | Upload with `Store-Fence: n` |
+| --- | --- | --- |
+| Off (default) | Accepted | Accepted, header ignored |
+| `f` | Refused (`409`) | Accepted if `n ≥ f`, else refused (`409`, current fence returned) |
+
+- An owner turns it on (`PUT …/fence` with a first value), raises it (never lowers it) or turns it off (`DELETE …/fence`).
+- kofrenot turns it on for each server vault and raises it to the new key epoch at each [rotation](#rotation): a device that has not seen the latest epoch cannot add files under the old key. Another app may use it for anything else, or never.
+
+## REST API (sketch)
+
+| Method and path                                                                              | Does                                                                                                                                                                  |
+| -------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `POST /v1/accounts`                                                                          | Sign up                                                                                                                                                               |
+| `POST /v1/sessions`, `POST /v1/sessions/refresh`                                             | Sign in, refresh                                                                                                                                                      |
+| `PUT /v1/accounts/me/password`                                                               | Change password (revokes refresh tokens)                                                                                                                              |
+| `GET/PUT /v1/accounts/me/data`                                                               | Opaque account data: a public part other users can read, a private part only its owner reads (kofrenot: the identity's public key, and its private key wrapped twice) |
+| `GET /v1/accounts/{id}/public`, `GET /v1/accounts?email=`                                    | Find a user to share with, and read their public part                                                                                                                 |
+| `GET/POST /v1/stores`                                                                        | List (owned and shared), create                                                                                                                                       |
+| `GET /v1/stores/{id}/stats`                                                                  | Size, file count                                                                                                                                                      |
+| `DELETE /v1/stores/{id}`, `POST /v1/stores/{id}/restore` | To the trash, back from it (password again): [Delete](#delete) |
+| `PUT/DELETE /v1/stores/{id}/members/{user}`                                                  | Add, change role, remove                                                                                                                                              |
+| `PUT/DELETE /v1/stores/{id}/fence`                                                           | Turn on or raise, turn off the [fence](#fence)                                                                                                                        |
+| `GET /v1/stores/{id}/feed?since={seq}`                                                       | Files added since `seq`                                                                                                                                               |
+| `GET/PUT /v1/stores/{id}/files/{path}`                                                       | Download, upload (create only; optional `Store-Fence` header)                                                                                                         |
+| `POST /v1/stores/{id}/batch`                                                                 | Download many small files in one stream                                                                                                                               |
+| `POST /v1/stores/{id}/uploads`, `PUT …/{upload}/{part}`, `POST …/{upload}/commit`            | Big file in parts, resumable; the file appears at commit only                                                                                                         |
+
+## Keys
+Same model for folder and server vaults: only where the files are differs.
+
+```
+pass phrase ──PBKDF2──┐                 recovery key (random, shown once) ──┐
+                      ▼                                                     ▼
+            identity private key  ◄── unwraps ── two wraps of the same key ─┘
+                      │  ECDH P-256 + HKDF + AES-GCM
+                      ▼
+ keys/epoch-N/<identity>   vault key N, wrapped for that identity
+ keys/epoch-N/chain        vault key N-1, wrapped by key N
+                      │
+                      ▼  key id in every file
+          changes/, content/ (AES-256-GCM, as today)
+```
+
+| | Folder vault | Server vault |
+| --- | --- | --- |
+| Identity (public key + 2 wraps) | In the vault: `keys/identities/<id>.json`, one per member | In the account: one for all its server vaults |
+| Pass phrase, recovery key | One per vault (as today) | One per account |
+| Vault keys | `keys/epoch-N/…` in the vault | Same, in the store |
+| Removing a member | Rotation only (and the user stops sharing the folder) | Server access removed, then rotation |
+| Reader role | Not enforceable | Enforced by the server |
+
+- **Open:** unwrap the identity, then the latest epoch, then the chain: a table *key id → key* in memory. A file access only looks up its key id.
+- **Change pass phrase:** wrap the identity again; nothing else changes. A folder vault's identity file is rewritten (`.tmp`, then renamed), like the header today.
+- **Lost pass phrase:** the recovery key unwraps the identity; choose a new pass phrase. Both lost: the data is lost, unless another member shares the vault again with a new identity.
+- **Pass phrase or recovery key leaked:** new identity (key pair), then rotation of every vault it can open. Changing the password only stops access through the server.
+- **Remember pass phrase** (DPAPI) keeps the identity's private key per vault or account.
+- Built into .NET (`ECDiffieHellman`, `HKDF`, `AesGcm`, `Rfc2898DeriveBytes`): no package.
+
+### Sharing
+1. The owner looks the member up by email; the server returns their id and public key.
+2. kofrenot shows the key's **fingerprint**: owner and member compare it out of band (phone, in person), so a server cannot swap keys.
+3. The current vault key is wrapped for the member (`keys/epoch-N/<member>`), and the member is added with a role.
+
+A folder vault is shared the same way, with the member's identity added to `keys/identities/` by their kofrenot.
+
+### Rotation
+Done by an owner's kofrenot when a member is removed, or on demand (*Rotate key*):
+
+```
+1. server: remove the member (server vault)  ─► 403 from now on
+2. new vault key N+1, wrapped for each remaining member + chain (N wrapped by N+1)
+3. server: fence = N+1                       ─► uploads under N refused
+4. every device writes with N+1 once it has synced
+```
+
+- Files are never re-encrypted: what the removed member already had stays readable to them; what is added after is not.
+- Cost: a few 100-byte files per member and rotation; opening walks the chain once (under 1 ms for dozens of epochs).
+
+### Format 6
+A breaking change, agreed with the owner (2026-10-20): `VaultFormat.Current` becomes 6.
+- New: `keys/` (identities, epochs, chain) and a key id in every change and content file.
+- An existing vault is upgraded without rewriting a file: its master key becomes **epoch 0**, a file without a key id is read with it, and `keys/` is added (identity, epoch 0 wrapped for it, recovery key shown). Asked through the existing upgrade question ([ARCHITECTURE.md](ARCHITECTURE.md#upgrade)).
+
+## Client sync
+- **Mirror:** a server vault is mirrored in `%LocalAppData%\kofrenot\stores\<id>\` with the folder vault layout; `Vault` reads it as a folder.
+- **Download:** the feed since the last `seq`: every file under `keys/` and `changes/` at once (batched), `content/` when shown or exported, or ahead for pinned nodes.
+- **Upload:** written to the mirror first, queued in an outbox, sent when online: adding works offline.
+- **Name of a vault not yet opened on this device:** shown as a placeholder (id, size) until the account's identity is unlocked; then read from its `nameVault` changes like any vault.
+
+## Server storage
+- JSON files on disk: `accounts.json` (email, password hash, approved, disabled), `stores/<id>/store.json` (owner, members and roles, fence, last `seq`), `stores/<id>/feed.jsonl`, `stores/<id>/files/…`.
+- The token signing key is in the server's configuration file.
+- Only `ASP.NET Core` (part of .NET) and `Microsoft.AspNetCore.Authentication.JwtBearer`; tests with `Microsoft.AspNetCore.Mvc.Testing` (in-memory server): agreed.
+- New projects: `Kofre.Server` and `Kofre.Server.Tests`, following [Generic by design](#generic-by-design). Line coverage ≥ 95 %, enforced by `build.cmd` as for Core.
+- Its docs: `src/Kofre.Server/README.md`. Once implemented, the server part of this document moves there, so it leaves with the server; what stays here is kofrenot's use of it.

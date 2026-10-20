@@ -61,8 +61,10 @@ One namespace per folder (`Kofrenot.Core.Settings`, `Kofrenot.UI.Views`, ...). T
 | Package | Project | Use |
 | --- | --- | --- |
 | `Serilog`, `Serilog.Sinks.File` | App | Log file |
-| `coverlet.msbuild` | Tests | Coverage of `Core`, build fails below 95 % lines |
+| `coverlet.msbuild` | Tests | Coverage of `Core` (and `Kofre.Server`, planned: 0.6), build fails below 95 % lines |
 | `dotnet-reportgenerator-globaltool` | Local tool (`.config/dotnet-tools.json`) | HTML coverage report (`build.cmd`) |
+| ASP.NET Core (shared framework), `Microsoft.AspNetCore.Authentication.JwtBearer` | `Kofre.Server` (planned: 0.6) | REST API, tokens ([SERVER-CONCEPT.md](SERVER-CONCEPT.md)) |
+| `Microsoft.AspNetCore.Mvc.Testing` | `Kofre.Server.Tests` (planned: 0.6) | API tests on an in-memory server |
 
 The update check uses .NET's own `HttpClient` (`GitHubReleaseFeed` in App): kofrenot's only network access so far. Encryption uses .NET's own `AesGcm` and `Rfc2898DeriveBytes` (Core), and `ProtectedData` (DPAPI, part of the Windows desktop framework, App): no package.
 
