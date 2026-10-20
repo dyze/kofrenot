@@ -1,41 +1,60 @@
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Controls.Primitives;
 using Kofrenot.Core.Browse;
 using Kofrenot.Core.Graph;
 using Kofrenot.Core.Input;
 
 namespace Kofrenot.UI.Views;
 
-/// <summary>A node's type: a generic node can be made a note, a dataset or a view; a type conflict is resolved by keeping one.</summary>
+/// <summary>
+/// A node's type: a generic node shows it in a combo, to make it a note, a dataset or a view (asked
+/// first, as it cannot be undone); a type conflict is resolved by keeping one.
+/// </summary>
 public partial class NodeDetailsPanel
 {
+    // Set while the combo is filled, so its selection is not taken as the user's choice.
+    private bool _showingType;
+
     /// <summary>Gives a node another type (a view asks for its definition first); false when cancelled or not written.</summary>
     public Func<NodeRetyped, bool>? Retype { get; set; }
 
     private void ShowType(NodeDetails details)
     {
-        ChangeTypeButton.Visibility = Retype is not null && RetypePlanner.TargetsOf(details.Node).Count > 0 ? Visibility.Visible : Visibility.Collapsed;
+        var targets = RetypePlanner.TargetsOf(details.Node);
+        var canChange = Retype is not null && targets.Count > 0;
+        TypeBox.Visibility = canChange ? Visibility.Visible : Visibility.Collapsed;
+        TypeText.Visibility = canChange ? Visibility.Collapsed : Visibility.Visible;
+        if (canChange)
+        {
+            _showingType = true;
+            try
+            {
+                TypeBox.ItemsSource = targets.Prepend(TypeCatalog.Generic).ToList();
+                TypeBox.SelectedItem = TypeCatalog.Generic;
+            }
+            finally
+            {
+                _showingType = false;
+            }
+        }
+
         ConflictTypes.ItemsSource = details.TypeConflict;
         TypeConflictPanel.Visibility = details.TypeConflict.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
     }
 
-    private void ChangeTypeButton_Click(object sender, RoutedEventArgs e)
+    private void TypeBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        if (Browser.Details is not { } details)
+        if (_showingType || TypeBox.SelectedItem is not NodeType type || type == TypeCatalog.Generic || Browser.Details is not { } details)
         {
             return;
         }
 
-        var menu = new ContextMenu { PlacementTarget = ChangeTypeButton, Placement = PlacementMode.Bottom };
-        foreach (var type in RetypePlanner.TargetsOf(details.Node))
+        var name = type.Name.ToLowerInvariant();
+        var question = $"Make “{details.Name}” a {name}?\n\nThis cannot be undone: a note, a dataset or a view stays one.";
+        if (!MessageDialog.Confirm(Window.GetWindow(this), question, $"Make it a {name}", "Cancel") || !ChangeType(type))
         {
-            var item = new MenuItem { Header = type.Name };
-            item.Click += (_, _) => ChangeType(type);
-            menu.Items.Add(item);
+            Show();
         }
-
-        menu.IsOpen = true;
     }
 
     private void KeepType_Click(object sender, RoutedEventArgs e)
@@ -46,13 +65,17 @@ public partial class NodeDetailsPanel
         }
     }
 
-    private void ChangeType(NodeType type)
+    /// <summary>False when it is not written (refused, cancelled, or it failed).</summary>
+    private bool ChangeType(NodeType type)
     {
-        if (Browser is { Graph: { } graph, Details: { } details }
-            && new RetypePlanner(graph).Plan(details.Node, type) is { Change: { } change }
-            && Retype?.Invoke(change) == true)
+        if (Browser is not { Graph: { } graph, Details: { } details }
+            || new RetypePlanner(graph).Plan(details.Node, type) is not { Change: { } change }
+            || Retype?.Invoke(change) != true)
         {
-            Show();
+            return false;
         }
+
+        Show();
+        return true;
     }
 }

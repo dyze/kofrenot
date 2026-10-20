@@ -142,17 +142,17 @@
             <RowDefinition Height="Auto" />
           </Grid.RowDefinitions>
           <TextBlock Opacity="0.7" Text="Type" />
-          <!-- A generic node: Change to… gives it a more specific type (note, dataset, view). -->
-          <StackPanel Grid.Column="1" Orientation="Horizontal">
+          <!-- A generic node: its type in a combo, to make it a note, a dataset or a view (asked first: it cannot be undone). -->
+          <Grid Grid.Column="1">
             <TextBlock x:Name="TypeText" VerticalAlignment="Center" />
-            <Button x:Name="ChangeTypeButton"
-                    Margin="10,0,0,0"
-                    Padding="10,2"
-                    Content="Change to…"
-                    ToolTip="Make this node a note, a dataset or a view"
-                    Visibility="Collapsed"
-                    Click="ChangeTypeButton_Click" />
-          </StackPanel>
+            <ComboBox x:Name="TypeBox"
+                      MinWidth="120"
+                      HorizontalAlignment="Left"
+                      DisplayMemberPath="Name"
+                      ToolTip="Make this node a note, a dataset or a view"
+                      Visibility="Collapsed"
+                      SelectionChanged="TypeBox_SelectionChanged" />
+          </Grid>
           <TextBlock Grid.Row="1" Opacity="0.7" Text="Created" />
           <TextBlock x:Name="CreatedText" Grid.Row="1" Grid.Column="1" />
           <!-- The latest of its creation, its names and its content versions (NodeFacts), as a view's Details. -->
