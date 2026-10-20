@@ -129,6 +129,8 @@ public partial class MainWindow : Window
         StatePanel.Visibility = open ? Visibility.Collapsed : Visibility.Visible;
         TabStrip.Visibility = open ? Visibility.Visible : Visibility.Collapsed;
         TitleText.Visibility = open ? Visibility.Collapsed : Visibility.Visible;
+        LockButton.Visibility = open ? Visibility.Visible : Visibility.Collapsed;
+        Title = SelectedName.Length > 0 ? $"{SelectedName} – kofrenot" : "kofrenot";
         if (vault is not null)
         {
             VaultText.Text = $"{SelectedName} · {vault.Graph.Nodes.Count} nodes · {vault.Graph.Links.Count} links";
@@ -314,6 +316,12 @@ public partial class MainWindow : Window
         if (e.Key == Key.Tab && Keyboard.Modifiers.HasFlag(ModifierKeys.Control))
         {
             e.Handled = SwitchTab(Keyboard.Modifiers.HasFlag(ModifierKeys.Shift) ? -1 : 1);
+            return;
+        }
+
+        if (Keyboard.Modifiers == ModifierKeys.Control && HandleVaultKey(e.Key))
+        {
+            e.Handled = true;
             return;
         }
 

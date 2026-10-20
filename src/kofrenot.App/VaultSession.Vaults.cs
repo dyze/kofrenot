@@ -41,6 +41,16 @@ public sealed partial class VaultSession
         }
     }
 
+    /// <summary>Closes the open vault, still selected: <see cref="Open"/> unlocks it again.</summary>
+    public void Lock()
+    {
+        if (Current is { } vault)
+        {
+            _log.Info("Action", $"Vault {vault.Id} locked");
+            Close();
+        }
+    }
+
     /// <summary>
     /// Closes the open vault, then opens the registered one at <paramref name="target"/>, selected
     /// from now on. When it cannot be opened (its pass phrase cancelled, not a vault, an error),

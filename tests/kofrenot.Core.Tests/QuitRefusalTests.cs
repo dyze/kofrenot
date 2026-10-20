@@ -24,6 +24,12 @@ public sealed class QuitRefusalTests
     }
 
     [Fact]
+    public void LockingTheVault_IsRefusedForTheSameReasons() =>
+        Assert.Equal(
+            "kofrenot cannot lock the vault now.\n\nA file is being imported: wait until it ends.\n\nThen lock the vault again.",
+            QuitRefusal.Reason(unsavedNote: null, importsRunning: 1, QuitRefusal.LockVault));
+
+    [Fact]
     public void OneImport_IsAFile()
     {
         var reason = QuitRefusal.Reason(unsavedNote: null, importsRunning: 1);

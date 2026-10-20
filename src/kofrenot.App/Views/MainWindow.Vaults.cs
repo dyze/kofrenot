@@ -1,6 +1,7 @@
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using Kofrenot.Core;
 using Kofrenot.Core.Logging;
 using Kofrenot.Core.Settings;
@@ -61,6 +62,54 @@ public partial class MainWindow
         Dispatcher.BeginInvoke(() => SwitchTo(target.Location));
     }
 
+    /// <summary>Ctrl+L locks the vault; Ctrl+1 to Ctrl+9 switch to the vault at that place in the list. False for another key.</summary>
+    private bool HandleVaultKey(Key key)
+    {
+        if (key == Key.L)
+        {
+            Lock();
+            return true;
+        }
+
+        var place = key switch
+        {
+            >= Key.D1 and <= Key.D9 => key - Key.D1,
+            >= Key.NumPad1 and <= Key.NumPad9 => key - Key.NumPad1,
+            _ => -1,
+        };
+        if (place < 0 || place >= _session.Vaults.Count)
+        {
+            return false;
+        }
+
+        if (_session.Vaults[place].Location != _session.Selected?.Location)
+        {
+            _log.Info("Action", $"Switch vaults with Ctrl+{place + 1}");
+            SwitchTo(_session.Vaults[place].Location);
+        }
+
+        return true;
+    }
+
+    private void LockButton_Click(object sender, RoutedEventArgs e) => Lock();
+
+    /// <summary>Locks the open vault: closed, still selected; the state panel offers to unlock it. Not while <see cref="WhyNotSwitch"/>.</summary>
+    private void Lock()
+    {
+        if (_session.Current is null)
+        {
+            return;
+        }
+
+        if (WhyNot(QuitRefusal.LockVault) is { } reason)
+        {
+            MessageDialog.Inform(this, reason);
+            return;
+        }
+
+        _session.Lock();
+    }
+
     /// <summary>
     /// A vault's hotkey: shows this window on that vault, switching to it; hides the window when
     /// it is in front showing that vault already.
@@ -86,10 +135,12 @@ public partial class MainWindow
     /// Why the open vault cannot be closed for another now: a file is being imported, or the note
     /// shown could not be saved (it is saved first, as when the window is hidden). Null otherwise.
     /// </summary>
-    public string? WhyNotSwitch()
+    public string? WhyNotSwitch() => WhyNot(QuitRefusal.SwitchVaults);
+
+    private string? WhyNot(string action)
     {
         DetailsPanel.LeaveNote();
-        return QuitRefusal.Reason(DetailsPanel.UnsavedNote, _session.ImportsRunning, QuitRefusal.SwitchVaults);
+        return QuitRefusal.Reason(DetailsPanel.UnsavedNote, _session.ImportsRunning, action);
     }
 
     /// <summary>Switches to another registered vault, unless <see cref="WhyNotSwitch"/>.</summary>
