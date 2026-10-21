@@ -33,7 +33,8 @@ public sealed class SettingsStore
 {
     private readonly string _path;
 
-    public SettingsStore(string path)
+    /// <param name="mirrorOf">The local mirror of a server vault's store; null keeps the folder saved.</param>
+    public SettingsStore(string path, Func<Guid, string>? mirrorOf = null)
     {
         _path = path;
 
@@ -46,7 +47,10 @@ public sealed class SettingsStore
         MainWindowPosition = Enum.TryParse<MainWindowPosition>(data?.MainWindowPosition, ignoreCase: true, out var position) && Enum.IsDefined(position)
             ? position
             : MainWindowPosition.Centered;
-        (Vaults, SelectedVault) = VaultsOf(data);
+        (Vaults, SelectedVault) = VaultsOf(data, mirrorOf);
+        Server = data?.Server is { Url: { } url, Email: { } email } && Uri.TryCreate(url, UriKind.Absolute, out var server)
+            ? new ServerAccount(server, email)
+            : null;
         Hotkey = Hotkey.TryParse(data?.Hotkey, out var hotkey) ? hotkey : Hotkey.Default;
     }
 
@@ -69,6 +73,15 @@ public sealed class SettingsStore
 
     /// <summary>The global shortcut that shows kofrenot. Ctrl+Alt+K by default.</summary>
     public Hotkey Hotkey { get; private set; }
+
+    /// <summary>The server account; null when none was set.</summary>
+    public ServerAccount? Server { get; private set; }
+
+    public void SetServer(ServerAccount? server)
+    {
+        Server = server;
+        Save();
+    }
 
     public void SetDebugLogging(bool enabled)
     {
@@ -143,8 +156,13 @@ public sealed class SettingsStore
         // VaultFolder still names the selected vault, for a kofrenot 0.4 started again.
         var data = new SettingsData(DebugLogging, Theme.ToString(), CheckForUpdates, SelectedVault?.Folder, Hotkey.ToString(), MainWindowPosition.ToString())
         {
-            Vaults = [.. Vaults.Vaults.Select(vault => new VaultData(vault.Location.Folder, vault.Id, vault.Hotkey?.ToString(), vault.IsLocked ? true : null))],
+            Vaults = [.. Vaults.Vaults.Select(vault => new VaultData(vault.Location.Folder, vault.Id, vault.Hotkey?.ToString(), vault.IsLocked ? true : null)
+            {
+                Server = vault.Location.Store?.Server.ToString(),
+                Store = vault.Location.Store?.Id,
+            })],
             SelectedVault = SelectedVault?.Folder,
+            Server = Server is { } server ? new ServerData(server.Server.ToString(), server.Email) : null,
         };
         File.WriteAllText(_path, JsonSerializer.Serialize(data));
     }
@@ -153,7 +171,7 @@ public sealed class SettingsStore
     /// The vaults stored, entries without a folder skipped. A file of kofrenot 0.4 or older has a
     /// single vault folder instead: it becomes the only vault, selected.
     /// </summary>
-    private static (VaultList Vaults, VaultLocation? Selected) VaultsOf(SettingsData? data)
+    private static (VaultList Vaults, VaultLocation? Selected) VaultsOf(SettingsData? data, Func<Guid, string>? mirrorOf)
     {
         if (data?.Vaults is null)
         {
@@ -166,7 +184,7 @@ public sealed class SettingsStore
             .OfType<VaultData>()
             .Where(vault => !string.IsNullOrWhiteSpace(vault.Folder))
             .Select(vault => new RegisteredVault(
-                new VaultLocation(vault.Folder!),
+                LocationOf(vault, mirrorOf),
                 vault.Id is { } id && id != Guid.Empty ? id : null,
                 Hotkey.TryParse(vault.Hotkey, out var hotkey) ? hotkey : null,
                 vault.Locked == true)));
@@ -175,6 +193,16 @@ public sealed class SettingsStore
             : vaults.Vaults.FirstOrDefault()?.Location;
         return (vaults, selected);
     }
+
+    /// <summary>
+    /// A folder vault's folder, or a server vault's store and mirror. The mirror's folder is saved
+    /// too, for a kofrenot 0.5 started again (it opens the mirror as a folder vault), but found
+    /// again from the store: the data folder of a portable copy moves with it.
+    /// </summary>
+    private static VaultLocation LocationOf(VaultData vault, Func<Guid, string>? mirrorOf) =>
+        vault is { Server: { } url, Store: { } store } && Uri.TryCreate(url, UriKind.Absolute, out var server)
+            ? new VaultLocation(mirrorOf?.Invoke(store) ?? vault.Folder!, new StoreAddress(server, store))
+            : new VaultLocation(vault.Folder!);
 
     private static SettingsData? Load(string path)
     {
@@ -201,6 +229,9 @@ public sealed class SettingsStore
         public List<VaultData?>? Vaults { get; init; }
 
         public string? SelectedVault { get; init; }
+
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public ServerData? Server { get; init; }
     }
 
     /// <param name="Folder">Missing in a damaged file: the entry is skipped.</param>
@@ -209,5 +240,16 @@ public sealed class SettingsStore
         string? Folder,
         Guid? Id,
         string? Hotkey,
-        [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] bool? Locked = null);
+        [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] bool? Locked = null)
+    {
+        /// <summary>A server vault's server; written only for one.</summary>
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public string? Server { get; init; }
+
+        /// <summary>A server vault's store; written only for one.</summary>
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public Guid? Store { get; init; }
+    }
+
+    internal sealed record ServerData(string? Url, string? Email);
 }

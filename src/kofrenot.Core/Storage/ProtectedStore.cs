@@ -5,7 +5,7 @@ using Kofrenot.Core.Logging;
 namespace Kofrenot.Core.Storage;
 
 /// <summary>
-/// Secrets kept on this computer, by vault id, in one JSON file, each protected by
+/// Secrets kept on this computer, by key (a vault id, a server), in one JSON file, each protected by
 /// <see cref="ISecretProtector"/>. A missing or damaged file means nothing kept.
 /// </summary>
 /// <param name="what">What is kept, for the log ("pass phrase").</param>
@@ -13,12 +13,15 @@ internal sealed class ProtectedStore(string path, ISecretProtector protector, st
 {
     private const string Category = "Vault";
 
-    public bool Has(Guid vault) => Load().ContainsKey(Name(vault));
+    /// <summary>The key of a vault's secret: its id.</summary>
+    public static string KeyOf(Guid vault) => vault.ToString("N");
+
+    public bool Has(string key) => Load().ContainsKey(key);
 
     /// <summary>The secret kept, or null (none, or it cannot be read on this account).</summary>
-    public byte[]? Recall(Guid vault)
+    public byte[]? Recall(string key)
     {
-        if (!Load().TryGetValue(Name(vault), out var protectedSecret))
+        if (!Load().TryGetValue(key, out var protectedSecret))
         {
             return null;
         }
@@ -29,23 +32,23 @@ internal sealed class ProtectedStore(string path, ISecretProtector protector, st
         }
         catch (CryptographicException ex)
         {
-            log.Warn(Category, $"The remembered {what} of vault {vault} cannot be read: {ex.Message}");
+            log.Warn(Category, $"The remembered {what} of {key} cannot be read: {ex.Message}");
             return null;
         }
     }
 
-    public void Remember(Guid vault, byte[] secret)
+    public void Remember(string key, byte[] secret)
     {
         var secrets = Load();
-        secrets[Name(vault)] = protector.Protect(secret);
+        secrets[key] = protector.Protect(secret);
         Save(secrets);
     }
 
-    /// <summary>False when nothing was kept for this vault.</summary>
-    public bool Forget(Guid vault)
+    /// <summary>False when nothing was kept for this key.</summary>
+    public bool Forget(string key)
     {
         var secrets = Load();
-        if (!secrets.Remove(Name(vault)))
+        if (!secrets.Remove(key))
         {
             return false;
         }
@@ -53,8 +56,6 @@ internal sealed class ProtectedStore(string path, ISecretProtector protector, st
         Save(secrets);
         return true;
     }
-
-    private static string Name(Guid vault) => vault.ToString("N");
 
     private Dictionary<string, byte[]> Load()
     {

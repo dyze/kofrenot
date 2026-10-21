@@ -16,6 +16,7 @@ public static class SettingsCatalog
     public const string GeneralTab = "General";
     public const string KeyBindingsTab = "Key bindings";
     public const string VaultTab = "Vault";
+    public const string ServerTab = "Server";
     public const string LinkTypesTab = "Link types";
     public const string AppearanceTab = "Appearance";
     public const string LoggingTab = "Logging";
@@ -25,6 +26,7 @@ public static class SettingsCatalog
     public const string MainWindowPositionId = "MainWindowPosition";
     public const string KeyBindingsId = "KeyBindings";
     public const string VaultsId = "Vaults";
+    public const string ServerId = "Server";
     public const string LinkAliasesId = "LinkAliases";
     public const string ThemeId = "Theme";
     public const string DebugLoggingId = "DebugLogging";
@@ -34,7 +36,7 @@ public static class SettingsCatalog
     public const string FilesId = "Files";
 
     /// <summary>The tabs, in the order they are shown.</summary>
-    public static IReadOnlyList<string> Tabs { get; } = [GeneralTab, KeyBindingsTab, VaultTab, LinkTypesTab, AppearanceTab, LoggingTab, AboutTab];
+    public static IReadOnlyList<string> Tabs { get; } = [GeneralTab, KeyBindingsTab, VaultTab, ServerTab, LinkTypesTab, AppearanceTab, LoggingTab, AboutTab];
 
     public static IReadOnlyList<SettingInfo> All { get; } =
     [
@@ -44,6 +46,7 @@ public static class SettingsCatalog
         new(VaultsId, VaultTab, "Vaults: name, folder, remembered pass phrase", [
             "database", "folder", "sync", "dropbox", "share", "nodes", "open", "create", "add", "remove", "several", "order", "name", "rename",
             "password", "passphrase", "forget", "remember", "unlock", "secret"]),
+        new(ServerId, ServerTab, "Server account: sign up, sign in, sign out", ["kofre", "web", "url", "account", "email", "signup", "online", "offline", "cloud"]),
         new(LinkAliasesId, LinkTypesTab, "Link types and their aliases", ["alias", "phrase", "relates", "contains", "instance", "reverse", "input"]),
         new(ThemeId, AppearanceTab, "Theme", ["dark", "light", "mode", "color", "colour"]),
         new(DebugLoggingId, LoggingTab, "Detailed (debug) logging", ["log", "verbose", "trace"]),

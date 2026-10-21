@@ -268,6 +268,60 @@ public sealed class SettingsStoreTests : IDisposable
         Assert.False(reloaded.CheckForUpdates);
     }
 
+    [Fact]
+    public void AServerVault_KeepsItsStore_AndFindsItsMirrorAgain()
+    {
+        var store = Guid.NewGuid();
+        var address = new StoreAddress(new Uri("https://kofre.example/"), store);
+        var vault = new RegisteredVault(new VaultLocation(@"E:\old\stores\" + store.ToString("N"), address), Guid.NewGuid());
+        var settings = new SettingsStore(FilePath);
+        settings.SetVaults(new VaultList([vault]));
+
+        var moved = new SettingsStore(FilePath, id => @"F:\kofrenot\data\stores\" + id.ToString("N")).Vaults.Vaults.Single();
+        var kept = new SettingsStore(FilePath).Vaults.Vaults.Single();
+
+        Assert.Equal(address, moved.Location.Store);
+        Assert.Equal(@"F:\kofrenot\data\stores\" + store.ToString("N"), moved.Location.Folder);
+        Assert.Equal(vault.Location.Folder, kept.Location.Folder);
+        Assert.Contains("\"Folder\":", File.ReadAllText(FilePath));
+    }
+
+    [Fact]
+    public void AFolderVault_HasNoServerWritten()
+    {
+        var settings = new SettingsStore(FilePath);
+        settings.SetVaults(new VaultList([new RegisteredVault(new VaultLocation(@"D:\Sync\private"))]));
+
+        Assert.Null(new SettingsStore(FilePath).Vaults.Vaults.Single().Location.Store);
+        Assert.DoesNotContain("Server", File.ReadAllText(FilePath));
+    }
+
+    [Fact]
+    public void TheServerAccount_IsPersisted_AndCleared()
+    {
+        var account = new ServerAccount(new Uri("https://kofre.example/"), "ada@example.com");
+        var settings = new SettingsStore(FilePath);
+
+        settings.SetServer(account);
+        Assert.Equal(account, new SettingsStore(FilePath).Server);
+
+        settings.SetServer(null);
+        Assert.Null(new SettingsStore(FilePath).Server);
+    }
+
+    [Fact]
+    public void AServerWithAnInvalidAddress_IsIgnored()
+    {
+        Directory.CreateDirectory(_directory);
+        File.WriteAllText(FilePath, """{"Server":{"Url":"not a url","Email":"ada@example.com"},"Vaults":[{"Folder":"D:\\m","Server":"not a url","Store":"7e1c5ad2-3c1b-4a7e-9a39-6f1b2f6a1d00"}]}""");
+
+        var settings = new SettingsStore(FilePath, _ => @"D:\other");
+
+        Assert.Null(settings.Server);
+        Assert.Equal(new VaultLocation(@"D:\m"), settings.Vaults.Vaults.Single().Location);
+        Assert.Null(settings.Vaults.Vaults.Single().Location.Store);
+    }
+
     public void Dispose()
     {
         if (Directory.Exists(_directory))

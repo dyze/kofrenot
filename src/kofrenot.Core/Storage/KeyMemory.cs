@@ -15,20 +15,20 @@ public sealed class KeyMemory(string path, ISecretProtector protector, ILog? log
     private readonly ILog _log = log ?? NullLog.Instance;
     private readonly ProtectedStore _store = new(path, protector, "pass phrase", log ?? NullLog.Instance);
 
-    public bool Has(Guid vault) => _store.Has(vault);
+    public bool Has(Guid vault) => _store.Has(ProtectedStore.KeyOf(vault));
 
     /// <summary>The remembered key, or null (none, or it cannot be read on this account).</summary>
-    public byte[]? Recall(Guid vault) => _store.Recall(vault);
+    public byte[]? Recall(Guid vault) => _store.Recall(ProtectedStore.KeyOf(vault));
 
     public void Remember(Guid vault, byte[] masterKey)
     {
-        _store.Remember(vault, masterKey);
+        _store.Remember(ProtectedStore.KeyOf(vault), masterKey);
         _log.Info(Category, $"Pass phrase of vault {vault} remembered");
     }
 
     public void Forget(Guid vault)
     {
-        if (_store.Forget(vault))
+        if (_store.Forget(ProtectedStore.KeyOf(vault)))
         {
             _log.Info(Category, $"Remembered pass phrase of vault {vault} forgotten");
         }

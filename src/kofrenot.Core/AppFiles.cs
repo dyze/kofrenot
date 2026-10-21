@@ -71,6 +71,18 @@ public sealed class AppFiles
 
     public string Logs => Path.Combine(DataDirectory, "logs");
 
+    /// <summary>The server session (refresh token), protected by Windows (DPAPI).</summary>
+    public string ServerSession => Path.Combine(DataDirectory, "server-session.json");
+
+    /// <summary>The local mirrors of the server vaults, one folder each, with their sync states.</summary>
+    public string Mirrors => Path.Combine(DataDirectory, "stores");
+
+    /// <summary>The mirror of a server vault's store: a folder with the vault layout.</summary>
+    public string MirrorOf(Guid store) => Path.Combine(Mirrors, store.ToString("N"));
+
+    /// <summary>What the last sync of a store's mirror knows (<see cref="Server.ServerSync"/>).</summary>
+    public string SyncStateOf(Guid store) => MirrorOf(store) + ".sync.json";
+
     /// <summary>The changelog, shipped next to kofrenot.exe.</summary>
     public string Changelog => Path.Combine(ProgramDirectory, "CHANGELOG.md");
 
@@ -87,6 +99,8 @@ public sealed class AppFiles
         new("Remembered pass phrases", RememberedKeys),
         new("Vault names", VaultNames),
         new("Vault snapshots", Cache),
+        new("Server session", ServerSession),
+        new("Server vault mirrors", Mirrors),
         new("Logs", Logs),
         new("Program", ProgramDirectory),
     ];

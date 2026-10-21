@@ -29,6 +29,17 @@ public sealed class VaultListTests
         Assert.Equal(name, new VaultLocation(folder).FolderName);
 
     [Fact]
+    public void AServerVault_IsShownByItsServer_AndIsTheSameLocationAsItsMirror()
+    {
+        var location = new VaultLocation(@"C:\data\stores\7e1c", new StoreAddress(new Uri("https://kofre.example/"), Guid.NewGuid()));
+
+        Assert.Equal("kofre.example", location.FolderName);
+        Assert.True(location.IsOnServer);
+        Assert.False(A.IsOnServer);
+        Assert.Equal(new VaultLocation(@"C:\data\stores\7e1c"), location);
+    }
+
+    [Fact]
     public void AnotherFolder_IsAnotherLocation()
     {
         Assert.NotEqual(A, B);
