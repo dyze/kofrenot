@@ -125,6 +125,7 @@ public partial class ServerSection : UserControl
         (_, "account-not-approved") => "Your account waits for the server's admin to approve it.",
         (_, "account-disabled") => "Your account is disabled: ask the server's admin.",
         (_, "email-taken") => "An account with this email exists already: sign in.",
+        (_, "sign-up-closed") => "The server takes no new account for now: ask its admin.",
         (_, "invalid-email") => "This email is not valid.",
         (_, "weak-password") => "The password needs at least 10 characters.",
         (ServerFailure.TooManyRequests, _) => "Too many attempts: try again in a minute.",

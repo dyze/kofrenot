@@ -24,7 +24,7 @@ public sealed partial class VaultSession
 
     public SyncService Sync => _sync;
 
-    /// <summary>The stores of the account not registered here yet; null when signed out or the server failed (the user is told).</summary>
+    /// <summary>The stores of the account not registered here yet; null when there is none, when signed out or when the server failed (the user is told why).</summary>
     public async Task<IReadOnlyList<ServerStore>?> StoresToAdd(Window owner)
     {
         if (_server.Client is not { Session: not null } client)
@@ -33,16 +33,28 @@ public sealed partial class VaultSession
             return null;
         }
 
+        IReadOnlyList<ServerStore> stores;
         try
         {
-            var registered = Vaults.Select(vault => vault.Location.Store?.Id).ToHashSet();
-            return (await client.ListStoresAsync()).Where(store => !registered.Contains(store.Id)).ToList();
+            stores = await client.ListStoresAsync();
         }
         catch (ServerException ex)
         {
             Inform(owner, "The vaults on the server cannot be listed", ex);
             return null;
         }
+
+        var registered = Vaults.Select(vault => vault.Location.Store?.Id).ToHashSet();
+        var toAdd = stores.Where(store => !registered.Contains(store.Id)).ToList();
+        if (toAdd.Count > 0)
+        {
+            return toAdd;
+        }
+
+        MessageDialog.Inform(owner, stores.Count == 0
+            ? "You have no vault on this server yet. Use New vault on the server, or Move to server… on a folder vault."
+            : "Your vaults on this server are all in the list already: there is none to add.");
+        return null;
     }
 
     /// <summary>Creates a vault on the server, then switches to it, asking its pass phrase. Not added when that is cancelled.</summary>

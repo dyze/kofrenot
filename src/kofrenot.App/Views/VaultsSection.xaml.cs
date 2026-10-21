@@ -259,12 +259,6 @@ public partial class VaultsSection : UserControl
             return;
         }
 
-        if (stores.Count == 0)
-        {
-            MessageDialog.Inform(Owner, "Every vault of the server is in the list already.");
-            return;
-        }
-
         if (StoreChoiceDialog.Ask(Owner, stores) is not { } store || !CanSwitch())
         {
             Log.Info("Action", "Adding a vault from the server cancelled");
