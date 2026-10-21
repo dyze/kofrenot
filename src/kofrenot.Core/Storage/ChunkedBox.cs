@@ -5,7 +5,8 @@ namespace Kofrenot.Core.Storage;
 
 /// <summary>
 /// Encrypts and authenticates a stream of any size with AES-256-GCM, in chunks of
-/// <see cref="ChunkSize"/>: <c>magic · nonce prefix · (chunk · tag)…</c>. Each chunk's nonce is the
+/// <see cref="ChunkSize"/>: <c>header · nonce prefix · (chunk · tag)…</c>, the header a magic and
+/// maybe more plain bytes (a key epoch), as in <see cref="SecretBox"/>. Each chunk's nonce is the
 /// prefix and its index, and its associated data says whether it is the last, so chunks cannot be
 /// changed, moved, left out, added or cut off without failing to open. <c>associated</c> binds the
 /// data to its place, as in <see cref="SecretBox"/>.
@@ -30,14 +31,15 @@ public sealed class ChunkedBox
     }
 
     /// <summary>Reads <paramref name="plain"/> to its end and writes it sealed to <paramref name="output"/>.</summary>
-    public void Seal(ReadOnlySpan<byte> magic, Stream plain, Stream output, ReadOnlySpan<byte> associated)
+    public void Seal(ReadOnlySpan<byte> header, Stream plain, Stream output, ReadOnlySpan<byte> associated)
     {
-        var header = new byte[SecretBox.MagicSize + PrefixSize];
-        CheckMagic(magic).CopyTo(header);
-        RandomNumberGenerator.Fill(header.AsSpan(SecretBox.MagicSize));
-        output.Write(header);
+        SecretBox.CheckHeader(header);
+        var start = new byte[header.Length + PrefixSize];
+        header.CopyTo(start);
+        RandomNumberGenerator.Fill(start.AsSpan(header.Length));
+        output.Write(start);
 
-        using var chunks = new Chunks(_key, header.AsSpan(SecretBox.MagicSize), magic, associated);
+        using var chunks = new Chunks(_key, start.AsSpan(header.Length), header, associated);
         var (current, next) = (new byte[ChunkSize], new byte[ChunkSize]);
         var cipher = new byte[ChunkSize + TagSize];
         var length = plain.ReadAtLeast(current, ChunkSize, throwOnEndOfStream: false);
@@ -61,21 +63,19 @@ public sealed class ChunkedBox
     /// <exception cref="InvalidDataException">
     /// Not this kind of data; or, while reading, damaged, cut off, or another key or place.
     /// </exception>
-    public Stream Open(ReadOnlySpan<byte> magic, Stream sealedData, ReadOnlySpan<byte> associated)
+    public Stream Open(ReadOnlySpan<byte> header, Stream sealedData, ReadOnlySpan<byte> associated)
     {
-        var header = new byte[SecretBox.MagicSize + PrefixSize];
-        if (sealedData.ReadAtLeast(header, header.Length, throwOnEndOfStream: false) < header.Length
-            || !header.AsSpan(0, SecretBox.MagicSize).SequenceEqual(CheckMagic(magic)))
+        SecretBox.CheckHeader(header);
+        var start = new byte[header.Length + PrefixSize];
+        if (sealedData.ReadAtLeast(start, start.Length, throwOnEndOfStream: false) < start.Length
+            || !start.AsSpan(0, header.Length).SequenceEqual(header))
         {
             sealedData.Dispose();
             throw new InvalidDataException("Not the expected kind of kofrenot data");
         }
 
-        return new OpenedStream(sealedData, new Chunks(_key, header.AsSpan(SecretBox.MagicSize), magic, associated));
+        return new OpenedStream(sealedData, new Chunks(_key, start.AsSpan(header.Length), header, associated));
     }
-
-    private static ReadOnlySpan<byte> CheckMagic(ReadOnlySpan<byte> magic) =>
-        magic.Length == SecretBox.MagicSize ? magic : throw new ArgumentException($"The magic must be {SecretBox.MagicSize} bytes", nameof(magic));
 
     /// <summary>The chunks of one sealed stream, in order: the nonce of each, and the associated data.</summary>
     private sealed class Chunks : IDisposable
@@ -85,15 +85,15 @@ public sealed class ChunkedBox
         private readonly byte[] _associated;
         private uint _index;
 
-        public Chunks(byte[] key, ReadOnlySpan<byte> prefix, ReadOnlySpan<byte> magic, ReadOnlySpan<byte> associated)
+        public Chunks(byte[] key, ReadOnlySpan<byte> prefix, ReadOnlySpan<byte> header, ReadOnlySpan<byte> associated)
         {
             _aes = new AesGcm(key, TagSize);
             prefix.CopyTo(_nonce);
 
-            // magic · place · last (1 byte)
-            _associated = new byte[magic.Length + associated.Length + 1];
-            magic.CopyTo(_associated);
-            associated.CopyTo(_associated.AsSpan(magic.Length));
+            // header · place · last (1 byte)
+            _associated = new byte[header.Length + associated.Length + 1];
+            header.CopyTo(_associated);
+            associated.CopyTo(_associated.AsSpan(header.Length));
         }
 
         /// <param name="output">The chunk sealed, then its tag.</param>

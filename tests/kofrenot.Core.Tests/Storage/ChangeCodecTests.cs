@@ -7,10 +7,14 @@ public sealed class ChangeCodecTests
 {
     private static readonly DateTimeOffset At = new(2026, 10, 16, 9, 12, 0, TimeSpan.Zero);
 
-    private readonly SecretBox _box = new(RandomNumberGenerator.GetBytes(SecretBox.KeySize));
+    private static readonly byte[] Key = RandomNumberGenerator.GetBytes(SecretBox.KeySize);
+
+    // Writes change files as kofrenot did before format 6 ("KFC1", no epoch): still read, with epoch 0.
+    private readonly SecretBox _box = new(Key);
+    private readonly KeyedBox _keyed = new(KeyRing.Of(Key));
     private readonly ChangeCodec _codec;
 
-    public ChangeCodecTests() => _codec = new ChangeCodec(_box);
+    public ChangeCodecTests() => _codec = new ChangeCodec(_keyed);
 
     [Fact]
     public void AnAddedNode_RoundTrips()
@@ -134,7 +138,7 @@ public sealed class ChangeCodecTests
     {
         var change = new DatasetEdited(Guid.NewGuid(), At, Guid.NewGuid(), new DatasetFile("survey.csv", 52430, new string('9', 64)), []);
 
-        var json = Encoding.UTF8.GetString(_box.Open("KFC1"u8, _codec.Encode(change), change.Id.ToByteArray()));
+        var json = Encoding.UTF8.GetString(_keyed.Open(SealKind.Change, _codec.Encode(change), change.Id.ToByteArray()));
 
         Assert.StartsWith($"{{\"format\":{VaultFormat.Current},\"op\":\"editDataset\",", json);
         Assert.Contains($"\"dataset\":{{\"node\":\"{change.Node}\",\"file\":{{\"name\":\"survey.csv\",\"size\":52430,\"sha256\":\"{new string('9', 64)}\"}},\"replaces\":[]}}", json);
@@ -179,7 +183,7 @@ public sealed class ChangeCodecTests
         var root = Guid.NewGuid();
         var change = new ViewEdited(Guid.NewGuid(), At, Guid.NewGuid(), new TreeDefinition(root, "contains"), []);
 
-        var json = Encoding.UTF8.GetString(_box.Open("KFC1"u8, _codec.Encode(change), change.Id.ToByteArray()));
+        var json = Encoding.UTF8.GetString(_keyed.Open(SealKind.Change, _codec.Encode(change), change.Id.ToByteArray()));
 
         Assert.Contains($"\"op\":\"editView\",", json);
         Assert.Contains($"\"view\":{{\"node\":\"{change.Node}\",\"display\":\"tree\",\"query\":{{\"root\":\"{root}\",\"linkType\":\"contains\"}},\"replaces\":[]}}", json);
@@ -250,7 +254,7 @@ public sealed class ChangeCodecTests
         var id = Guid.NewGuid();
         var change = new NodeAdded(id, At, new Node(Guid.NewGuid(), "generic", "Dune", At));
 
-        var json = Encoding.UTF8.GetString(_box.Open("KFC1"u8, _codec.Encode(change), id.ToByteArray()));
+        var json = Encoding.UTF8.GetString(_keyed.Open(SealKind.Change, _codec.Encode(change), id.ToByteArray()));
 
         Assert.StartsWith($"{{\"format\":{VaultFormat.Current},\"op\":\"addNode\",\"at\":", json);
         Assert.Contains("\"name\":\"Dune\"", json);
@@ -292,7 +296,7 @@ public sealed class ChangeCodecTests
         var replaced = new[] { Guid.NewGuid(), Guid.NewGuid() };
         var change = new NodeRenamed(Guid.NewGuid(), At, Guid.NewGuid(), "Dune (novel)", replaced);
 
-        var json = Encoding.UTF8.GetString(_box.Open("KFC1"u8, _codec.Encode(change), change.Id.ToByteArray()));
+        var json = Encoding.UTF8.GetString(_keyed.Open(SealKind.Change, _codec.Encode(change), change.Id.ToByteArray()));
         var decoded = Assert.IsType<NodeRenamed>(_codec.Decode(change.Id, _codec.Encode(change)));
 
         Assert.Contains("\"op\":\"renameNode\"", json);
@@ -339,7 +343,7 @@ public sealed class ChangeCodecTests
     {
         var change = new NodeAdded(Guid.NewGuid(), At, new Node(Guid.NewGuid(), "generic", "Dune", At));
 
-        var json = Encoding.UTF8.GetString(_box.Open("KFC1"u8, _codec.Encode(change), change.Id.ToByteArray()));
+        var json = Encoding.UTF8.GetString(_keyed.Open(SealKind.Change, _codec.Encode(change), change.Id.ToByteArray()));
 
         Assert.StartsWith($"{{\"format\":{VaultFormat.Current},", json);
     }

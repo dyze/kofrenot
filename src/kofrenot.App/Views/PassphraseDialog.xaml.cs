@@ -8,37 +8,45 @@ namespace Kofrenot.UI.Views;
 /// <summary>What the user chose for a new vault: its name, and whether to remember its pass phrase.</summary>
 public sealed record NewVault(string Name, bool Remember);
 
+/// <summary>How the user unlocks a vault: with the pass phrase typed (remembered or not), or with the recovery key.</summary>
+public sealed record UnlockAnswer(bool Remember, bool UseRecoveryKey);
+
 /// <summary>
-/// Asks the pass phrase of a vault: to unlock it, or (twice, with its name) to create it. The
-/// pass phrase is handed to <c>accept</c> in the background, as deriving the key takes a moment;
-/// the dialog stays open while it is refused.
+/// Asks the pass phrase of a vault: to unlock or upgrade it, or (twice) to create it, with its
+/// name, or to change it. The pass phrase is handed to <c>accept</c> in the background, as deriving
+/// the key takes a moment; the dialog stays open while it is refused.
 /// </summary>
 public partial class PassphraseDialog : Window
 {
-    private readonly bool _create;
+    private readonly Mode _mode;
     private readonly Func<string, bool> _accept;
+    private bool _useRecoveryKey;
 
-    /// <param name="newName">The name offered for a new vault; null to unlock one.</param>
-    private PassphraseDialog(Window owner, string place, string? newName, Func<string, bool> accept)
+    private PassphraseDialog(Window owner, Mode mode, string place, Func<string, bool> accept, string? newName = null)
     {
         InitializeComponent();
         Owner = owner;
-        _create = newName is not null;
+        _mode = mode;
         _accept = accept;
 
-        TitleText.Text = _create ? "New vault" : "Unlock vault";
+        (TitleText.Text, HintText.Text, OkButton.Content) = mode switch
+        {
+            Mode.Create => ("New vault", "Name it, and choose a pass phrase. Everything in the vault is encrypted with it; a recovery key, shown next, opens it too. If both are lost, the vault cannot be read.", "Create"),
+            Mode.Upgrade => ("Upgrade vault", "Type the pass phrase of this vault: the upgrade seals its key with it, and makes a recovery key, shown next.", "Upgrade"),
+            Mode.Change => ("New pass phrase", "Choose the pass phrase that unlocks this vault from now on. The recovery key stays the same.", "Change"),
+            _ => ("Unlock vault", "Type the pass phrase of this vault.", "Unlock"),
+        };
         FolderText.Text = place;
         FolderText.ToolTip = place;
-        HintText.Text = _create
-            ? "Name it, and choose a pass phrase. Everything in the vault is encrypted with it: if it is lost, the vault cannot be read."
-            : "Type the pass phrase of this vault.";
-        NamePanel.Visibility = _create ? Visibility.Visible : Visibility.Collapsed;
+        NamePanel.Visibility = mode == Mode.Create ? Visibility.Visible : Visibility.Collapsed;
         NameBox.Text = newName ?? string.Empty;
-        SecondPanel.Visibility = _create ? Visibility.Visible : Visibility.Collapsed;
-        OkButton.Content = _create ? "Create" : "Unlock";
+        FirstLabel.Text = mode == Mode.Change ? "New pass phrase" : "Pass phrase";
+        SecondPanel.Visibility = IsNew ? Visibility.Visible : Visibility.Collapsed;
+        RememberCheckBox.Visibility = mode is Mode.Unlock or Mode.Create ? Visibility.Visible : Visibility.Collapsed;
+        RecoveryButton.Visibility = mode == Mode.Unlock ? Visibility.Visible : Visibility.Collapsed;
         Loaded += (_, _) =>
         {
-            if (_create && NameBox.Text.Length == 0)
+            if (mode == Mode.Create && NameBox.Text.Length == 0)
             {
                 NameBox.Focus();
             }
@@ -49,16 +57,27 @@ public partial class PassphraseDialog : Window
         };
     }
 
+    private enum Mode
+    {
+        Unlock,
+        Create,
+        Upgrade,
+        Change,
+    }
+
+    // A new pass phrase is typed twice.
+    private bool IsNew => _mode is Mode.Create or Mode.Change;
+
     /// <summary>
-    /// Asks the pass phrase of a vault until <paramref name="accept"/> takes it (true) or the user
-    /// cancels. Returns whether to remember it, or null when cancelled.
+    /// Asks the pass phrase of a vault until <paramref name="accept"/> takes it (true), the user
+    /// chooses the recovery key instead, or cancels (null).
     /// </summary>
     /// <param name="place">Where the vault is: its folder.</param>
     /// <param name="accept">Unlocks the vault; false for a wrong pass phrase. Runs in the background.</param>
-    public static bool? Ask(Window owner, string place, Func<string, bool> accept)
+    public static UnlockAnswer? Ask(Window owner, string place, Func<string, bool> accept)
     {
-        var dialog = new PassphraseDialog(owner, place, newName: null, accept);
-        return dialog.ShowDialog() == true ? dialog.RememberCheckBox.IsChecked == true : null;
+        var dialog = new PassphraseDialog(owner, Mode.Unlock, place, accept);
+        return dialog.ShowDialog() == true ? new UnlockAnswer(dialog.RememberCheckBox.IsChecked == true, dialog._useRecoveryKey) : null;
     }
 
     /// <summary>
@@ -70,13 +89,21 @@ public partial class PassphraseDialog : Window
     /// <param name="accept">Creates the vault with the pass phrase. Runs in the background.</param>
     public static NewVault? AskNew(Window owner, string place, string name, Func<string, bool> accept)
     {
-        var dialog = new PassphraseDialog(owner, place, name, accept);
+        var dialog = new PassphraseDialog(owner, Mode.Create, place, accept, name);
         return dialog.ShowDialog() == true ? new NewVault(dialog.NameBox.Text.Trim(), dialog.RememberCheckBox.IsChecked == true) : null;
     }
 
+    /// <summary>Asks the pass phrase of a vault to upgrade until <paramref name="accept"/> takes it (true) or the user cancels (false).</summary>
+    public static bool AskToUpgrade(Window owner, string place, Func<string, bool> accept) =>
+        new PassphraseDialog(owner, Mode.Upgrade, place, accept).ShowDialog() == true;
+
+    /// <summary>Asks a new pass phrase, twice, until <paramref name="accept"/> sets it (true) or the user cancels (false).</summary>
+    public static bool AskToChange(Window owner, string place, Func<string, bool> accept) =>
+        new PassphraseDialog(owner, Mode.Change, place, accept).ShowDialog() == true;
+
     private async void OkButton_Click(object sender, RoutedEventArgs e)
     {
-        if (_create && NameBox.Text.Trim().Length == 0)
+        if (_mode == Mode.Create && NameBox.Text.Trim().Length == 0)
         {
             ShowError("Name the vault: every device shows it by this name.");
             NameBox.Focus();
@@ -90,7 +117,7 @@ public partial class PassphraseDialog : Window
             return;
         }
 
-        if (_create && passPhrase != SecondBox.Password)
+        if (IsNew && passPhrase != SecondBox.Password)
         {
             ShowError("The two pass phrases differ.");
             return;
@@ -103,7 +130,7 @@ public partial class PassphraseDialog : Window
         {
             error = await Task.Run(() => _accept(passPhrase)) ? null : "Wrong pass phrase.";
         }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidDataException)
         {
             error = ex.Message;
         }
@@ -122,6 +149,12 @@ public partial class PassphraseDialog : Window
         ShowError(error);
         FirstBox.Focus();
         FirstBox.SelectAll();
+    }
+
+    private void RecoveryButton_Click(object sender, RoutedEventArgs e)
+    {
+        _useRecoveryKey = true;
+        DialogResult = true;
     }
 
     private void ShowError(string message)

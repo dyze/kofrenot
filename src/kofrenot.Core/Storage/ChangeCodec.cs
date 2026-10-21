@@ -6,20 +6,18 @@ namespace Kofrenot.Core.Storage;
 
 /// <summary>
 /// Turns a change into the content of its file and back: JSON (<see cref="ChangeData"/>), then
-/// sealed with the master key ("KFC1"), bound to the change id (the file's name), so a file
+/// sealed with the vault's key (<see cref="SealKind.Change"/>), bound to the change id (the file's name), so a file
 /// renamed or copied under another id no longer opens.
 /// </summary>
-public sealed class ChangeCodec(SecretBox box)
+public sealed class ChangeCodec(KeyedBox box)
 {
-    private static ReadOnlySpan<byte> Magic => "KFC1"u8;
-
     internal static JsonSerializerOptions Json { get; } = new(JsonSerializerDefaults.Web)
     {
         DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
     };
 
     public byte[] Encode(Change change) =>
-        box.Seal(Magic, JsonSerializer.SerializeToUtf8Bytes(ChangeData.From(change), Json), change.Id.ToByteArray());
+        box.Seal(SealKind.Change, JsonSerializer.SerializeToUtf8Bytes(ChangeData.From(change), Json), change.Id.ToByteArray());
 
     /// <exception cref="InvalidDataException">Damaged, another key or id, or an unknown change.</exception>
     /// <exception cref="NewerVaultFormatException">Written by a newer kofrenot.</exception>
@@ -30,7 +28,7 @@ public sealed class ChangeCodec(SecretBox box)
     /// <exception cref="NewerVaultFormatException">Written by a newer kofrenot.</exception>
     public (Change Change, int Format) DecodeWithFormat(Guid id, byte[] data)
     {
-        var json = box.Open(Magic, data, id.ToByteArray());
+        var json = box.Open(SealKind.Change, data, id.ToByteArray());
         ChangeData? change;
         try
         {

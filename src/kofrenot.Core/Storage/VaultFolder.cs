@@ -1,3 +1,4 @@
+using System.Security.Cryptography;
 using Kofrenot.Core.Datasets;
 
 namespace Kofrenot.Core.Storage;
@@ -22,6 +23,7 @@ public enum FolderKind
 public static class VaultFolder
 {
     public const string HeaderFile = "kofrenot-vault.json";
+    public const string KeysFolder = "keys";
     public const string ChangesFolder = "changes";
     public const string ChangeExtension = ".kfc";
     public const string ContentFolder = "content";
@@ -39,21 +41,25 @@ public static class VaultFolder
         return Directory.Exists(folder) && Directory.EnumerateFileSystemEntries(folder).Any() ? FolderKind.Other : FolderKind.Empty;
     }
 
-    /// <summary>Creates a vault in an empty folder: its header, with a new master key.</summary>
+    /// <summary>
+    /// Creates a vault in an empty folder: its keys (an identity sealed by the pass phrase, a new
+    /// key of epoch 0), then its header. Returns the recovery key of the identity, to show once.
+    /// </summary>
     /// <exception cref="IOException">The folder is not empty.</exception>
-    public static (VaultHeader Header, byte[] MasterKey) Create(string folder, string passPhrase, int iterations = KeyWrap.DefaultIterations)
+    public static (VaultAccess Access, RecoveryKey Recovery) Create(string folder, string passPhrase, int iterations = KeyWrap.DefaultIterations)
     {
         if (Inspect(folder) != FolderKind.Empty)
         {
             throw new IOException("A vault can only be created in an empty folder");
         }
 
-        var id = Guid.NewGuid();
-        var (wrapped, masterKey) = KeyWrap.Create(passPhrase, id.ToByteArray(), iterations);
-        var header = new VaultHeader(VaultFormat.Current, id, wrapped);
+        var header = new VaultHeader(VaultFormat.Current, Guid.NewGuid());
+        var created = VaultKeys.Create(folder, header, RandomNumberGenerator.GetBytes(SecretBox.KeySize), passPhrase, iterations);
         Directory.CreateDirectory(ChangesOf(folder));
+
+        // The header last: a folder holding it is a vault, whose keys are there.
         header.Write(HeaderOf(folder));
-        return (header, masterKey);
+        return created;
     }
 
     /// <summary>
@@ -74,6 +80,8 @@ public static class VaultFolder
     }
 
     public static string HeaderOf(string folder) => Path.Combine(folder, HeaderFile);
+
+    internal static string KeysOf(string folder) => Path.Combine(folder, KeysFolder);
 
     internal static string ChangesOf(string folder) => Path.Combine(folder, ChangesFolder);
 

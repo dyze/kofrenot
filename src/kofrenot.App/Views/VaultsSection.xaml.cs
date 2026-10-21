@@ -132,6 +132,10 @@ public partial class VaultsSection : UserControl
         MoveToServerButton.Visibility = onServer ? Visibility.Collapsed : Visibility.Visible;
         DeleteFromServerButton.Visibility = onServer ? Visibility.Visible : Visibility.Collapsed;
 
+        // A server vault's identity is written once in its store: its pass phrase cannot change yet.
+        PassPhrasePanel.Visibility = onServer ? Visibility.Collapsed : Visibility.Visible;
+        ChangePassPhraseButton.IsEnabled = open && session.CanChangePassPhrase;
+
         var remembered = session.IsRemembered(vault);
         RememberedText.Text = remembered ? "The pass phrase is remembered on this computer." : "The pass phrase is not remembered.";
         ForgetButton.IsEnabled = remembered;
@@ -451,6 +455,12 @@ public partial class VaultsSection : UserControl
             Log.Error("Action", $"Cannot open {folder}", ex);
             MessageDialog.Inform(Owner, ex.Message);
         }
+    }
+
+    private void ChangePassPhraseButton_Click(object sender, RoutedEventArgs e)
+    {
+        _session?.ChangePassPhrase(Owner);
+        ShowChosen();
     }
 
     private void ForgetButton_Click(object sender, RoutedEventArgs e)

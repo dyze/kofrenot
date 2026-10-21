@@ -61,13 +61,13 @@ What could go wrong, and how it is addressed today:
 | A vault written by a newer kofrenot | Not misread: the vault closes and asks for an upgrade ([Format](ARCHITECTURE.md#format)) | Implemented |
 | Two copies of the app writing the same local files | One copy per Windows session ([Startup](ARCHITECTURE.md#startup-and-windows)) | Implemented |
 | Someone reading or changing the files | AES-256-GCM per file, the file id as AAD: a changed, swapped or cut file fails to open ([Encryption](ARCHITECTURE.md#encryption)) | Implemented |
-| Pass phrase guessed | PBKDF2-SHA256, 600 000 iterations; the remembered key protected by Windows (DPAPI) | Implemented |
+| Pass phrase guessed | PBKDF2-SHA256, 600 000 iterations; the remembered key protected by Windows (DPAPI); the pass phrase can be changed | Implemented |
 | Secrets leaking through logs or caches | No content, search text, key or pass phrase logged; the snapshot is encrypted and stays local ([Logging](ARCHITECTURE.md#logging)) | Implemented |
 | The sync tool holding a `.tmp` during its rename | The save fails with an error, nothing lost | Not tested with Dropbox |
 | A server reading the vaults | It stores the files as they are, encrypted with the pass phrase, which never leaves the devices ([Server vaults](ARCHITECTURE.md#server-vaults)) | Implemented |
 | The server's password guessed, or a token stolen | Passwords hashed (PBKDF2-SHA256); 10 sign-ins a minute per address; access tokens last 15 minutes, the account checked at every request; deleting a vault asks the password again ([Kofre server](https://github.com/dyze/kofreserver)) | Implemented |
 | A server sending a file outside the vault | Only a vault's file names are accepted from it | Implemented |
-| Pass phrase lost | A recovery key, shown once, unwraps the identity too ([Keys](SERVER-CONCEPT.md#keys)) | Planned: 0.7 |
+| Pass phrase lost | A recovery key, shown once, unwraps the identity too ([Keys](SERVER-CONCEPT.md#keys)) | Implemented (a new pass phrase after it: folder vaults; server vaults with the account's identity, planned) |
 | A member removed from a shared vault | Server access removed at once, then key rotation: files added later are unreadable to them ([Rotation](SERVER-CONCEPT.md#rotation)) | Planned: 0.7 |
 | A server reading or swapping keys | The server only stores wrapped keys; fingerprints are compared out of band before sharing ([Sharing](SERVER-CONCEPT.md#sharing)) | Planned: 0.7 |
 
@@ -98,7 +98,7 @@ What each version contains: [ROADMAP.md](../ROADMAP.md).
 | Datasets | A node type holding one file of any size, each import a new version; encrypted in 1 MB chunks, so memory use does not depend on the size (since 0.3) |
 | Server | A generic, blind, write-once store of files with accounts and members, on Linux, knowing nothing of kofrenot so other apps can use it, in its own repository ([kofreserver](https://github.com/dyze/kofreserver)); no email, the admin approves accounts in a JSON file (since 0.6) |
 | Sharing | Complete server vaults, with roles reader, writer and one owner; removing a member rotates the vault key (0.7, planned) |
-| Keys | Vault keys wrapped for an identity (key pair) unlocked by a pass phrase or a recovery key; same model for folder and server vaults, format 6 (0.7, planned) |
+| Keys | Vault keys wrapped for an identity (key pair) unlocked by a pass phrase or a recovery key; same model for folder and server vaults, format 6 (since 0.7; the server account's identity: planned) |
 | Views | A node type holding a definition (a tree from a root node through a link type, or a list of the nodes of a type), in versions kept in its changes: views work offline (since 0.4) |
 
 ## Open questions

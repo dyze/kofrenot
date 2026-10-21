@@ -6,7 +6,7 @@ public sealed class ThumbnailFilesTests : IDisposable
 {
     private readonly TempFolder _temp = new();
     private readonly RingLog _log = new();
-    private readonly SecretBox _box = new(RandomNumberGenerator.GetBytes(SecretBox.KeySize));
+    private readonly KeyedBox _box = new(KeyRing.Of(RandomNumberGenerator.GetBytes(SecretBox.KeySize)));
 
     private string ContentFolder => Path.Combine(_temp.Sub("vault"), VaultFolder.ContentFolder);
 

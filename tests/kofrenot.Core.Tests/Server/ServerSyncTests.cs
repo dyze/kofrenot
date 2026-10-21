@@ -45,18 +45,19 @@ public sealed class ServerSyncTests : IDisposable
     }
 
     [Fact]
-    public async Task TheMirrorsFiles_AreUploaded_HeaderFirst_ChangesLast()
+    public async Task TheMirrorsFiles_AreUploaded_HeaderAndKeysFirst_ChangesLast()
     {
         Write("changes/ab/ab12.kfc", "change");
         Write("content/cd/cd34.kfn", "content");
+        Write("keys/epoch-0/ef56.kfw", "key");
         Write("kofrenot-vault.json", "{}");
 
         var first = await Sync().RunAsync();
         var second = await Sync().RunAsync();
 
-        Assert.Equal(new SyncResult(0, 3), first);
+        Assert.Equal(new SyncResult(0, 4), first);
         Assert.Equal(new SyncResult(0, 0), second);
-        Assert.Equal(["kofrenot-vault.json", "content/cd/cd34.kfn", "changes/ab/ab12.kfc"], _store.Uploads);
+        Assert.Equal(["kofrenot-vault.json", "keys/epoch-0/ef56.kfw", "content/cd/cd34.kfn", "changes/ab/ab12.kfc"], _store.Uploads);
     }
 
     [Fact]

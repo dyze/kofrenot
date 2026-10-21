@@ -4,13 +4,11 @@ namespace Kofrenot.Core.Storage;
 
 /// <summary>
 /// The files of dataset versions, one each (<c>content/</c>), written once and never changed:
-/// sealed in chunks with the master key ("KFD1", <see cref="ChunkedBox"/>), bound to the version
+/// sealed in chunks with the vault's key (<see cref="SealKind.Dataset"/>, <see cref="ChunkedBox"/>), bound to the version
 /// id (the file's name). Read and written as streams, so any size fits in little memory.
 /// </summary>
-public sealed class DatasetFiles(string vaultFolder, ChunkedBox box)
+public sealed class DatasetFiles(string vaultFolder, KeyedBox box)
 {
-    private static ReadOnlySpan<byte> Magic => "KFD1"u8;
-
     /// <summary>
     /// Describes a file to import: its name (without folder), size and SHA-256, reading it once;
     /// <paramref name="progress"/> is told the bytes read so far.
@@ -40,7 +38,7 @@ public sealed class DatasetFiles(string vaultFolder, ChunkedBox box)
         AtomicFile.Write(path, output =>
         {
             using var hashing = new HashingStream(content, progress);
-            box.Seal(Magic, hashing, output, version.Id.ToByteArray());
+            box.Seal(SealKind.Dataset, hashing, output, version.Id.ToByteArray());
             if (hashing.Count != version.File.Size || hashing.Sha256() != version.File.Sha256)
             {
                 throw new IOException("The file changed while it was imported");
@@ -52,7 +50,7 @@ public sealed class DatasetFiles(string vaultFolder, ChunkedBox box)
     /// <exception cref="IOException">Its file is not there yet (file or folder not found), or cannot be read.</exception>
     /// <exception cref="InvalidDataException">Damaged (also while reading), or another key or id.</exception>
     public Stream OpenRead(Guid version) =>
-        box.Open(Magic, File.OpenRead(VaultFolder.DatasetFileOf(vaultFolder, version)), version.ToByteArray());
+        box.Open(SealKind.Dataset, File.OpenRead(VaultFolder.DatasetFileOf(vaultFolder, version)), version.ToByteArray());
 
     /// <summary>
     /// Writes the content of a version to <paramref name="target"/>, replacing it. A failure leaves

@@ -1,0 +1,60 @@
+<Window x:Class="Kofrenot.UI.Views.RecoveryKeyDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="kofrenot"
+        Icon="/Assets/kofrenot.ico"
+        Width="500"
+        SizeToContent="Height"
+        ResizeMode="NoResize"
+        ShowInTaskbar="False"
+        WindowStartupLocation="CenterOwner"
+        SourceInitialized="Window_SourceInitialized"
+        Closing="Window_Closing">
+  <!-- Shows a vault's recovery key once, until the user says it is saved; or asks it, to unlock the vault. -->
+  <Window.Resources>
+    <ResourceDictionary Source="SharedStyles.xaml" />
+  </Window.Resources>
+
+  <StackPanel Margin="20,18,20,16">
+    <TextBlock x:Name="TitleText" Style="{StaticResource HeadingText}" />
+    <TextBlock x:Name="FolderText" Margin="0,4,0,0" Opacity="0.7" TextTrimming="CharacterEllipsis" />
+    <TextBlock x:Name="HintText" Margin="0,10,0,0" TextWrapping="Wrap" />
+
+    <TextBox x:Name="KeyBox"
+             Margin="0,14,0,0"
+             Padding="6,6"
+             FontFamily="Consolas"
+             FontSize="{StaticResource SecondaryFontSize}"
+             TextWrapping="Wrap" />
+
+    <Button x:Name="CopyButton"
+            Margin="0,6,0,0"
+            HorizontalAlignment="Left"
+            Padding="12,4"
+            Content="Copy"
+            ToolTip="Copies the key, to paste it into a password manager"
+            Click="CopyButton_Click" />
+
+    <CheckBox x:Name="SavedCheckBox"
+              Margin="0,14,0,0"
+              Content="I have saved the recovery key somewhere safe"
+              Checked="SavedCheckBox_Changed"
+              Unchecked="SavedCheckBox_Changed" />
+
+    <CheckBox x:Name="RememberCheckBox"
+              Margin="0,14,0,0"
+              Content="Remember on this computer"
+              ToolTip="Kept by Windows for your account only: kofrenot then opens the vault without asking" />
+
+    <TextBlock x:Name="ErrorText"
+               Margin="0,10,0,0"
+               Foreground="{DynamicResource SystemFillColorCriticalBrush}"
+               TextWrapping="Wrap"
+               Visibility="Collapsed" />
+
+    <StackPanel Margin="0,20,0,0" HorizontalAlignment="Right" Orientation="Horizontal">
+      <Button x:Name="OkButton" MinWidth="90" Padding="12,4" IsDefault="True" Click="OkButton_Click" />
+      <Button x:Name="CancelButton" MinWidth="90" Margin="8,0,0,0" Padding="12,4" Content="Cancel" IsCancel="True" />
+    </StackPanel>
+  </StackPanel>
+</Window>

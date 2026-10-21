@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+- **Recovery key**: shown once when a vault is created or upgraded, it opens the vault when its pass phrase is lost (*Lost it? Use the recovery key* when unlocking); a folder vault then asks a new pass phrase.
+- **Change the pass phrase** of a folder vault: Settings > Vault > *Pass phrase* > *Change...*, the vault open. The recovery key and the remembered pass phrase stay valid.
+
+### Changed
+- **Vault format 6**: a vault's key is wrapped for an identity (a key pair) that the pass phrase and the recovery key unlock, kept in the vault's `keys/` folder; every file says which key epoch sealed it. An existing vault is upgraded without rewriting a file: its pass phrase is asked again, then its recovery key shown. kofrenot 0.6 and older no longer open an upgraded vault.
+
 ## [0.6] - 2026-10-21
 
 ### Added

@@ -9,13 +9,12 @@ public sealed record Snapshot(IReadOnlyList<Change> Changes, int HighestFormat);
 
 /// <summary>
 /// Keeps the changes of a vault read on this device in a local file, so each change file is read
-/// once per device. Sealed with the master key ("KFS1"), bound to the vault id. Only a cache:
+/// once per device. Sealed with the vault's key (<see cref="SealKind.Snapshot"/>), bound to the vault id. Only a cache:
 /// when it is missing or unreadable, every change is read again.
 /// </summary>
-public sealed class SnapshotStore(string path, SecretBox box, Guid vault, ILog? log = null)
+public sealed class SnapshotStore(string path, KeyedBox box, Guid vault, ILog? log = null)
 {
     public const int Format = 4;
-    private static ReadOnlySpan<byte> Magic => "KFS1"u8;
 
     private readonly ILog _log = log ?? NullLog.Instance;
 
@@ -29,7 +28,7 @@ public sealed class SnapshotStore(string path, SecretBox box, Guid vault, ILog? 
 
         try
         {
-            var json = box.Open(Magic, File.ReadAllBytes(path), vault.ToByteArray());
+            var json = box.Open(SealKind.Snapshot, File.ReadAllBytes(path), vault.ToByteArray());
             // The format first: an older snapshot has another shape.
             if (JsonSerializer.Deserialize<FormatOnly>(json, ChangeCodec.Json) is { Format: Format }
                 && JsonSerializer.Deserialize<SnapshotData>(json, ChangeCodec.Json) is { Changes: { } changes, HighestFormat: >= 1 and var highest })
@@ -59,7 +58,7 @@ public sealed class SnapshotStore(string path, SecretBox box, Guid vault, ILog? 
         try
         {
             Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(path))!);
-            AtomicFile.Write(path, box.Seal(Magic, JsonSerializer.SerializeToUtf8Bytes(data, ChangeCodec.Json), vault.ToByteArray()), overwrite: true);
+            AtomicFile.Write(path, box.Seal(SealKind.Snapshot, JsonSerializer.SerializeToUtf8Bytes(data, ChangeCodec.Json), vault.ToByteArray()), overwrite: true);
             _log.Debug("Vault", $"Snapshot saved: {changes.Count} changes");
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)

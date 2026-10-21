@@ -8,10 +8,10 @@ namespace Kofrenot.Core.Storage;
 public static class VaultFormat
 {
     /// <summary>The newest format this version reads, and the one it writes.</summary>
-    public const int Current = 5;
+    public const int Current = 6;
 
     // The first kofrenot writing each format, from format 1.
-    private static readonly string[] FirstVersions = ["0.1", "0.2", "0.3", "0.4", "0.5"];
+    private static readonly string[] FirstVersions = ["0.1", "0.2", "0.3", "0.4", "0.5", "0.7"];
 
     /// <summary>The first kofrenot writing <paramref name="format"/> ("0.4").</summary>
     public static string Since(int format) =>

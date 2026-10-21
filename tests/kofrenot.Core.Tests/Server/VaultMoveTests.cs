@@ -13,7 +13,7 @@ public sealed class VaultMoveTests : IDisposable
     [Fact]
     public void TheVaultsFiles_AreCopiedAsTheyAre_AndTheFolderKept()
     {
-        var (header, key) = VaultFolder.Create(Folder, "secret", iterations: 10);
+        var (header, key, _) = VaultFolder.Create(Folder, "secret", iterations: 10).Access;
         var vault = Vault.Open(Folder, header, key);
         vault.Append(new NodeAdded(Guid.NewGuid(), DateTimeOffset.UtcNow, new Node(Guid.NewGuid(), TypeCatalog.Generic.Id, "Dune", DateTimeOffset.UtcNow)));
         File.WriteAllText(Path.Combine(Folder, "changes", "half.kfc.tmp"), "x");
@@ -21,10 +21,10 @@ public sealed class VaultMoveTests : IDisposable
 
         var copied = VaultMove.CopyToMirror(Folder, Mirror);
 
-        Assert.Equal(2, copied);
+        Assert.Equal(4, copied);
         Assert.Equal(header.Id, Vault.Open(Mirror, VaultHeader.Read(VaultFolder.HeaderOf(Mirror)), key).Id);
         Assert.Single(Vault.Open(Mirror, header, key).Graph.Nodes);
-        Assert.Equal(4, Directory.GetFiles(Folder, "*", SearchOption.AllDirectories).Length);
+        Assert.Equal(6, Directory.GetFiles(Folder, "*", SearchOption.AllDirectories).Length);
     }
 
     [Fact]

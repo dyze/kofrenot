@@ -5,7 +5,8 @@ namespace Kofrenot.Core.Tests.Storage;
 
 public sealed class KeyMemoryTests : IDisposable
 {
-    private static readonly byte[] Key = [1, 2, 3, 4];
+    private static readonly byte[] MasterKey = RandomNumberGenerator.GetBytes(SecretBox.KeySize);
+    private static readonly UnlockedIdentity Identity = new(Guid.NewGuid(), [5, 6, 7, 8]);
 
     private readonly TempFolder _temp = new();
     private readonly RingLog _log = new();
@@ -20,36 +21,62 @@ public sealed class KeyMemoryTests : IDisposable
         var memory = Memory();
 
         Assert.False(memory.Has(_vault));
-        Assert.Null(memory.Recall(_vault));
+        Assert.Null(memory.RecallIdentity(_vault));
+        Assert.Null(memory.RecallMasterKey(_vault));
     }
 
     [Fact]
-    public void ARememberedKey_IsRecalled_OnlyForItsVault()
+    public void ARememberedIdentity_IsRecalled_OnlyForItsVault()
     {
-        Memory().Remember(_vault, Key);
+        Memory().Remember(Upgraded(_vault));
 
         var memory = Memory();
         Assert.True(memory.Has(_vault));
-        Assert.Equal(Key, memory.Recall(_vault));
-        Assert.Null(memory.Recall(Guid.NewGuid()));
+        var recalled = memory.RecallIdentity(_vault);
+        Assert.Equal(Identity.Id, recalled?.Id);
+        Assert.Equal(Identity.PrivateKey, recalled?.PrivateKey);
+        Assert.Null(memory.RecallMasterKey(_vault));
+        Assert.Null(memory.RecallIdentity(Guid.NewGuid()));
         Assert.Contains(_log.Entries, entry => entry.Level == LogLevel.Info && entry.Message.Contains("remembered"));
+    }
+
+    [Fact]
+    public void AFormat5Vault_RemembersItsMasterKey()
+    {
+        Memory().Remember(NotUpgraded(_vault));
+
+        Assert.True(Memory().Has(_vault));
+        Assert.Equal(MasterKey, Memory().RecallMasterKey(_vault));
+        Assert.Null(Memory().RecallIdentity(_vault));
+    }
+
+    [Fact]
+    public void TheIdentity_ReplacesTheMasterKey_OnceTheVaultIsUpgraded()
+    {
+        Memory().Remember(NotUpgraded(_vault));
+
+        Memory().Remember(Upgraded(_vault));
+
+        Assert.Null(Memory().RecallMasterKey(_vault));
+        Assert.NotNull(Memory().RecallIdentity(_vault));
     }
 
     [Fact]
     public void TheKey_IsStoredProtected()
     {
-        Memory().Remember(_vault, Key);
+        Memory().Remember(NotUpgraded(_vault));
 
-        Assert.Contains(Convert.ToBase64String(_protector.Protect(Key)), File.ReadAllText(FilePath));
-        Assert.DoesNotContain(Convert.ToBase64String(Key), File.ReadAllText(FilePath));
+        Assert.Contains(Convert.ToBase64String(_protector.Protect(MasterKey)), File.ReadAllText(FilePath));
+        Assert.DoesNotContain(Convert.ToBase64String(MasterKey), File.ReadAllText(FilePath));
     }
 
     [Fact]
-    public void AForgottenKey_IsGone_AndTheOthersStay()
+    public void AForgottenVault_IsGone_AndTheOthersStay()
     {
         var other = Guid.NewGuid();
-        Memory().Remember(_vault, Key);
-        Memory().Remember(other, Key);
+        Memory().Remember(NotUpgraded(_vault));
+        Memory().Remember(Upgraded(_vault));
+        Memory().Remember(Upgraded(other));
 
         Memory().Forget(_vault);
 
@@ -59,7 +86,7 @@ public sealed class KeyMemoryTests : IDisposable
     }
 
     [Fact]
-    public void ForgettingAnUnknownKey_DoesNothing()
+    public void ForgettingAnUnknownVault_DoesNothing()
     {
         Memory().Forget(_vault);
 
@@ -69,10 +96,10 @@ public sealed class KeyMemoryTests : IDisposable
     [Fact]
     public void AKeyThatCannotBeUnprotected_IsNotRecalled()
     {
-        Memory().Remember(_vault, Key);
+        Memory().Remember(Upgraded(_vault));
         _protector.Fails = true;
 
-        Assert.Null(Memory().Recall(_vault));
+        Assert.Null(Memory().RecallIdentity(_vault));
         Assert.Contains(_log.Entries, entry => entry.Level == LogLevel.Warning);
     }
 
@@ -96,6 +123,10 @@ public sealed class KeyMemoryTests : IDisposable
     }
 
     public void Dispose() => _temp.Dispose();
+
+    private static VaultAccess Upgraded(Guid vault) => new(new VaultHeader(VaultFormat.Current, vault), KeyRing.Of(MasterKey), Identity);
+
+    private static VaultAccess NotUpgraded(Guid vault) => new(new VaultHeader(5, vault), KeyRing.Of(MasterKey), Identity: null);
 
     private KeyMemory Memory() => new(FilePath, _protector, _log);
 

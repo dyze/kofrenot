@@ -79,6 +79,16 @@
 
       <TextBlock x:Name="StatusText" Margin="0,10,0,0" Opacity="0.7" TextWrapping="Wrap" />
 
+      <StackPanel x:Name="PassPhrasePanel" Margin="0,10,0,0" Orientation="Horizontal">
+        <TextBlock Width="110" VerticalAlignment="Center" Text="Pass phrase" />
+        <Button x:Name="ChangePassPhraseButton"
+                Padding="12,4"
+                Content="Change..."
+                ToolTip="Seals the vault's key with a new pass phrase; the recovery key stays the same. The vault must be open"
+                ToolTipService.ShowOnDisabled="True"
+                Click="ChangePassPhraseButton_Click" />
+      </StackPanel>
+
       <StackPanel Margin="0,10,0,0" Orientation="Horizontal">
         <TextBlock x:Name="RememberedText" VerticalAlignment="Center" />
         <Button x:Name="ForgetButton"

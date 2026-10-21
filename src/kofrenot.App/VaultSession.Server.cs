@@ -209,7 +209,7 @@ public sealed partial class VaultSession
     /// </summary>
     private void CreateVault(Window owner, KofreClient client, Uri server, Guid? store)
     {
-        (Guid Store, VaultHeader Header, byte[] Key)? created = null;
+        (Guid Store, VaultAccess Access, RecoveryKey Recovery)? created = null;
         var answer = PassphraseDialog.AskNew(owner, $"On the server {server.Host}", name: string.Empty, passPhrase =>
         {
             try
@@ -223,8 +223,8 @@ public sealed partial class VaultSession
                 throw new IOException(Explain(ex), ex);
             }
 
-            var (header, key) = VaultFolder.Create(_files.MirrorOf(store.Value), passPhrase);
-            created = (store.Value, header, key);
+            var (access, recovery) = VaultFolder.Create(_files.MirrorOf(store.Value), passPhrase);
+            created = (store.Value, access, recovery);
             return true;
         });
         if (answer is null || created is not { } vault)
@@ -235,10 +235,11 @@ public sealed partial class VaultSession
 
         var location = new VaultLocation(_files.MirrorOf(vault.Store), new StoreAddress(server, vault.Store));
         _settings.SetVaults(_settings.Vaults.Add(new RegisteredVault(location)));
-        _log.Info("Action", $"Vault {vault.Header.Id} created on the server, store {vault.Store}");
+        _log.Info("Action", $"Vault {vault.Access.Header.Id} created on the server, store {vault.Store}");
+        RecoveryKeyDialog.Show(owner, $"On the server {server.Host}", vault.Recovery);
         Close();
         _settings.SelectVault(location);
-        if (Open(owner, location.Folder, vault.Header, vault.Key, answer.Remember) is { } opened)
+        if (Open(owner, location.Folder, vault.Access, answer.Remember) is { } opened)
         {
             NameNew(owner, opened, answer.Name);
             Use(owner, location.Folder, opened);

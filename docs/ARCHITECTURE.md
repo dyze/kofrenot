@@ -146,7 +146,10 @@ Model and principles: [GOAL.md](GOAL.md#data-model).
 
 ```
 <vault folder>/
-  kofrenot-vault.json      header, plain JSON: format, vault id, KDF salt + iterations, wrapped master key
+  kofrenot-vault.json      header, plain JSON: format, vault id (up to format 5: KDF salt + iterations, wrapped master key)
+  keys/                    since format 6 (Encryption)
+    identities/9e1c….json  an identity: public key, private key sealed by the pass phrase and by the recovery key
+    epoch-0/9e1c….kfw      the vault key of epoch 0, wrapped for that identity, written once
   changes/
     3f/3f9c…e1.kfc         one encrypted change, named by a random id, written once
     a0/a07b…42.kfc
@@ -178,12 +181,12 @@ settings.json  "vaults": [{ "folder", "id"?, "hotkey"?, "locked"?, "server"?, "s
 - **Name**: asked on creation (`PassphraseDialog.AskNew`) and written as the vault's first change, then by Rename: a `nameVault` change, encrypted like the others, replacing the current names (`CurrentVersions`), as renames do: two names made apart are a conflict, shown in Settings > Vault, resolved by naming again (`VaultNamePlanner`). `VaultNameMemory` keeps the last name read on this device (`vault-names.json`, protected by DPAPI like `keys.json`), so a locked vault shows it; otherwise its folder's name (a server vault: its server's). A server knows a vault by its store id only ([Server vaults](#server-vaults)).
 
 ### Server vaults
-A vault kept on a Kofre server ([kofreserver](https://github.com/dyze/kofreserver)): one store per vault, mirrored in a local folder that `Vault` reads as any vault folder. Its files and their encryption are those of a folder vault (format 5): the server only stores them. Design and later steps: [SERVER-CONCEPT.md](SERVER-CONCEPT.md).
+A vault kept on a Kofre server ([kofreserver](https://github.com/dyze/kofreserver)): one store per vault, mirrored in a local folder that `Vault` reads as any vault folder. Its files and their encryption are those of a folder vault, its identity in its `keys/` for now (the server account will hold it: [Keys](SERVER-CONCEPT.md#keys)): the server only stores them. Design and later steps: [SERVER-CONCEPT.md](SERVER-CONCEPT.md).
 
 ```
  Vault ── reads, writes ──► mirror  %LocalAppData%\kofrenot\stores\<store>\   (folder vault layout)
                               ▲  │                                    stores\<store>.sync.json: feed position, files both sides have
-          downloads (feed) ───┘  └─── uploads: the mirror's files the store lacks (header, contents, then changes)
+          downloads (feed) ───┘  └─── uploads: the mirror's files the store lacks (header, keys, contents, then changes)
                               ServerSync ◄──► KofreClient ── HTTPS, JWT ──► Kofre server
 ```
 
@@ -206,6 +209,7 @@ One number for the whole vault, `VaultFormat.Current`, written in the header and
 | 3 | 0.3 | `editDataset` with its chunked `.kfd` content files: a 0.2 app does not know them |
 | 4 | 0.4 | `remove` of nodes and links: a 0.3 app would still show them; `editView` |
 | 5 | 0.5 | `nameVault`, `retypeNode`: a 0.4 app cannot read them |
+| 6 | 0.7 | `keys/` and the key epoch in every file (`KFC2`, `KFN2`, `KFT2`, `KFD2`); a header without key: a 0.6 app cannot open the keys |
 
 | Found | This kofrenot |
 | --- | --- |
@@ -234,36 +238,52 @@ open: unlock, read ─► Vault.Format = highest of header, change files, snapsh
                 refresh, then ask again unless another device upgraded it)
 ```
 
+- **5 → 6**: once agreed, the pass phrase is asked again (`PassphraseDialog.AskToUpgrade`): `VaultKeys.Upgrade` adds `keys/` (an identity, the master key as epoch 0), then the recovery key is shown. No file is rewritten: the header keeps its key until the pass phrase changes. If another device upgraded it, its identity opens with the same pass phrase and nothing is added. Cancelled, the vault waits, as with *Not now*.
 - `Vault` refuses every write (`Append`, `Save`, `WriteDataset`, `WriteCopies`) with `InvalidOperationException` until `AgreeToUpgrade`: no content file is written ahead of a refusal.
 - `VaultUpgrades` (`vault-upgrades.json`, ids only) keeps the highest format agreed per vault, on this device: asked once, and again only for a newer format.
 - `VaultFormat.Since` names the first kofrenot writing each format, for the question.
 
 ### Encryption
 
+Since format 6 ([design](SERVER-CONCEPT.md#keys)):
+
 ```
-pass phrase ──PBKDF2-SHA256 (salt, 600 000 iterations)──► pass-phrase key
-                                                             │ AES-256-GCM
-master key (32 random bytes) ◄──────── unwraps ──────────────┘   (header)
-   │ AES-256-GCM, new 12-byte nonce per file, AAD = file id
-   ▼
-change file = "KFC1" · nonce · ciphertext · tag
+pass phrase ─PBKDF2-SHA256 (600 000)─┐     recovery key (32 random bytes, shown once) ─HKDF─┐
+                                     ▼ AES-256-GCM                          AES-256-GCM ▼
+keys/identities/<id>.json   Identity: P-256 public key, private key sealed twice ("KFK1", "KFR1")
+                                     │ ECDH with a one-time key pair, HKDF-SHA256, AES-256-GCM
+                                     ▼
+keys/epoch-N/<id>.kfw       vault key of epoch N = "KFW1" · one-time public key · nonce · key · tag
+                            (EpochKeys; AAD = vault id · epoch · identity id)
+                                     ▼
+KeyRing { epoch → key } ─► KeyedBox: AES-256-GCM, new 12-byte nonce per file, AAD = header · file id
+                                     ▼
+change file = "KFC2" · epoch (4 bytes, big-endian) · nonce · ciphertext · tag
 ```
+
+| Kind (`SealKind`) | Before format 6, read with epoch 0 | Since |
+| --- | --- | --- |
+| Change, note, thumbnail, dataset, snapshot | `KFC1`, `KFN1`, `KFT1`, `KFD1`, `KFS1` | `KFC2`, `KFN2`, `KFT2`, `KFD2`, `KFS2` · epoch |
+
+- **Format 5** and before: the header holds the master key, wrapped by the pass phrase (PBKDF2-SHA256, then AES-256-GCM, "KFK1"); it is epoch 0.
+- **Unlock** (`VaultKeys.Unlock`): each identity is tried with the pass phrase (or the recovery key), then the header's key; the identity unwraps its keys of every epoch into a `KeyRing`. New files use the latest epoch. Only epoch 0 exists until members can be removed ([Rotation](SERVER-CONCEPT.md#rotation)).
+- **Change the pass phrase** (`VaultKeys.ChangePassPhrase`, folder vaults): the identity file is rewritten (`.tmp`, then renamed); a header still holding the master key is rewritten without it (format 6), so the old pass phrase opens nothing. A server vault's files are written once: its pass phrase cannot change until its identity moves to the server account (0.7, later step).
+- **Recovery key**: 52 Base32 characters in groups of 4 (`RecoveryKey`); case, spaces and dashes ignored. After unlocking with it, a folder vault asks a new pass phrase.
 
 A dataset's file can be of any size, so it is sealed in chunks (`ChunkedBox`), read and written as a stream:
 
 ```
-.kfd file = "KFD1" · nonce prefix (8 random bytes) · chunk 0 · chunk 1 · … · last chunk
+.kfd file = "KFD2" · epoch · nonce prefix (8 random bytes) · chunk 0 · chunk 1 · … · last chunk
 chunk i   = AES-256-GCM(1 MB of the file) · tag
-            nonce = prefix · i (4 bytes, big-endian)    AAD = "KFD1" · version id · last (1 byte)
+            nonce = prefix · i (4 bytes, big-endian)    AAD = "KFD2" · epoch · version id · last (1 byte)
 ```
 
 - A chunk changed, moved, left out or added after the last one fails to open; so does a file cut after a chunk (no last one). An empty file is one empty last chunk.
 - Memory use stays at about two chunks, whatever the size.
 
-- Built into .NET (`Rfc2898DeriveBytes`, `AesGcm`): no package.
-- A wrong pass phrase fails to unwrap the master key (GCM tag), so no extra check value is needed.
-- Changing the pass phrase (later) rewrites the header only.
-- *Remember pass phrase* stores the master key (not the pass phrase: it opens at once and survives a pass phrase change), protected by DPAPI for the current Windows user, in `keys.json` in the local data folder, per vault id (`KeyMemory`). `Core` sees DPAPI through `ISecretProtector`; `App` implements it with `ProtectedData` (`DpapiProtector`).
+- Built into .NET (`Rfc2898DeriveBytes`, `AesGcm`, `ECDiffieHellman`, `HKDF`): no package.
+- A wrong pass phrase fails to unseal the identity (GCM tag), so no extra check value is needed.
+- *Remember pass phrase* stores the identity's private key (a format 5 vault: its master key, replaced at upgrade), not the pass phrase: it opens at once and survives a pass phrase change. Protected by DPAPI for the current Windows user, in `keys.json` in the local data folder, per vault id (`KeyMemory`). A master key remembered for a vault that has identities is not used: the pass phrase is asked, then the identity remembered. `Core` sees DPAPI through `ISecretProtector`; `App` implements it with `ProtectedData` (`DpapiProtector`).
 - The key, the pass phrase and names are never logged.
 
 ### Change content

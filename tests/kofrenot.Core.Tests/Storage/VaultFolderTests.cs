@@ -32,17 +32,28 @@ public sealed class VaultFolderTests : IDisposable
     }
 
     [Fact]
-    public void ACreatedVault_IsAVault_AndUnlocksWithItsPassPhrase()
+    public void ACreatedVault_IsAVault_AndUnlocksWithItsPassPhrase_OrItsRecoveryKey()
     {
-        var (header, masterKey) = VaultFolder.Create(Folder, "secret", Iterations);
+        var (access, recovery) = VaultFolder.Create(Folder, "secret", Iterations);
 
         Assert.Equal(FolderKind.Vault, VaultFolder.Inspect(Folder));
         Assert.True(Directory.Exists(Path.Combine(Folder, VaultFolder.ChangesFolder)));
         var read = VaultHeader.Read(VaultFolder.HeaderOf(Folder));
-        Assert.Equal(header.Id, read.Id);
+        Assert.Equal(access.Header.Id, read.Id);
         Assert.Equal(VaultFormat.Current, read.Format);
-        Assert.Equal(masterKey, read.Unlock("secret"));
-        Assert.Null(read.Unlock("wrong"));
+        Assert.Null(read.Key);
+        Assert.Equal(access.Keys.CurrentKey, VaultKeys.Unlock(Folder, read, "secret")?.Keys.CurrentKey);
+        Assert.Equal(access.Keys.CurrentKey, VaultKeys.Unlock(Folder, read, recovery)?.Keys.CurrentKey);
+        Assert.Null(VaultKeys.Unlock(Folder, read, "wrong"));
+    }
+
+    [Fact]
+    public void AHeaderWithoutKey_IsRead_FromFormat6Only()
+    {
+        const string Id = "\"id\":\"3f2504e0-4f89-11d3-9a0c-0305e82c3301\"";
+
+        Assert.Null(VaultHeader.Read(WriteHeader($"{{\"format\":6,{Id}}}")).Unlock("secret"));
+        Assert.Throws<InvalidDataException>(() => VaultHeader.Read(WriteHeader($"{{\"format\":5,{Id}}}")));
     }
 
     [Fact]
@@ -92,7 +103,7 @@ public sealed class VaultFolderTests : IDisposable
     public void TheSize_CountsEveryFile_InEverySubFolder()
     {
         VaultFolder.Create(Folder, "secret phrase", Iterations);
-        var header = new FileInfo(VaultFolder.HeaderOf(Folder)).Length;
+        var created = Directory.GetFiles(Folder, "*", SearchOption.AllDirectories).Select(file => new FileInfo(file).Length).ToList();
         var nested = Path.Combine(Folder, VaultFolder.ContentFolder, "3f");
         Directory.CreateDirectory(nested);
         File.WriteAllBytes(Path.Combine(nested, "a.kfd"), new byte[2000]);
@@ -100,7 +111,8 @@ public sealed class VaultFolderTests : IDisposable
 
         var size = VaultFolder.SizeOf(Folder);
 
-        Assert.Equal(new FolderSize(3, header + 2048), size);
+        Assert.Equal(3, created.Count);
+        Assert.Equal(new FolderSize(created.Count + 2, created.Sum() + 2048), size);
     }
 
     [Fact]

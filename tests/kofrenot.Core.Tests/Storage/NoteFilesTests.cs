@@ -7,7 +7,7 @@ public sealed class NoteFilesTests : IDisposable
 {
     private readonly TempFolder _temp = new();
     private readonly RingLog _log = new();
-    private readonly SecretBox _box = new(RandomNumberGenerator.GetBytes(SecretBox.KeySize));
+    private readonly KeyedBox _box = new(KeyRing.Of(RandomNumberGenerator.GetBytes(SecretBox.KeySize)));
 
     private string Folder => _temp.Sub("vault");
 

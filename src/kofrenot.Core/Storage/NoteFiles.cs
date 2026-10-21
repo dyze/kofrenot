@@ -5,12 +5,10 @@ namespace Kofrenot.Core.Storage;
 
 /// <summary>
 /// The content of note versions, one file each (<c>content/</c>), written once and never changed.
-/// UTF-8 text sealed with the master key ("KFN1"), bound to the version id (the file's name).
+/// UTF-8 text sealed with the vault's key (<see cref="SealKind.Note"/>), bound to the version id (the file's name).
 /// </summary>
-public sealed class NoteFiles(string vaultFolder, SecretBox box, ILog? log = null)
+public sealed class NoteFiles(string vaultFolder, KeyedBox box, ILog? log = null)
 {
-    private static ReadOnlySpan<byte> Magic => "KFN1"u8;
-
     private readonly ILog _log = log ?? NullLog.Instance;
 
     /// <summary>Whether a version's file is in the vault (it may arrive after its change).</summary>
@@ -21,7 +19,7 @@ public sealed class NoteFiles(string vaultFolder, SecretBox box, ILog? log = nul
     {
         var path = VaultFolder.ContentFileOf(vaultFolder, version);
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
-        AtomicFile.Write(path, box.Seal(Magic, Encoding.UTF8.GetBytes(content), version.ToByteArray()), overwrite: false);
+        AtomicFile.Write(path, box.Seal(SealKind.Note, Encoding.UTF8.GetBytes(content), version.ToByteArray()), overwrite: false);
     }
 
     /// <summary>
@@ -38,7 +36,7 @@ public sealed class NoteFiles(string vaultFolder, SecretBox box, ILog? log = nul
 
         try
         {
-            return Encoding.UTF8.GetString(box.Open(Magic, File.ReadAllBytes(path), version.ToByteArray()));
+            return Encoding.UTF8.GetString(box.Open(SealKind.Note, File.ReadAllBytes(path), version.ToByteArray()));
         }
         catch (Exception ex) when (ex is InvalidDataException or IOException or UnauthorizedAccessException)
         {

@@ -49,15 +49,23 @@ public sealed partial class VaultSession
             return true;
         }
 
-        if (!_upgrades.IsAgreed(vault.Id, VaultFormat.Current))
+        var agreed = _upgrades.IsAgreed(vault.Id, VaultFormat.Current);
+        if (!agreed && !MessageDialog.Confirm(owner, VaultFormat.UpgradeQuestion(vault.Format), "Upgrade and open", "Not now"))
         {
-            if (!MessageDialog.Confirm(owner, VaultFormat.UpgradeQuestion(vault.Format), "Upgrade and open", "Not now"))
-            {
-                _log.Info("Action", $"Upgrade of vault {vault.Id} from format {vault.Format} declined");
-                _notUpgraded = vault;
-                return false;
-            }
+            _log.Info("Action", $"Upgrade of vault {vault.Id} from format {vault.Format} declined");
+            _notUpgraded = vault;
+            return false;
+        }
 
+        // Format 6 seals the vault's key for an identity: made now, with the pass phrase.
+        if (!UpgradeKeys(owner, vault))
+        {
+            _notUpgraded = vault;
+            return false;
+        }
+
+        if (!agreed)
+        {
             _log.Info("Action", $"Upgrade of vault {vault.Id} from format {vault.Format} agreed");
             _upgrades.Agree(vault.Id, VaultFormat.Current);
         }

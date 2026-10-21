@@ -7,9 +7,9 @@ public sealed class VaultTests : IDisposable
     private readonly TempFolder _temp = new();
     private readonly RingLog _log = new();
     private readonly VaultHeader _header;
-    private readonly byte[] _key;
+    private readonly KeyRing _keys;
 
-    public VaultTests() => (_header, _key) = VaultFolder.Create(Folder, "secret", iterations: 10);
+    public VaultTests() => (_header, _keys, _) = VaultFolder.Create(Folder, "secret", iterations: 10).Access;
 
     private string Folder => _temp.Sub("db");
 
@@ -436,7 +436,7 @@ public sealed class VaultTests : IDisposable
     private string ChangesFolder => Path.Combine(Folder, VaultFolder.ChangesFolder);
 
     private Vault Open(bool snapshot = true, int headerFormat = VaultFormat.Current) =>
-        Vault.Open(Folder, _header with { Format = headerFormat }, _key, snapshot ? Cache : null, _log);
+        Vault.Open(Folder, _header with { Format = headerFormat }, _keys, snapshot ? Cache : null, _log);
 
     private static string NodeAddedJson(int format, string name) =>
         $"{{\"format\":{format},\"op\":\"addNode\",\"at\":\"2026-10-16T09:12:00Z\",\"node\":{{\"id\":\"{Guid.NewGuid()}\",\"type\":\"generic\",\"name\":\"{name}\",\"created\":\"2026-10-16T09:12:00Z\"}}}}";
@@ -455,7 +455,7 @@ public sealed class VaultTests : IDisposable
         var name = id.ToString("N");
         var path = Path.Combine(ChangesFolder, name[..2], name + ".kfc");
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
-        File.WriteAllBytes(path, new SecretBox(_key).Seal("KFC1"u8, System.Text.Encoding.UTF8.GetBytes(json), id.ToByteArray()));
+        File.WriteAllBytes(path, new SecretBox(_keys.KeyOf(0)).Seal("KFC1"u8, System.Text.Encoding.UTF8.GetBytes(json), id.ToByteArray()));
     }
 
     private static Node NewNode(string name) => new(Guid.NewGuid(), TypeCatalog.Generic.Id, name, Start);

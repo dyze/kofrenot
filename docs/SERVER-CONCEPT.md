@@ -7,7 +7,8 @@ Decisions: [GOAL.md](GOAL.md#decisions). Built in steps ([ROADMAP.md](../ROADMAP
 | Version | Parts of this design | Status |
 | --- | --- | --- |
 | 0.6 | [Accounts](#accounts), stores with their owner only, [Delete](#delete), files and feed of the [REST API](#rest-api-sketch); [Client sync](#client-sync) with every file downloaded; today's keys (format 5) | Implemented |
-| 0.7 | Members and roles, account data, [Fence](#fence), [Keys](#keys) (identity, [Sharing](#sharing), [Rotation](#rotation), [Format 6](#format-6)) | Planned |
+| 0.7 | [Keys](#keys): identity in the vault, recovery key, pass phrase change, [Format 6](#format-6) | Implemented ([ARCHITECTURE.md](ARCHITECTURE.md#encryption)) |
+| 0.7 | Members and roles, account data and the account's identity, [Fence](#fence), [Sharing](#sharing), [Rotation](#rotation) | Planned |
 | 0.8 | Content on demand and pinned nodes ([Client sync](#client-sync)), batch download, uploads in parts | Planned |
 
 ## Principles

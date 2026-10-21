@@ -21,16 +21,16 @@ public sealed partial class Vault
     private readonly Dictionary<Guid, Change> _read = [];
     private readonly HashSet<Guid> _reportedUnreadable = [];
 
-    private Vault(string folder, VaultHeader header, byte[] masterKey, string? cacheFolder, ILog? log)
+    private Vault(string folder, VaultHeader header, KeyRing keys, string? cacheFolder, ILog? log)
     {
         _folder = folder;
         Id = header.Id;
         Format = header.Format;
         _log = log ?? NullLog.Instance;
-        var box = new SecretBox(masterKey);
+        var box = new KeyedBox(keys);
         _codec = new ChangeCodec(box);
         Notes = new NoteFiles(folder, box, _log);
-        Datasets = new DatasetFiles(folder, new ChunkedBox(masterKey));
+        Datasets = new DatasetFiles(folder, box);
         Thumbnails = new ThumbnailFiles(folder, box, _log);
         _snapshot = cacheFolder is null ? null : new SnapshotStore(SnapshotOf(cacheFolder, Id), box, Id, _log);
     }
@@ -51,12 +51,12 @@ public sealed partial class Vault
     /// <summary>Whether the file of a note's or dataset's version is in the vault (it may arrive after its change).</summary>
     public bool HasContent(ContentEdited version) => version is DatasetEdited ? Datasets.Exists(version.Id) : Notes.Exists(version.Id);
 
-    /// <summary>Opens a vault with its master key: the snapshot, then the change files it lacks.</summary>
+    /// <summary>Opens a vault with its keys: the snapshot, then the change files it lacks.</summary>
     /// <param name="cacheFolder">Where the local snapshot is kept; null for none.</param>
     /// <exception cref="NewerVaultFormatException">A change file was written by a newer kofrenot.</exception>
-    public static Vault Open(string folder, VaultHeader header, byte[] masterKey, string? cacheFolder = null, ILog? log = null)
+    public static Vault Open(string folder, VaultHeader header, KeyRing keys, string? cacheFolder = null, ILog? log = null)
     {
-        var vault = new Vault(folder, header, masterKey, cacheFolder, log);
+        var vault = new Vault(folder, header, keys, cacheFolder, log);
         var fromSnapshot = vault.LoadSnapshot();
         var read = vault.Refresh();
         vault._log.Info(Category, $"Vault {vault.Id} opened: {vault.Graph.Nodes.Count} nodes, "

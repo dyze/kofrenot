@@ -15,7 +15,7 @@ Scope of each planned version. Implemented features move to [CHANGELOG.md](CHANG
 | 0.9     | To define | Editing: restore versions, drop files                                              |
 
 ## 0.7 (to define)
-1. **Identity and recovery key.** Vault keys are wrapped for an identity (key pair) unlocked by the pass phrase or a recovery key shown once. Same for folder and server vaults (format 6, existing vaults upgraded without rewriting a file).
+1. **Account identity.** A server vault's identity is kept in the server account: one pass phrase and recovery key for all its server vaults, which can then change. 0.6 server vaults get it at their upgrade ([Format 6](docs/SERVER-CONCEPT.md#format-6)).
 2. **Share complete server vaults** with other users (reader or writer), found by their exact email, after checking the key's fingerprint. A vault has one owner, its creator.
 3. **Remove a member.** Server access removed at once, then key rotation and fence: files added later are unreadable to them. A member can also leave a vault: the key is rotated the same way.
 4. **Change the account's password** on the server.
@@ -37,7 +37,6 @@ Scope of each planned version. Implemented features move to [CHANGELOG.md](CHANG
 2. **Re-encrypt on pack.** Packed files are encrypted again with the latest vault key, so old key epochs can be dropped ([Rotation](docs/SERVER-CONCEPT.md#rotation)).
 3. **Move a server vault to a folder.** Its files are saved as they are into a folder vault; its id is kept.
 4. **Import/Export a server repo.**
-5. **Change the pass phrase.** The identity is wrapped again; nothing else changes ([Keys](docs/SERVER-CONCEPT.md#keys)).
-6. **Share folder vaults.** A member's identity added to the vault's `keys/identities/` by their kofrenot ([Sharing](docs/SERVER-CONCEPT.md#sharing)).
-7. **Rotate key on demand**, not only when a member is removed ([Rotation](docs/SERVER-CONCEPT.md#rotation)).
+5. **Share folder vaults.** A member's identity added to the vault's `keys/identities/` by their kofrenot ([Sharing](docs/SERVER-CONCEPT.md#sharing)).
+6. **Rotate key on demand**, not only when a member is removed ([Rotation](docs/SERVER-CONCEPT.md#rotation)).
 

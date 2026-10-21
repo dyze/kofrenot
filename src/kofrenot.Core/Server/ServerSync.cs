@@ -134,7 +134,7 @@ public sealed class ServerSync(string mirror, string stateFile, Guid store, ISto
 
     /// <summary>
     /// The mirror's files not known on the store, in the order a reader needs them: the vault's
-    /// header first, then contents, then the changes that refer to them.
+    /// header first, then its keys, then contents, then the changes that refer to them.
     /// </summary>
     private static List<string> FilesToUpload(string mirror, SyncState state) =>
         Directory.Exists(mirror)
@@ -149,8 +149,9 @@ public sealed class ServerSync(string mirror, string stateFile, Guid store, ISto
 
     private static int UploadRank(string path) =>
         path == VaultFolder.HeaderFile ? 0
-        : path.EndsWith(VaultFolder.ChangeExtension, StringComparison.Ordinal) ? 2
-        : 1;
+        : path.StartsWith(VaultFolder.KeysFolder + "/", StringComparison.Ordinal) ? 1
+        : path.EndsWith(VaultFolder.ChangeExtension, StringComparison.Ordinal) ? 3
+        : 2;
 
     /// <summary>A mirror's sync state, in a JSON file beside it.</summary>
     private sealed class SyncState

@@ -9,7 +9,7 @@ public sealed class SnapshotStoreTests : IDisposable
 
     private readonly TempFolder _temp = new();
     private readonly RingLog _log = new();
-    private readonly SecretBox _box = new(RandomNumberGenerator.GetBytes(SecretBox.KeySize));
+    private readonly KeyedBox _box = new(KeyRing.Of(RandomNumberGenerator.GetBytes(SecretBox.KeySize)));
     private readonly Guid _vault = Guid.NewGuid();
 
     private string FilePath => Path.Combine(_temp.Sub("cache"), "db.kfs");
@@ -139,6 +139,6 @@ public sealed class SnapshotStoreTests : IDisposable
     private void WriteSnapshot(string json)
     {
         Directory.CreateDirectory(Path.GetDirectoryName(FilePath)!);
-        File.WriteAllBytes(FilePath, _box.Seal("KFS1"u8, Encoding.UTF8.GetBytes(json), _vault.ToByteArray()));
+        File.WriteAllBytes(FilePath, _box.Seal(SealKind.Snapshot, Encoding.UTF8.GetBytes(json), _vault.ToByteArray()));
     }
 }

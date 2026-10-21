@@ -9,7 +9,7 @@
         ShowInTaskbar="False"
         WindowStartupLocation="CenterOwner"
         SourceInitialized="Window_SourceInitialized">
-  <!-- Asks the pass phrase of a vault: once to unlock it, twice to create it, with its name. Enter: OK, Esc: Cancel. -->
+  <!-- Asks the pass phrase of a vault: once to unlock or upgrade it, twice to create it (with its name) or change it. Enter: OK, Esc: Cancel. -->
   <Window.Resources>
     <ResourceDictionary Source="SharedStyles.xaml" />
   </Window.Resources>
@@ -24,7 +24,7 @@
       <TextBox x:Name="NameBox" Padding="4,3" ToolTip="Stored, encrypted, in the vault: every device shows it. Rename it later in Settings > Vault" />
     </StackPanel>
 
-    <TextBlock Margin="0,14,0,4" Text="Pass phrase" />
+    <TextBlock x:Name="FirstLabel" Margin="0,14,0,4" Text="Pass phrase" />
     <PasswordBox x:Name="FirstBox" Padding="6,4" />
 
     <StackPanel x:Name="SecondPanel" Visibility="Collapsed">
@@ -36,6 +36,15 @@
               Margin="0,14,0,0"
               Content="Remember pass phrase on this computer"
               ToolTip="Kept by Windows for your account only: kofrenot then opens the vault without asking" />
+
+    <Button x:Name="RecoveryButton"
+            Margin="0,10,0,0"
+            HorizontalAlignment="Left"
+            Style="{StaticResource FlatButton}"
+            Content="Lost it? Use the recovery key"
+            ToolTip="The key shown once when the vault was created or upgraded"
+            Visibility="Collapsed"
+            Click="RecoveryButton_Click" />
 
     <TextBlock x:Name="ErrorText"
                Margin="0,10,0,0"

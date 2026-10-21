@@ -169,7 +169,7 @@ public sealed class DatasetFilesTests : IDisposable
         public void Report(long value) => Values.Add(value);
     }
 
-    private DatasetFiles Files() => new(Folder, new ChunkedBox(_key));
+    private DatasetFiles Files() => new(Folder, new KeyedBox(KeyRing.Of(_key)));
 
     private string Source(string name, string content)
     {

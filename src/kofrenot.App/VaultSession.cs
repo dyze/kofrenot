@@ -371,6 +371,7 @@ public sealed partial class VaultSession : IDisposable
         _watcher?.Dispose();
         _watcher = null;
         _keptName = null;
+        _access = null;
         if (Current is not null || _notUpgraded is not null)
         {
             Current = null;
@@ -409,7 +410,7 @@ public sealed partial class VaultSession : IDisposable
 
     private Vault? Create(Window owner, string folder)
     {
-        (VaultHeader Header, byte[] Key)? created = null;
+        (VaultAccess Access, RecoveryKey Recovery)? created = null;
         var answer = PassphraseDialog.AskNew(owner, folder, new VaultLocation(folder).FolderName, passPhrase =>
         {
             created = VaultFolder.Create(folder, passPhrase);
@@ -421,8 +422,9 @@ public sealed partial class VaultSession : IDisposable
             return null;
         }
 
-        _log.Info("Action", $"Vault {vault.Header.Id} created in {folder}");
-        var opened = Open(owner, folder, vault.Header, vault.Key, answer.Remember);
+        _log.Info("Action", $"Vault {vault.Access.Header.Id} created in {folder}");
+        RecoveryKeyDialog.Show(owner, folder, vault.Recovery);
+        var opened = Open(owner, folder, vault.Access, answer.Remember);
         if (opened is not null)
         {
             NameNew(owner, opened, answer.Name);
@@ -459,44 +461,22 @@ public sealed partial class VaultSession : IDisposable
             return null;
         }
 
-        if (!_askPassPhrase && _keys.Recall(header.Id) is { } remembered)
-        {
-            _log.Info(Category, $"Vault {header.Id} unlocked with the remembered pass phrase");
-            return Open(owner, folder, header, remembered, remember: false);
-        }
-
-        byte[]? key = null;
-        var remember = PassphraseDialog.Ask(owner, PlaceOf(Selected, folder), passPhrase =>
-        {
-            key = header.Unlock(passPhrase);
-            if (key is null)
-            {
-                _log.Warn(Category, $"Wrong pass phrase for vault {header.Id}");
-            }
-
-            return key is not null;
-        });
-        if (remember is null || key is null)
-        {
-            _log.Info("Action", "Unlock cancelled");
-            return null;
-        }
-
-        _log.Info("Action", $"Vault {header.Id} unlocked");
-        return Open(owner, folder, header, key, remember.Value);
+        return UnlockKeys(owner, folder, header) is { } unlocked ? Open(owner, folder, unlocked.Access, unlocked.Remember) : null;
     }
 
-    private Vault? Open(Window owner, string folder, VaultHeader header, byte[] key, bool remember)
+    private Vault? Open(Window owner, string folder, VaultAccess access, bool remember)
     {
         try
         {
-            Identify(header);
+            Identify(access.Header);
             if (remember)
             {
-                _keys.Remember(header.Id, key);
+                _keys.Remember(access);
             }
 
-            return Vault.Open(folder, header, key, _files.Cache, _log);
+            var vault = Vault.Open(folder, access.Header, access.Keys, _files.Cache, _log);
+            _access = access;
+            return vault;
         }
         catch (NewerVaultFormatException ex)
         {

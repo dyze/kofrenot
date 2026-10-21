@@ -4,12 +4,10 @@ namespace Kofrenot.Core.Storage;
 
 /// <summary>
 /// The thumbnails of dataset versions, one small file each (<c>content/</c>), written once and
-/// never changed: a PNG sealed with the master key ("KFT1"), bound to the version id (the file's name).
+/// never changed: a PNG sealed with the vault's key (<see cref="SealKind.Thumbnail"/>), bound to the version id (the file's name).
 /// </summary>
-public sealed class ThumbnailFiles(string vaultFolder, SecretBox box, ILog? log = null)
+public sealed class ThumbnailFiles(string vaultFolder, KeyedBox box, ILog? log = null)
 {
-    private static ReadOnlySpan<byte> Magic => "KFT1"u8;
-
     private readonly ILog _log = log ?? NullLog.Instance;
 
     /// <exception cref="IOException">The file cannot be written.</exception>
@@ -17,7 +15,7 @@ public sealed class ThumbnailFiles(string vaultFolder, SecretBox box, ILog? log 
     {
         var path = VaultFolder.ThumbnailFileOf(vaultFolder, version);
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
-        AtomicFile.Write(path, box.Seal(Magic, png, version.ToByteArray()), overwrite: false);
+        AtomicFile.Write(path, box.Seal(SealKind.Thumbnail, png, version.ToByteArray()), overwrite: false);
     }
 
     /// <summary>
@@ -34,7 +32,7 @@ public sealed class ThumbnailFiles(string vaultFolder, SecretBox box, ILog? log 
 
         try
         {
-            return box.Open(Magic, File.ReadAllBytes(path), version.ToByteArray());
+            return box.Open(SealKind.Thumbnail, File.ReadAllBytes(path), version.ToByteArray());
         }
         catch (Exception ex) when (ex is InvalidDataException or IOException or UnauthorizedAccessException)
         {

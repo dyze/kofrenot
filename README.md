@@ -34,8 +34,10 @@ Upgrade: run a newer setup over the old one. Uninstall: *Settings > Apps*. Your 
 ### Vault
 A vault is a folder: on this computer, on a file share, or in a folder a sync tool copies between computers. Add it in Settings > Vault, which also shows the open vault's nodes, links and size on disk (measured each time the tab is shown).
 
-- An **empty folder** becomes a new vault: kofrenot asks its name (the folder's, to begin with) and a pass phrase, twice. Everything in it is encrypted with that pass phrase: **if it is lost, the vault cannot be read**.
-- A **vault folder** asks for its pass phrase when opened, unless *Remember pass phrase on this computer* was ticked (kept by Windows for your account; Settings > Vault > *Forget* removes it).
+- An **empty folder** becomes a new vault: kofrenot asks its name (the folder's, to begin with) and a pass phrase, twice, then shows its **recovery key** once: write it down or keep it in a password manager. Everything in the vault is encrypted: the pass phrase or the recovery key opens it; **if both are lost, the vault cannot be read**.
+- A **vault folder** asks for its pass phrase when opened, unless *Remember pass phrase on this computer* was ticked (kept by Windows for your account; Settings > Vault > *Forget* removes it). Pass phrase lost: *Lost it? Use the recovery key*, then choose a new pass phrase.
+- **Change the pass phrase**: Settings > Vault > *Pass phrase* > *Change...*, the vault open (folder vaults). The recovery key stays the same.
+- A vault from kofrenot 0.6 or older is **upgraded** when opened, if you agree: its pass phrase is asked again and its recovery key shown. kofrenot 0.6 no longer opens it then.
 - A folder holding other files is refused, and so is a vault in the list already.
 - **Several vaults**: add as many as you like; one is open at a time, and they never mix (no search or link across vaults). With two or more, a box at the top left of the main window switches between them: the open vault is closed, then the chosen one opened (its pass phrase asked unless remembered; cancelled, the previous one comes back). The note shown is saved first; not while a file is being imported. kofrenot opens the last vault chosen at start. A vault whose folder cannot be reached is marked *unavailable*.
 - **Name**: asked when the vault is created; changed in Settings > Vault > *Rename*, for the open vault. The name is stored, encrypted, in the vault, so every computer shows it; locked, a vault shows the last name seen on this computer (or its folder's name). Named differently on two computers before they synced, both names are shown there: rename it to keep one.
@@ -142,7 +144,7 @@ Gear button in the main window, or tray menu > Settings. A dialog over the main 
 | --- | --- |
 | Key bindings | Every shortcut, by area (main window, input box, node details, notes, datasets, views, creation screen, image window, Settings), with the global hotkeys: read only |
 | General | Hotkey that shows kofrenot (click the box, then press the new shortcut; *Default*: Ctrl+Alt+K); main window position: centered on the mouse's monitor (default), at the mouse, or where you left it. Its size is kept, and it always stays fully on screen |
-| Vault | The vaults, in the order of the main window's box: *Add...*, *Remove*, *Up*, *Down*. For the one chosen in the list: its name (*Rename*, when open), its hotkey (click the box, then press the shortcut; *None*), its folder (*Explore to*), whether it is open; the remembered pass phrase (*Forget*) |
+| Vault | The vaults, in the order of the main window's box: *Add...*, *Remove*, *Up*, *Down*. For the one chosen in the list: its name (*Rename*, when open), its hotkey (click the box, then press the shortcut; *None*), its folder (*Explore to*), whether it is open; its pass phrase (*Change...*, when open; folder vaults); the remembered pass phrase (*Forget*) |
 | Link types | Each link type, both ways, with its phrases. Add your own aliases (for example `-` for *relates to*): pick the link type, type the phrase, *Add*; × removes one. They are stored in the vault, so every device has them. A phrase in use is refused, and node names containing it are warned about (the input box would read them as links) |
 | Appearance | Theme: follow Windows (default), light or dark |
 | Logging | Detailed (debug) logging; open the log window |
@@ -161,7 +163,7 @@ Everything stays on your computer, in `%LOCALAPPDATA%\kofrenot` (a portable copy
 | `tabs.json` | The views open as tabs, per vault (ids only, no names) |
 | `view-states.json` | The nodes expanded in each tree view, per vault (ids only, no names) |
 | `vault-upgrades.json` | The vaults whose upgrade you agreed to (ids only, no names) |
-| `keys.json` | Remembered pass phrases (the vault keys, protected by Windows for your account) |
+| `keys.json` | Remembered pass phrases (the keys that open the vaults, protected by Windows for your account) |
 | `vault-names.json` | The last name seen in each vault, to show it while locked (protected by Windows for your account) |
 | `cache\` | One encrypted snapshot per vault opened here, so it opens fast. Safe to delete |
 | `server-session.json` | The session on your server, so kofrenot stays signed in (protected by Windows for your account) |

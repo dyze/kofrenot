@@ -74,10 +74,23 @@ public sealed class SecretBoxTests
         Assert.Throws<InvalidDataException>(() => _box.Open("TEST"u8, "TEST"u8.ToArray(), Place));
 
     [Fact]
-    public void AMagicOfTheWrongSize_IsAnError()
+    public void AHeaderShorterThanAMagic_IsAnError()
     {
-        Assert.Throws<ArgumentException>(() => _box.Seal("TOOLONG"u8, Plain, Place));
+        Assert.Throws<ArgumentException>(() => _box.Seal("KF"u8, Plain, Place));
         Assert.Throws<ArgumentException>(() => _box.Open("X"u8, [], Place));
+    }
+
+    [Fact]
+    public void TheBytesAfterTheMagic_AreKeptPlain_AndAuthenticated()
+    {
+        byte[] header = [.. "TEST"u8, 0, 0, 0, 7];
+        var sealedData = _box.Seal(header, Plain, Place);
+
+        Assert.Equal(header, sealedData[..8]);
+        Assert.Equal(Plain, _box.Open(header, sealedData, Place));
+        sealedData[7] = 8;
+        byte[] changed = [.. "TEST"u8, 0, 0, 0, 8];
+        Assert.Throws<InvalidDataException>(() => _box.Open(changed, sealedData, Place));
     }
 
     [Fact]
