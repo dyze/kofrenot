@@ -2,13 +2,13 @@
 
 The server is **Kofre** (`Kofre.Server`): generic, kofrenot is one of its clients.
 
-Planned, not implemented. Decisions: [GOAL.md](GOAL.md#decisions). Built in steps ([ROADMAP.md](ROADMAP.md)):
+Decisions: [GOAL.md](GOAL.md#decisions). Built in steps ([ROADMAP.md](ROADMAP.md)); what is implemented is documented in [kofreserver](https://github.com/dyze/kofreserver) (the server) and [ARCHITECTURE.md](ARCHITECTURE.md#server-vaults) (kofrenot):
 
-| Version | Parts of this design |
-| --- | --- |
-| 0.6 | [Accounts](#accounts), stores with their owner only, [Delete](#delete), files and feed of the [REST API](#rest-api-sketch); [Client sync](#client-sync) with every file downloaded; today's keys (format 5) |
-| 0.7 | Members and roles, account data, [Fence](#fence), [Keys](#keys) (identity, [Sharing](#sharing), [Rotation](#rotation), [Format 6](#format-6)) |
-| 0.8 | Content on demand and pinned nodes ([Client sync](#client-sync)), batch download, uploads in parts |
+| Version | Parts of this design | Status |
+| --- | --- | --- |
+| 0.6 | [Accounts](#accounts), stores with their owner only, [Delete](#delete), files and feed of the [REST API](#rest-api-sketch); [Client sync](#client-sync) with every file downloaded; today's keys (format 5) | Implemented |
+| 0.7 | Members and roles, account data, [Fence](#fence), [Keys](#keys) (identity, [Sharing](#sharing), [Rotation](#rotation), [Format 6](#format-6)) | Planned |
+| 0.8 | Content on demand and pinned nodes ([Client sync](#client-sync)), batch download, uploads in parts | Planned |
 
 ## Principles
 - **Generic and blind.** The server stores *stores*: sets of files addressed by path, with their members. It never sees a key, a name or a content, and knows nothing of kofrenot: other apps can use it.
@@ -18,7 +18,7 @@ Planned, not implemented. Decisions: [GOAL.md](GOAL.md#decisions). Built in step
 - **REST only.** No web site, no admin UI: the admin edits the server's JSON files.
 
 ## Generic by design
-The server is a product of its own, used by kofrenot as one client among others, and may move to its own repository.
+The server is a product of its own, used by kofrenot as one client among others, in its own repository: [kofreserver](https://github.com/dyze/kofreserver).
 
 | Rule | So that |
 | --- | --- |
@@ -169,12 +169,8 @@ A breaking change, agreed with the owner (2026-10-20): `VaultFormat.Current` bec
 ## Client sync
 - **Mirror:** a server vault is mirrored in `%LocalAppData%\kofrenot\stores\<id>\` with the folder vault layout; `Vault` reads it as a folder.
 - **Download:** the feed since the last `seq`: every file under `keys/` and `changes/` at once (batched), `content/` when shown or exported, or ahead for pinned nodes.
-- **Upload:** written to the mirror first, queued in an outbox, sent when online: adding works offline.
+- **Upload:** written to the mirror first; the mirror's files the store lacks are its outbox, sent when online: adding works offline.
 - **Name of a vault not yet opened on this device:** shown as a placeholder (id, size) until the account's identity is unlocked; then read from its `nameVault` changes like any vault.
 
 ## Server storage
-- JSON files on disk: `accounts.json` (email, password hash, approved, disabled), `stores/<id>/store.json` (owner, members and roles, fence, last `seq`), `stores/<id>/feed.jsonl`, `stores/<id>/files/…`.
-- The token signing key is in the server's configuration file.
-- Only `ASP.NET Core` (part of .NET) and `Microsoft.AspNetCore.Authentication.JwtBearer`; tests with `Microsoft.AspNetCore.Mvc.Testing` (in-memory server): agreed.
-- New projects: `Kofre.Server` and `Kofre.Server.Tests`, following [Generic by design](#generic-by-design). Line coverage ≥ 95 %, enforced by `build.cmd` as for Core.
-- Its docs: `src/Kofre.Server/README.md`. Once implemented, the server part of this document moves there, so it leaves with the server; what stays here is kofrenot's use of it.
+Implemented (0.6): files on disk, configuration, admin and API in [kofreserver](https://github.com/dyze/kofreserver), the server's own repository. Each later part moves there once implemented; what stays here is kofrenot's use of it, and what is not built yet.

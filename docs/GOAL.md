@@ -64,6 +64,9 @@ What could go wrong, and how it is addressed today:
 | Pass phrase guessed | PBKDF2-SHA256, 600 000 iterations; the remembered key protected by Windows (DPAPI) | Implemented |
 | Secrets leaking through logs or caches | No content, search text, key or pass phrase logged; the snapshot is encrypted and stays local ([Logging](ARCHITECTURE.md#logging)) | Implemented |
 | The sync tool holding a `.tmp` during its rename | The save fails with an error, nothing lost | Not tested with Dropbox |
+| A server reading the vaults | It stores the files as they are, encrypted with the pass phrase, which never leaves the devices ([Server vaults](ARCHITECTURE.md#server-vaults)) | Implemented |
+| The server's password guessed, or a token stolen | Passwords hashed (PBKDF2-SHA256); 10 sign-ins a minute per address; access tokens last 15 minutes, the account checked at every request; deleting a vault asks the password again ([Kofre server](https://github.com/dyze/kofreserver)) | Implemented |
+| A server sending a file outside the vault | Only a vault's file names are accepted from it | Implemented |
 | Pass phrase lost | A recovery key, shown once, unwraps the identity too ([Keys](SERVER-CONCEPT.md#keys)) | Planned: 0.7 |
 | A member removed from a shared vault | Server access removed at once, then key rotation: files added later are unreadable to them ([Rotation](SERVER-CONCEPT.md#rotation)) | Planned: 0.7 |
 | A server reading or swapping keys | The server only stores wrapped keys; fingerprints are compared out of band before sharing ([Sharing](SERVER-CONCEPT.md#sharing)) | Planned: 0.7 |
@@ -87,13 +90,13 @@ What each version contains: [ROADMAP.md](ROADMAP.md).
 | Topic | Decision |
 | --- | --- |
 | Local storage | A folder of encrypted change files, read into memory ([ARCHITECTURE.md](ARCHITECTURE.md#vault)) |
-| Sync | Folder vaults: outside kofrenot, by copying files. Server vaults: kofrenot mirrors them in a local folder (0.6, planned: [SERVER-CONCEPT.md](SERVER-CONCEPT.md)) |
+| Sync | Folder vaults: outside kofrenot, by copying files. Server vaults: kofrenot mirrors them in a local folder (since 0.6: [ARCHITECTURE.md](ARCHITECTURE.md#server-vaults)) |
 | Conflicts | Concurrent duplicates, renames and note edits are flagged, not merged |
 | Security | AES-256-GCM, random master key wrapped by a pass-phrase key (PBKDF2-SHA256); optionally remembered by Windows (DPAPI) |
 | Notes | A node type; content in Markdown, each save a new version (since 0.2) |
 | Content on demand | Content files are in the vault folder on every device (the sync tool copies them); kofrenot reads one only when needed: a note shown, a dataset exported (since 0.3) |
 | Datasets | A node type holding one file of any size, each import a new version; encrypted in 1 MB chunks, so memory use does not depend on the size (since 0.3) |
-| Server | A generic, blind, write-once store of files with accounts and members, on Linux, knowing nothing of kofrenot so other apps can use it and it can move to its own repository; no email, the admin approves accounts in a JSON file (0.6, planned) |
+| Server | A generic, blind, write-once store of files with accounts and members, on Linux, knowing nothing of kofrenot so other apps can use it, in its own repository ([kofreserver](https://github.com/dyze/kofreserver)); no email, the admin approves accounts in a JSON file (since 0.6) |
 | Sharing | Complete vaults, with roles reader, writer, owner; removing a member rotates the vault key (0.7, planned) |
 | Keys | Vault keys wrapped for an identity (key pair) unlocked by a pass phrase or a recovery key; same model for folder and server vaults, format 6 (0.7, planned) |
 | Views | A node type holding a definition (a tree from a root node through a link type, or a list of the nodes of a type), in versions kept in its changes: views work offline (since 0.4) |

@@ -46,6 +46,15 @@ A vault is a folder: on this computer, on a file share, or in a folder a sync to
 - A vault written by a newer kofrenot (on another computer, say) is not opened, or is closed as soon as it is seen: install the latest kofrenot (*Get the latest kofrenot* in the main window).
 - A vault written by an older kofrenot asks first to be upgraded: once this kofrenot changes it, the older one no longer opens it, so update kofrenot on your other computers first. *Not now* leaves the vault unused, and untouched, until *Upgrade and open…* in the main window. The answer is asked once per vault on each computer.
 
+### Server vaults
+A vault can also be kept on a Kofre server, yours or one you are given an account on ([run one](https://github.com/dyze/kofreserver)): kofrenot syncs it across your devices itself, without a sync tool. The server keeps the files as they are, encrypted with the vault's pass phrase, which never leaves your computers: it cannot read your vaults.
+
+- **Account** (Settings > Server): type the server's address (`https://…`), your email and a password (10 characters at least), then *Sign up*. Once the server's admin approves the account, *Sign in*. kofrenot stays signed in across restarts (the session is kept by Windows for your account; the password is not kept). *Sign out* forgets the session: your server vaults stay, synced again once you sign in.
+- **Add** in Settings > Vault: *New vault on the server* (a pass phrase is asked, as for a folder), or *Vault from the server…*: your vaults on the server not listed yet, shown by their size until opened (their name is encrypted in them). An empty one becomes a new vault.
+- **Move to server…** (Settings > Vault, for a folder vault): copies it to the server as it is, then lists it as a server vault, with its name, hotkey and remembered pass phrase. Its folder is left as it was: delete it once you no longer need it.
+- **Offline first**: a server vault is kept whole on each computer, so it opens, searches and adds offline. What you add is uploaded at the next sync: every 30 seconds, soon after a change, and when the window is shown. The footer of the main window, and Settings > Vault, say where the sync stands: *synced*, *offline*, *sign in to sync*, and the files waiting to be uploaded.
+- **Delete from server…** (Settings > Vault): type the vault's name and your password. The vault goes to the server's trash, for every device (the server deletes it for good after 30 days, unless its admin restores it), and leaves the list. *Remove* only takes it out of this computer's list: it stays on the server.
+
 ### Input box
 Type in the box at the top of the main window:
 
@@ -155,6 +164,8 @@ Everything stays on your computer, in `%LOCALAPPDATA%\kofrenot` (a portable copy
 | `keys.json` | Remembered pass phrases (the vault keys, protected by Windows for your account) |
 | `vault-names.json` | The last name seen in each vault, to show it while locked (protected by Windows for your account) |
 | `cache\` | One encrypted snapshot per vault opened here, so it opens fast. Safe to delete |
+| `server-session.json` | The session on your server, so kofrenot stays signed in (protected by Windows for your account) |
+| `stores\` | Each server vault, kept whole on this computer (encrypted), with where its sync stands. Files not uploaded yet are only here |
 | `logs\kofrenot.log` | Log, at most 3 files of 1 MB, oldest deleted |
 
 Your vaults are in the folders you chose, not here.

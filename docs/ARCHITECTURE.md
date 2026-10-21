@@ -6,6 +6,7 @@
 kofrenot.App   (WPF, Windows only)
 │  main window (input box, node details, note editor, dataset panel), creation dialog, settings window, pass phrase dialog, log window, changelog window, tray icon
 │  VaultSession (the registered vaults; opens one, watches it and adds to it through the creation dialog)
+│  ServerConnection + SyncService (the server account; syncs the server vaults in the background)
 │  adapters: SerilogFileLog, SingleInstance, NativeWindows + WindowPlacer (window positions), GitHubReleaseFeed, Browser,
 │            DpapiProtector, GlobalHotkey, VaultWatcher
 │
@@ -14,6 +15,7 @@ kofrenot.App   (WPF, Windows only)
 kofrenot.Core  (no Windows dependency, fully unit-tested on any OS)
    Graph: KnowledgeGraph · Node · Link · TypeCatalog · LinkAliases · Change
    Storage: Vault · VaultFolder · VaultFormat · SecretBox · ChunkedBox · KeyWrap · SnapshotStore · NoteFiles · DatasetFiles · ThumbnailFiles · KeyMemory · VaultNameMemory
+   Server: KofreClient · ServerSync · VaultMove · ServerSessionMemory   ── HTTPS ──►  Kofre server (own repository: kofreserver)
    Input: InputParser · GraphSearch · AddPlanner · InputPresenter · CreationForm
    Browse: NodeBrowser · NodeDetails · NodeVisual · NodeFacts · PinPlanner · RecentNodes · ViewTabs · ViewStates
    Notes: NotePlanner · MarkdownFormat
@@ -28,6 +30,7 @@ kofrenot.Core  (no Windows dependency, fully unit-tested on any OS)
 - All domain logic goes in `Core`. When it needs Windows, it takes an interface defined in `Core`, and `App` supplies the implementation.
 - `App.xaml.cs` wires everything together at startup.
 - Tests: `tests/kofrenot.Core.Tests` (xUnit), `Core` only.
+- The server, Kofre, is generic (accounts, stores, files: no kofrenot term) and lives in its own repository; kofrenot only talks to it over HTTP: [kofreserver](https://github.com/dyze/kofreserver), [SERVER-CONCEPT.md](SERVER-CONCEPT.md#generic-by-design).
 
 ### Folders
 One namespace per folder (`Kofrenot.Core.Settings`, `Kofrenot.UI.Views`, ...). The tests use the same folders as `Core`, and import every `Core` namespace once in their `.csproj`.
@@ -35,21 +38,23 @@ One namespace per folder (`Kofrenot.Core.Settings`, `Kofrenot.UI.Views`, ...). T
 | `kofrenot.Core` | Content |
 | --- | --- |
 | *(root)* | `AppVersion`; `RunningCopy` + `AppCopy` (another copy running: same or not, and what the user is told); `QuitRefusal` (why kofrenot must not quit, or switch vaults, now); `AppFiles` (where every file of kofrenot is, including `keys.json` and the snapshots in `cache\`: the only place their names are written, listed in Settings > About; `AppFiles.For` picks the data folder, see [Portable copy](#portable-copy)); `Changelog` (reads the text shown by Settings > About); `ProjectLinks` (website, issues, releases) |
-| `Settings/` | `SettingsStore` (`settings.json`: theme, debug logging, update check, the registered vaults and the one selected, hotkey; `IsHotkeyTaken`), `Hotkey`, `KeyBindings` (every shortcut, by area, for Settings > Key bindings: written by hand, **update it with the key handlers**), `VaultList` + `RegisteredVault` + `VaultLocation` (see [Registered vaults](#registered-vaults)), `SettingsCatalog` (the entries of the Settings window, their tabs, and the search that finds them) |
+| `Settings/` | `SettingsStore` (`settings.json`: theme, debug logging, update check, the registered vaults and the one selected, hotkey, server account; `IsHotkeyTaken`), `Hotkey`, `KeyBindings` (every shortcut, by area, for Settings > Key bindings: written by hand, **update it with the key handlers**), `VaultList` + `RegisteredVault` + `VaultLocation` + `StoreAddress` (see [Registered vaults](#registered-vaults)), `ServerAccount`, `SettingsCatalog` (the entries of the Settings window, their tabs, and the search that finds them) |
 | `Graph/` | `Node`, `Link`, `NodeType`, `LinkType`, `LinkVerb` (a link type read one way), `TypeCatalog` (built-in node and link types, link aliases; `LinkName`, `VerbOf`: how a link reads from one of its nodes), `LinkAliases` (the user's aliases, see [Aliases and removals](#aliases-and-removals)), `RemovableChanges`, `NameKey` (the form names are compared in), `Change` (`NodeAdded`, `LinkAdded`, `NodeRenamed`, `NodeRetyped`, `AliasAdded`, `NodePinned`, `ChangesRemoved`, `ContentEdited`: `NoteEdited`, `DatasetEdited`, `ViewEdited`; `VaultNamed`), `DatasetFile` (a dataset version's file: name, size, SHA-256), `CurrentVersions` + `IReplacing` (the versions no other replaces: shared by names, types, contents and the vault's name), `NodeNames` + `NameVersion` (a node's current names, see [Renames](#renames)), `NodeTypes` + `TypeVersion` (a node's current types, see [Type changes](#type-changes)), `ContentVersions` (the current versions of a note or dataset, see [Notes](#notes)), `KnowledgeGraph` (in-memory state, built by applying changes) |
 | `Storage/` | `VaultFormat` (+ `NewerVaultFormatException`, `Since`, `UpgradeQuestion`), `VaultUpgrades` (upgrades agreed, `vault-upgrades.json`, see [Upgrade](#upgrade)), `SecretBox` (AES-GCM seal / open), `ChunkedBox` (AES-GCM over 1 MB chunks, streamed), `KeyWrap` (KDF, wrap / unwrap the master key), `ChangeData` (a change as JSON, shared with the snapshot), `ChangeCodec` (change ⇄ sealed JSON), `VaultHeader`, `VaultFolder` (layout, inspect, create, `SizeOf` + `FolderSize`: its files and bytes, shown in Settings > Vault, measured off the UI thread), `SnapshotStore`, `NoteFiles` (note content, `content/`), `DatasetFiles` (dataset content, `content/`: describe a file, write, export, open), `ThumbnailFiles` (thumbnails, `content/`), `Vault` (open, append, refresh, save a note or a dataset version, `WriteDataset`: its files only, off the UI thread; `Vault.Upgrade`: its format, writes refused until an upgrade is agreed), `AtomicFile` (write as `.tmp`, then rename), `KeyMemory` (remembered master keys, `keys.json`) and `VaultNameMemory` (the last name read in each vault, `vault-names.json`), both through `ProtectedStore`, `ISecretProtector` |
 | `Input/` | `InputParser` (text → `NodeRequest` / `LinkRequest`), `GraphSearch` (`SearchHit`), `AddPlanner` (`AddChoices` → `AddPlan`: `NodePlan`, `LinkPlan`, `PlannedSide`), `InputPresenter` (the input box: preview, result rows, homonym choices), `CreationForm` (the creation screen: steps, types, note content, dataset file, status, what exists), `PlanText` (wording shared by both), `RenamePlanner` (`RenamePlan`: a new name, its problem, homonyms), `VaultNamePlanner` (`VaultNamePlan`), `RetypePlanner` (`RetypePlan`), `LinkChangePlanner` (`LinkChangePlan`: a link's type or direction, as a removal and a new link), `DetailsLink` (the link row of the details: + Link, Ctrl+K), `AliasPlanner` (`AliasPlan`) |
 | `Browse/` | `NodeBrowser` (the details screen: trail of open nodes, at most 4, the selected link of each), `NodeDetails`, `LinkRow`, `NodeVisual` (`NodeIcon`: how a node is pictured in rows, see [Datasets](#datasets)), `NodeFacts` (type, size, last change: a view's Details), `PinPlanner` (pin or unpin), `RecentNodes` (the nodes last opened on this device), `ViewTabs` and `ViewStates` (the tabs open, the nodes expanded in each tree, on this device), through `LocalJsonFile` |
 | `Notes/` | `NotePlanner` (`NoteState`, `ConflictVersion`: load a note, plan its next version), `MarkdownFormat` (`TextEdit`: the toolbar's Markdown) |
 | `Datasets/` | `DatasetPlanner` (`DatasetState`, `DatasetChoice`: load a dataset, plan an import or the version kept from a conflict), `ByteSize` (sizes as shown: 1.2 MB), `DatasetType` (`DatasetCategory`, `DatasetViewer`: the inner type, from the extension, its category and viewer), `IThumbnailMaker` (implemented by App), `TextPreview` (the beginning of a text, for the viewer), `ImageZoom` (the image window's zoom: fit, steps, percent) |
+| `Server/` | Server vaults, see [Server vaults](#server-vaults): `KofreClient` (the server's REST API, renews its token; `IStoreFiles`, `ServerException` + `ServerFailure`), `ServerSync` (mirror ⇄ store), `StorePaths`, `VaultMove` (a folder vault into a mirror), `ServerSessionMemory` (`server-session.json`, through `ProtectedStore`) |
 | `Logging/` | `ILog` (with `NullLog`), `LogEntry`, `RingLog`, `CompositeLog`, `FilteredLog` |
 | `Placement/` | Window positions: `WindowPlacement`, `PlacementRules`, `PlacementStore` (see [Window positions](#window-positions)) |
 | `Updates/` | The daily update check, see [Updates](#updates): `UpdateChecker`, `Release`, `IReleaseFeed`, `UpdateStore` |
 
 | `kofrenot.App` | Content |
 | --- | --- |
-| *(root)* | `App.xaml`: startup and wiring; `App.Hotkeys` (the hotkey that shows kofrenot, and the vaults'); `VaultSession` (the open vault: create, unlock, watch, `Create` (creation dialog, then add); `VaultSession.Vaults`: switch, register, unregister, move, name, forget a remembered key) |
-| `Views/` | Windows: `MainWindow` (input box, shows `InputPresenter`; `MainWindow.Vaults`: the vault box, `VaultChoice`, and a vault's hotkey), `NodeDetailsPanel` (in the main window, shows a `NodeBrowser`; `NoteEditor` for a note, `DatasetPanel` for a dataset: import, export, drag in and out, and `DatasetView`, its viewer), `NodeVisualView` + `ThumbnailCache` (a node's picture in rows), `CreationDialog` (shows a `CreationForm`, one step at a time; the node types in a list with their icons (`TypeChoice`), the focus starting on the chosen one; the link type in a combo, as it has six entries), `MarkdownBox` (note text and toolbar), `SharedStyles` (the type scale: title, heading, body, secondary, caption, footer; shared buttons), `SettingsWindow` (tabs General, Key bindings (`KeyBindingsSection`), Vault (`VaultsSection`), Link types (`LinkTypesSection`), Appearance, Logging, About; `HotkeyCapture`: the shortcut pressed in a hotkey box), `PassphraseDialog`, `ImageWindow` (a dataset's image), `LogWindow`, `ChangelogWindow` (Settings > About > *Show changelog*); `MessageDialog` (messages and questions in the app's theme, instead of the Windows `MessageBox`); `AppTheme` |
+| *(root)* | `App.xaml`: startup and wiring; `App.Hotkeys` (the hotkey that shows kofrenot, and the vaults'); `VaultSession` (the open vault: create, unlock, watch, `Create` (creation dialog, then add); `VaultSession.Vaults`: switch, register, unregister, move, name, forget a remembered key; `VaultSession.Server`: create on, add from, move to and delete from the server) |
+| `Sync/` | `ServerConnection` (the server account: sign up, in, out; its session kept with DPAPI), `SyncService` + `SyncStatus` (syncs every server vault in the background, see [Server vaults](#server-vaults)) |
+| `Views/` | Windows: `MainWindow` (input box, shows `InputPresenter`; `MainWindow.Vaults`: the vault box, `VaultChoice`, and a vault's hotkey), `NodeDetailsPanel` (in the main window, shows a `NodeBrowser`; `NoteEditor` for a note, `DatasetPanel` for a dataset: import, export, drag in and out, and `DatasetView`, its viewer), `NodeVisualView` + `ThumbnailCache` (a node's picture in rows), `CreationDialog` (shows a `CreationForm`, one step at a time; the node types in a list with their icons (`TypeChoice`), the focus starting on the chosen one; the link type in a combo, as it has six entries), `MarkdownBox` (note text and toolbar), `SharedStyles` (the type scale: title, heading, body, secondary, caption, footer; shared buttons), `SettingsWindow` (tabs General, Key bindings (`KeyBindingsSection`), Vault (`VaultsSection`; `StoreChoiceDialog`, `DeleteServerVaultDialog`), Server (`ServerSection`), Link types (`LinkTypesSection`), Appearance, Logging, About; `HotkeyCapture`: the shortcut pressed in a hotkey box), `PassphraseDialog`, `ImageWindow` (a dataset's image), `LogWindow`, `ChangelogWindow` (Settings > About > *Show changelog*); `MessageDialog` (messages and questions in the app's theme, instead of the Windows `MessageBox`); `AppTheme` |
 | `Tray/` | `TrayIcon` |
 | `Platform/` | Implementations of the `Core` interfaces (`GitHubReleaseFeed`, `DpapiProtector`), `WpfThumbnailMaker` (`IThumbnailMaker`), `DragExport` + `LazyFileDrop` (a file given only when asked for), `Browser` (opens web pages), `SingleInstance`, `GlobalHotkey` (`RegisterHotKey`, several by id), `VaultWatcher` (`FileSystemWatcher`), and window placement (`NativeWindows`, `WindowPlacer`) |
 | `Logging/` | `LogHub`, `SerilogFileLog` |
@@ -61,12 +66,10 @@ One namespace per folder (`Kofrenot.Core.Settings`, `Kofrenot.UI.Views`, ...). T
 | Package | Project | Use |
 | --- | --- | --- |
 | `Serilog`, `Serilog.Sinks.File` | App | Log file |
-| `coverlet.msbuild` | Tests | Coverage of `Core` (and `Kofre.Server`, planned: 0.6), build fails below 95 % lines |
+| `coverlet.msbuild` | Tests | Coverage of `Core`, build fails below 95 % lines |
 | `dotnet-reportgenerator-globaltool` | Local tool (`.config/dotnet-tools.json`) | HTML coverage report (`build.cmd`) |
-| ASP.NET Core (shared framework), `Microsoft.AspNetCore.Authentication.JwtBearer` | `Kofre.Server` (planned: 0.6) | REST API, tokens ([SERVER-CONCEPT.md](SERVER-CONCEPT.md)) |
-| `Microsoft.AspNetCore.Mvc.Testing` | `Kofre.Server.Tests` (planned: 0.6) | API tests on an in-memory server |
 
-The update check uses .NET's own `HttpClient` (`GitHubReleaseFeed` in App): kofrenot's only network access so far. Encryption uses .NET's own `AesGcm` and `Rfc2898DeriveBytes` (Core), and `ProtectedData` (DPAPI, part of the Windows desktop framework, App): no package.
+The update check (`GitHubReleaseFeed` in App) and the server (`KofreClient` in Core) use .NET's own `HttpClient`: kofrenot's only network access. Encryption uses .NET's own `AesGcm` and `Rfc2898DeriveBytes` (Core), and `ProtectedData` (DPAPI, part of the Windows desktop framework, App): no package.
 
 Shared build settings and the version are in `Directory.Build.props`; output goes to `artifacts/`. Builds are deterministic and `DeterministicSourcePaths` replaces the local repo path with `/_/` in DLLs, their embedded debug info (`DebugType=embedded`: no `.pdb` files) and Source Link data, so no local path (or user name) ships. The installer is built with [Inno Setup](https://jrsoftware.org/isinfo.php) (`build/installer.cmd`, `build/installer/kofrenot.iss`), a tool installed on the PC, not a package.
 
@@ -163,15 +166,35 @@ Model and principles: [GOAL.md](GOAL.md#data-model).
 The vaults kofrenot knows are in `settings.json`, in the user's order, with the one selected: one vault is open at a time, and vaults never mix.
 
 ```
-settings.json  "vaults": [{ "folder", "id"?, "hotkey"?, "locked"? }], "selectedVault": "<folder>"
+settings.json  "vaults": [{ "folder", "id"?, "hotkey"?, "locked"?, "server"?, "store"? }], "selectedVault": "<folder>"
+               "server": { "url", "email" }   the server account, one per kofrenot
                "vaultFolder": the selected one too, for a kofrenot 0.4 started again; read alone (0.4) ─► the only vault
 ```
 
-- `VaultLocation` is where a vault is: only a folder for now (compared ignoring case and a trailing separator), so a server can be another kind later. `RegisteredVault` adds its id, null until its header is read (`VaultSession.Identify`), and its optional hotkey. `VaultList` is immutable and lists each location and id once.
+- `VaultLocation` is where a vault is: a folder, or a store on a server (`StoreAddress`) with its mirror as folder ([Server vaults](#server-vaults)). Locations are compared by folder, ignoring case and a trailing separator. `RegisteredVault` adds its id, null until its header is read (`VaultSession.Identify`), and its optional hotkey. `VaultList` is immutable and lists each location and id once.
 - Switching (`VaultSession.SwitchTo`) closes the open vault, then opens the selected one. When it does not open (pass phrase cancelled, not a vault, an error), the vault open before is used again, without asking its pass phrase. The main window refuses to switch while a file is being imported or a note cannot be saved (`QuitRefusal`).
 - `Register` (Settings > Vault > *Add...*) refuses a folder holding other files, and a vault listed already, by folder or by the id in its header; a new vault whose creation is cancelled is not added. `Unregister` forgets the vault's key and name on this device; its folder is not touched.
 - **Lock** (`VaultSession.Lock`, padlock or Ctrl+L): the vault is closed and marked locked in `settings.json` (`"locked": true`). `Open` leaves a locked vault closed (at start, on a switch, on its hotkey), and `SwitchTo` does not go back to the previous vault for it. `Unlock` asks the pass phrase, skipping the remembered key (kept for later), then clears the mark; cancelled, the vault stays locked.
-- **Name**: a `nameVault` change, encrypted like the others, replacing the current names (`CurrentVersions`), as renames do: two names made apart are a conflict, shown in Settings > Vault, resolved by naming again (`VaultNamePlanner`). `VaultNameMemory` keeps the last name read on this device (`vault-names.json`, protected by DPAPI like `keys.json`), so a locked vault shows it; otherwise its folder's name. A server listing the vaults will know their ids only: see [SERVER-CONCEPT.md](SERVER-CONCEPT.md).
+- **Name**: a `nameVault` change, encrypted like the others, replacing the current names (`CurrentVersions`), as renames do: two names made apart are a conflict, shown in Settings > Vault, resolved by naming again (`VaultNamePlanner`). `VaultNameMemory` keeps the last name read on this device (`vault-names.json`, protected by DPAPI like `keys.json`), so a locked vault shows it; otherwise its folder's name (a server vault: its server's). A server knows a vault by its store id only ([Server vaults](#server-vaults)).
+
+### Server vaults
+A vault kept on a Kofre server ([kofreserver](https://github.com/dyze/kofreserver)): one store per vault, mirrored in a local folder that `Vault` reads as any vault folder. Its files and their encryption are those of a folder vault (format 5): the server only stores them. Design and later steps: [SERVER-CONCEPT.md](SERVER-CONCEPT.md).
+
+```
+ Vault ── reads, writes ──► mirror  %LocalAppData%\kofrenot\stores\<store>\   (folder vault layout)
+                              ▲  │                                    stores\<store>.sync.json: feed position, files both sides have
+          downloads (feed) ───┘  └─── uploads: the mirror's files the store lacks (header, contents, then changes)
+                              ServerSync ◄──► KofreClient ── HTTPS, JWT ──► Kofre server
+```
+
+- **Sync** (`SyncService`, App): every 30 s, 2 s after a change or when the window is shown, one sync at a time, for every server vault of the list, in the background. A download is written as `.tmp` then renamed, so `VaultWatcher` sees it and the vault refreshes. Offline, writes stay in the mirror until the next sync: nothing is queued elsewhere. Files are only added on both sides, so a sync is two copies, never a merge.
+- **Status**: `SyncStatus` (synced, offline, sign in to sync, files to upload), in the main window's footer and in Settings > Vault. A failure is logged once, not at every try.
+- **Account** (`ServerConnection`): one per kofrenot, in `settings.json`. Only its session is kept, in `server-session.json` (DPAPI, through `ProtectedStore`); the password never is. `KofreClient` renews the access token before it expires and when refused; a refused refresh signs out.
+- **Create on the server**: a new store, then the creation of a vault in its empty mirror (the pass phrase asked as for a folder). Cancelled, the store stays empty: *Vault from the server* offers it, as a new vault.
+- **Add from the server**: the stores not listed (shown by id and size: the name is encrypted in the vault), downloaded, then opened. An empty mirror of a store with files is never made a new vault: it waits for its download.
+- **Move to the server** (`VaultMove`): the vault's files copied as they are into a new store's mirror (other files left), the registration replaced (same id, hotkey, remembered key and name), then uploaded. The folder is left as it was.
+- **Delete from the server**: the vault's name typed again and the account's password; the store goes to the server's trash, the vault out of the list, and its mirror is deleted. **Remove** keeps the mirror: added again, it syncs from where it was.
+- Paths from the server are checked (`StorePaths`): only a vault's file names, so a store cannot write outside its mirror.
 
 ### Format
 One number for the whole vault, `VaultFormat.Current`, written in the header and in every change file (`format`). It is not the app version: it only changes when what is written in a vault breaks.

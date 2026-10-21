@@ -9,17 +9,15 @@ Scope of each planned version. Implemented features move to [CHANGELOG.md](../CH
 | 0.3     | Released  | Datasets: files stored in the vault, read on demand                                |
 | 0.4     | Released  | Views: flat and tree views over the graph, shown as tabs                           |
 | 0.5     | Released  | Vaults: several vaults, a hot key per vault; change types, link nodes              |
-| 0.6     | To define | Server: own vaults stored on a web server, synced across devices                   |
+| 0.6     | In progress | Server: own vaults stored on a web server, synced across devices                 |
 | 0.7     | To define | Sharing: identities, recovery key, vaults shared with other users                  |
 | 0.8     | To define | Large vaults: content on demand, pinned for offline, faster transfers              |
 | 0.9     | To define | Editing: restore versions, drop files                                              |
 
-## 0.6 (to define)
+## 0.6 (in progress)
 The server's MVP: one user, their own vaults, several devices. Design: [SERVER-CONCEPT.md](SERVER-CONCEPT.md). Decisions: [GOAL.md](GOAL.md#decisions).
 
-1. **Web server.** A generic, write-once store of files on Linux: accounts approved by the admin, stores (owner only), REST API with tokens, feed of added files, delete to a trash and restore.
-2. **Server vaults.** A vault is a folder (as today) or a store on a server, mirrored in a local folder: every file is downloaded, changes are queued while offline.
-3. **Move a folder vault to a server.** Its files are uploaded as they are into a new store; its id is kept.
+Its features (web server, server vaults, move a folder vault to a server) are implemented: [CHANGELOG.md](../CHANGELOG.md#unreleased).
 
 ## 0.7 (to define)
 1. **Identity and recovery key.** Vault keys are wrapped for an identity (key pair) unlocked by the pass phrase or a recovery key shown once. Same for folder and server vaults (format 6, existing vaults upgraded without rewriting a file).

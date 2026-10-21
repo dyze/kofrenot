@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+- **Server**
+  - **Kofre server** support: a server, in its own repository ([kofreserver](https://github.com/dyze/kofreserver)), keeps the files of server vaults, encrypted as they are, for accounts its admin approves.
+  - **Account** in Settings > Server: sign up, sign in (kept across restarts, the password is not), sign out.
+- **Vaults**
+  - **Server vaults**: *New vault on the server* and *Vault from the server…* in Settings > Vault > *Add...*. kofrenot syncs them across your devices itself: every 30 seconds, soon after a change, and when the window is shown. Kept whole on each computer, they work offline; what is added offline is uploaded at the next sync.
+  - **Move to server…**: a folder vault goes to the server as it is, with its name, hotkey and remembered pass phrase; its folder is left as it was.
+  - **Delete from server…**: the vault's name and your password asked; it goes to the server's trash, for every device.
+  - **Sync status** in the main window's footer and in Settings > Vault: synced, offline, sign in to sync, files waiting to be uploaded.
+
 ## [0.5] - 2026-10-20
 
 ### Added
