@@ -16,10 +16,16 @@
         <ColumnDefinition Width="Auto" />
       </Grid.ColumnDefinitions>
 
-      <ListBox x:Name="VaultList" Height="150" SelectionChanged="VaultList_SelectionChanged">
+      <!-- As high as its rows, up to 150 px: then it scrolls. -->
+      <ListBox x:Name="VaultList" MaxHeight="150" SelectionChanged="VaultList_SelectionChanged">
+        <ListBox.ItemContainerStyle>
+          <Style TargetType="ListBoxItem" BasedOn="{StaticResource {x:Type ListBoxItem}}">
+            <Setter Property="Padding" Value="10,3" />
+          </Style>
+        </ListBox.ItemContainerStyle>
         <ListBox.ItemTemplate>
           <DataTemplate>
-            <StackPanel Margin="0,2">
+            <StackPanel>
               <TextBlock FontWeight="SemiBold" Text="{Binding Title}" />
               <TextBlock Opacity="0.7" Text="{Binding Folder}" TextTrimming="CharacterEllipsis" />
             </StackPanel>
