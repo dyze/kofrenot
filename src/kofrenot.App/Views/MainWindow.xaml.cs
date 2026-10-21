@@ -79,6 +79,13 @@ public partial class MainWindow : Window
         ShowUpdateMark();
         _session.Changed += ShowVault;
         _session.Changed += ShowVaults;
+        _session.Sync.Changed += () =>
+        {
+            if (_session.Current is { } open)
+            {
+                VaultText.Text = FooterOf(open);
+            }
+        };
         ShowVault();
         ShowVaults();
     }
@@ -105,6 +112,11 @@ public partial class MainWindow : Window
 
         _imageWindow.Open(vault.Datasets, version);
     }
+
+    /// <summary>"Personal · 120 nodes · 80 links", and a server vault's sync ("· offline, 2 files to upload").</summary>
+    private string FooterOf(Vault vault) =>
+        $"{SelectedName} · {vault.Graph.Nodes.Count} nodes · {vault.Graph.Links.Count} links"
+        + (_session.Selected?.Location.Store is { } store ? $" · {_session.Sync.StatusOf(store).Describe()}" : string.Empty);
 
     private void ShowVault()
     {
@@ -133,7 +145,7 @@ public partial class MainWindow : Window
         Title = SelectedName.Length > 0 ? SelectedName : "kofrenot";
         if (vault is not null)
         {
-            VaultText.Text = $"{SelectedName} · {vault.Graph.Nodes.Count} nodes · {vault.Graph.Links.Count} links";
+            VaultText.Text = FooterOf(vault);
             VaultText.ToolTip = _session.Folder;
             ShowTabs(vault, view);
             ShowInput();
@@ -449,6 +461,7 @@ public partial class MainWindow : Window
 
         Activate();
         _session.Refresh();
+        _session.Sync.Soon();
         if (_session.Current is not null && DetailsShown)
         {
             DetailsPanel.Focus();

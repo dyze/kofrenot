@@ -148,6 +148,12 @@
           <local:VaultsSection x:Name="Vaults" Tag="{x:Static settings:SettingsCatalog.VaultsId}" />
         </StackPanel>
 
+        <StackPanel Tag="{x:Static settings:SettingsCatalog.ServerTab}">
+          <TextBlock Text="{x:Static settings:SettingsCatalog.ServerTab}" Style="{StaticResource SectionHeader}" />
+
+          <local:ServerSection x:Name="Server" Tag="{x:Static settings:SettingsCatalog.ServerId}" />
+        </StackPanel>
+
         <StackPanel Tag="{x:Static settings:SettingsCatalog.LinkTypesTab}">
           <TextBlock Text="{x:Static settings:SettingsCatalog.LinkTypesTab}" Style="{StaticResource SectionHeader}" />
 

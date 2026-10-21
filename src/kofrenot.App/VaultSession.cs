@@ -7,6 +7,7 @@ using Kofrenot.Core.Settings;
 using Kofrenot.Core.Storage;
 using Kofrenot.Core.Views;
 using Kofrenot.UI.Platform;
+using Kofrenot.UI.Sync;
 using Kofrenot.UI.Views;
 
 namespace Kofrenot.UI;
@@ -24,6 +25,8 @@ public sealed partial class VaultSession : IDisposable
     private readonly AppFiles _files;
     private readonly KeyMemory _keys;
     private readonly VaultNameMemory _names;
+    private readonly ServerConnection _server;
+    private readonly SyncService _sync;
     private readonly ILog _log;
     private readonly HashSet<Guid> _importing = [];
     private readonly WpfThumbnailMaker _thumbnails = new();
@@ -33,12 +36,14 @@ public sealed partial class VaultSession : IDisposable
     // Set while a locked vault is unlocked: its pass phrase is asked, even when remembered.
     private bool _askPassPhrase;
 
-    public VaultSession(SettingsStore settings, AppFiles files, KeyMemory keys, VaultNameMemory names, ILog log)
+    public VaultSession(SettingsStore settings, AppFiles files, KeyMemory keys, VaultNameMemory names, ServerConnection server, SyncService sync, ILog log)
     {
         _settings = settings;
         _files = files;
         _keys = keys;
         _names = names;
+        _server = server;
+        _sync = sync;
         _log = log;
         _upgrades = new VaultUpgrades(files.VaultUpgrades, log);
     }
@@ -385,6 +390,11 @@ public sealed partial class VaultSession : IDisposable
             case FolderKind.Empty when Selected?.Id is not null:
                 _log.Warn(Category, $"Vault {Selected.Id} cannot be reached in {folder}");
                 MessageDialog.Inform(owner, $"The vault cannot be reached in {folder}.\n\nCheck that the folder, or the file share it is on, is available.");
+                return null;
+            // A server vault not downloaded yet: never a new vault in its mirror, unless it is being created.
+            case FolderKind.Empty when Selected?.Location is { IsOnServer: true } location && location != _newOnServer:
+                _log.Warn(Category, $"Server vault {location.Store!.Id} not downloaded yet");
+                MessageDialog.Inform(owner, $"This vault is not downloaded yet ({_sync.StatusOf(location.Store).Describe()}).\n\nkofrenot downloads it once the server can be reached and you are signed in (Settings > Server).");
                 return null;
             case FolderKind.Empty:
                 return Create(owner, folder);

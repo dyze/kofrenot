@@ -10,7 +10,7 @@ using Kofrenot.Core.Storage;
 
 namespace Kofrenot.UI.Views;
 
-/// <summary>A row of the list: a registered vault, its name (marked when open) and its folder.</summary>
+/// <summary>A row of the list: a registered vault, its name (marked when open) and where it is: its folder, or its server and sync.</summary>
 public sealed record VaultRow(RegisteredVault Vault, string Title, string Folder);
 
 /// <summary>
@@ -42,6 +42,8 @@ public partial class VaultsSection : UserControl
         set
         {
             _session = value;
+            value.Sync.Changed += ShowSync;
+            Unloaded += (_, _) => value.Sync.Changed -= ShowSync;
             Show();
         }
     }
@@ -60,7 +62,7 @@ public partial class VaultsSection : UserControl
 
         var keep = Chosen?.Location ?? session.Selected?.Location;
         var rows = session.Vaults
-            .Select(vault => new VaultRow(vault, IsOpen(vault) ? $"{session.NameOf(vault)} · open" : session.NameOf(vault), vault.Location.Folder))
+            .Select(vault => new VaultRow(vault, IsOpen(vault) ? $"{session.NameOf(vault)} · open" : session.NameOf(vault), WhereOf(session, vault)))
             .ToList();
         _filling = true;
         try
@@ -77,7 +79,31 @@ public partial class VaultsSection : UserControl
         ShowChosen();
     }
 
+    /// <summary>Shows the server vaults' sync again in the list, leaving the details (a name being typed) as they are.</summary>
+    private void ShowSync()
+    {
+        if (_session is not { } session || VaultList.ItemsSource is not List<VaultRow> rows)
+        {
+            return;
+        }
+
+        var chosen = VaultList.SelectedIndex;
+        _filling = true;
+        try
+        {
+            VaultList.ItemsSource = rows.Select(row => row with { Folder = WhereOf(session, row.Vault) }).ToList();
+            VaultList.SelectedIndex = chosen;
+        }
+        finally
+        {
+            _filling = false;
+        }
+    }
+
     private bool IsOpen(RegisteredVault vault) => vault.Id is { } id && _session?.Current?.Id == id;
+
+    private static string WhereOf(VaultSession session, RegisteredVault vault) =>
+        vault.Location.Store is { } store ? $"{store.Server.Host} · {session.Sync.StatusOf(store).Describe()}" : vault.Location.Folder;
 
     /// <summary>The buttons, name, state and pass phrase of the vault chosen in the list.</summary>
     private void ShowChosen()
@@ -101,6 +127,10 @@ public partial class VaultsSection : UserControl
         ClearHotkeyButton.IsEnabled = vault.Hotkey is not null;
         HotkeyStatusText.Text = string.Empty;
         ShowStatus(session, vault, open);
+        var onServer = vault.Location.IsOnServer;
+        PlaceLabel.Text = onServer ? "Server" : "Folder";
+        MoveToServerButton.Visibility = onServer ? Visibility.Collapsed : Visibility.Visible;
+        DeleteFromServerButton.Visibility = onServer ? Visibility.Visible : Visibility.Collapsed;
 
         var remembered = session.IsRemembered(vault);
         RememberedText.Text = remembered ? "The pass phrase is remembered on this computer." : "The pass phrase is not remembered.";
@@ -196,7 +226,109 @@ public partial class VaultsSection : UserControl
         }
     }
 
+    /// <summary>Shows what can be added: a folder, a new vault on the server, a vault from the server.</summary>
     private void AddButton_Click(object sender, RoutedEventArgs e)
+    {
+        AddButton.ContextMenu.PlacementTarget = AddButton;
+        AddButton.ContextMenu.IsOpen = true;
+    }
+
+    private async void CreateOnServer_Click(object sender, RoutedEventArgs e)
+    {
+        if (_session is not { } session || !CanSwitch())
+        {
+            return;
+        }
+
+        Log.Info("Action", "New vault on the server");
+        await session.CreateOnServer(Owner);
+        VaultList.SelectedItem = null;
+        Show();
+    }
+
+    private async void AddFromServer_Click(object sender, RoutedEventArgs e)
+    {
+        if (_session is not { } session)
+        {
+            return;
+        }
+
+        Log.Info("Action", "Add a vault from the server");
+        if (await session.StoresToAdd(Owner) is not { } stores)
+        {
+            return;
+        }
+
+        if (stores.Count == 0)
+        {
+            MessageDialog.Inform(Owner, "Every vault of the server is in the list already.");
+            return;
+        }
+
+        if (StoreChoiceDialog.Ask(Owner, stores) is not { } store || !CanSwitch())
+        {
+            Log.Info("Action", "Adding a vault from the server cancelled");
+            return;
+        }
+
+        await session.AddFromServer(Owner, store);
+        VaultList.SelectedItem = null;
+        Show();
+    }
+
+    private async void MoveToServerButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (_session is not { } session || Chosen is not { } vault)
+        {
+            return;
+        }
+
+        var question = $"Move “{session.NameOf(vault)}” to the server?\n\nIts files are copied to the server as they are, still encrypted with its pass phrase: kofrenot then keeps it synced across your devices. Its folder is left as it was.";
+        if (!MessageDialog.Confirm(Owner, question, "Move", "Cancel") || (vault.Location == session.Selected?.Location && !CanSwitch()))
+        {
+            return;
+        }
+
+        Log.Info("Action", "Move a vault to the server");
+        await session.MoveToServer(Owner, vault);
+        Show();
+    }
+
+    private async void DeleteFromServerButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (_session is not { } session || Chosen is not { } vault)
+        {
+            return;
+        }
+
+        if (DeleteServerVaultDialog.Ask(Owner, session.NameOf(vault)) is not { } password || (vault.Location == session.Selected?.Location && !CanSwitch()))
+        {
+            Log.Info("Action", "Delete from the server cancelled");
+            return;
+        }
+
+        Log.Info("Action", "Delete a vault from the server");
+        if (await session.DeleteFromServer(Owner, vault, password))
+        {
+            VaultList.SelectedItem = null;
+        }
+
+        Show();
+    }
+
+    /// <summary>Whether the open vault can be closed now; the user is told why not.</summary>
+    private bool CanSwitch()
+    {
+        if (WhyNotSwitch() is { } reason)
+        {
+            MessageDialog.Inform(Owner, reason);
+            return false;
+        }
+
+        return true;
+    }
+
+    private void AddFolder_Click(object sender, RoutedEventArgs e)
     {
         if (_session is not { } session)
         {
@@ -232,7 +364,10 @@ public partial class VaultsSection : UserControl
             return;
         }
 
-        var question = $"Remove “{session.NameOf(vault)}” from the list?\n\nIts folder, and everything in it, stays as it is: add it again to use it. Its remembered pass phrase is forgotten on this computer.";
+        var where = vault.Location.IsOnServer
+            ? "It stays on the server: add it again from the server to use it."
+            : "Its folder, and everything in it, stays as it is: add it again to use it.";
+        var question = $"Remove “{session.NameOf(vault)}” from the list?\n\n{where} Its remembered pass phrase is forgotten on this computer.";
         if (!MessageDialog.Confirm(Owner, question, "Remove", "Cancel"))
         {
             return;

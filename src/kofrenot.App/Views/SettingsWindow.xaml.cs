@@ -83,6 +83,8 @@ public partial class SettingsWindow : Window
         Vaults.Settings = settings;
         Vaults.ApplyHotkey = applyVaultHotkey;
         Vaults.Session = session;
+        Server.Log = _log;
+        Server.Connection = session.Server;
         LinkTypes.Session = session;
         session.Changed += ShowVault;
         Closed += (_, _) => session.Changed -= ShowVault;

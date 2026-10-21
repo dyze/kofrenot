@@ -9,7 +9,7 @@
                Margin="0,0,0,8"
                Opacity="0.7"
                TextWrapping="Wrap"
-               Text="No vault yet. Add one: an empty folder becomes a new vault, encrypted with a pass phrase; a folder holding a kofrenot vault adds it." />
+               Text="No vault yet. Add one: an empty folder becomes a new vault, encrypted with a pass phrase; a folder holding a kofrenot vault adds it. Or keep it on a server (Settings > Server), synced across your devices." />
     <Grid>
       <Grid.ColumnDefinitions>
         <ColumnDefinition Width="*" />
@@ -28,7 +28,15 @@
       </ListBox>
 
       <StackPanel Grid.Column="1" Margin="8,0,0,0">
-        <Button Padding="12,4" Content="Add..." ToolTip="An empty folder becomes a new vault; a folder holding a kofrenot vault adds it" Click="AddButton_Click" />
+        <Button x:Name="AddButton" Padding="12,4" Content="Add..." ToolTip="A folder (an empty one becomes a new vault), a new vault on the server, or one of the server's vaults" Click="AddButton_Click">
+          <Button.ContextMenu>
+            <ContextMenu>
+              <MenuItem Header="Folder..." ToolTip="An empty folder becomes a new vault; a folder holding a kofrenot vault adds it" Click="AddFolder_Click" />
+              <MenuItem Header="New vault on the server" ToolTip="A new vault kept on the server, synced across your devices" Click="CreateOnServer_Click" />
+              <MenuItem Header="Vault from the server..." ToolTip="One of your vaults on the server, downloaded to this computer" Click="AddFromServer_Click" />
+            </ContextMenu>
+          </Button.ContextMenu>
+        </Button>
         <Button x:Name="RemoveButton" Margin="0,6,0,0" Padding="12,4" Content="Remove" ToolTip="Takes the vault out of the list: its folder is not touched" Click="RemoveButton_Click" />
         <Button x:Name="UpButton" Margin="0,6,0,0" Padding="12,4" Content="Up" Click="UpButton_Click" />
         <Button x:Name="DownButton" Margin="0,6,0,0" Padding="12,4" Content="Down" Click="DownButton_Click" />
@@ -57,8 +65,10 @@
       <TextBlock x:Name="HotkeyStatusText" Margin="110,4,0,0" Opacity="0.7" TextWrapping="Wrap" />
 
       <StackPanel Margin="0,10,0,0" Orientation="Horizontal">
-        <TextBlock Width="110" VerticalAlignment="Center" Text="Folder" />
-        <Button x:Name="ExploreButton" Padding="12,4" Content="Explore to" ToolTip="Opens the vault folder in File Explorer" Click="ExploreButton_Click" />
+        <TextBlock x:Name="PlaceLabel" Width="110" VerticalAlignment="Center" Text="Folder" />
+        <Button x:Name="ExploreButton" Padding="12,4" Content="Explore to" ToolTip="Opens the vault folder (of a server vault: its copy on this computer) in File Explorer" Click="ExploreButton_Click" />
+        <Button x:Name="MoveToServerButton" Margin="8,0,0,0" Padding="12,4" Content="Move to server..." ToolTip="Copies the vault to the server, as it is: it is then synced by kofrenot. Its folder is left as it was" Click="MoveToServerButton_Click" />
+        <Button x:Name="DeleteFromServerButton" Margin="8,0,0,0" Padding="12,4" Content="Delete from server..." ToolTip="Moves the vault to the server's trash, for every device" Click="DeleteFromServerButton_Click" />
       </StackPanel>
 
       <TextBlock x:Name="StatusText" Margin="0,10,0,0" Opacity="0.7" TextWrapping="Wrap" />

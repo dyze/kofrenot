@@ -4,11 +4,13 @@ using Kofrenot.Core;
 using Kofrenot.Core.Browse;
 using Kofrenot.Core.Logging;
 using Kofrenot.Core.Placement;
+using Kofrenot.Core.Server;
 using Kofrenot.Core.Settings;
 using Kofrenot.Core.Storage;
 using Kofrenot.Core.Updates;
 using Kofrenot.UI.Logging;
 using Kofrenot.UI.Platform;
+using Kofrenot.UI.Sync;
 using Kofrenot.UI.Tray;
 using Kofrenot.UI.Views;
 
@@ -22,6 +24,8 @@ public partial class App : Application
     private LogWindow? _logWindow;
     private TrayIcon? _tray;
     private VaultSession? _session;
+    private ServerConnection? _server;
+    private SyncService? _sync;
     private GlobalHotkey? _hotkey;
 
     // How long the copy running may take to quit when this one replaces it.
@@ -37,7 +41,7 @@ public partial class App : Application
         var files = AppFiles.For(
             AppContext.BaseDirectory,
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData));
-        var settings = new SettingsStore(files.Settings);
+        var settings = new SettingsStore(files.Settings, files.MirrorOf);
 
         // Before any window (the dialogs about another copy too) or the tray menu is created.
         AppTheme.ApplyToTrayMenu(settings.Theme);
@@ -72,7 +76,10 @@ public partial class App : Application
         var updates = new UpdateChecker(new GitHubReleaseFeed(version), new UpdateStore(files.UpdateCheck), version, log: log);
         var logHub = _logHub;
         var protector = new DpapiProtector();
-        var session = _session = new VaultSession(settings, files, new KeyMemory(files.RememberedKeys, protector, log), new VaultNameMemory(files.VaultNames, protector, log), log);
+        var server = _server = new ServerConnection(settings, new ServerSessionMemory(files.ServerSession, protector, log), log);
+        var sync = _sync = new SyncService(settings, files, server, log);
+        var session = _session = new VaultSession(settings, files, new KeyMemory(files.RememberedKeys, protector, log), new VaultNameMemory(files.VaultNames, protector, log), server, sync, log);
+        session.Changed += sync.Soon;
         _window = new MainWindow(
             settings,
             log,
@@ -283,6 +290,8 @@ public partial class App : Application
         _tray?.Dispose();
         _hotkey?.Dispose();
         _session?.Dispose();
+        _sync?.Dispose();
+        _server?.Dispose();
         _logHub?.Filter.Info("App", "kofrenot stopped");
         _logHub?.Dispose();
         _singleInstance?.Dispose();
