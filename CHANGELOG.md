@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.6] - 2026-10-21
+
 ### Added
 - **Server**
   - **Kofre server** support: a server, in its own repository ([kofreserver](https://github.com/dyze/kofreserver)), keeps the files of server vaults, encrypted as they are, for accounts its admin approves.
@@ -121,7 +123,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **Update check** once a day against GitHub releases, switchable in About.
 - **Installer and portable zip** (`build\installer.cmd`), self-contained.
 
-[Unreleased]: https://github.com/dyze/kofrenot/compare/0.5...HEAD
+[Unreleased]: https://github.com/dyze/kofrenot/compare/0.6...HEAD
+[0.6]: https://github.com/dyze/kofrenot/compare/0.5...0.6
 [0.5]: https://github.com/dyze/kofrenot/compare/0.4...0.5
 [0.4]: https://github.com/dyze/kofrenot/compare/0.3...0.4
 [0.3]: https://github.com/dyze/kofrenot/compare/0.2...0.3
