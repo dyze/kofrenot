@@ -33,3 +33,6 @@ public interface IStoreFiles
     /// <exception cref="ServerException">The call failed.</exception>
     Task<bool> UploadAsync(Guid store, string path, Func<Stream> open, CancellationToken cancel = default);
 }
+
+/// <summary>A server account's data, opaque to the server: a public part any account reads, a private part only its own; its version counts the writes (0: none yet).</summary>
+public sealed record AccountData(long Version, byte[]? Public, byte[]? Private);

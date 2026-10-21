@@ -202,19 +202,36 @@ public sealed partial class VaultSession
     }
 
     /// <summary>
-    /// Asks the pass phrase of a new server vault. Only once it is given are its store made (unless
-    /// <paramref name="store"/> is an empty one already) and the vault created in its mirror; then
-    /// it is listed and opened with the key just made, and uploaded at the next sync. A server
-    /// that fails keeps the dialog open, saying why.
+    /// Asks the name of a new server vault and its account's pass phrase (chosen the first time).
+    /// Only once it is given are its store made (unless <paramref name="store"/> is an empty one
+    /// already) and the vault created in its mirror, its key wrapped for the account's identity;
+    /// then it is listed and opened, and uploaded at the next sync. A server that fails keeps the
+    /// dialog open, saying why.
     /// </summary>
     private void CreateVault(Window owner, KofreClient client, Uri server, Guid? store)
     {
-        (Guid Store, VaultAccess Access, RecoveryKey Recovery)? created = null;
-        var answer = PassphraseDialog.AskNew(owner, $"On the server {server.Host}", name: string.Empty, passPhrase =>
+        if (_server.TooOld is not null || _server.Account is not { } account)
         {
+            MessageDialog.Inform(owner, _server.TooOld ?? NotSignedIn);
+            return;
+        }
+
+        var kept = _server.Identity;
+        var place = $"On the server {server.Host}";
+        (Guid Store, VaultAccess Access, RecoveryKey? Recovery)? created = null;
+        var answer = PassphraseDialog.AskNewOnServer(owner, place, accountHasPassPhrase: kept is not null, passPhrase =>
+        {
+            // In the background: the dialog waits for it, as for the key derivation.
+            var (identity, unlocked, recovery) = kept is null
+                ? CreateAccountIdentity(client, account.Server, account.Email, passPhrase)
+                : kept.Identity.Unlock(passPhrase) is { } opened ? (kept, opened, null) : default;
+            if (identity is null)
+            {
+                return false;
+            }
+
             try
             {
-                // In the background: the dialog waits for it, as for the key derivation.
                 store ??= client.CreateStoreAsync().GetAwaiter().GetResult();
             }
             catch (ServerException ex)
@@ -223,8 +240,7 @@ public sealed partial class VaultSession
                 throw new IOException(Explain(ex), ex);
             }
 
-            var (access, recovery) = VaultFolder.Create(_files.MirrorOf(store.Value), passPhrase);
-            created = (store.Value, access, recovery);
+            created = (store.Value, VaultFolder.Create(_files.MirrorOf(store.Value), identity.Identity, unlocked!), recovery);
             return true;
         });
         if (answer is null || created is not { } vault)
@@ -236,7 +252,11 @@ public sealed partial class VaultSession
         var location = new VaultLocation(_files.MirrorOf(vault.Store), new StoreAddress(server, vault.Store));
         _settings.SetVaults(_settings.Vaults.Add(new RegisteredVault(location)));
         _log.Info("Action", $"Vault {vault.Access.Header.Id} created on the server, store {vault.Store}");
-        RecoveryKeyDialog.Show(owner, $"On the server {server.Host}", vault.Recovery);
+        if (vault.Recovery is { } recovery)
+        {
+            RecoveryKeyDialog.Show(owner, place, recovery);
+        }
+
         Close();
         _settings.SelectVault(location);
         if (Open(owner, location.Folder, vault.Access, answer.Remember) is { } opened)

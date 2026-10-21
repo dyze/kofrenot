@@ -84,6 +84,7 @@ public partial class SettingsWindow : Window
         Vaults.ApplyHotkey = applyVaultHotkey;
         Vaults.Session = session;
         Server.Log = _log;
+        Server.ChangePassPhrase = session.ChangeAccountPassPhrase;
         Server.Connection = session.Server;
         LinkTypes.Session = session;
         session.Changed += ShowVault;

@@ -109,6 +109,7 @@ public sealed class SyncService : IDisposable
         do
         {
             _again = false;
+            await _server.RefreshAsync();
             foreach (var store in ServerVaults())
             {
                 _statuses[store.Id] = await RunOneAsync(store);

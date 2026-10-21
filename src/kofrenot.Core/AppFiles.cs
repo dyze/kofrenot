@@ -74,6 +74,9 @@ public sealed class AppFiles
     /// <summary>The server session (refresh token), protected by Windows (DPAPI).</summary>
     public string ServerSession => Path.Combine(DataDirectory, "server-session.json");
 
+    /// <summary>The server account's identity, as on the server (sealed), so server vaults unlock offline.</summary>
+    public string AccountIdentity => Path.Combine(DataDirectory, "account-identity.json");
+
     /// <summary>The local mirrors of the server vaults, one folder each, with their sync states.</summary>
     public string Mirrors => Path.Combine(DataDirectory, "stores");
 
@@ -100,6 +103,7 @@ public sealed class AppFiles
         new("Vault names", VaultNames),
         new("Vault snapshots", Cache),
         new("Server session", ServerSession),
+        new("Server account identity", AccountIdentity),
         new("Server vault mirrors", Mirrors),
         new("Logs", Logs),
         new("Program", ProgramDirectory),

@@ -33,6 +33,11 @@ public sealed class KeyRing
 
     public byte[] CurrentKey => _keys[CurrentEpoch];
 
+    public IEnumerable<int> Epochs => _keys.Keys.Order();
+
+    /// <summary>This ring and the key of another epoch.</summary>
+    public KeyRing With(int epoch, byte[] key) => new(new Dictionary<int, byte[]>(_keys) { [epoch] = key });
+
     /// <exception cref="InvalidDataException">No key of this epoch: the file cannot be opened.</exception>
     public byte[] KeyOf(int epoch) =>
         _keys.TryGetValue(epoch, out var key) ? key : throw new InvalidDataException($"No key of epoch {epoch}");

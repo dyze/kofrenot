@@ -9,9 +9,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ### Added
 - **Recovery key**: shown once when a vault is created or upgraded, it opens the vault when its pass phrase is lost (*Lost it? Use the recovery key* when unlocking); a folder vault then asks a new pass phrase.
 - **Change the pass phrase** of a folder vault: Settings > Vault > *Pass phrase* > *Change...*, the vault open. The recovery key and the remembered pass phrase stay valid.
+- **Server account's pass phrase**: one pass phrase, and one recovery key, open all your server vaults. Chosen with your first new server vault (or when an older one moves to it), changed in Settings > Server > *Pass phrase*. Kept, sealed, in your account on the server, and copied on each computer so server vaults open offline.
+- **Server too old**: Settings > Server says when the server runs a version older than 0.2; your server vaults still sync, but cannot move to the account's pass phrase until it is upgraded.
 
 ### Changed
 - **Vault format 6**: a vault's key is wrapped for an identity (a key pair) that the pass phrase and the recovery key unlock, kept in the vault's `keys/` folder; every file says which key epoch sealed it. An existing vault is upgraded without rewriting a file: its pass phrase is asked again, then its recovery key shown. kofrenot 0.6 and older no longer open an upgraded vault.
+- **Server vaults** open with your server account's pass phrase. A vault from 0.6, or moved from a folder, opens once more with its own, then moves to the account's: its own pass phrase then opens only its older files. Needs a Kofre server from 0.2.
 
 ## [0.6] - 2026-10-21
 

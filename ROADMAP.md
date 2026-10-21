@@ -15,11 +15,9 @@ Scope of each planned version. Implemented features move to [CHANGELOG.md](CHANG
 | 0.9     | To define | Editing: restore versions, drop files                                              |
 
 ## 0.7 (to define)
-1. **Account identity.** A server vault's identity is kept in the server account: one pass phrase and recovery key for all its server vaults, which can then change. 0.6 server vaults get it at their upgrade ([Format 6](docs/SERVER-CONCEPT.md#format-6)).
-2. **Share complete server vaults** with other users (reader or writer), found by their exact email, after checking the key's fingerprint. A vault has one owner, its creator.
-3. **Remove a member.** Server access removed at once, then key rotation and fence: files added later are unreadable to them. A member can also leave a vault: the key is rotated the same way.
-4. **Change the account's password** on the server.
-5. **Server too old.** kofrenot says so when the server lacks what this version needs.
+1. **Share complete server vaults** with other users (reader or writer), found by their exact email, after checking the key's fingerprint. A vault has one owner, its creator.
+2. **Remove a member.** Server access removed at once, then key rotation and fence: files added later are unreadable to them. A member can also leave a vault: the key is rotated the same way.
+3. **Change the account's password** on the server.
 
 ## 0.8 (to define)
 1. **Content on demand.** A server vault downloads change files at once, content only when shown or exported.

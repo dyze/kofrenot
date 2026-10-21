@@ -181,7 +181,7 @@ settings.json  "vaults": [{ "folder", "id"?, "hotkey"?, "locked"?, "server"?, "s
 - **Name**: asked on creation (`PassphraseDialog.AskNew`) and written as the vault's first change, then by Rename: a `nameVault` change, encrypted like the others, replacing the current names (`CurrentVersions`), as renames do: two names made apart are a conflict, shown in Settings > Vault, resolved by naming again (`VaultNamePlanner`). `VaultNameMemory` keeps the last name read on this device (`vault-names.json`, protected by DPAPI like `keys.json`), so a locked vault shows it; otherwise its folder's name (a server vault: its server's). A server knows a vault by its store id only ([Server vaults](#server-vaults)).
 
 ### Server vaults
-A vault kept on a Kofre server ([kofreserver](https://github.com/dyze/kofreserver)): one store per vault, mirrored in a local folder that `Vault` reads as any vault folder. Its files and their encryption are those of a folder vault, its identity in its `keys/` for now (the server account will hold it: [Keys](SERVER-CONCEPT.md#keys)): the server only stores them. Design and later steps: [SERVER-CONCEPT.md](SERVER-CONCEPT.md).
+A vault kept on a Kofre server ([kofreserver](https://github.com/dyze/kofreserver)): one store per vault, mirrored in a local folder that `Vault` reads as any vault folder. Its files and their encryption are those of a folder vault, its keys wrapped for the server account's identity ([Account identity](#account-identity)): the server only stores them. Design and later steps: [SERVER-CONCEPT.md](SERVER-CONCEPT.md).
 
 ```
  Vault ── reads, writes ──► mirror  %LocalAppData%\kofrenot\stores\<store>\   (folder vault layout)
@@ -198,6 +198,28 @@ A vault kept on a Kofre server ([kofreserver](https://github.com/dyze/kofreserve
 - **Move to the server** (`VaultMove`): the vault's files copied as they are into a new store's mirror (other files left), the registration replaced (same id, hotkey, remembered key and name), then uploaded. The folder is left as it was.
 - **Delete from the server**: the vault's name typed again and the account's password; the store goes to the server's trash, the vault out of the list, and its mirror is deleted. **Remove** keeps the mirror: added again, it syncs from where it was.
 - Paths from the server are checked (`StorePaths`): only a vault's file names, so a store cannot write outside its mirror.
+
+#### Account identity
+One identity for all the server vaults of the account ([design](SERVER-CONCEPT.md#keys)): its pass phrase and recovery key open them all.
+
+```
+server: GET/PUT /v1/accounts/me/data   public: { id, public key }    private: Identity (sealed)
+            │ version-checked: a write names the version it replaces (409 when another device wrote)
+            ▼
+AccountIdentities ─► account-identity.json (this computer: server vaults unlock offline)
+            │ refreshed at sign-in and at each sync (ServerConnection.RefreshAsync)
+            ▼
+VaultKeys.Unlock(…, account): the account's identity first, then the vault's own, then its header
+```
+
+| Server vault | Its keys |
+| --- | --- |
+| New | Epoch 0 wrapped for the account's identity (`VaultFolder.Create(folder, identity, unlocked)`); no identity of its own, no recovery key of its own |
+| From 0.6 (format 5), moved from a folder, or made by an early 0.7 | Opened with its own pass phrase, then **attached** (`VaultKeys.Attach`): at its upgrade, or at its next opening when the server can be asked. Its keys are wrapped for the account, then a new epoch for the account only: the old pass phrase opens only the files written before |
+| Remembered key | Used only while it opens the latest epoch (`VaultKeys.IsCurrent`); else the pass phrase is asked |
+
+- **The account's pass phrase** is chosen at the first need (a new server vault, or the first attach), then its recovery key shown once. Changed in Settings > Server (*Pass phrase*: its current one asked, then the new one); after the recovery key unlocks a server vault, a new one is asked too.
+- **Server version**: `GET /v1/version`, at sign-in and at each sync. Below 0.2 (`KofreVersion.Minimum`; a 0.1 server answers 404), Settings > Server says the server is too old, and what needs the account's data is refused (creating, attaching, changing the pass phrase); the files still sync.
 
 ### Format
 One number for the whole vault, `VaultFormat.Current`, written in the header and in every change file (`format`). It is not the app version: it only changes when what is written in a vault breaks.
@@ -267,7 +289,7 @@ change file = "KFC2" · epoch (4 bytes, big-endian) · nonce · ciphertext · ta
 
 - **Format 5** and before: the header holds the master key, wrapped by the pass phrase (PBKDF2-SHA256, then AES-256-GCM, "KFK1"); it is epoch 0.
 - **Unlock** (`VaultKeys.Unlock`): each identity is tried with the pass phrase (or the recovery key), then the header's key; the identity unwraps its keys of every epoch into a `KeyRing`. New files use the latest epoch. Only epoch 0 exists until members can be removed ([Rotation](SERVER-CONCEPT.md#rotation)).
-- **Change the pass phrase** (`VaultKeys.ChangePassPhrase`, folder vaults): the identity file is rewritten (`.tmp`, then renamed); a header still holding the master key is rewritten without it (format 6), so the old pass phrase opens nothing. A server vault's files are written once: its pass phrase cannot change until its identity moves to the server account (0.7, later step).
+- **Change the pass phrase** (`VaultKeys.ChangePassPhrase`, folder vaults): the identity file is rewritten (`.tmp`, then renamed); a header still holding the master key is rewritten without it (format 6), so the old pass phrase opens nothing. A server vault opens with its account's pass phrase, changed in Settings > Server ([Account identity](#account-identity)).
 - **Recovery key**: 52 Base32 characters in groups of 4 (`RecoveryKey`); case, spaces and dashes ignored. After unlocking with it, a folder vault asks a new pass phrase.
 
 A dataset's file can be of any size, so it is sealed in chunks (`ChunkedBox`), read and written as a stream:

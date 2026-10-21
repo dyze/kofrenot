@@ -76,7 +76,7 @@ public partial class App : Application
         var updates = new UpdateChecker(new GitHubReleaseFeed(version), new UpdateStore(files.UpdateCheck), version, log: log);
         var logHub = _logHub;
         var protector = new DpapiProtector();
-        var server = _server = new ServerConnection(settings, new ServerSessionMemory(files.ServerSession, protector, log), log);
+        var server = _server = new ServerConnection(settings, new ServerSessionMemory(files.ServerSession, protector, log), new AccountIdentities(files.AccountIdentity, log), log);
         var sync = _sync = new SyncService(settings, files, server, log);
         var session = _session = new VaultSession(settings, files, new KeyMemory(files.RememberedKeys, protector, log), new VaultNameMemory(files.VaultNames, protector, log), server, sync, log);
         session.Changed += sync.Soon;

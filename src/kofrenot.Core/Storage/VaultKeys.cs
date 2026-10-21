@@ -11,7 +11,7 @@ public sealed record VaultAccess(VaultHeader Header, KeyRing Keys, UnlockedIdent
 /// (<c>epoch-N/&lt;identity&gt;.kfw</c>). A format 5 vault has none until it is upgraded: its
 /// master key, in its header, becomes epoch 0.
 /// </summary>
-public static class VaultKeys
+public static partial class VaultKeys
 {
     private const string Category = "Vault";
     private const string IdentitiesFolder = "identities";
@@ -23,13 +23,14 @@ public static class VaultKeys
     public static bool HasIdentities(string folder) => IdentityFiles(folder).Any();
 
     /// <summary>
-    /// Unlocks the vault with its pass phrase: through the identity it opens, or, for a format 5
-    /// vault, its header's key. Null when the pass phrase is wrong.
+    /// Unlocks the vault with a pass phrase: through the identity it opens (<paramref name="account"/>
+    /// first: a server account's, kept outside the vault), or, for a format 5 vault, its header's
+    /// key. Null when the pass phrase is wrong.
     /// </summary>
     /// <exception cref="InvalidDataException">The identity opens, but no key of the vault is wrapped for it.</exception>
-    public static VaultAccess? Unlock(string folder, VaultHeader header, string passPhrase, ILog? log = null)
+    public static VaultAccess? Unlock(string folder, VaultHeader header, string passPhrase, ILog? log = null, Identity? account = null)
     {
-        foreach (var identity in ReadIdentities(folder, log))
+        foreach (var identity in IdentitiesOf(folder, log, account))
         {
             if (identity.Unlock(passPhrase) is { } unlocked)
             {
@@ -40,10 +41,10 @@ public static class VaultKeys
         return header.Unlock(passPhrase) is { } masterKey ? new VaultAccess(header, KeyRing.Of(masterKey), Identity: null) : null;
     }
 
-    /// <summary>Unlocks the vault with the recovery key of one of its identities; null when it is none of theirs.</summary>
+    /// <summary>Unlocks the vault with the recovery key of one of its identities (or of <paramref name="account"/>); null when it is none of theirs.</summary>
     /// <exception cref="InvalidDataException">The identity opens, but no key of the vault is wrapped for it.</exception>
-    public static VaultAccess? Unlock(string folder, VaultHeader header, RecoveryKey recovery, ILog? log = null) =>
-        ReadIdentities(folder, log).Select(identity => identity.Unlock(recovery)).FirstOrDefault(unlocked => unlocked is not null) is { } found
+    public static VaultAccess? Unlock(string folder, VaultHeader header, RecoveryKey recovery, ILog? log = null, Identity? account = null) =>
+        IdentitiesOf(folder, log, account).Select(identity => identity.Unlock(recovery)).FirstOrDefault(unlocked => unlocked is not null) is { } found
             ? Open(folder, header, found)
             : null;
 
@@ -59,9 +60,7 @@ public static class VaultKeys
     public static (VaultAccess Access, RecoveryKey Recovery) Create(string folder, VaultHeader header, byte[] key, string passPhrase, int iterations = KeyWrap.DefaultIterations)
     {
         var (identity, unlocked, recovery) = Identity.Create(passPhrase, iterations);
-        var wrapPath = WrapOf(folder, 0, identity.Id);
-        Directory.CreateDirectory(Path.GetDirectoryName(wrapPath)!);
-        AtomicFile.Write(wrapPath, EpochKeys.Wrap(key, identity.PublicKey, header.Id, 0, identity.Id), overwrite: false);
+        WrapFor(folder, header.Id, 0, key, identity);
 
         // The identity last: one found always has its key.
         var identityPath = IdentityOf(folder, identity.Id);
@@ -108,30 +107,49 @@ public static class VaultKeys
     private static KeyRing? RingOf(string folder, VaultHeader header, UnlockedIdentity identity, ILog? log)
     {
         var keys = new Dictionary<int, byte[]>();
-        var keysFolder = VaultFolder.KeysOf(folder);
-        if (Directory.Exists(keysFolder))
+        foreach (var epoch in EpochsOf(folder))
         {
-            foreach (var epochFolder in Directory.EnumerateDirectories(keysFolder, EpochPrefix + "*"))
+            if (WrapOf(folder, epoch, identity.Id) is var path && File.Exists(path))
             {
-                if (int.TryParse(Path.GetFileName(epochFolder)[EpochPrefix.Length..], out var epoch)
-                    && epoch >= 0
-                    && WrapOf(folder, epoch, identity.Id) is var path
-                    && File.Exists(path))
+                try
                 {
-                    try
-                    {
-                        keys[epoch] = EpochKeys.Unwrap(File.ReadAllBytes(path), identity, header.Id, epoch);
-                    }
-                    catch (Exception ex) when (ex is InvalidDataException or IOException or UnauthorizedAccessException)
-                    {
-                        log?.Warn(Category, $"The key of epoch {epoch} of vault {header.Id} cannot be read: {ex.Message}");
-                    }
+                    keys[epoch] = EpochKeys.Unwrap(File.ReadAllBytes(path), identity, header.Id, epoch);
+                }
+                catch (Exception ex) when (ex is InvalidDataException or IOException or UnauthorizedAccessException)
+                {
+                    log?.Warn(Category, $"The key of epoch {epoch} of vault {header.Id} cannot be read: {ex.Message}");
                 }
             }
         }
 
         return keys.Count > 0 ? new KeyRing(keys) : null;
     }
+
+    /// <summary>The epochs of the vault's keys (<c>keys/epoch-N</c>).</summary>
+    private static IEnumerable<int> EpochsOf(string folder)
+    {
+        var keysFolder = VaultFolder.KeysOf(folder);
+        return Directory.Exists(keysFolder)
+            ? Directory.EnumerateDirectories(keysFolder, EpochPrefix + "*")
+                .Select(epochFolder => int.TryParse(Path.GetFileName(epochFolder)[EpochPrefix.Length..], out var epoch) ? epoch : -1)
+                .Where(epoch => epoch >= 0)
+            : [];
+    }
+
+    /// <summary>Writes the vault's key of <paramref name="epoch"/> wrapped for <paramref name="identity"/>, unless it is there already.</summary>
+    private static void WrapFor(string folder, Guid vault, int epoch, byte[] key, Identity identity)
+    {
+        var path = WrapOf(folder, epoch, identity.Id);
+        if (!File.Exists(path))
+        {
+            Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+            AtomicFile.Write(path, EpochKeys.Wrap(key, identity.PublicKey, vault, epoch, identity.Id), overwrite: false);
+        }
+    }
+
+    // The account's identity first, then the vault's own.
+    private static IEnumerable<Identity> IdentitiesOf(string folder, ILog? log, Identity? account) =>
+        account is null ? ReadIdentities(folder, log) : [account, .. ReadIdentities(folder, log).Where(identity => identity.Id != account.Id)];
 
     private static List<Identity> ReadIdentities(string folder, ILog? log)
     {

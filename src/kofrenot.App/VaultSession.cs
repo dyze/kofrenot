@@ -94,6 +94,13 @@ public sealed partial class VaultSession : IDisposable
             return;
         }
 
+        // A server vault still opening with its own pass phrase moves to its account's, when the
+        // server can be asked; else at a later opening.
+        if (_server.IsSignedIn && _server.TooOld is null)
+        {
+            AttachToAccount(owner, folder, vault);
+        }
+
         Current = vault;
         KeepName();
         try

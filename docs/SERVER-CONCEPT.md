@@ -7,8 +7,8 @@ Decisions: [GOAL.md](GOAL.md#decisions). Built in steps ([ROADMAP.md](../ROADMAP
 | Version | Parts of this design | Status |
 | --- | --- | --- |
 | 0.6 | [Accounts](#accounts), stores with their owner only, [Delete](#delete), files and feed of the [REST API](#rest-api-sketch); [Client sync](#client-sync) with every file downloaded; today's keys (format 5) | Implemented |
-| 0.7 | [Keys](#keys): identity in the vault, recovery key, pass phrase change, [Format 6](#format-6) | Implemented ([ARCHITECTURE.md](ARCHITECTURE.md#encryption)) |
-| 0.7 | Members and roles, account data and the account's identity, [Fence](#fence), [Sharing](#sharing), [Rotation](#rotation) | Planned |
+| 0.7 | [Keys](#keys): identities, recovery key, pass phrase change, [Format 6](#format-6); the account's identity in its account data, server vaults attached to it, the server's version checked | Implemented ([ARCHITECTURE.md](ARCHITECTURE.md#encryption)); account data, members, fence in [kofreserver](https://github.com/dyze/kofreserver) 0.2 |
+| 0.7 | [Sharing](#sharing), members removed or leaving, [Rotation](#rotation) with the [fence](#fence) | Planned |
 | 0.8 | Content on demand and pinned nodes ([Client sync](#client-sync)), batch download, uploads in parts | Planned |
 
 ## Principles
@@ -167,8 +167,8 @@ Done by the owner's kofrenot when a member is removed, or at its next sync after
 A breaking change, agreed with the owner (2026-10-20): `VaultFormat.Current` becomes 6.
 - New: `keys/` (identities, epochs, chain) and a key id in every change and content file.
 - An existing vault is upgraded without rewriting a file: its master key becomes **epoch 0**, a file without a key id is read with it, and `keys/` is added (identity, epoch 0 wrapped for it, recovery key shown). Asked through the existing upgrade question ([ARCHITECTURE.md](ARCHITECTURE.md#upgrade)).
-- **Server vaults** (one pass phrase each in 0.6): the account's pass phrase is chosen once, at the first upgrade, and its identity and recovery key made; each server vault then has its epoch 0 wrapped for that identity, after its own pass phrase unlocks it.
-- **Move to the server:** the folder vault's current epoch is wrapped for the account's identity (one small file); its `keys/identities/` are copied as they are.
+- **Server vaults** (one pass phrase each in 0.6, or a vault identity of their own when made by an early 0.7 or moved from a folder): opened once with that pass phrase, then **attached** to the account's identity (`VaultKeys.Attach`): every key wrapped for it, then a new epoch for it only, its key derived from the identity's private key so two devices attaching at once write the same. The old pass phrase then opens only the files written before. The account's pass phrase and recovery key are chosen at the first need (a new server vault, or the first attach).
+- **Move to the server:** the folder vault's files are copied as they are; it is attached at its next opening.
 
 ## Client sync
 - **Mirror:** a server vault is mirrored in `%LocalAppData%\kofrenot\stores\<id>\` with the folder vault layout; `Vault` reads it as a folder.

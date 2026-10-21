@@ -46,7 +46,18 @@ public static class VaultFolder
     /// key of epoch 0), then its header. Returns the recovery key of the identity, to show once.
     /// </summary>
     /// <exception cref="IOException">The folder is not empty.</exception>
-    public static (VaultAccess Access, RecoveryKey Recovery) Create(string folder, string passPhrase, int iterations = KeyWrap.DefaultIterations)
+    public static (VaultAccess Access, RecoveryKey Recovery) Create(string folder, string passPhrase, int iterations = KeyWrap.DefaultIterations) =>
+        Create(folder, header => VaultKeys.Create(folder, header, RandomNumberGenerator.GetBytes(SecretBox.KeySize), passPhrase, iterations));
+
+    /// <summary>
+    /// Creates a vault in an empty folder for an identity kept outside it (a server account's): its
+    /// first key wrapped for that identity, then its header.
+    /// </summary>
+    /// <exception cref="IOException">The folder is not empty.</exception>
+    public static VaultAccess Create(string folder, Identity identity, UnlockedIdentity unlocked) =>
+        Create(folder, header => VaultKeys.Create(folder, header, identity, unlocked));
+
+    private static T Create<T>(string folder, Func<VaultHeader, T> createKeys)
     {
         if (Inspect(folder) != FolderKind.Empty)
         {
@@ -54,7 +65,7 @@ public static class VaultFolder
         }
 
         var header = new VaultHeader(VaultFormat.Current, Guid.NewGuid());
-        var created = VaultKeys.Create(folder, header, RandomNumberGenerator.GetBytes(SecretBox.KeySize), passPhrase, iterations);
+        var created = createKeys(header);
         Directory.CreateDirectory(ChangesOf(folder));
 
         // The header last: a folder holding it is a vault, whose keys are there.

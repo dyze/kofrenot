@@ -56,19 +56,22 @@ public sealed class SealKind
 /// </summary>
 public sealed class KeyedBox(KeyRing keys)
 {
+    /// <summary>The keys it seals and opens with; replaced when the vault gains an epoch.</summary>
+    public KeyRing Keys { get; set; } = keys;
+
     public byte[] Seal(SealKind kind, ReadOnlySpan<byte> plain, ReadOnlySpan<byte> associated) =>
-        new SecretBox(keys.CurrentKey).Seal(kind.HeaderOf(keys.CurrentEpoch), plain, associated);
+        new SecretBox(Keys.CurrentKey).Seal(kind.HeaderOf(Keys.CurrentEpoch), plain, associated);
 
     /// <exception cref="InvalidDataException">Not this kind of file, damaged, another key or place, or an epoch whose key is missing.</exception>
     public byte[] Open(SealKind kind, byte[] data, ReadOnlySpan<byte> associated)
     {
         var (header, epoch) = kind.Read(data);
-        return new SecretBox(keys.KeyOf(epoch)).Open(header, data, associated);
+        return new SecretBox(Keys.KeyOf(epoch)).Open(header, data, associated);
     }
 
     /// <summary>Reads <paramref name="plain"/> to its end and writes it sealed to <paramref name="output"/>.</summary>
     public void Seal(SealKind kind, Stream plain, Stream output, ReadOnlySpan<byte> associated) =>
-        new ChunkedBox(keys.CurrentKey).Seal(kind.HeaderOf(keys.CurrentEpoch), plain, output, associated);
+        new ChunkedBox(Keys.CurrentKey).Seal(kind.HeaderOf(Keys.CurrentEpoch), plain, output, associated);
 
     /// <summary>A stream reading <paramref name="sealedData"/> (seekable) decrypted. It owns <paramref name="sealedData"/>.</summary>
     /// <exception cref="InvalidDataException">As <see cref="Open(SealKind, byte[], ReadOnlySpan{byte})"/>; while reading, also cut off.</exception>
@@ -81,7 +84,7 @@ public sealed class KeyedBox(KeyRing keys)
             var start = new byte[SealKind.HeaderSize];
             var read = sealedData.ReadAtLeast(start, start.Length, throwOnEndOfStream: false);
             (header, var epoch) = kind.Read(start.AsSpan(0, read));
-            key = keys.KeyOf(epoch);
+            key = Keys.KeyOf(epoch);
             sealedData.Position = 0;
         }
         catch

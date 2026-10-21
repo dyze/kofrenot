@@ -57,11 +57,15 @@ public sealed record Identity(Guid Id, byte[] PublicKey, WrappedKey ByPassPhrase
 
     /// <exception cref="InvalidDataException">Damaged.</exception>
     /// <exception cref="IOException">Cannot be read.</exception>
-    public static Identity Read(string path)
+    public static Identity Read(string path) => FromJson(File.ReadAllBytes(path));
+
+    /// <summary>An identity from its JSON (a file, or a server account's data).</summary>
+    /// <exception cref="InvalidDataException">Damaged.</exception>
+    public static Identity FromJson(byte[] json)
     {
         try
         {
-            return JsonSerializer.Deserialize<Identity>(File.ReadAllText(path), Json) is { } identity && IsComplete(identity)
+            return JsonSerializer.Deserialize<Identity>(json, Json) is { } identity && IsComplete(identity)
                 ? identity
                 : throw new InvalidDataException("The identity is damaged");
         }
@@ -71,8 +75,9 @@ public sealed record Identity(Guid Id, byte[] PublicKey, WrappedKey ByPassPhrase
         }
     }
 
-    internal void Write(string path, bool overwrite) =>
-        AtomicFile.Write(path, JsonSerializer.SerializeToUtf8Bytes(this, Json), overwrite);
+    public byte[] ToJson() => JsonSerializer.SerializeToUtf8Bytes(this, Json);
+
+    internal void Write(string path, bool overwrite) => AtomicFile.Write(path, ToJson(), overwrite);
 
     private static byte[] BoxKeyOf(RecoveryKey recovery, Guid identity) =>
         HKDF.DeriveKey(HashAlgorithmName.SHA256, recovery.Bytes, SecretBox.KeySize, identity.ToByteArray(), "kofrenot identity recovery"u8.ToArray());

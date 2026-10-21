@@ -26,6 +26,9 @@ public partial class ServerSection : UserControl
 
     public ILog Log { private get; set; } = NullLog.Instance;
 
+    /// <summary>Changes the account's pass phrase (<see cref="VaultSession.ChangeAccountPassPhrase"/>).</summary>
+    public Action<Window>? ChangePassPhrase { private get; set; }
+
     /// <summary>The account shown; set once by the Settings window.</summary>
     public ServerConnection Connection
     {
@@ -63,7 +66,12 @@ public partial class ServerSection : UserControl
             ({ } account, false) => $"Signed out of {account.Server.Host}: sign in to sync the server vaults.",
             _ => "No server yet.",
         };
+        TooOldText.Text = connection.TooOld ?? string.Empty;
+        TooOldText.Visibility = connection.TooOld is null ? Visibility.Collapsed : Visibility.Visible;
+        ChangePassPhraseButton.IsEnabled = signedIn && connection.TooOld is null && connection.Identity is not null;
     }
+
+    private void ChangePassPhraseButton_Click(object sender, RoutedEventArgs e) => ChangePassPhrase?.Invoke(Window.GetWindow(this));
 
     private async void SignInButton_Click(object sender, RoutedEventArgs e) =>
         await Call("Sign in", (connection, server, email, password) => connection.SignInAsync(server, email, password), signedUp: false);

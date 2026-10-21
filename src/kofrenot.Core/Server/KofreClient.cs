@@ -59,6 +59,41 @@ public sealed class KofreClient(HttpClient http, ServerSession? session = null, 
         _log.Info(Category, $"Signed out of {Server}");
     }
 
+    /// <summary>The server's version ("0.2"); null for a server older than 0.2, which does not say.</summary>
+    /// <exception cref="ServerException">The server cannot be reached, or failed.</exception>
+    public async Task<string?> VersionAsync(CancellationToken cancel = default)
+    {
+        try
+        {
+            using var response = await SendAsync(() => new HttpRequestMessage(HttpMethod.Get, "v1/version"), authorized: false, cancel);
+            return (await Read<VersionBody>(response, cancel)).Version;
+        }
+        catch (ServerException ex) when (ex.Failure == ServerFailure.NotFound)
+        {
+            return null;
+        }
+    }
+
+    /// <summary>The account's data, as the server keeps it (version 0: none yet).</summary>
+    public async Task<AccountData> AccountDataAsync(CancellationToken cancel = default)
+    {
+        using var response = await SendAsync(() => new HttpRequestMessage(HttpMethod.Get, "v1/accounts/me/data"), authorized: true, cancel);
+        return await Read<AccountData>(response, cancel);
+    }
+
+    /// <summary>Replaces the account's data, if its version is still <paramref name="replaces"/>. Returns the new version.</summary>
+    /// <exception cref="ServerException">Another device wrote it meanwhile (<see cref="ServerFailure.Conflict"/>), or the call failed.</exception>
+    public async Task<long> WriteAccountDataAsync(long replaces, byte[] publicPart, byte[] privatePart, CancellationToken cancel = default)
+    {
+        using var response = await SendAsync(
+            () => new HttpRequestMessage(HttpMethod.Put, "v1/accounts/me/data") { Content = JsonContent.Create(new AccountData(replaces, publicPart, privatePart), options: Json) },
+            authorized: true,
+            cancel);
+        var version = (await Read<VersionNumber>(response, cancel)).Version;
+        _log.Info(Category, $"Account data written, version {version}");
+        return version;
+    }
+
     public async Task<IReadOnlyList<ServerStore>> ListStoresAsync(CancellationToken cancel = default)
     {
         using var response = await SendAsync(() => new HttpRequestMessage(HttpMethod.Get, "v1/stores"), authorized: true, cancel);
@@ -253,6 +288,10 @@ public sealed class KofreClient(HttpClient http, ServerSession? session = null, 
     }
 
     private sealed record CreatedStore(Guid Id);
+
+    private sealed record VersionBody(string? Version);
+
+    private sealed record VersionNumber(long Version);
 
     private sealed record ErrorBody(string? Error);
 }

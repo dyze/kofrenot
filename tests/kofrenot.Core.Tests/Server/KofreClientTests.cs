@@ -294,6 +294,39 @@ public sealed class KofreClientTests
         Assert.False(await client.UploadAsync(Guid.NewGuid(), "a", () => new MemoryStream()));
     }
 
+    [Fact]
+    public async Task TheServersVersion_IsRead_WithoutSigningIn_AndNoneFromAnOlderServer()
+    {
+        var found = true;
+        var stub = new StubHandler(_ => found ? Json(HttpStatusCode.OK, """{"version":"0.2"}""") : Json(HttpStatusCode.NotFound, "{}"));
+        var client = Client(stub, session: null);
+
+        Assert.Equal("0.2", await client.VersionAsync());
+        found = false;
+        Assert.Null(await client.VersionAsync());
+        Assert.Null(stub.Requests[0].Bearer);
+    }
+
+    [Fact]
+    public async Task AFailingServer_IsNotTakenForAnOlderOne()
+    {
+        var client = Client(new StubHandler(_ => Json(HttpStatusCode.InternalServerError, "{}")), session: null);
+
+        Assert.Equal(ServerFailure.Failed, (await Assert.ThrowsAsync<ServerException>(() => client.VersionAsync())).Failure);
+    }
+
+    [Fact]
+    public async Task TheAccountsData_IsRead()
+    {
+        var client = Client(new StubHandler(_ => Json(HttpStatusCode.OK, """{"version":3,"public":"AQ==","private":"Ag=="}""")));
+
+        var data = await client.AccountDataAsync();
+
+        Assert.Equal(3, data.Version);
+        Assert.Equal([1], data.Public);
+        Assert.Equal([2], data.Private);
+    }
+
     private KofreClient Client(StubHandler stub) => Client(stub, Valid);
 
     private KofreClient Client(StubHandler stub, ServerSession? session) => new(stub.Client(), session, _clock, _log);

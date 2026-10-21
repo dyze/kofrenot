@@ -15,6 +15,7 @@ public sealed partial class Vault
     private const string Category = "Vault";
 
     private readonly string _folder;
+    private readonly KeyedBox _box;
     private readonly ChangeCodec _codec;
     private readonly SnapshotStore? _snapshot;
     private readonly ILog _log;
@@ -27,12 +28,12 @@ public sealed partial class Vault
         Id = header.Id;
         Format = header.Format;
         _log = log ?? NullLog.Instance;
-        var box = new KeyedBox(keys);
-        _codec = new ChangeCodec(box);
-        Notes = new NoteFiles(folder, box, _log);
-        Datasets = new DatasetFiles(folder, box);
-        Thumbnails = new ThumbnailFiles(folder, box, _log);
-        _snapshot = cacheFolder is null ? null : new SnapshotStore(SnapshotOf(cacheFolder, Id), box, Id, _log);
+        _box = new KeyedBox(keys);
+        _codec = new ChangeCodec(_box);
+        Notes = new NoteFiles(folder, _box, _log);
+        Datasets = new DatasetFiles(folder, _box);
+        Thumbnails = new ThumbnailFiles(folder, _box, _log);
+        _snapshot = cacheFolder is null ? null : new SnapshotStore(SnapshotOf(cacheFolder, Id), _box, Id, _log);
     }
 
     public Guid Id { get; }
@@ -47,6 +48,9 @@ public sealed partial class Vault
 
     /// <summary>The thumbnails of dataset versions (images), read on demand.</summary>
     public ThumbnailFiles Thumbnails { get; }
+
+    /// <summary>Seals what is written next with a newer epoch's key (the vault was handed to another identity); the older keys still open the files written before.</summary>
+    public void UseKeys(KeyRing keys) => _box.Keys = keys;
 
     /// <summary>Whether the file of a note's or dataset's version is in the vault (it may arrive after its change).</summary>
     public bool HasContent(ContentEdited version) => version is DatasetEdited ? Datasets.Exists(version.Id) : Notes.Exists(version.Id);
