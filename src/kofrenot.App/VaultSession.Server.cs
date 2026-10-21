@@ -17,9 +17,6 @@ public sealed partial class VaultSession
 {
     private const string NotSignedIn = "Sign in to a server first, in Settings > Server.";
 
-    // The server vault being created: its empty mirror becomes a new vault, not one waiting for its download.
-    private VaultLocation? _newOnServer;
-
     public ServerConnection Server => _server;
 
     public SyncService Sync => _sync;
@@ -57,8 +54,8 @@ public sealed partial class VaultSession
         return null;
     }
 
-    /// <summary>Creates a vault on the server, then switches to it, asking its pass phrase. Not added when that is cancelled.</summary>
-    public async Task CreateOnServer(Window owner)
+    /// <summary>Creates a vault on the server, then switches to it. Nothing is made, on the server or here, until its pass phrase is given.</summary>
+    public void CreateOnServer(Window owner)
     {
         if (_server.Client is not { Session: not null, Server: { } server } client)
         {
@@ -66,38 +63,37 @@ public sealed partial class VaultSession
             return;
         }
 
-        Guid store;
-        try
-        {
-            store = await client.CreateStoreAsync();
-        }
-        catch (ServerException ex)
-        {
-            Inform(owner, "The vault cannot be created on the server", ex);
-            return;
-        }
-
-        // A creation cancelled leaves an empty store: listed in Add from server, where it becomes a new vault.
-        AddServerVault(owner, new StoreAddress(server, store), isNew: true);
+        CreateVault(owner, client, server, store: null);
     }
 
     /// <summary>Adds a vault of the server: downloads it, then switches to it. An empty store becomes a new vault.</summary>
     public async Task AddFromServer(Window owner, ServerStore store)
     {
-        if (_server.Client is not { Server: { } server })
+        if (_server.Client is not { Server: { } server } client)
         {
             MessageDialog.Inform(owner, NotSignedIn);
             return;
         }
 
+        if (store.Files == 0)
+        {
+            CreateVault(owner, client, server, store.Id);
+            return;
+        }
+
         var address = new StoreAddress(server, store.Id);
-        if (store.Files > 0 && await _sync.SyncAsync(address) is var status && VaultFolder.Inspect(_files.MirrorOf(store.Id)) != FolderKind.Vault)
+        var status = await _sync.SyncAsync(address);
+        if (VaultFolder.Inspect(_files.MirrorOf(store.Id)) != FolderKind.Vault)
         {
             MessageDialog.Inform(owner, $"The vault cannot be downloaded: {status.Describe()}.");
             return;
         }
 
-        AddServerVault(owner, address, isNew: store.Files == 0);
+        var location = new VaultLocation(_files.MirrorOf(store.Id), address);
+        _settings.SetVaults(_settings.Vaults.Add(new RegisteredVault(location)));
+        _log.Info("Settings", $"Server vault added: store {store.Id}");
+        SwitchTo(owner, location);
+        _sync.Soon();
     }
 
     /// <summary>
@@ -205,29 +201,50 @@ public sealed partial class VaultSession
         }
     }
 
-    private void AddServerVault(Window owner, StoreAddress store, bool isNew)
+    /// <summary>
+    /// Asks the pass phrase of a new server vault. Only once it is given are its store made (unless
+    /// <paramref name="store"/> is an empty one already) and the vault created in its mirror; then
+    /// it is listed and opened with the key just made, and uploaded at the next sync. A server
+    /// that fails keeps the dialog open, saying why.
+    /// </summary>
+    private void CreateVault(Window owner, KofreClient client, Uri server, Guid? store)
     {
-        var location = new VaultLocation(_files.MirrorOf(store.Id), store);
-        _settings.SetVaults(_settings.Vaults.Add(new RegisteredVault(location)));
-        _log.Info("Settings", $"Server vault added: store {store.Id}");
-        _newOnServer = isNew ? location : null;
-        try
+        (Guid Store, VaultHeader Header, byte[] Key)? created = null;
+        var answer = PassphraseDialog.AskNew(owner, $"On the server {server.Host}", name: string.Empty, passPhrase =>
         {
-            SwitchTo(owner, location);
-        }
-        finally
-        {
-            _newOnServer = null;
-        }
+            try
+            {
+                // In the background: the dialog waits for it, as for the key derivation.
+                store ??= client.CreateStoreAsync().GetAwaiter().GetResult();
+            }
+            catch (ServerException ex)
+            {
+                _log.Warn("Action", $"The vault cannot be created on the server: {ex.Message}");
+                throw new IOException(Explain(ex), ex);
+            }
 
-        if (VaultFolder.Inspect(location.Folder) != FolderKind.Vault)
+            var (header, key) = VaultFolder.Create(_files.MirrorOf(store.Value), passPhrase);
+            created = (store.Value, header, key);
+            return true;
+        });
+        if (answer is null || created is not { } vault)
         {
-            _settings.SetVaults(_settings.Vaults.Remove(location));
-            _log.Info("Settings", "Server vault not added: its creation was cancelled");
-            Changed?.Invoke();
+            _log.Info("Action", "Server vault creation cancelled");
             return;
         }
 
+        var location = new VaultLocation(_files.MirrorOf(vault.Store), new StoreAddress(server, vault.Store));
+        _settings.SetVaults(_settings.Vaults.Add(new RegisteredVault(location)));
+        _log.Info("Action", $"Vault {vault.Header.Id} created on the server, store {vault.Store}");
+        Close();
+        _settings.SelectVault(location);
+        if (Open(owner, location.Folder, vault.Header, vault.Key, answer.Remember) is { } opened)
+        {
+            NameNew(owner, opened, answer.Name);
+            Use(owner, location.Folder, opened);
+        }
+
+        Changed?.Invoke();
         _sync.Soon();
     }
 

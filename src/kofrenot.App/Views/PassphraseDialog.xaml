@@ -9,7 +9,7 @@
         ShowInTaskbar="False"
         WindowStartupLocation="CenterOwner"
         SourceInitialized="Window_SourceInitialized">
-  <!-- Asks the pass phrase of a vault: once to unlock it, twice to create it. Enter: OK, Esc: Cancel. -->
+  <!-- Asks the pass phrase of a vault: once to unlock it, twice to create it, with its name. Enter: OK, Esc: Cancel. -->
   <Window.Resources>
     <ResourceDictionary Source="SharedStyles.xaml" />
   </Window.Resources>
@@ -18,6 +18,11 @@
     <TextBlock x:Name="TitleText" Style="{StaticResource HeadingText}" />
     <TextBlock x:Name="FolderText" Margin="0,4,0,0" Opacity="0.7" TextTrimming="CharacterEllipsis" />
     <TextBlock x:Name="HintText" Margin="0,10,0,0" TextWrapping="Wrap" />
+
+    <StackPanel x:Name="NamePanel" Visibility="Collapsed">
+      <TextBlock Margin="0,14,0,4" Text="Name" />
+      <TextBox x:Name="NameBox" Padding="4,3" ToolTip="Stored, encrypted, in the vault: every device shows it. Rename it later in Settings > Vault" />
+    </StackPanel>
 
     <TextBlock Margin="0,14,0,4" Text="Pass phrase" />
     <PasswordBox x:Name="FirstBox" Padding="6,4" />

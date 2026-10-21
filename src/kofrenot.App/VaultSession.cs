@@ -391,8 +391,8 @@ public sealed partial class VaultSession : IDisposable
                 _log.Warn(Category, $"Vault {Selected.Id} cannot be reached in {folder}");
                 MessageDialog.Inform(owner, $"The vault cannot be reached in {folder}.\n\nCheck that the folder, or the file share it is on, is available.");
                 return null;
-            // A server vault not downloaded yet: never a new vault in its mirror, unless it is being created.
-            case FolderKind.Empty when Selected?.Location is { IsOnServer: true } location && location != _newOnServer:
+            // A server vault not downloaded yet: never a new vault in its mirror (CreateVault makes those).
+            case FolderKind.Empty when Selected?.Location is { IsOnServer: true } location:
                 _log.Warn(Category, $"Server vault {location.Store!.Id} not downloaded yet");
                 MessageDialog.Inform(owner, $"This vault is not downloaded yet ({_sync.StatusOf(location.Store).Describe()}).\n\nkofrenot downloads it once the server can be reached and you are signed in (Settings > Server).");
                 return null;
@@ -410,19 +410,34 @@ public sealed partial class VaultSession : IDisposable
     private Vault? Create(Window owner, string folder)
     {
         (VaultHeader Header, byte[] Key)? created = null;
-        var remember = PassphraseDialog.Ask(owner, create: true, folder, passPhrase =>
+        var answer = PassphraseDialog.AskNew(owner, folder, new VaultLocation(folder).FolderName, passPhrase =>
         {
             created = VaultFolder.Create(folder, passPhrase);
             return true;
         });
-        if (remember is null || created is not { } vault)
+        if (answer is null || created is not { } vault)
         {
             _log.Info("Action", "Vault creation cancelled");
             return null;
         }
 
         _log.Info("Action", $"Vault {vault.Header.Id} created in {folder}");
-        return Open(owner, folder, vault.Header, vault.Key, remember.Value);
+        var opened = Open(owner, folder, vault.Header, vault.Key, answer.Remember);
+        if (opened is not null)
+        {
+            NameNew(owner, opened, answer.Name);
+        }
+
+        return opened;
+    }
+
+    /// <summary>Writes a new vault's first change: the name chosen on its creation, so every device shows it.</summary>
+    private void NameNew(Window owner, Vault vault, string name)
+    {
+        if (new VaultNamePlanner(vault.Graph).Plan(name).Change is { } change)
+        {
+            Append(owner, vault, [change], "Vault named");
+        }
     }
 
     private Vault? Unlock(Window owner, string folder)
@@ -451,7 +466,7 @@ public sealed partial class VaultSession : IDisposable
         }
 
         byte[]? key = null;
-        var remember = PassphraseDialog.Ask(owner, create: false, folder, passPhrase =>
+        var remember = PassphraseDialog.Ask(owner, folder, passPhrase =>
         {
             key = header.Unlock(passPhrase);
             if (key is null)

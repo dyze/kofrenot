@@ -15,6 +15,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   - **Move to server…**: a folder vault goes to the server as it is, with its name, hotkey and remembered pass phrase; its folder is left as it was.
   - **Delete from server…**: the vault's name and your password asked; it goes to the server's trash, for every device.
   - **Sync status** in the main window's footer and in Settings > Vault: synced, offline, sign in to sync, files waiting to be uploaded.
+  - **Name asked on creation**, for a folder vault (its folder's name offered) as for a server vault, so every device shows it at once.
 
 ## [0.5] - 2026-10-20
 

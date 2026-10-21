@@ -233,7 +233,7 @@ public partial class VaultsSection : UserControl
         AddButton.ContextMenu.IsOpen = true;
     }
 
-    private async void CreateOnServer_Click(object sender, RoutedEventArgs e)
+    private void CreateOnServer_Click(object sender, RoutedEventArgs e)
     {
         if (_session is not { } session || !CanSwitch())
         {
@@ -241,7 +241,7 @@ public partial class VaultsSection : UserControl
         }
 
         Log.Info("Action", "New vault on the server");
-        await session.CreateOnServer(Owner);
+        session.CreateOnServer(Owner);
         VaultList.SelectedItem = null;
         Show();
     }
