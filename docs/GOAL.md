@@ -97,7 +97,7 @@ What each version contains: [ROADMAP.md](../ROADMAP.md).
 | Content on demand | Content files are in the vault folder on every device (the sync tool copies them); kofrenot reads one only when needed: a note shown, a dataset exported (since 0.3) |
 | Datasets | A node type holding one file of any size, each import a new version; encrypted in 1 MB chunks, so memory use does not depend on the size (since 0.3) |
 | Server | A generic, blind, write-once store of files with accounts and members, on Linux, knowing nothing of kofrenot so other apps can use it, in its own repository ([kofreserver](https://github.com/dyze/kofreserver)); no email, the admin approves accounts in a JSON file (since 0.6) |
-| Sharing | Complete vaults, with roles reader, writer, owner; removing a member rotates the vault key (0.7, planned) |
+| Sharing | Complete server vaults, with roles reader, writer and one owner; removing a member rotates the vault key (0.7, planned) |
 | Keys | Vault keys wrapped for an identity (key pair) unlocked by a pass phrase or a recovery key; same model for folder and server vaults, format 6 (0.7, planned) |
 | Views | A node type holding a definition (a tree from a root node through a link type, or a list of the nodes of a type), in versions kept in its changes: views work offline (since 0.4) |
 

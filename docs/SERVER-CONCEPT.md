@@ -63,7 +63,7 @@ Two secrets, never mixed:
 | writer | ✔ | ✔ | |
 | owner | ✔ | ✔ | ✔ |
 
-- The creator is owner. The server knows a store by its id: the vault's name stays in its encrypted changes.
+- The creator is the owner, the only one: not changed, not removed. A member can leave (`DELETE …/members/me`). The server knows a store by its id: the vault's name stays in its encrypted changes.
 - **Fence:** optional, see [Fence](#fence).
 - **Statistics:** disk space, number of files.
 
@@ -95,15 +95,16 @@ An optional number per store, to stop writers that are behind: the server compar
 
 | Method and path                                                                              | Does                                                                                                                                                                  |
 | -------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `GET /v1/version` | The server's version: kofrenot says *server too old* below the one it needs |
 | `POST /v1/accounts`                                                                          | Sign up                                                                                                                                                               |
 | `POST /v1/sessions`, `POST /v1/sessions/refresh`                                             | Sign in, refresh                                                                                                                                                      |
 | `PUT /v1/accounts/me/password`                                                               | Change password (revokes refresh tokens)                                                                                                                              |
 | `GET/PUT /v1/accounts/me/data`                                                               | Opaque account data: a public part other users can read, a private part only its owner reads (kofrenot: the identity's public key, and its private key wrapped twice) |
-| `GET /v1/accounts/{id}/public`, `GET /v1/accounts?email=`                                    | Find a user to share with, and read their public part                                                                                                                 |
+| `GET /v1/accounts/{id}/public`, `GET /v1/accounts?email=` (exact)                                 | Find a user to share with, and read their public part                                                                                                                 |
 | `GET/POST /v1/stores`                                                                        | List (owned and shared), create                                                                                                                                       |
 | `GET /v1/stores/{id}/stats`                                                                  | Size, file count                                                                                                                                                      |
 | `DELETE /v1/stores/{id}`, `POST /v1/stores/{id}/restore` | To the trash, back from it (password again): [Delete](#delete) |
-| `PUT/DELETE /v1/stores/{id}/members/{user}`                                                  | Add, change role, remove                                                                                                                                              |
+| `PUT/DELETE /v1/stores/{id}/members/{user}`                                                  | Add, change role, remove, leave                                                                                                                                           |
 | `PUT/DELETE /v1/stores/{id}/fence`                                                           | Turn on or raise, turn off the [fence](#fence)                                                                                                                        |
 | `GET /v1/stores/{id}/feed?since={seq}`                                                       | Files added since `seq`                                                                                                                                               |
 | `GET/PUT /v1/stores/{id}/files/{path}`                                                       | Download, upload (create only; optional `Store-Fence` header)                                                                                                         |
@@ -126,19 +127,19 @@ pass phrase ──PBKDF2──┐                 recovery key (random, shown on
           changes/, content/ (AES-256-GCM, as today)
 ```
 
-| | Folder vault | Server vault |
-| --- | --- | --- |
+|                                 | Folder vault                                              | Server vault                                  |
+| ------------------------------- | --------------------------------------------------------- | --------------------------------------------- |
 | Identity (public key + 2 wraps) | In the vault: `keys/identities/<id>.json`, one per member | In the account: one for all its server vaults |
-| Pass phrase, recovery key | One per vault (as today) | One per account |
-| Vault keys | `keys/epoch-N/…` in the vault | Same, in the store |
-| Removing a member | Rotation only (and the user stops sharing the folder) | Server access removed, then rotation |
-| Reader role | Not enforceable | Enforced by the server |
+| Pass phrase, recovery key       | One per vault (as today)                                  | One per account                               |
+| Vault keys                      | `keys/epoch-N/…` in the vault                             | Same, in the store                            |
+| Removing a member               | Rotation only (and the user stops sharing the folder)     | Server access removed, then rotation          |
+| Reader role                     | Not enforceable                                           | Enforced by the server                        |
 
 - **Open:** unwrap the identity, then the latest epoch, then the chain: a table *key id → key* in memory. A file access only looks up its key id.
 - **Change pass phrase:** wrap the identity again; nothing else changes. A folder vault's identity file is rewritten (`.tmp`, then renamed), like the header today.
 - **Lost pass phrase:** the recovery key unwraps the identity; choose a new pass phrase. Both lost: the data is lost, unless another member shares the vault again with a new identity.
 - **Pass phrase or recovery key leaked:** new identity (key pair), then rotation of every vault it can open. Changing the password only stops access through the server.
-- **Remember pass phrase** (DPAPI) keeps the identity's private key per vault or account.
+- **Remember pass phrase** (DPAPI) keeps the identity's private key per vault or account; the master keys remembered in `keys.json` (format 5) are replaced at upgrade.
 - Built into .NET (`ECDiffieHellman`, `HKDF`, `AesGcm`, `Rfc2898DeriveBytes`): no package.
 
 ### Sharing
@@ -146,10 +147,10 @@ pass phrase ──PBKDF2──┐                 recovery key (random, shown on
 2. kofrenot shows the key's **fingerprint**: owner and member compare it out of band (phone, in person), so a server cannot swap keys.
 3. The current vault key is wrapped for the member (`keys/epoch-N/<member>`), and the member is added with a role.
 
-A folder vault is shared the same way, with the member's identity added to `keys/identities/` by their kofrenot.
+Server vaults only in 0.7. A folder vault (later) is shared the same way, with the member's identity added to `keys/identities/` by their kofrenot.
 
 ### Rotation
-Done by an owner's kofrenot when a member is removed, or on demand (*Rotate key*):
+Done by the owner's kofrenot when a member is removed, or at its next sync after a member left (a key wrapped in the latest epoch for an account no longer a member); on demand, *Rotate key*, later:
 
 ```
 1. server: remove the member (server vault)  ─► 403 from now on
@@ -165,6 +166,8 @@ Done by an owner's kofrenot when a member is removed, or on demand (*Rotate key*
 A breaking change, agreed with the owner (2026-10-20): `VaultFormat.Current` becomes 6.
 - New: `keys/` (identities, epochs, chain) and a key id in every change and content file.
 - An existing vault is upgraded without rewriting a file: its master key becomes **epoch 0**, a file without a key id is read with it, and `keys/` is added (identity, epoch 0 wrapped for it, recovery key shown). Asked through the existing upgrade question ([ARCHITECTURE.md](ARCHITECTURE.md#upgrade)).
+- **Server vaults** (one pass phrase each in 0.6): the account's pass phrase is chosen once, at the first upgrade, and its identity and recovery key made; each server vault then has its epoch 0 wrapped for that identity, after its own pass phrase unlocks it.
+- **Move to the server:** the folder vault's current epoch is wrapped for the account's identity (one small file); its `keys/identities/` are copied as they are.
 
 ## Client sync
 - **Mirror:** a server vault is mirrored in `%LocalAppData%\kofrenot\stores\<id>\` with the folder vault layout; `Vault` reads it as a folder.
