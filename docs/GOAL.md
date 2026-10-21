@@ -55,7 +55,7 @@ What could go wrong, and how it is addressed today:
 | --- | --- | --- |
 | Half-written file (crash, sync tool reading early) | Written as `*.tmp`, then renamed; `.tmp` files ignored ([Folder](ARCHITECTURE.md#folder)) | Implemented |
 | Two writers on one file | Each change is a new file named by a random id, never overwritten | Implemented |
-| File locked or still being copied | Skipped, logged once, read again at the next refresh ([Folder](ARCHITECTURE.md#folder)) | Implemented; retry on a timer: [ROADMAP.md](ROADMAP.md#09-to-define) |
+| File locked or still being copied | Skipped, logged once, read again at the next refresh ([Folder](ARCHITECTURE.md#folder)) | Implemented; retry on a timer: [ROADMAP.md](../ROADMAP.md#09-to-define) |
 | Files arriving in any order (a link before its node, a change before its content) | Kept until what they refer to arrives; the result does not depend on the order, and a removal wins ([Local snapshot](ARCHITECTURE.md#local-snapshot)) | Implemented |
 | Concurrent edits on two devices | Shown as conflicts, never merged silently ([Renames](ARCHITECTURE.md#renames), [Notes](ARCHITECTURE.md#notes)) | Implemented |
 | A vault written by a newer kofrenot | Not misread: the vault closes and asks for an upgrade ([Format](ARCHITECTURE.md#format)) | Implemented |
@@ -77,7 +77,7 @@ What could go wrong, and how it is addressed today:
 - Each build is identified by its git commit (no build number), shown in Settings > About and the log: `0.4 (4e9c313)`, `-dirty` for a build with uncommitted changes.
 - The vault has its own **format** number, raised only by a breaking change. A kofrenot reads the formats up to its own, and asks to be upgraded for a newer one: [ARCHITECTURE.md](ARCHITECTURE.md#format).
 
-What each version contains: [ROADMAP.md](ROADMAP.md).
+What each version contains: [ROADMAP.md](../ROADMAP.md).
 
 ## Non-goals
 - A hosted (SaaS) service run by someone else

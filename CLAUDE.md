@@ -2,7 +2,7 @@
 
 Rules for working on **kofrenot** together. Read first:
 - `docs/GOAL.md`: goal, principles, non-goals, open questions
-- `docs/ROADMAP.md`: scope of each planned version
+- `ROADMAP.md`: scope of each planned version
 - `CHANGELOG.md`: what each version changed
 - `docs/ARCHITECTURE.md`: projects, stack, logging, window positions, updates
 
@@ -43,7 +43,7 @@ Only those listed in `docs/ARCHITECTURE.md#stack`. Ask before adding one.
 - **Build honesty.** Claude builds and runs the tests itself (the .NET SDK is installed) and reports the real result, errors and coverage included. Never claim the code builds without having run it.
 - **Docs.** One home per fact:
   - user-facing behavior → `README.md`
-  - version scope → `docs/ROADMAP.md` (planned features)
+  - version scope → `ROADMAP.md` (planned features)
   - changes → `CHANGELOG.md`, following [Keep a Changelog](https://keepachangelog.com/en/1.1.0/): when a feature is implemented, it moves from ROADMAP to `[Unreleased]`, under Added, Changed, Deprecated, Removed, Fixed or Security; at release, `[Unreleased]` becomes `[<version>] - <date>`, most recent version first, with its compare link at the bottom
   - design and internals → `docs/ARCHITECTURE.md`
   - goal and principles → `docs/GOAL.md`
@@ -57,7 +57,7 @@ Only those listed in `docs/ARCHITECTURE.md#stack`. Ask before adding one.
 * Follow Clean Architecture principles.
 * Avoid redundancies in explanations, try to update existing docs instead of creating new ones.
 * Ask clarifying questions before making architectural changes.
-* Mark in documents what is implemented and what is not. In `docs/ROADMAP.md`, only the version table holds a status: no "Done" or "Not implemented" on features.
+* Mark in documents what is implemented and what is not. In `ROADMAP.md`, only the version table holds a status: no "Done" or "Not implemented" on features.
 
 ## Coding rules
 

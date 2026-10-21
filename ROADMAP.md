@@ -1,6 +1,6 @@
 # kofrenot: roadmap
 
-Scope of each planned version. Implemented features move to [CHANGELOG.md](../CHANGELOG.md). The goal, principles, non-goals and open questions are in [GOAL.md](GOAL.md). The features are sorted by priority.
+Scope of each planned version. Implemented features move to [CHANGELOG.md](CHANGELOG.md). The goal, principles, non-goals and open questions are in [GOAL.md](docs/GOAL.md). The features are sorted by priority.
 
 | Version | Status    | Theme                                                                              |
 | ------- | --------- | ---------------------------------------------------------------------------------- |
@@ -18,6 +18,7 @@ Scope of each planned version. Implemented features move to [CHANGELOG.md](../CH
 1. **Identity and recovery key.** Vault keys are wrapped for an identity (key pair) unlocked by the pass phrase or a recovery key shown once. Same for folder and server vaults (format 6, existing vaults upgraded without rewriting a file).
 2. **Share complete vaults** with other users (reader, writer, owner), after checking the key's fingerprint.
 3. **Remove a member.** Server access removed at once, then key rotation and fence: files added later are unreadable to them.
+4. User can change his **password**.
 
 ## 0.8 (to define)
 1. **Content on demand.** A server vault downloads change files at once, content only when shown or exported.
@@ -28,9 +29,11 @@ Scope of each planned version. Implemented features move to [CHANGELOG.md](../CH
 1. **Restore previous versions.** If a user made a mistake he can see the list of versions and restore one of them.
 2. **File drop zone.** Main window shows a small zone in which user can drop one or several files. This is a way to secure quickly a set of files. The App, proposes a preview of actions that will be done. node names and types are determined automatically. User acks and app proceeds with actions.
 3. Tree view accepts several dropped files too, with the same preview (one file: 0.5).
-4. **Retry unreadable change files.** A change file skipped because it was locked or still being copied is read again a few seconds later, not only at the next sync event or when the window is shown ([GOAL.md](GOAL.md#robust-and-secure)).
+4. **Retry unreadable change files.** A change file skipped because it was locked or still being copied is read again a few seconds later, not only at the next sync event or when the window is shown ([GOAL.md](docs/GOAL.md#robust-and-secure)).
 
 ## Later
 1. **Pack vault.** Pack a vault to reduce its size and number of files (needs deletes on the server).
-2. **Re-encrypt on pack.** Packed files are encrypted again with the latest vault key, so old key epochs can be dropped ([Rotation](SERVER-CONCEPT.md#rotation)).
+2. **Re-encrypt on pack.** Packed files are encrypted again with the latest vault key, so old key epochs can be dropped ([Rotation](docs/SERVER-CONCEPT.md#rotation)).
 3. **Move a server vault to a folder.** Its files are saved as they are into a folder vault; its id is kept.
+4. **Import/Export a server repo.**
+

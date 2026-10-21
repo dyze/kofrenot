@@ -5,13 +5,13 @@ A private, self-hosted knowledge system: store, organize, search, version and sh
 | Doc | Content |
 | --- | --- |
 | [docs/GOAL.md](docs/GOAL.md) | Goal, principles, non-goals, open questions |
-| [docs/ROADMAP.md](docs/ROADMAP.md) | Scope of each planned version |
+| [ROADMAP.md](ROADMAP.md) | Scope of each planned version |
 | [CHANGELOG.md](CHANGELOG.md) | What each version changed, most recent first ([Keep a Changelog](https://keepachangelog.com/en/1.1.0/)) |
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Projects, stack, startup, window positions, updates, logging |
 
 ## Status
 
-Version 0.6: nodes and links typed in one box (directed link types, your own aliases), notes with Markdown content, datasets (files of any size, with thumbnails and a viewer for images and texts), views (trees and lists over the graph, in tabs, where nodes are added, renamed, copied, moved and deleted, and files dropped), pinned and recent nodes, all stored encrypted in folders or on your own Kofre server, synced across your devices and usable offline: several vaults, each with its name, lock and hotkey. What comes next: [docs/ROADMAP.md](docs/ROADMAP.md).
+Version 0.6: nodes and links typed in one box (directed link types, your own aliases), notes with Markdown content, datasets (files of any size, with thumbnails and a viewer for images and texts), views (trees and lists over the graph, in tabs, where nodes are added, renamed, copied, moved and deleted, and files dropped), pinned and recent nodes, all stored encrypted in folders or on your own Kofre server, synced across your devices and usable offline: several vaults, each with its name, lock and hotkey. What comes next: [ROADMAP.md](ROADMAP.md).
 
 ## Install
 

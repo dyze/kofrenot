@@ -2,7 +2,7 @@
 
 The server is **Kofre** (`Kofre.Server`): generic, kofrenot is one of its clients.
 
-Decisions: [GOAL.md](GOAL.md#decisions). Built in steps ([ROADMAP.md](ROADMAP.md)); what is implemented is documented in [kofreserver](https://github.com/dyze/kofreserver) (the server) and [ARCHITECTURE.md](ARCHITECTURE.md#server-vaults) (kofrenot):
+Decisions: [GOAL.md](GOAL.md#decisions). Built in steps ([ROADMAP.md](../ROADMAP.md)); what is implemented is documented in [kofreserver](https://github.com/dyze/kofreserver) (the server) and [ARCHITECTURE.md](ARCHITECTURE.md#server-vaults) (kofrenot):
 
 | Version | Parts of this design | Status |
 | --- | --- | --- |
@@ -12,7 +12,7 @@ Decisions: [GOAL.md](GOAL.md#decisions). Built in steps ([ROADMAP.md](ROADMAP.md
 
 ## Principles
 - **Generic and blind.** The server stores *stores*: sets of files addressed by path, with their members. It never sees a key, a name or a content, and knows nothing of kofrenot: other apps can use it.
-- **Write-once.** A file, once uploaded, is never replaced or deleted: an upload on an existing path is refused. Only a whole store can be deleted, into a trash first ([Delete](#delete)). (Packing, later, will need deletes: [ROADMAP.md](ROADMAP.md).)
+- **Write-once.** A file, once uploaded, is never replaced or deleted: an upload on an existing path is refused. Only a whole store can be deleted, into a trash first ([Delete](#delete)). (Packing, later, will need deletes: [ROADMAP.md](../ROADMAP.md).)
 - **Offline first, unchanged.** A server vault is mirrored in a local folder: every change file is downloaded, content only when needed or pinned. `Vault` keeps reading a folder.
 - **Folder vaults stay.** A vault is a folder (as today) or a server store; both use the same keys and files ([Keys](#keys)).
 - **REST only.** No web site, no admin UI: the admin edits the server's JSON files.
