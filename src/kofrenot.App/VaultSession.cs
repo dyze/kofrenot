@@ -466,7 +466,7 @@ public sealed partial class VaultSession : IDisposable
         }
 
         byte[]? key = null;
-        var remember = PassphraseDialog.Ask(owner, folder, passPhrase =>
+        var remember = PassphraseDialog.Ask(owner, PlaceOf(Selected, folder), passPhrase =>
         {
             key = header.Unlock(passPhrase);
             if (key is null)

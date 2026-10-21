@@ -29,6 +29,23 @@ public sealed partial class VaultSession
         ?? (vault.Id is { } id ? _names.Recall(id) : null)
         ?? vault.Location.FolderName;
 
+    /// <summary>
+    /// How the unlock dialog names a vault: its name last read here, with its server for a server
+    /// vault ("Personal · on kofre.example.org"). Before any name is known: its server, or its
+    /// <paramref name="folder"/>, never a server vault's local copy.
+    /// </summary>
+    private string PlaceOf(RegisteredVault? vault, string folder)
+    {
+        var name = vault?.Id is { } id ? _names.Recall(id) : null;
+        return (name, vault?.Location.Store) switch
+        {
+            ({ } known, { } store) => $"{known} · on {store.Server.Host}",
+            ({ } known, null) => known,
+            (null, { } store) => $"On the server {store.Server.Host}",
+            _ => folder,
+        };
+    }
+
     /// <summary>Whether the key of <paramref name="vault"/> is remembered on this computer.</summary>
     public bool IsRemembered(RegisteredVault vault) => vault.Id is { } id && _keys.Has(id);
 
