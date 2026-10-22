@@ -15,6 +15,7 @@ namespace Kofrenot.Core.Server;
 public sealed class KofreClient(HttpClient http, ServerSession? session = null, TimeProvider? clock = null, ILog? log = null) : IStoreFiles
 {
     public const string PasswordHeader = "X-Password";
+    public const string FenceHeader = "Store-Fence";
 
     private const string Category = "Server";
     private static readonly TimeSpan RefreshMargin = TimeSpan.FromMinutes(1);
@@ -184,20 +185,49 @@ public sealed class KofreClient(HttpClient http, ServerSession? session = null, 
         await response.Content.CopyToAsync(destination, cancel);
     }
 
-    public async Task<bool> UploadAsync(Guid store, string path, Func<Stream> open, CancellationToken cancel = default)
+    public async Task<UploadResult> UploadAsync(Guid store, string path, Func<Stream> open, long fence, CancellationToken cancel = default)
     {
         try
         {
             using var _ = await SendAsync(
-                () => new HttpRequestMessage(HttpMethod.Put, $"v1/stores/{store}/files/{path}") { Content = new StreamContent(open()) },
+                () => new HttpRequestMessage(HttpMethod.Put, $"v1/stores/{store}/files/{path}")
+                {
+                    Content = new StreamContent(open()),
+                    Headers = { { FenceHeader, fence.ToString(System.Globalization.CultureInfo.InvariantCulture) } },
+                },
                 authorized: true,
                 cancel);
-            return true;
+            return UploadResult.Uploaded;
         }
         catch (ServerException ex) when (ex.Failure == ServerFailure.Conflict)
         {
-            return false;
+            return ex.Code == "fence" ? UploadResult.Fenced : UploadResult.Exists;
         }
+    }
+
+    /// <summary>Removes a member from the store (the caller its owner): refused at its next call.</summary>
+    public async Task RemoveMemberAsync(Guid store, Guid account, CancellationToken cancel = default)
+    {
+        using var _ = await SendAsync(() => new HttpRequestMessage(HttpMethod.Delete, $"v1/stores/{store}/members/{account}"), authorized: true, cancel);
+        _log.Info(Category, $"Store {store}: {account} removed");
+    }
+
+    /// <summary>Leaves a store shared with this account.</summary>
+    public async Task LeaveAsync(Guid store, CancellationToken cancel = default)
+    {
+        using var _ = await SendAsync(() => new HttpRequestMessage(HttpMethod.Delete, $"v1/stores/{store}/members/me"), authorized: true, cancel);
+        _log.Info(Category, $"Store {store} left");
+    }
+
+    /// <summary>Turns the store's fence on, or raises it (the caller its owner): uploads naming less are refused.</summary>
+    /// <exception cref="ServerException">Lower than its fence (<see cref="ServerFailure.Conflict"/>), or the call failed.</exception>
+    public async Task SetFenceAsync(Guid store, long value, CancellationToken cancel = default)
+    {
+        using var _ = await SendAsync(
+            () => new HttpRequestMessage(HttpMethod.Put, $"v1/stores/{store}/fence") { Content = JsonContent.Create(new { value }, options: Json) },
+            authorized: true,
+            cancel);
+        _log.Info(Category, $"Store {store}: fence set to {value}");
     }
 
     private static HttpRequestMessage Post(string url, object body) => new(HttpMethod.Post, url) { Content = JsonContent.Create(body, options: Json) };

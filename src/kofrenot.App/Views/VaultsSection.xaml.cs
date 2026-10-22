@@ -467,11 +467,21 @@ public partial class VaultsSection : UserControl
         MembersList.ItemsSource = members
             .OrderBy(member => member.Role == MemberRole.Owner ? 0 : 1)
             .ThenBy(member => member.Email, StringComparer.CurrentCultureIgnoreCase)
-            .Select(member => $"{member.Email} · {member.Role.ToString().ToLowerInvariant()} · {Fingerprint.Of(member.PublicKey)}")
+            .Select(member => new MemberRow(member, $"{member.Email} · {member.Role.ToString().ToLowerInvariant()} · {Fingerprint.Of(member.PublicKey)}"))
             .ToList();
+        MembersList.Visibility = members.Count == 0 ? Visibility.Collapsed : Visibility.Visible;
         NotSharedText.Visibility = members.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+        ShareButton.Visibility = session.CanLeave ? Visibility.Collapsed : Visibility.Visible;
         ShareButton.IsEnabled = session.CanShare;
+        RemoveMemberButton.Visibility = ShareButton.Visibility;
+        LeaveButton.Visibility = session.CanLeave ? Visibility.Visible : Visibility.Collapsed;
+        ShowMemberChosen();
     }
+
+    private void ShowMemberChosen() =>
+        RemoveMemberButton.IsEnabled = _session is { CanRemoveMembers: true } && MembersList.SelectedItem is MemberRow { Member.Role: not MemberRole.Owner };
+
+    private void MembersList_SelectionChanged(object sender, SelectionChangedEventArgs e) => ShowMemberChosen();
 
     private async void ShareButton_Click(object sender, RoutedEventArgs e)
     {
@@ -481,6 +491,27 @@ public partial class VaultsSection : UserControl
             ShowChosen();
         }
     }
+
+    private async void RemoveMemberButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (_session is { } session && MembersList.SelectedItem is MemberRow row)
+        {
+            await session.RemoveMember(Owner, row.Member);
+            ShowChosen();
+        }
+    }
+
+    private async void LeaveButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (_session is { } session)
+        {
+            await session.Leave(Owner);
+            ShowChosen();
+        }
+    }
+
+    /// <summary>A member as listed: the member, and what is shown of them.</summary>
+    private sealed record MemberRow(VaultMember Member, string Text);
 
     private void ChangePassPhraseButton_Click(object sender, RoutedEventArgs e)
     {

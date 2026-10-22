@@ -165,6 +165,37 @@ public sealed class ServerSyncTests : IDisposable
         Assert.Equal((FakeStore.Id, Mirror), (sync.Store, sync.Mirror));
     }
 
+    [Fact]
+    public async Task AnUpload_NamesTheEpochOfItsFile_OrTheMirrorsLatest()
+    {
+        Directory.CreateDirectory(Path.Combine(Mirror, "keys", "epoch-2"));
+        File.WriteAllBytes(Path.Combine(Mirror, "a.kfc"), [.. "KFC2"u8, 0, 0, 0, 1, 9, 9]);
+        Write("kofrenot-vault.json", "{}");
+
+        await Sync().RunAsync();
+
+        Assert.Equal(1, _store.Fences["a.kfc"]);
+        Assert.Equal(2, _store.Fences["kofrenot-vault.json"]);
+    }
+
+    [Fact]
+    public async Task AFileBelowTheFence_WaitsToBeSealedAgain_ThenIsUploaded()
+    {
+        _store.Fence = 2;
+        File.WriteAllBytes(Path.Combine(Directory.CreateDirectory(Mirror).FullName, "a.kfc"), [.. "KFC2"u8, 0, 0, 0, 1, 9, 9]);
+
+        var refused = await Sync().RunAsync();
+
+        Assert.Equal(new SyncResult(0, 0, 1), refused);
+        Assert.Equal(["a.kfc"], ServerSync.Fenced(State));
+        Assert.Equal(1, ServerSync.Waiting(Mirror, State));
+        Assert.Contains(_log.Entries, entry => entry.Message.Contains("to seal again"));
+
+        File.WriteAllBytes(Path.Combine(Mirror, "a.kfc"), [.. "KFC2"u8, 0, 0, 0, 2, 9, 9]);
+        Assert.Equal(new SyncResult(0, 1, 0), await Sync().RunAsync());
+        Assert.Empty(ServerSync.Fenced(State));
+    }
+
     private ServerSync Sync() => new(Mirror, State, FakeStore.Id, _store, _log);
 
     private void Write(string path, string text)
@@ -216,16 +247,26 @@ public sealed class ServerSyncTests : IDisposable
             await destination.WriteAsync(_files.Single(file => file.Path == path).Content, cancel);
         }
 
-        public Task<bool> UploadAsync(Guid store, string path, Func<Stream> open, CancellationToken cancel = default)
+        public Dictionary<string, long> Fences { get; } = [];
+
+        public long? Fence { get; set; }
+
+        public Task<UploadResult> UploadAsync(Guid store, string path, Func<Stream> open, long fence, CancellationToken cancel = default)
         {
             if (Uploads.Count == FailUploadsAfter)
             {
                 throw new ServerException(ServerFailure.Offline);
             }
 
+            Fences[path] = fence;
+            if (fence < Fence)
+            {
+                return Task.FromResult(UploadResult.Fenced);
+            }
+
             if (_refused.Contains(path))
             {
-                return Task.FromResult(false);
+                return Task.FromResult(UploadResult.Exists);
             }
 
             using var content = open();
@@ -233,7 +274,7 @@ public sealed class ServerSyncTests : IDisposable
             content.CopyTo(copy);
             _files.Add((path, copy.ToArray()));
             Uploads.Add(path);
-            return Task.FromResult(true);
+            return Task.FromResult(UploadResult.Uploaded);
         }
     }
 }

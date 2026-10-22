@@ -9,7 +9,7 @@ Decisions: [GOAL.md](GOAL.md#decisions). Built in steps ([ROADMAP.md](../ROADMAP
 | 0.6 | [Accounts](#accounts), stores with their owner only, [Delete](#delete), files and feed of the [REST API](#rest-api-sketch); [Client sync](#client-sync) with every file downloaded; today's keys (format 5) | Implemented |
 | 0.7 | [Keys](#keys): identities, recovery key, pass phrase change, [Format 6](#format-6); the account's identity in its account data, server vaults attached to it, the server's version checked | Implemented ([ARCHITECTURE.md](ARCHITECTURE.md#encryption)); account data, members, fence in [kofreserver](https://github.com/dyze/kofreserver) 0.2 |
 | 0.7 | [Sharing](#sharing) | Implemented ([ARCHITECTURE.md](ARCHITECTURE.md#sharing)) |
-| 0.7 | Members removed or leaving, [Rotation](#rotation) with the [fence](#fence) | Planned |
+| 0.7 | Members removed or leaving, [Rotation](#rotation) with the [fence](#fence) | Implemented ([ARCHITECTURE.md](ARCHITECTURE.md#members-leaving)) |
 | 0.8 | Content on demand and pinned nodes ([Client sync](#client-sync)), batch download, uploads in parts | Planned |
 
 ## Principles
@@ -151,16 +151,17 @@ pass phrase ──PBKDF2──┐                 recovery key (random, shown on
 Server vaults only in 0.7. A folder vault (later) is shared the same way, with the member's identity added to `keys/identities/` by their kofrenot.
 
 ### Rotation
-Done by the owner's kofrenot when a member is removed, or at its next sync after a member left (a key wrapped in the latest epoch for an account no longer a member); on demand, *Rotate key*, later:
+Done by the owner's kofrenot when a member is removed, or at its next opening after a member left (recorded in the vault, no longer a member on the server); on demand, *Rotate key*, later:
 
 ```
 1. server: remove the member (server vault)  ─► 403 from now on
 2. new vault key N+1, wrapped for each remaining member (their keys from the vault's records)
-3. server: fence = N+1                       ─► uploads under N refused
-4. every device writes with N+1 once it has synced
+3. sync uploads the new keys, then server: fence = N+1 ─► uploads naming less refused
+4. every device takes up N+1 once synced; a file it wrote under N, refused, is sealed again with N+1 (same id: it never reached the server)
 ```
 
-- Files are never re-encrypted: what the removed member already had stays readable to them; what is added after is not.
+- Files on the server are never re-encrypted: what the removed member already had stays readable to them; what is added after is not.
+- The key of N+1 is derived from the owner's private key: two of its devices rotating at once write the same. An upload names the epoch in its file's header (`Store-Fence`), or the vault's latest for its header and keys.
 - Cost: a 100-byte file per member and epoch.
 
 ### Format 6

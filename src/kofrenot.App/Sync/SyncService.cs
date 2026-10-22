@@ -22,7 +22,7 @@ public sealed record SyncStatus(DateTimeOffset? Synced, ServerFailure? Failure, 
             null => "synced",
             ServerFailure.Offline => "offline",
             ServerFailure.SignInNeeded => "sign in to sync",
-            ServerFailure.Refused or ServerFailure.NotFound => "no longer on the server",
+            ServerFailure.Refused or ServerFailure.NotFound => "no longer on the server, or no longer shared with you",
             _ => "sync failed",
         };
         return Waiting > 0 ? $"{state}, {Waiting} {(Waiting == 1 ? "file" : "files")} to upload" : state;

@@ -34,11 +34,25 @@ public interface IStoreFiles
     /// <exception cref="ServerException">The call failed.</exception>
     Task DownloadAsync(Guid store, string path, Stream destination, CancellationToken cancel = default);
 
-    /// <summary>Uploads a file, read from <paramref name="open"/> (opened again if the call is retried).</summary>
-    /// <returns>False when the store had this file already.</returns>
+    /// <summary>
+    /// Uploads a file, read from <paramref name="open"/> (opened again if the call is retried),
+    /// naming <paramref name="fence"/>: the store refuses it below its fence, if it has one.
+    /// </summary>
     /// <exception cref="ServerException">The call failed.</exception>
-    Task<bool> UploadAsync(Guid store, string path, Func<Stream> open, CancellationToken cancel = default);
+    Task<UploadResult> UploadAsync(Guid store, string path, Func<Stream> open, long fence, CancellationToken cancel = default);
 }
 
 /// <summary>A server account's data, opaque to the server: a public part any account reads, a private part only its own; its version counts the writes (0: none yet).</summary>
 public sealed record AccountData(long Version, byte[]? Public, byte[]? Private);
+
+/// <summary>What became of an upload.</summary>
+public enum UploadResult
+{
+    Uploaded,
+
+    /// <summary>The store had this file already.</summary>
+    Exists,
+
+    /// <summary>Below the store's fence: sealed with a key older than its latest, to seal again.</summary>
+    Fenced,
+}

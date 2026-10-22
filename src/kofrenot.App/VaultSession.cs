@@ -46,6 +46,7 @@ public sealed partial class VaultSession : IDisposable
         _sync = sync;
         _log = log;
         _upgrades = new VaultUpgrades(files.VaultUpgrades, log);
+        _sync.Changed += AfterSync;
     }
 
     /// <summary>Raised on the UI thread when the vault is opened or closed, or has new changes.</summary>
@@ -103,6 +104,7 @@ public sealed partial class VaultSession : IDisposable
 
         Current = vault;
         KeepName();
+        _ = SettleMembers(owner);
         try
         {
             _watcher = new VaultWatcher(folder, Refresh);

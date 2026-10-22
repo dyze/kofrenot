@@ -271,27 +271,56 @@ public sealed class KofreClientTests
     public async Task AFile_IsUploaded_AndReopenedWhenSentAgain()
     {
         var opened = 0;
-        var stub = new StubHandler(request => request.RequestUri!.AbsolutePath == "/v1/sessions/refresh" ? Json(HttpStatusCode.OK, Session)
+        static HttpResponseMessage answer(HttpRequestMessage request) =>
+            request.RequestUri!.AbsolutePath == "/v1/sessions/refresh" ? Json(HttpStatusCode.OK, Session)
             : request.Headers.Authorization!.Parameter == "access-1" ? new HttpResponseMessage(HttpStatusCode.Unauthorized)
-            : new HttpResponseMessage(HttpStatusCode.Created));
+            : new HttpResponseMessage(HttpStatusCode.Created);
+
+        string? fence = null;
+        var stub = new StubHandler(request =>
+        {
+            fence = request.Headers.TryGetValues(KofreClient.FenceHeader, out var values) ? values.Single() : null;
+            return answer(request);
+        });
 
         var added = await Client(stub).UploadAsync(Guid.NewGuid(), "a", () =>
         {
             opened++;
             return new MemoryStream(Encoding.UTF8.GetBytes("abc"));
-        });
+        }, fence: 3);
 
-        Assert.True(added);
+        Assert.Equal(UploadResult.Uploaded, added);
         Assert.Equal(2, opened);
         Assert.Equal("abc", stub.Requests[^1].Body);
+        Assert.Equal("3", fence);
+    }
+
+    [Theory]
+    [InlineData("file-exists", UploadResult.Exists)]
+    [InlineData("fence", UploadResult.Fenced)]
+    public async Task AFileTheStoreHas_OrBelowItsFence_IsNotUploaded(string code, UploadResult result)
+    {
+        var client = Client(new StubHandler(_ => Json(HttpStatusCode.Conflict, $$"""{"error":"{{code}}"}""")));
+
+        Assert.Equal(result, await client.UploadAsync(Guid.NewGuid(), "a", () => new MemoryStream(), fence: 0));
     }
 
     [Fact]
-    public async Task AFileTheStoreHas_IsNotUploadedAgain()
+    public async Task AMemberIsRemoved_OrLeaves_AndTheFenceIsSet()
     {
-        var client = Client(new StubHandler(_ => Json(HttpStatusCode.Conflict, """{"error":"file-exists"}""")));
+        var store = Guid.NewGuid();
+        var account = Guid.NewGuid();
+        var stub = new StubHandler(_ => new HttpResponseMessage(HttpStatusCode.NoContent));
+        var client = Client(stub);
 
-        Assert.False(await client.UploadAsync(Guid.NewGuid(), "a", () => new MemoryStream()));
+        await client.RemoveMemberAsync(store, account);
+        await client.LeaveAsync(store);
+        await client.SetFenceAsync(store, 4);
+
+        Assert.Equal(
+            [(HttpMethod.Delete, $"/v1/stores/{store}/members/{account}"), (HttpMethod.Delete, $"/v1/stores/{store}/members/me"), (HttpMethod.Put, $"/v1/stores/{store}/fence")],
+            stub.Requests.Select(request => (request.Method, request.Path)));
+        Assert.Contains("\"value\":4", stub.Requests[2].Body);
     }
 
     [Fact]

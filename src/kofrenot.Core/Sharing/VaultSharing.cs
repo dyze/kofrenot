@@ -70,6 +70,34 @@ public static class VaultSharing
         return changes;
     }
 
+    /// <summary>
+    /// Takes members out of the open vault (removed, or gone from the server): a new epoch wrapped
+    /// for every other member (<paramref name="owner"/> included), and the change removing their
+    /// records, to write with it. Returns the access with the new epoch.
+    /// </summary>
+    /// <exception cref="InvalidOperationException">The access does not hold the latest epoch, or has no identity.</exception>
+    /// <exception cref="IOException">A key file cannot be written.</exception>
+    public static (VaultAccess Access, ChangesRemoved Removal) Remove(
+        string folder, VaultAccess access, KnowledgeGraph graph, IReadOnlyCollection<Guid> accounts, AccountKey owner, DateTimeOffset now)
+    {
+        var staying = graph.Members
+            .Where(member => !accounts.Contains(member.Account))
+            .Select(member => (member.Identity, member.PublicKey))
+            .Append((owner.Id, owner.PublicKey))
+            .DistinctBy(identity => identity.Item1)
+            .ToList();
+        var rotated = VaultKeys.Rotate(folder, access, staying);
+        var records = accounts.SelectMany(graph.MemberRecordsOf).ToList();
+        return (rotated, new ChangesRemoved(Guid.NewGuid(), now, records));
+    }
+
+    /// <summary>The members recorded in the vault who are no longer members on the server: they left (or were removed from another device).</summary>
+    public static IReadOnlyList<VaultMember> Gone(KnowledgeGraph graph, IEnumerable<StoreMember> onServer)
+    {
+        var members = onServer.Select(member => member.Account).ToHashSet();
+        return graph.Members.Where(member => member.Role != MemberRole.Owner && !members.Contains(member.Account)).ToList();
+    }
+
     /// <summary>The role of <paramref name="identity"/> in a shared vault; null when it is not shared with it (its own vault).</summary>
     public static MemberRole? RoleOf(KnowledgeGraph graph, Guid identity) =>
         graph.Members.FirstOrDefault(member => member.Identity == identity)?.Role;

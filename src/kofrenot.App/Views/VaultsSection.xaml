@@ -93,21 +93,33 @@
         <TextBlock Width="110" Margin="0,4,0,0" VerticalAlignment="Top" Text="Members" />
         <StackPanel>
           <TextBlock x:Name="NotSharedText" Margin="0,4,0,0" Opacity="0.7" Text="Not shared." />
-          <ItemsControl x:Name="MembersList" Margin="0,4,0,0">
-            <ItemsControl.ItemTemplate>
-              <DataTemplate>
-                <TextBlock Margin="0,0,0,2" Text="{Binding}" ToolTip="Email, role, and the fingerprint of their key" />
-              </DataTemplate>
-            </ItemsControl.ItemTemplate>
-          </ItemsControl>
-          <Button x:Name="ShareButton"
-                  Margin="0,6,0,0"
-                  HorizontalAlignment="Left"
-                  Padding="12,4"
-                  Content="Share..."
-                  ToolTip="Shares the vault with another account on the server, after comparing the fingerprint of their key. The vault must be open"
-                  ToolTipService.ShowOnDisabled="True"
-                  Click="ShareButton_Click" />
+          <ListBox x:Name="MembersList"
+                   Margin="0,4,0,0"
+                   MaxHeight="140"
+                   DisplayMemberPath="Text"
+                   ToolTip="Email, role, and the fingerprint of their key"
+                   SelectionChanged="MembersList_SelectionChanged" />
+          <StackPanel Margin="0,6,0,0" Orientation="Horizontal">
+            <Button x:Name="ShareButton"
+                    Padding="12,4"
+                    Content="Share..."
+                    ToolTip="Shares the vault with another account on the server, after comparing the fingerprint of their key. The vault must be open"
+                    ToolTipService.ShowOnDisabled="True"
+                    Click="ShareButton_Click" />
+            <Button x:Name="RemoveMemberButton"
+                    Margin="8,0,0,0"
+                    Padding="12,4"
+                    Content="Remove..."
+                    ToolTip="Takes the chosen member out: their server access at once, then a new key they do not have"
+                    ToolTipService.ShowOnDisabled="True"
+                    Click="RemoveMemberButton_Click" />
+            <Button x:Name="LeaveButton"
+                    Margin="8,0,0,0"
+                    Padding="12,4"
+                    Content="Leave..."
+                    ToolTip="Leaves this vault, shared with you by someone else"
+                    Click="LeaveButton_Click" />
+          </StackPanel>
         </StackPanel>
       </StackPanel>
 

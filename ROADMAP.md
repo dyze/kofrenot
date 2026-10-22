@@ -14,9 +14,6 @@ Scope of each planned version. Implemented features move to [CHANGELOG.md](CHANG
 | 0.8     | To define | Large vaults: content on demand, pinned for offline, faster transfers              |
 | 0.9     | To define | Editing: restore versions, drop files                                              |
 
-## 0.7 (to define)
-1. **Remove a member.** Server access removed at once, then key rotation and fence: files added later are unreadable to them. A member can also leave a vault: the key is rotated the same way.
-
 ## 0.8 (to define)
 1. **Content on demand.** A server vault downloads change files at once, content only when shown or exported.
 2. **Pinned for offline.** When a node is pinned for offline access, its content is downloaded ahead, so it is always readable without access to the vault storage.

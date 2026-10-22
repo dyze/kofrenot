@@ -45,7 +45,7 @@ public static partial class VaultKeys
         }
 
         var next = access.Keys.CurrentEpoch + 1;
-        var key = AttachKey(unlocked, access.Header.Id, next);
+        var key = DerivedKey(unlocked, access.Header.Id, next);
         WrapFor(folder, access.Header.Id, next, key, identity);
         return new VaultAccess(access.Header, access.Keys.With(next, key), unlocked);
     }
@@ -69,6 +69,31 @@ public static partial class VaultKeys
         }
     }
 
+    /// <summary>
+    /// Rotates the vault's key (its owner, after removing a member): a new epoch, wrapped only for
+    /// <paramref name="identities"/> (the members left, its owner among them). What is written next
+    /// is sealed with it: a member removed reads the files written so far, not the next. Returns the
+    /// access with the new epoch.
+    /// </summary>
+    /// <exception cref="InvalidOperationException"><paramref name="access"/> does not hold the latest epoch, or has no identity.</exception>
+    /// <exception cref="IOException">A file cannot be written.</exception>
+    public static VaultAccess Rotate(string folder, VaultAccess access, IReadOnlyCollection<(Guid Identity, byte[] PublicKey)> identities)
+    {
+        if (!IsCurrent(folder, access) || access.Identity is not { } owner)
+        {
+            throw new InvalidOperationException("The vault has keys newer than the ones it was opened with, or no identity to rotate them");
+        }
+
+        var next = access.Keys.CurrentEpoch + 1;
+        var key = DerivedKey(owner, access.Header.Id, next);
+        foreach (var (identity, publicKey) in identities)
+        {
+            WrapFor(folder, access.Header.Id, next, key, identity, publicKey);
+        }
+
+        return access with { Keys = access.Keys.With(next, key) };
+    }
+
     /// <summary>Gives a new vault its first key, wrapped for <paramref name="identity"/> (a server account's): no identity of its own.</summary>
     /// <exception cref="IOException">A file cannot be written.</exception>
     internal static VaultAccess Create(string folder, VaultHeader header, Identity identity, UnlockedIdentity unlocked)
@@ -78,8 +103,9 @@ public static partial class VaultKeys
         return new VaultAccess(header, KeyRing.Of(key), unlocked);
     }
 
-    // Derived from the identity's private key, not random: two devices attaching the vault at once
-    // write the same key, whichever of their files the server keeps; what opened it before cannot.
-    private static byte[] AttachKey(UnlockedIdentity unlocked, Guid vault, int epoch) =>
+    // Derived from the identity's private key, not random: two devices attaching or rotating the
+    // vault at once write the same key, whichever of their files the server keeps; what opened it
+    // before, or a member removed, cannot derive it.
+    private static byte[] DerivedKey(UnlockedIdentity unlocked, Guid vault, int epoch) =>
         HKDF.DeriveKey(HashAlgorithmName.SHA256, unlocked.PrivateKey, SecretBox.KeySize, vault.ToByteArray(), Encoding.ASCII.GetBytes($"kofrenot vault key, epoch {epoch}"));
 }

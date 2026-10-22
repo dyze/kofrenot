@@ -240,6 +240,22 @@ email ─► GET /v1/accounts?email= ─► {id, public}: AccountIdentities.KeyO
 | Reader | The vault opens read only: every change is refused (`VaultSession.CanWrite`); the server refuses its uploads anyway |
 | Who shares | The owner only (the server enforces it), from a vault opened with its account's identity |
 
+#### Members leaving
+A member is removed by the owner (*Members* > *Remove...*), or leaves (*Leave...*: the vault goes out of their list, its copy stays). Then the key is rotated ([design](SERVER-CONCEPT.md#rotation)):
+
+```
+owner's kofrenot: DELETE /members/{account} (or, at its next opening, MembersAsync: a recorded member gone)
+   ─► VaultSharing.Remove: VaultKeys.Rotate (epoch N+1, derived from the owner's private key, wrapped
+      for each member left and the owner) + ChangesRemoved of their records ─► vault.UseKeys(N+1)
+   ─► SyncAsync (the new keys uploaded) ─► PUT /fence {N+1}           (VaultSession.Members.cs)
+other devices, after each sync (VaultSession.AfterSync):
+   ─► keys/epoch-(N+1) wrapped for them: taken up (vault.UseKeys)
+   ─► files refused below the fence (ServerSync.Fenced): Vault.Reseal, same id, latest key; uploaded again
+```
+
+- `ServerSync` sends `Store-Fence` with each upload: the epoch in the file's header (`SealKind.EpochOf`), else (header, keys) the mirror's latest. A `409 fence` leaves the file waiting (`SyncResult.Fenced`), never marked as on the server.
+- A removed member's device: its sync is refused (`403`), shown as "no longer on the server, or no longer shared with you"; what it has stays readable to it.
+
 ### Format
 One number for the whole vault, `VaultFormat.Current`, written in the header and in every change file (`format`). It is not the app version: it only changes when what is written in a vault breaks.
 

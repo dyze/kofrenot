@@ -22,6 +22,13 @@ public sealed class SealKind
 
     private SealKind(string legacy, string magic) => (_legacy, _magic) = (Encoding.ASCII.GetBytes(legacy), Encoding.ASCII.GetBytes(magic));
 
+    /// <summary>The key epoch a sealed file of any kind starts with (since format 6); null for any other file.</summary>
+    public static int? EpochOf(ReadOnlySpan<byte> start) =>
+        start.Length >= HeaderSize && start.StartsWith("KF"u8) && start[3] == (byte)'2'
+        && BinaryPrimitives.ReadUInt32BigEndian(start[SecretBox.MagicSize..]) is var epoch and <= int.MaxValue
+            ? (int)epoch
+            : null;
+
     internal byte[] HeaderOf(int epoch)
     {
         var header = new byte[HeaderSize];
