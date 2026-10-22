@@ -66,3 +66,10 @@ public sealed record DatasetEdited(Guid Id, DateTimeOffset At, Guid Node, Datase
 /// <summary>A new version of a view's definition, held by the change: a view works offline.</summary>
 public sealed record ViewEdited(Guid Id, DateTimeOffset At, Guid Node, ViewDefinition Definition, IReadOnlyList<Guid> Replaces)
     : ContentEdited(Id, At, Node, Replaces);
+
+/// <summary>
+/// Records a member of a shared vault, encrypted like any change, so every member's device knows
+/// who shares it and their keys. A later one for the same account replaces it (a role changed);
+/// removed by a <see cref="ChangesRemoved"/>.
+/// </summary>
+public sealed record MemberAdded(Guid Id, DateTimeOffset At, VaultMember Member) : Change(Id, At);

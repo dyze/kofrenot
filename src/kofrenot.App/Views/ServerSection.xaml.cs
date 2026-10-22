@@ -3,6 +3,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using Kofrenot.Core.Logging;
 using Kofrenot.Core.Server;
+using Kofrenot.Core.Storage;
 using Kofrenot.UI.Sync;
 
 namespace Kofrenot.UI.Views;
@@ -70,6 +71,8 @@ public partial class ServerSection : UserControl
         TooOldText.Visibility = connection.TooOld is null ? Visibility.Collapsed : Visibility.Visible;
         ChangePassPhraseButton.IsEnabled = signedIn && connection.TooOld is null && connection.Identity is not null;
         ChangePasswordButton.IsEnabled = signedIn;
+        KeyText.Text = connection.Identity is { } identity ? $"Your key: {Fingerprint.Of(identity.Identity.PublicKey)}" : string.Empty;
+        KeyText.Visibility = connection.Identity is null ? Visibility.Collapsed : Visibility.Visible;
     }
 
     private void ChangePasswordButton_Click(object sender, RoutedEventArgs e)

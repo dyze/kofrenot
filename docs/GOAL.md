@@ -69,7 +69,7 @@ What could go wrong, and how it is addressed today:
 | A server sending a file outside the vault | Only a vault's file names are accepted from it | Implemented |
 | Pass phrase lost | A recovery key, shown once, unwraps the identity too ([Keys](SERVER-CONCEPT.md#keys)) | Implemented: a folder vault's, or the server account's for its vaults; a new pass phrase is then chosen |
 | A member removed from a shared vault | Server access removed at once, then key rotation: files added later are unreadable to them ([Rotation](SERVER-CONCEPT.md#rotation)) | Planned: 0.7 |
-| A server reading or swapping keys | The server only stores wrapped keys; fingerprints are compared out of band before sharing ([Sharing](SERVER-CONCEPT.md#sharing)) | Planned: 0.7 |
+| A server reading or swapping keys | The server only stores wrapped keys; fingerprints are compared out of band before sharing ([Sharing](SERVER-CONCEPT.md#sharing)) | Implemented |
 
 ## Versioning
 - Format `MAJOR.MINOR`, starting at **0.1**, then 0.2, and so on. No `v` prefix, and no 1.0 until I decide.
@@ -97,7 +97,7 @@ What each version contains: [ROADMAP.md](../ROADMAP.md).
 | Content on demand | Content files are in the vault folder on every device (the sync tool copies them); kofrenot reads one only when needed: a note shown, a dataset exported (since 0.3) |
 | Datasets | A node type holding one file of any size, each import a new version; encrypted in 1 MB chunks, so memory use does not depend on the size (since 0.3) |
 | Server | A generic, blind, write-once store of files with accounts and members, on Linux, knowing nothing of kofrenot so other apps can use it, in its own repository ([kofreserver](https://github.com/dyze/kofreserver)); no email, the admin approves accounts in a JSON file (since 0.6) |
-| Sharing | Complete server vaults, with roles reader, writer and one owner; removing a member rotates the vault key (0.7, planned) |
+| Sharing | Complete server vaults, with roles reader, writer and one owner; removing a member rotates the vault key (0.7: sharing implemented, removal planned) |
 | Keys | Vault keys wrapped for an identity (key pair) unlocked by a pass phrase or a recovery key; same model for folder and server vaults, format 6; a server vault's identity is its account's, one for all its server vaults (since 0.7) |
 | Views | A node type holding a definition (a tree from a root node through a link type, or a list of the nodes of a type), in versions kept in its changes: views work offline (since 0.4) |
 

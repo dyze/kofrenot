@@ -11,7 +11,13 @@ public enum StoreRole
 }
 
 /// <summary>A store on the server, as listed for the signed-in account.</summary>
-public sealed record ServerStore(Guid Id, StoreRole Role, int Files, long Bytes);
+public sealed record ServerStore(Guid Id, StoreRole Role, int Files, long Bytes, long? Fence = null);
+
+/// <summary>A member of a store, by account.</summary>
+public sealed record StoreMember(Guid Account, StoreRole Role);
+
+/// <summary>An account found by email: its id, and the public part of its data (none before it has an identity).</summary>
+public sealed record FoundAccount(Guid Id, byte[]? Public);
 
 /// <summary>The <paramref name="Seq"/>-th file added to a store.</summary>
 public sealed record FeedEntry(long Seq, string Path, long Size);

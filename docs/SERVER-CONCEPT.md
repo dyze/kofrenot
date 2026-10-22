@@ -8,7 +8,8 @@ Decisions: [GOAL.md](GOAL.md#decisions). Built in steps ([ROADMAP.md](../ROADMAP
 | --- | --- | --- |
 | 0.6 | [Accounts](#accounts), stores with their owner only, [Delete](#delete), files and feed of the [REST API](#rest-api-sketch); [Client sync](#client-sync) with every file downloaded; today's keys (format 5) | Implemented |
 | 0.7 | [Keys](#keys): identities, recovery key, pass phrase change, [Format 6](#format-6); the account's identity in its account data, server vaults attached to it, the server's version checked | Implemented ([ARCHITECTURE.md](ARCHITECTURE.md#encryption)); account data, members, fence in [kofreserver](https://github.com/dyze/kofreserver) 0.2 |
-| 0.7 | [Sharing](#sharing), members removed or leaving, [Rotation](#rotation) with the [fence](#fence) | Planned |
+| 0.7 | [Sharing](#sharing) | Implemented ([ARCHITECTURE.md](ARCHITECTURE.md#sharing)) |
+| 0.7 | Members removed or leaving, [Rotation](#rotation) with the [fence](#fence) | Planned |
 | 0.8 | Content on demand and pinned nodes ([Client sync](#client-sync)), batch download, uploads in parts | Planned |
 
 ## Principles
@@ -121,8 +122,7 @@ pass phrase ──PBKDF2──┐                 recovery key (random, shown on
             identity private key  ◄── unwraps ── two wraps of the same key ─┘
                       │  ECDH P-256 + HKDF + AES-GCM
                       ▼
- keys/epoch-N/<identity>   vault key N, wrapped for that identity
- keys/epoch-N/chain        vault key N-1, wrapped by key N
+ keys/epoch-N/<identity>   vault key N, wrapped for that identity: every epoch, for each identity
                       │
                       ▼  key id in every file
           changes/, content/ (AES-256-GCM, as today)
@@ -136,7 +136,7 @@ pass phrase ──PBKDF2──┐                 recovery key (random, shown on
 | Removing a member               | Rotation only (and the user stops sharing the folder)     | Server access removed, then rotation          |
 | Reader role                     | Not enforceable                                           | Enforced by the server                        |
 
-- **Open:** unwrap the identity, then the latest epoch, then the chain: a table *key id → key* in memory. A file access only looks up its key id.
+- **Open:** unwrap the identity, then each epoch wrapped for it: a table *epoch → key* in memory. A file access only looks up its epoch.
 - **Change pass phrase:** wrap the identity again; nothing else changes. A folder vault's identity file is rewritten (`.tmp`, then renamed), like the header today.
 - **Lost pass phrase:** the recovery key unwraps the identity; choose a new pass phrase. Both lost: the data is lost, unless another member shares the vault again with a new identity.
 - **Pass phrase or recovery key leaked:** new identity (key pair), then rotation of every vault it can open. Changing the password only stops access through the server.
@@ -144,9 +144,9 @@ pass phrase ──PBKDF2──┐                 recovery key (random, shown on
 - Built into .NET (`ECDiffieHellman`, `HKDF`, `AesGcm`, `Rfc2898DeriveBytes`): no package.
 
 ### Sharing
-1. The owner looks the member up by email; the server returns their id and public key.
+1. The owner looks the member up by exact email; the server returns their account id and the public part of their data: their identity's id and public key.
 2. kofrenot shows the key's **fingerprint**: owner and member compare it out of band (phone, in person), so a server cannot swap keys.
-3. The current vault key is wrapped for the member (`keys/epoch-N/<member>`), and the member is added with a role.
+3. **Every** epoch's key is wrapped for the member (`keys/epoch-N/<identity>`), a `addMember` change records them in the vault (account, identity, public key, email, role; the owner too, the first time), and the server makes them a member. The records let every device know the members' keys: a rotation never asks the server for them, so it cannot swap one later.
 
 Server vaults only in 0.7. A folder vault (later) is shared the same way, with the member's identity added to `keys/identities/` by their kofrenot.
 
@@ -155,17 +155,17 @@ Done by the owner's kofrenot when a member is removed, or at its next sync after
 
 ```
 1. server: remove the member (server vault)  ─► 403 from now on
-2. new vault key N+1, wrapped for each remaining member + chain (N wrapped by N+1)
+2. new vault key N+1, wrapped for each remaining member (their keys from the vault's records)
 3. server: fence = N+1                       ─► uploads under N refused
 4. every device writes with N+1 once it has synced
 ```
 
 - Files are never re-encrypted: what the removed member already had stays readable to them; what is added after is not.
-- Cost: a few 100-byte files per member and rotation; opening walks the chain once (under 1 ms for dozens of epochs).
+- Cost: a 100-byte file per member and epoch.
 
 ### Format 6
 A breaking change, agreed with the owner (2026-10-20): `VaultFormat.Current` becomes 6.
-- New: `keys/` (identities, epochs, chain) and a key id in every change and content file.
+- New: `keys/` (identities, epochs) and the key epoch in every change and content file.
 - An existing vault is upgraded without rewriting a file: its master key becomes **epoch 0**, a file without a key id is read with it, and `keys/` is added (identity, epoch 0 wrapped for it, recovery key shown). Asked through the existing upgrade question ([ARCHITECTURE.md](ARCHITECTURE.md#upgrade)).
 - **Server vaults** (one pass phrase each in 0.6, or a vault identity of their own when made by an early 0.7 or moved from a folder): opened once with that pass phrase, then **attached** to the account's identity (`VaultKeys.Attach`): every key wrapped for it, then a new epoch for it only, its key derived from the identity's private key so two devices attaching at once write the same. The old pass phrase then opens only the files written before. The account's pass phrase and recovery key are chosen at the first need (a new server vault, or the first attach).
 - **Move to the server:** the folder vault's files are copied as they are; it is attached at its next opening.

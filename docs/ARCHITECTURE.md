@@ -221,6 +221,25 @@ VaultKeys.Unlock(…, account): the account's identity first, then the vault's o
 - **The account's pass phrase** is chosen at the first need (a new server vault, or the first attach), then its recovery key shown once. Changed in Settings > Server (*Pass phrase*: its current one asked, then the new one); after the recovery key unlocks a server vault, a new one is asked too.
 - **Server version**: `GET /v1/version`, at sign-in and at each sync. Below 0.2 (`KofreVersion.Minimum`; a 0.1 server answers 404), Settings > Server says the server is too old, and what needs the account's data is refused (creating, attaching, changing the pass phrase); the files still sync.
 
+#### Sharing
+A server vault is shared by its owner with other accounts on the server ([design](SERVER-CONCEPT.md#sharing)), in Settings > Vault > *Members* > *Share...* (`VaultSession.Share`, `ShareDialog`):
+
+```
+email ─► GET /v1/accounts?email= ─► {id, public}: AccountIdentities.KeyOf ─► ShareCandidate
+       ─► Fingerprint.Of(public key), compared out of band ─► "They read the same fingerprint"
+       ─► VaultSharing.Share: VaultKeys.Share (every epoch wrapped for their identity)
+                              + addMember changes (the owner's record the first time, then theirs)
+       ─► PUT /v1/stores/{id}/members/{account} {role} ─► sync uploads the key files and changes
+```
+
+| | |
+| --- | --- |
+| Members | Recorded in the vault (`MemberAdded`: account, identity, public key, email, role; the latest per account wins; removed by `ChangesRemoved`), listed in Settings > Vault with their fingerprint |
+| Fingerprint | First 160 bits of the SHA-256 of the public key, 8 groups of 4 Base32 characters; the account's own in Settings > Server (*Your key*) |
+| Member's side | The store appears in *Vault from the server…*; it opens with the member's own account pass phrase (their identity's wraps) |
+| Reader | The vault opens read only: every change is refused (`VaultSession.CanWrite`); the server refuses its uploads anyway |
+| Who shares | The owner only (the server enforces it), from a vault opened with its account's identity |
+
 ### Format
 One number for the whole vault, `VaultFormat.Current`, written in the header and in every change file (`format`). It is not the app version: it only changes when what is written in a vault breaks.
 

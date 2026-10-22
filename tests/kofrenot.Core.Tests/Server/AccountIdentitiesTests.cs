@@ -93,6 +93,18 @@ public sealed class AccountIdentitiesTests : IDisposable
     }
 
     [Fact]
+    public void AnAccountsKey_IsReadFromItsPublicPart_OrNone()
+    {
+        var id = Guid.NewGuid();
+
+        Assert.Equal(id, AccountIdentities.KeyOf(JsonSerializer.SerializeToUtf8Bytes(new AccountKey(id, [1, 2])))?.Id);
+        Assert.Null(AccountIdentities.KeyOf(null));
+        Assert.Null(AccountIdentities.KeyOf("{ not json"u8.ToArray()));
+        Assert.Null(AccountIdentities.KeyOf(JsonSerializer.SerializeToUtf8Bytes(new AccountKey(Guid.Empty, [1]))));
+        Assert.Null(AccountIdentities.KeyOf(JsonSerializer.SerializeToUtf8Bytes(new { Id = id })));
+    }
+
+    [Fact]
     public void ADamagedCopy_IsNone_AndLogged()
     {
         Directory.CreateDirectory(_temp.Path);

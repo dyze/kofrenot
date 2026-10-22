@@ -50,6 +50,25 @@ public static partial class VaultKeys
         return new VaultAccess(access.Header, access.Keys.With(next, key), unlocked);
     }
 
+    /// <summary>
+    /// Shares the vault with a member's identity: every key of <paramref name="access"/> wrapped for
+    /// it, so they read all its files. Keys already wrapped for it are left as they are.
+    /// </summary>
+    /// <exception cref="InvalidOperationException"><paramref name="access"/> does not hold the latest epoch.</exception>
+    /// <exception cref="IOException">A file cannot be written.</exception>
+    public static void Share(string folder, VaultAccess access, Guid identity, byte[] publicKey)
+    {
+        if (!IsCurrent(folder, access))
+        {
+            throw new InvalidOperationException("The vault has keys newer than the ones it was opened with");
+        }
+
+        foreach (var epoch in access.Keys.Epochs)
+        {
+            WrapFor(folder, access.Header.Id, epoch, access.Keys.KeyOf(epoch), identity, publicKey);
+        }
+    }
+
     /// <summary>Gives a new vault its first key, wrapped for <paramref name="identity"/> (a server account's): no identity of its own.</summary>
     /// <exception cref="IOException">A file cannot be written.</exception>
     internal static VaultAccess Create(string folder, VaultHeader header, Identity identity, UnlockedIdentity unlocked)

@@ -154,6 +154,11 @@ public sealed partial class VaultSession : IDisposable
 
     private AddPlan? Create(Window owner, Vault vault, CreationForm form, string? file = null)
     {
+        if (!CanWrite(owner))
+        {
+            return null;
+        }
+
         if (!CreationDialog.Ask(owner, form, file))
         {
             _log.Info("Action", "Creation cancelled");
@@ -190,7 +195,7 @@ public sealed partial class VaultSession : IDisposable
     /// </summary>
     public async Task<bool> SaveDataset(Window owner, DatasetEdited version, Func<Stream> open, IProgress<long>? progress = null)
     {
-        if (Current is not { } vault || !_importing.Add(version.Node))
+        if (Current is not { } vault || !CanWrite(owner) || !_importing.Add(version.Node))
         {
             return false;
         }
@@ -318,7 +323,7 @@ public sealed partial class VaultSession : IDisposable
     /// </summary>
     public async Task<bool> Copy(Window owner, CopyPlan plan)
     {
-        if (Current is not { } vault)
+        if (Current is not { } vault || !CanWrite(owner))
         {
             return false;
         }
@@ -345,6 +350,11 @@ public sealed partial class VaultSession : IDisposable
     /// <summary>Writes the changes, then the note versions (each content file, then its change).</summary>
     private bool Append(Window owner, Vault vault, IReadOnlyList<Change> changes, string action, IReadOnlyList<NoteToSave>? notes = null)
     {
+        if (!CanWrite(owner))
+        {
+            return false;
+        }
+
         try
         {
             foreach (var change in changes)

@@ -31,6 +31,12 @@
 
     <TextBlock x:Name="StatusText" Margin="110,10,0,0" Opacity="0.8" TextWrapping="Wrap" />
 
+    <TextBlock x:Name="KeyText"
+               Margin="110,6,0,0"
+               Opacity="0.8"
+               TextWrapping="Wrap"
+               ToolTip="Read it to whoever shares a vault with you: they see the same, or the server gave them another key" />
+
     <TextBlock x:Name="TooOldText"
                Margin="110,6,0,0"
                Foreground="{DynamicResource SystemFillColorCriticalBrush}"

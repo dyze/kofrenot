@@ -137,13 +137,16 @@ public static partial class VaultKeys
     }
 
     /// <summary>Writes the vault's key of <paramref name="epoch"/> wrapped for <paramref name="identity"/>, unless it is there already.</summary>
-    private static void WrapFor(string folder, Guid vault, int epoch, byte[] key, Identity identity)
+    private static void WrapFor(string folder, Guid vault, int epoch, byte[] key, Identity identity) =>
+        WrapFor(folder, vault, epoch, key, identity.Id, identity.PublicKey);
+
+    private static void WrapFor(string folder, Guid vault, int epoch, byte[] key, Guid identity, byte[] publicKey)
     {
-        var path = WrapOf(folder, epoch, identity.Id);
+        var path = WrapOf(folder, epoch, identity);
         if (!File.Exists(path))
         {
             Directory.CreateDirectory(Path.GetDirectoryName(path)!);
-            AtomicFile.Write(path, EpochKeys.Wrap(key, identity.PublicKey, vault, epoch, identity.Id), overwrite: false);
+            AtomicFile.Write(path, EpochKeys.Wrap(key, publicKey, vault, epoch, identity), overwrite: false);
         }
     }
 

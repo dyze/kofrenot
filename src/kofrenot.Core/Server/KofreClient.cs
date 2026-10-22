@@ -113,6 +113,37 @@ public sealed class KofreClient(HttpClient http, ServerSession? session = null, 
         return version;
     }
 
+    /// <summary>The active account with this exact email (any case); null when there is none.</summary>
+    /// <exception cref="ServerException">Too many lookups (<see cref="ServerFailure.TooManyRequests"/>), or the call failed.</exception>
+    public async Task<FoundAccount?> FindAccountAsync(string email, CancellationToken cancel = default)
+    {
+        try
+        {
+            using var response = await SendAsync(() => new HttpRequestMessage(HttpMethod.Get, $"v1/accounts?email={Uri.EscapeDataString(email)}"), authorized: true, cancel);
+            return await Read<FoundAccount>(response, cancel);
+        }
+        catch (ServerException ex) when (ex.Failure == ServerFailure.NotFound)
+        {
+            return null;
+        }
+    }
+
+    public async Task<IReadOnlyList<StoreMember>> MembersAsync(Guid store, CancellationToken cancel = default)
+    {
+        using var response = await SendAsync(() => new HttpRequestMessage(HttpMethod.Get, $"v1/stores/{store}/members"), authorized: true, cancel);
+        return await Read<List<StoreMember>>(response, cancel);
+    }
+
+    /// <summary>Makes an account a member of the store (the caller its owner), or changes its role.</summary>
+    public async Task SetMemberAsync(Guid store, Guid account, StoreRole role, CancellationToken cancel = default)
+    {
+        using var _ = await SendAsync(
+            () => new HttpRequestMessage(HttpMethod.Put, $"v1/stores/{store}/members/{account}") { Content = JsonContent.Create(new { role }, options: Json) },
+            authorized: true,
+            cancel);
+        _log.Info(Category, $"Store {store}: {account} made {role}");
+    }
+
     public async Task<IReadOnlyList<ServerStore>> ListStoresAsync(CancellationToken cancel = default)
     {
         using var response = await SendAsync(() => new HttpRequestMessage(HttpMethod.Get, "v1/stores"), authorized: true, cancel);

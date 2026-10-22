@@ -3,6 +3,7 @@ using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using Kofrenot.Core.Graph;
 using Kofrenot.Core.Input;
 using Kofrenot.Core.Logging;
 using Kofrenot.Core.Settings;
@@ -135,6 +136,7 @@ public partial class VaultsSection : UserControl
         // A server vault's identity is written once in its store: its pass phrase cannot change yet.
         PassPhrasePanel.Visibility = onServer ? Visibility.Collapsed : Visibility.Visible;
         ChangePassPhraseButton.IsEnabled = open && session.CanChangePassPhrase;
+        ShowMembers(session, onServer && open);
 
         var remembered = session.IsRemembered(vault);
         RememberedText.Text = remembered ? "The pass phrase is remembered on this computer." : "The pass phrase is not remembered.";
@@ -454,6 +456,29 @@ public partial class VaultsSection : UserControl
         {
             Log.Error("Action", $"Cannot open {folder}", ex);
             MessageDialog.Inform(Owner, ex.Message);
+        }
+    }
+
+    // The open server vault's members, as recorded in it: email, role, fingerprint.
+    private void ShowMembers(VaultSession session, bool shown)
+    {
+        MembersPanel.Visibility = shown ? Visibility.Visible : Visibility.Collapsed;
+        var members = shown ? session.Members : [];
+        MembersList.ItemsSource = members
+            .OrderBy(member => member.Role == MemberRole.Owner ? 0 : 1)
+            .ThenBy(member => member.Email, StringComparer.CurrentCultureIgnoreCase)
+            .Select(member => $"{member.Email} · {member.Role.ToString().ToLowerInvariant()} · {Fingerprint.Of(member.PublicKey)}")
+            .ToList();
+        NotSharedText.Visibility = members.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+        ShareButton.IsEnabled = session.CanShare;
+    }
+
+    private async void ShareButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (_session is { } session)
+        {
+            await session.Share(Owner);
+            ShowChosen();
         }
     }
 

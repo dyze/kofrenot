@@ -353,6 +353,24 @@ public sealed class KofreClientTests
         Assert.Equal("access-1", client.Session!.AccessToken);
     }
 
+    [Fact]
+    public async Task AStoresMembers_AreReadAndSet()
+    {
+        var store = Guid.NewGuid();
+        var account = Guid.NewGuid();
+        var stub = new StubHandler(request => request.Method == HttpMethod.Get
+            ? Json(HttpStatusCode.OK, $$"""[{"account":"{{account}}","role":"writer"}]""")
+            : new HttpResponseMessage(HttpStatusCode.NoContent));
+        var client = Client(stub);
+
+        var members = await client.MembersAsync(store);
+        await client.SetMemberAsync(store, account, StoreRole.Reader);
+
+        Assert.Equal([new StoreMember(account, StoreRole.Writer)], members);
+        Assert.Equal((HttpMethod.Put, $"/v1/stores/{store}/members/{account}"), (stub.Requests[1].Method, stub.Requests[1].Path));
+        Assert.Contains("\"role\":\"reader\"", stub.Requests[1].Body);
+    }
+
     private KofreClient Client(StubHandler stub) => Client(stub, Valid);
 
     private KofreClient Client(StubHandler stub, ServerSession? session) => new(stub.Client(), session, _clock, _log);

@@ -87,13 +87,25 @@ public sealed class AccountIdentities(string path, ILog? log = null)
     }
 
     private static Task<long> WriteAsync(KofreClient client, long replaces, Identity identity, CancellationToken cancel) =>
-        client.WriteAccountDataAsync(replaces, JsonSerializer.SerializeToUtf8Bytes(new PublicIdentity(identity.Id, identity.PublicKey)), identity.ToJson(), cancel);
+        client.WriteAccountDataAsync(replaces, JsonSerializer.SerializeToUtf8Bytes(new AccountKey(identity.Id, identity.PublicKey)), identity.ToJson(), cancel);
 
     private void Keep(AccountIdentity identity) =>
         _file.Save(new KeptFile { Server = identity.Server, Email = identity.Email, Version = identity.Version, Identity = identity.Identity.ToJson() });
 
-    /// <summary>The public part of the account's data: what another account needs to share a vault with it.</summary>
-    private sealed record PublicIdentity(Guid Id, byte[] PublicKey);
+    /// <summary>The identity in the public part of an account's data (another account's, found to share a vault with); null when there is none.</summary>
+    public static AccountKey? KeyOf(byte[]? publicPart)
+    {
+        try
+        {
+            return publicPart is null ? null
+                : JsonSerializer.Deserialize<AccountKey>(publicPart) is { PublicKey.Length: > 0 } key && key.Id != Guid.Empty ? key
+                : null;
+        }
+        catch (JsonException)
+        {
+            return null;
+        }
+    }
 
     private sealed class KeptFile
     {
@@ -106,3 +118,9 @@ public sealed class AccountIdentities(string path, ILog? log = null)
         public byte[]? Identity { get; set; }
     }
 }
+
+/// <summary>
+/// The public part of a server account's data: its identity's id and public key, what another
+/// account needs to share a vault with it.
+/// </summary>
+public sealed record AccountKey(Guid Id, byte[] PublicKey);

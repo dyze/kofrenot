@@ -21,7 +21,8 @@ internal sealed record ChangeData(
     ChangeData.ViewData? View = null,
     List<Guid>? Removes = null,
     ChangeData.VaultNameData? Vault = null,
-    ChangeData.RetypeData? Retype = null)
+    ChangeData.RetypeData? Retype = null,
+    ChangeData.MemberData? Member = null)
 {
     private const string NodeAddedOp = "addNode";
     private const string LinkAddedOp = "addLink";
@@ -34,6 +35,7 @@ internal sealed record ChangeData(
     private const string ViewEditedOp = "editView";
     private const string VaultNamedOp = "nameVault";
     private const string NodeRetypedOp = "retypeNode";
+    private const string MemberAddedOp = "addMember";
 
     public static ChangeData From(Change change) => change switch
     {
@@ -48,6 +50,7 @@ internal sealed record ChangeData(
         ViewEdited view => new(VaultFormat.Current, ViewEditedOp, view.At, View: ViewData.From(view)),
         VaultNamed name => new(VaultFormat.Current, VaultNamedOp, name.At, Vault: new VaultNameData(name.Name, [.. name.Replaces])),
         NodeRetyped retype => new(VaultFormat.Current, NodeRetypedOp, retype.At, Retype: new RetypeData(retype.Node, retype.Type, [.. retype.Replaces])),
+        MemberAdded added => new(VaultFormat.Current, MemberAddedOp, added.At, Member: MemberData.From(added.Member)),
         _ => throw new ArgumentOutOfRangeException(nameof(change), change.GetType().Name, "Unknown change"),
     };
 
@@ -79,6 +82,7 @@ internal sealed record ChangeData(
                 => new VaultNamed(id, At, name, replaces),
             NodeRetypedOp when Retype is { Type: { Length: > 0 } type, Replaces: { Count: > 0 } replaces } && Retype.Node != Guid.Empty
                 => new NodeRetyped(id, At, Retype.Node, type, replaces),
+            MemberAddedOp when Member?.ToMember() is { } member => new MemberAdded(id, At, member),
             _ => throw new InvalidDataException($"Unknown or incomplete change '{Op}'"),
         };
     }
@@ -150,6 +154,19 @@ internal sealed record ChangeData(
 
     /// <summary><c>"vault": { "name": "Personal", "replaces": ["…"] }</c></summary>
     internal sealed record VaultNameData(string? Name, List<Guid>? Replaces);
+
+    /// <summary><c>"member": { "account": "…", "identity": "…", "publicKey": "…", "email": "…", "role": "writer" }</c></summary>
+    internal sealed record MemberData(Guid Account, Guid Identity, byte[]? PublicKey, string? Email, string? Role)
+    {
+        public static MemberData From(VaultMember member) => new(member.Account, member.Identity, member.PublicKey, member.Email, member.Role.ToString().ToLowerInvariant());
+
+        /// <summary>The member, or null when incomplete.</summary>
+        public VaultMember? ToMember() =>
+            Account != Guid.Empty && Identity != Guid.Empty && PublicKey is { Length: > 0 } && !string.IsNullOrWhiteSpace(Email)
+            && Enum.TryParse<MemberRole>(Role, ignoreCase: true, out var role) && Enum.IsDefined(role)
+                ? new VaultMember(Account, Identity, PublicKey, Email, role)
+                : null;
+    }
 
     /// <summary><c>"query": { "root": "…", "linkType": "contains" }</c> or <c>"query": { "nodeType": "note" }</c></summary>
     internal sealed record QueryData(Guid? Root = null, string? LinkType = null, string? NodeType = null);
