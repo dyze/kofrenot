@@ -327,6 +327,32 @@ public sealed class KofreClientTests
         Assert.Equal([2], data.Private);
     }
 
+    [Fact]
+    public async Task AChangedPassword_KeepsTheNewSession_TheCurrentOneGivenAgain()
+    {
+        var stub = new StubHandler(_ => Json(HttpStatusCode.OK, Session));
+        var client = Client(stub);
+
+        await client.ChangePasswordAsync("old password", "new password!");
+
+        Assert.Equal((HttpMethod.Put, "/v1/accounts/me/password", "old password"), (stub.Requests[0].Method, stub.Requests[0].Path, stub.Requests[0].Password));
+        Assert.Contains("\"password\":\"new password!\"", stub.Requests[0].Body);
+        Assert.Equal("access-2", client.Session!.AccessToken);
+        Assert.Contains(_log.Entries, entry => entry.Level == LogLevel.Info && entry.Message.Contains("Password changed"));
+        Assert.DoesNotContain(_log.Entries, entry => entry.Message.Contains("password!") || entry.Message.Contains("old password"));
+    }
+
+    [Fact]
+    public async Task AWrongCurrentPassword_IsRefused_AndTheSessionKept()
+    {
+        var client = Client(new StubHandler(_ => Json(HttpStatusCode.Forbidden, """{"error":"wrong-password"}""")));
+
+        var error = await Assert.ThrowsAsync<ServerException>(() => client.ChangePasswordAsync("wrong", "new password!"));
+
+        Assert.Equal((ServerFailure.Refused, "wrong-password"), (error.Failure, error.Code));
+        Assert.Equal("access-1", client.Session!.AccessToken);
+    }
+
     private KofreClient Client(StubHandler stub) => Client(stub, Valid);
 
     private KofreClient Client(StubHandler stub, ServerSession? session) => new(stub.Client(), session, _clock, _log);

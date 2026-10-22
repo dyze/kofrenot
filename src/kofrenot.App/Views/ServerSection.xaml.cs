@@ -69,6 +69,37 @@ public partial class ServerSection : UserControl
         TooOldText.Text = connection.TooOld ?? string.Empty;
         TooOldText.Visibility = connection.TooOld is null ? Visibility.Collapsed : Visibility.Visible;
         ChangePassPhraseButton.IsEnabled = signedIn && connection.TooOld is null && connection.Identity is not null;
+        ChangePasswordButton.IsEnabled = signedIn;
+    }
+
+    private void ChangePasswordButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (_connection is not { Client: { } client, Account: { } account })
+        {
+            return;
+        }
+
+        Log.Info("Action", "Change the server password");
+        if (PasswordDialog.Ask(Window.GetWindow(this), $"{account.Email} on {account.Server.Host}", async (current, password) =>
+        {
+            try
+            {
+                await client.ChangePasswordAsync(current, password);
+                return null;
+            }
+            catch (ServerException ex)
+            {
+                Log.Warn("Action", $"Password change refused: {ex.Message}");
+                return Explain(ex);
+            }
+        }))
+        {
+            StatusText.Text = "Password changed: sign in with it on your other devices.";
+        }
+        else
+        {
+            Log.Info("Action", "Password change cancelled");
+        }
     }
 
     private void ChangePassPhraseButton_Click(object sender, RoutedEventArgs e) => ChangePassPhrase?.Invoke(Window.GetWindow(this));
@@ -136,6 +167,7 @@ public partial class ServerSection : UserControl
         (_, "sign-up-closed") => "The server takes no new account for now: ask its admin.",
         (_, "invalid-email") => "This email is not valid.",
         (_, "weak-password") => "The password needs at least 10 characters.",
+        (_, "wrong-password") => "The current password is not this one.",
         (ServerFailure.TooManyRequests, _) => "Too many attempts: try again in a minute.",
         _ => $"The server failed ({ex.Message}).",
     };

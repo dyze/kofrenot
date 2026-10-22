@@ -52,6 +52,25 @@ public sealed class KofreClient(HttpClient http, ServerSession? session = null, 
         _log.Info(Category, $"Signed in on {Server}");
     }
 
+    /// <summary>
+    /// Changes the account's password, the current one given again. The server ends the account's
+    /// other sessions and starts a new one, kept here.
+    /// </summary>
+    /// <exception cref="ServerException">A wrong current password (<see cref="ServerFailure.Refused"/>), a weak new one (<see cref="ServerFailure.Failed"/>), or a failed call.</exception>
+    public async Task ChangePasswordAsync(string current, string password, CancellationToken cancel = default)
+    {
+        using var response = await SendAsync(
+            () => new HttpRequestMessage(HttpMethod.Put, "v1/accounts/me/password")
+            {
+                Content = JsonContent.Create(new { password }, options: Json),
+                Headers = { { PasswordHeader, current } },
+            },
+            authorized: true,
+            cancel);
+        SetSession(await Read<ServerSession>(response, cancel));
+        _log.Info(Category, $"Password changed on {Server}, the other sessions ended");
+    }
+
     /// <summary>Forgets the session on this device; the server's refresh token expires on its own.</summary>
     public void SignOut()
     {

@@ -17,7 +17,6 @@ Scope of each planned version. Implemented features move to [CHANGELOG.md](CHANG
 ## 0.7 (to define)
 1. **Share complete server vaults** with other users (reader or writer), found by their exact email, after checking the key's fingerprint. A vault has one owner, its creator.
 2. **Remove a member.** Server access removed at once, then key rotation and fence: files added later are unreadable to them. A member can also leave a vault: the key is rotated the same way.
-3. **Change the account's password** on the server.
 
 ## 0.8 (to define)
 1. **Content on demand.** A server vault downloads change files at once, content only when shown or exported.

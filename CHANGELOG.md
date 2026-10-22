@@ -10,6 +10,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **Recovery key**: shown once when a vault is created or upgraded, it opens the vault when its pass phrase is lost (*Lost it? Use the recovery key* when unlocking); a folder vault then asks a new pass phrase.
 - **Change the pass phrase** of a folder vault: Settings > Vault > *Pass phrase* > *Change...*, the vault open. The recovery key and the remembered pass phrase stay valid.
 - **Server account's pass phrase**: one pass phrase, and one recovery key, open all your server vaults. Chosen with your first new server vault (or when an older one moves to it), changed in Settings > Server > *Pass phrase*. Kept, sealed, in your account on the server, and copied on each computer so server vaults open offline.
+- **Change the server password**: Settings > Server > *Password* > *Change...*, the current one asked again. Your other devices are signed out.
 - **Server too old**: Settings > Server says when the server runs a version older than 0.2; your server vaults still sync, but cannot move to the account's pass phrase until it is upgraded.
 
 ### Changed

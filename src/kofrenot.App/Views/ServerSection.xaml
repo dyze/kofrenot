@@ -38,6 +38,16 @@
                Visibility="Collapsed" />
 
     <StackPanel Margin="0,14,0,0" Orientation="Horizontal">
+      <TextBlock Width="110" VerticalAlignment="Center" Text="Password" />
+      <Button x:Name="ChangePasswordButton"
+              Padding="12,4"
+              Content="Change..."
+              ToolTip="The password that signs in to the server: your other devices are then signed out"
+              ToolTipService.ShowOnDisabled="True"
+              Click="ChangePasswordButton_Click" />
+    </StackPanel>
+
+    <StackPanel Margin="0,8,0,0" Orientation="Horizontal">
       <TextBlock Width="110" VerticalAlignment="Center" Text="Pass phrase" />
       <Button x:Name="ChangePassPhraseButton"
               Padding="12,4"
