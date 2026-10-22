@@ -122,7 +122,7 @@ pass phrase ──PBKDF2──┐                 recovery key (random, shown on
             identity private key  ◄── unwraps ── two wraps of the same key ─┘
                       │  ECDH P-256 + HKDF + AES-GCM
                       ▼
- keys/epoch-N/<identity>   vault key N, wrapped for that identity: every epoch, for each identity
+ keys/epoch-N/<identity>.<random>.kfw   vault key N, wrapped for that identity, signed by its writer: every epoch, for each identity
                       │
                       ▼  key id in every file
           changes/, content/ (AES-256-GCM, as today)
@@ -147,6 +147,8 @@ pass phrase ──PBKDF2──┐                 recovery key (random, shown on
 1. The owner looks the member up by exact email; the server returns their account id and the public part of their data: their identity's id and public key.
 2. kofrenot shows the key's **fingerprint**: owner and member compare it out of band (phone, in person), so a server cannot swap keys.
 3. **Every** epoch's key is wrapped for the member (`keys/epoch-N/<identity>`), a `addMember` change records them in the vault (account, identity, public key, email, role; the owner too, the first time), and the server makes them a member. The records let every device know the members' keys: a rotation never asks the server for them, so it cannot swap one later.
+4. **Only the owner** changes who reads the vault: it signs the epoch wraps (`KFW2`) and the member records (`addMember`, `removeMember`) with a signing key derived from its identity. Devices use only what the owner signed: a writer can neither plant a key nor add or drop a member. Each wrap file has a random part in its name, so no member can take the name the owner writes next (files on the server are written once).
+5. **The owner** is, on its own devices, this account; on a member's, the store's owner on the server, read once with its public keys and kept. Its fingerprint is listed among the members: the member can compare it with the owner too.
 
 Server vaults only in 0.7. A folder vault (later) is shared the same way, with the member's identity added to `keys/identities/` by their kofrenot.
 

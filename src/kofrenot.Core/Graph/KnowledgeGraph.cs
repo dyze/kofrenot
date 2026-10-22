@@ -26,7 +26,7 @@ public sealed class KnowledgeGraph
     private readonly ContentVersions<DatasetEdited> _datasets = new();
     private readonly ContentVersions<ViewEdited> _views = new();
     private readonly Dictionary<Guid, VaultNamed> _vaultNames = [];
-    private readonly RemovableChanges<MemberAdded> _members;
+    private readonly Dictionary<Guid, Change> _memberChanges = [];
 
     public KnowledgeGraph(TypeCatalog? types = null)
     {
@@ -34,7 +34,6 @@ public sealed class KnowledgeGraph
         Aliases = new LinkAliases(catalog, _removed);
         _links = new LinkIndex(catalog, _removed);
         _pins = new RemovableChanges<NodePinned>(_removed);
-        _members = new RemovableChanges<MemberAdded>(_removed);
     }
 
     /// <summary>The link types, with the user's aliases: what the input box reads.</summary>
@@ -64,7 +63,7 @@ public sealed class KnowledgeGraph
         DatasetEdited version => _datasets.Add(version),
         ViewEdited version => _views.Add(version),
         VaultNamed name => _vaultNames.TryAdd(name.Id, name),
-        MemberAdded member => _members.Add(member),
+        MemberAdded or MemberRemoved => _memberChanges.TryAdd(change.Id, change),
         _ => throw new ArgumentOutOfRangeException(nameof(change), change.GetType().Name, "Unknown change"),
     };
 
@@ -95,13 +94,11 @@ public sealed class KnowledgeGraph
     /// <summary>The vault's name shown: the latest current one; null before it is named.</summary>
     public string? VaultName => VaultNames.LastOrDefault()?.Name;
 
-    /// <summary>The members of a shared vault, each by its latest record; none before it is shared.</summary>
-    public IReadOnlyList<VaultMember> Members =>
-        _members.Current.GroupBy(added => added.Member.Account).Select(records => records.Last().Member).ToList();
-
-    /// <summary>The records of a member (to remove them all).</summary>
-    public IReadOnlyList<Guid> MemberRecordsOf(Guid account) =>
-        _members.Current.Where(added => added.Member.Account == account).Select(added => added.Id).ToList();
+    /// <summary>
+    /// The records of a shared vault's members, added and removed, as written: not checked. Its
+    /// members are the ones its owner signed (<c>VaultSharing.Members</c>).
+    /// </summary>
+    public IReadOnlyCollection<Change> MemberChanges => _memberChanges.Values;
 
     /// <summary>The pins of a node: several when it was pinned on two devices. Unpinning removes them all.</summary>
     public IReadOnlyList<Guid> PinsOf(Guid node) =>

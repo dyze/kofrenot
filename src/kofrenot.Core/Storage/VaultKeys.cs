@@ -28,13 +28,13 @@ public static partial class VaultKeys
     /// key. Null when the pass phrase is wrong.
     /// </summary>
     /// <exception cref="InvalidDataException">The identity opens, but no key of the vault is wrapped for it.</exception>
-    public static VaultAccess? Unlock(string folder, VaultHeader header, string passPhrase, ILog? log = null, Identity? account = null)
+    public static VaultAccess? Unlock(string folder, VaultHeader header, string passPhrase, ILog? log = null, Identity? account = null, KeySigner? signer = null)
     {
         foreach (var identity in IdentitiesOf(folder, log, account))
         {
             if (identity.Unlock(passPhrase) is { } unlocked)
             {
-                return Open(folder, header, unlocked);
+                return Open(folder, header, unlocked, signer);
             }
         }
 
@@ -43,14 +43,14 @@ public static partial class VaultKeys
 
     /// <summary>Unlocks the vault with the recovery key of one of its identities (or of <paramref name="account"/>); null when it is none of theirs.</summary>
     /// <exception cref="InvalidDataException">The identity opens, but no key of the vault is wrapped for it.</exception>
-    public static VaultAccess? Unlock(string folder, VaultHeader header, RecoveryKey recovery, ILog? log = null, Identity? account = null) =>
+    public static VaultAccess? Unlock(string folder, VaultHeader header, RecoveryKey recovery, ILog? log = null, Identity? account = null, KeySigner? signer = null) =>
         IdentitiesOf(folder, log, account).Select(identity => identity.Unlock(recovery)).FirstOrDefault(unlocked => unlocked is not null) is { } found
-            ? Open(folder, header, found)
+            ? Open(folder, header, found, signer)
             : null;
 
     /// <summary>Unlocks the vault with an identity already unlocked (remembered); null when no key of the vault is wrapped for it.</summary>
-    public static VaultAccess? Unlock(string folder, VaultHeader header, UnlockedIdentity identity, ILog? log = null) =>
-        RingOf(folder, header, identity, log) is { } keys ? new VaultAccess(header, keys, identity) : null;
+    public static VaultAccess? Unlock(string folder, VaultHeader header, UnlockedIdentity identity, ILog? log = null, KeySigner? signer = null) =>
+        RingOf(folder, header, identity, log, signer) is { } keys ? new VaultAccess(header, keys, identity) : null;
 
     /// <summary>
     /// Gives a vault its keys: a new identity sealed by <paramref name="passPhrase"/>, and
@@ -60,7 +60,7 @@ public static partial class VaultKeys
     public static (VaultAccess Access, RecoveryKey Recovery) Create(string folder, VaultHeader header, byte[] key, string passPhrase, int iterations = KeyWrap.DefaultIterations)
     {
         var (identity, unlocked, recovery) = Identity.Create(passPhrase, iterations);
-        WrapFor(folder, header.Id, 0, key, identity);
+        WrapFor(folder, header.Id, 0, key, identity, unlocked);
 
         // The identity last: one found always has its key.
         var identityPath = IdentityOf(folder, identity.Id);
@@ -101,54 +101,8 @@ public static partial class VaultKeys
         return access with { Header = header };
     }
 
-    private static VaultAccess Open(string folder, VaultHeader header, UnlockedIdentity identity) =>
-        Unlock(folder, header, identity) ?? throw new InvalidDataException("No key of the vault is wrapped for this identity");
-
-    private static KeyRing? RingOf(string folder, VaultHeader header, UnlockedIdentity identity, ILog? log)
-    {
-        var keys = new Dictionary<int, byte[]>();
-        foreach (var epoch in EpochsOf(folder))
-        {
-            if (WrapOf(folder, epoch, identity.Id) is var path && File.Exists(path))
-            {
-                try
-                {
-                    keys[epoch] = EpochKeys.Unwrap(File.ReadAllBytes(path), identity, header.Id, epoch);
-                }
-                catch (Exception ex) when (ex is InvalidDataException or IOException or UnauthorizedAccessException)
-                {
-                    log?.Warn(Category, $"The key of epoch {epoch} of vault {header.Id} cannot be read: {ex.Message}");
-                }
-            }
-        }
-
-        return keys.Count > 0 ? new KeyRing(keys) : null;
-    }
-
-    /// <summary>The epochs of the vault's keys (<c>keys/epoch-N</c>).</summary>
-    private static IEnumerable<int> EpochsOf(string folder)
-    {
-        var keysFolder = VaultFolder.KeysOf(folder);
-        return Directory.Exists(keysFolder)
-            ? Directory.EnumerateDirectories(keysFolder, EpochPrefix + "*")
-                .Select(epochFolder => int.TryParse(Path.GetFileName(epochFolder)[EpochPrefix.Length..], out var epoch) ? epoch : -1)
-                .Where(epoch => epoch >= 0)
-            : [];
-    }
-
-    /// <summary>Writes the vault's key of <paramref name="epoch"/> wrapped for <paramref name="identity"/>, unless it is there already.</summary>
-    private static void WrapFor(string folder, Guid vault, int epoch, byte[] key, Identity identity) =>
-        WrapFor(folder, vault, epoch, key, identity.Id, identity.PublicKey);
-
-    private static void WrapFor(string folder, Guid vault, int epoch, byte[] key, Guid identity, byte[] publicKey)
-    {
-        var path = WrapOf(folder, epoch, identity);
-        if (!File.Exists(path))
-        {
-            Directory.CreateDirectory(Path.GetDirectoryName(path)!);
-            AtomicFile.Write(path, EpochKeys.Wrap(key, publicKey, vault, epoch, identity), overwrite: false);
-        }
-    }
+    private static VaultAccess Open(string folder, VaultHeader header, UnlockedIdentity identity, KeySigner? signer) =>
+        Unlock(folder, header, identity, signer: signer) ?? throw new InvalidDataException("No key of the vault is wrapped for this identity");
 
     // The account's identity first, then the vault's own.
     private static IEnumerable<Identity> IdentitiesOf(string folder, ILog? log, Identity? account) =>
@@ -183,7 +137,4 @@ public static partial class VaultKeys
 
     private static string IdentityOf(string folder, Guid identity) =>
         Path.Combine(VaultFolder.KeysOf(folder), IdentitiesFolder, identity.ToString("N") + IdentityExtension);
-
-    private static string WrapOf(string folder, int epoch, Guid identity) =>
-        Path.Combine(VaultFolder.KeysOf(folder), EpochPrefix + epoch, identity.ToString("N") + WrapExtension);
 }

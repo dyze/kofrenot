@@ -149,7 +149,7 @@ Model and principles: [GOAL.md](GOAL.md#data-model).
   kofrenot-vault.json      header, plain JSON: format, vault id (up to format 5: KDF salt + iterations, wrapped master key)
   keys/                    since format 6 (Encryption)
     identities/9e1c….json  an identity: public key, private key sealed by the pass phrase and by the recovery key
-    epoch-0/9e1c….kfw      the vault key of epoch 0, wrapped for that identity, written once
+    epoch-0/9e1c….3f0a….kfw the vault key of epoch 0, wrapped for that identity, signed by who wrote it, written once
   changes/
     3f/3f9c…e1.kfc         one encrypted change, named by a random id, written once
     a0/a07b…42.kfc
@@ -234,8 +234,9 @@ email ─► GET /v1/accounts?email= ─► {id, public}: AccountIdentities.KeyO
 
 | | |
 | --- | --- |
-| Members | Recorded in the vault (`MemberAdded`: account, identity, public key, email, role; the latest per account wins; removed by `ChangesRemoved`), listed in Settings > Vault with their fingerprint |
-| Fingerprint | First 160 bits of the SHA-256 of the public key, 8 groups of 4 Base32 characters; the account's own in Settings > Server (*Your key*) |
+| Members | Recorded in the vault (`MemberAdded`, `MemberRemoved`: account, identity, public keys, email, role), each **signed by the owner** (`MemberRecords`): only those count, the latest per account; listed in Settings > Vault with their fingerprint, the owner's included |
+| Fingerprint | First 160 bits of the SHA-256 of the public keys (encryption, signing), 8 groups of 4 Base32 characters; the account's own in Settings > Server (*Your key*) |
+| Owner's key | `KeySigner`: this account's signing key for its own vaults (the vault's own identity before it is attached); for a vault shared with it, the owner kept in `vault-owners.json` (`VaultOwners`: read once from the store's members and the owner's public data). Epoch wraps (`KFW2`) not signed by it are ignored, by `Unlock` and the latest epoch alike |
 | Member's side | The store appears in *Vault from the server…*; it opens with the member's own account pass phrase (their identity's wraps) |
 | Reader | The vault opens read only: every change is refused (`VaultSession.CanWrite`); the server refuses its uploads anyway |
 | Who shares | The owner only (the server enforces it), from a vault opened with its account's identity |
@@ -310,7 +311,7 @@ pass phrase ─PBKDF2-SHA256 (600 000)─┐     recovery key (32 random bytes, 
 keys/identities/<id>.json   Identity: P-256 public key, private key sealed twice ("KFK1", "KFR1")
                                      │ ECDH with a one-time key pair, HKDF-SHA256, AES-256-GCM
                                      ▼
-keys/epoch-N/<id>.kfw       vault key of epoch N = "KFW1" · one-time public key · nonce · key · tag
+keys/epoch-N/<id>.<random>.kfw   vault key of epoch N = "KFW2" · one-time public key · nonce · key · tag · signature (ECDSA P-256 of its writer; "KFW1": unsigned, read where no signature is asked)
                             (EpochKeys; AAD = vault id · epoch · identity id)
                                      ▼
 KeyRing { epoch → key } ─► KeyedBox: AES-256-GCM, new 12-byte nonce per file, AAD = header · file id
@@ -338,7 +339,8 @@ chunk i   = AES-256-GCM(1 MB of the file) · tag
 - A chunk changed, moved, left out or added after the last one fails to open; so does a file cut after a chunk (no last one). An empty file is one empty last chunk.
 - Memory use stays at about two chunks, whatever the size.
 
-- Built into .NET (`Rfc2898DeriveBytes`, `AesGcm`, `ECDiffieHellman`, `HKDF`): no package.
+- Built into .NET (`Rfc2898DeriveBytes`, `AesGcm`, `ECDiffieHellman`, `ECDsa`, `HKDF`): no package.
+- **Signing key** (`Signing`): derived from the identity's private key (HKDF to a P-256 scalar), so an identity needs no second secret; its public part is in the identity (`SigningKey`) and the account's public data, added at its next unlock for an identity made before.
 - A wrong pass phrase fails to unseal the identity (GCM tag), so no extra check value is needed.
 - *Remember pass phrase* stores the identity's private key (a format 5 vault: its master key, replaced at upgrade), not the pass phrase: it opens at once and survives a pass phrase change. Protected by DPAPI for the current Windows user, in `keys.json` in the local data folder, per vault id (`KeyMemory`). A master key remembered for a vault that has identities is not used: the pass phrase is asked, then the identity remembered. `Core` sees DPAPI through `ISecretProtector`; `App` implements it with `ProtectedData` (`DpapiProtector`).
 - The key, the pass phrase and names are never logged.

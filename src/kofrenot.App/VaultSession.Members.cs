@@ -88,7 +88,7 @@ public sealed partial class VaultSession
 
         try
         {
-            var gone = VaultSharing.Gone(Current!.Graph, await client.MembersAsync(store.Id));
+            var gone = VaultSharing.Gone(Members, await client.MembersAsync(store.Id));
             if (gone.Count > 0)
             {
                 await RotateAway(owner, gone);
@@ -115,10 +115,10 @@ public sealed partial class VaultSession
 
         try
         {
-            var (rotated, removal) = VaultSharing.Remove(folder, access, vault.Graph, [.. gone.Select(member => member.Account)], new AccountKey(account.Identity.Id, account.Identity.PublicKey), DateTimeOffset.UtcNow);
+            var (rotated, removals) = VaultSharing.Remove(folder, access, vault.Graph, [.. gone.Select(member => member.Account)], new AccountKey(account.Identity.Id, account.Identity.PublicKey), DateTimeOffset.UtcNow);
             vault.UseKeys(rotated.Keys);
             _access = rotated;
-            Append(owner, vault, [removal], $"Vault key rotated to epoch {rotated.Keys.CurrentEpoch}: {gone.Count} members out");
+            Append(owner, vault, removals, $"Vault key rotated to epoch {rotated.Keys.CurrentEpoch}: {gone.Count} members out");
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidOperationException)
         {
@@ -138,7 +138,7 @@ public sealed partial class VaultSession
             return;
         }
 
-        var latest = VaultKeys.LatestEpoch(folder);
+        var latest = OwnerKey is { } ownerKey && _access is { } access ? VaultKeys.LatestEpoch(folder, access.Header.Id, ownerKey) : VaultKeys.LatestEpoch(folder);
         var stored = (await client.ListStoresAsync()).FirstOrDefault(listed => listed.Id == store.Id);
         if (stored is { Role: StoreRole.Owner } && (stored.Fence ?? -1) < latest)
         {
@@ -159,7 +159,7 @@ public sealed partial class VaultSession
 
         try
         {
-            if (VaultKeys.LatestEpoch(folder) > _access.Keys.CurrentEpoch && VaultKeys.Unlock(folder, _access.Header, identity, _log) is { } newer)
+            if (!IsCurrent(folder, _access) && VaultKeys.Unlock(folder, _access.Header, identity, _log, SignerOf(folder, vault.Id)) is { } newer)
             {
                 vault.UseKeys(newer.Keys);
                 _access = newer;

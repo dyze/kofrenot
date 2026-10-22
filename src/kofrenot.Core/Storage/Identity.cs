@@ -9,10 +9,11 @@ public sealed record UnlockedIdentity(Guid Id, byte[] PrivateKey);
 
 /// <summary>
 /// A key pair (ECDH P-256) the vault keys are wrapped for (<see cref="EpochKeys"/>): its public
-/// key, and its private key sealed twice, by the pass phrase (<see cref="KeyWrap"/>) and by the
-/// recovery key (HKDF-SHA256, then AES-256-GCM, "KFR1"). Nothing in it is secret.
+/// key, its private key sealed twice, by the pass phrase (<see cref="KeyWrap"/>) and by the
+/// recovery key (HKDF-SHA256, then AES-256-GCM, "KFR1"), and the public part of the signing key
+/// derived from it (<see cref="Signing"/>; none in an identity made before). Nothing in it is secret.
 /// </summary>
-public sealed record Identity(Guid Id, byte[] PublicKey, WrappedKey ByPassPhrase, byte[] ByRecoveryKey)
+public sealed record Identity(Guid Id, byte[] PublicKey, WrappedKey ByPassPhrase, byte[] ByRecoveryKey, byte[]? SigningKey = null)
 {
     private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web) { WriteIndented = true };
 
@@ -28,7 +29,8 @@ public sealed record Identity(Guid Id, byte[] PublicKey, WrappedKey ByPassPhrase
             unlocked.Id,
             keys.ExportSubjectPublicKeyInfo(),
             KeyWrap.Seal(unlocked.PrivateKey, passPhrase, unlocked.Id.ToByteArray(), iterations),
-            new SecretBox(BoxKeyOf(recovery, unlocked.Id)).Seal(RecoveryMagic, unlocked.PrivateKey, unlocked.Id.ToByteArray()));
+            new SecretBox(BoxKeyOf(recovery, unlocked.Id)).Seal(RecoveryMagic, unlocked.PrivateKey, unlocked.Id.ToByteArray()),
+            Signing.PublicKeyOf(unlocked));
         return (identity, unlocked, recovery);
     }
 
@@ -54,6 +56,10 @@ public sealed record Identity(Guid Id, byte[] PublicKey, WrappedKey ByPassPhrase
         unlocked.Id == Id
             ? this with { ByPassPhrase = KeyWrap.Seal(unlocked.PrivateKey, passPhrase, Id.ToByteArray(), iterations) }
             : throw new ArgumentException("Another identity", nameof(unlocked));
+
+    /// <summary>The same identity, with the public part of its signing key (<see cref="Signing"/>): an identity made before it had one.</summary>
+    public Identity WithSigningKey(UnlockedIdentity unlocked) =>
+        unlocked.Id == Id ? this with { SigningKey = Signing.PublicKeyOf(unlocked) } : throw new ArgumentException("Another identity", nameof(unlocked));
 
     /// <exception cref="InvalidDataException">Damaged.</exception>
     /// <exception cref="IOException">Cannot be read.</exception>

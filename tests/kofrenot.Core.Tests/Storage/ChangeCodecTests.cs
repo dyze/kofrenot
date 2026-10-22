@@ -147,13 +147,18 @@ public sealed class ChangeCodecTests
     [Fact]
     public void AMember_RoundTrips()
     {
-        var member = new VaultMember(Guid.NewGuid(), Guid.NewGuid(), [1, 2, 3], "bob@example.com", MemberRole.Writer);
-        var change = new MemberAdded(Guid.NewGuid(), At, member);
+        var member = new VaultMember(Guid.NewGuid(), Guid.NewGuid(), [1, 2, 3], "bob@example.com", MemberRole.Writer, [4, 5]);
+        var change = new MemberAdded(Guid.NewGuid(), At, member, [6, 7]);
+        var removal = new MemberRemoved(Guid.NewGuid(), At, member.Account, [8]);
 
         var decoded = Assert.IsType<MemberAdded>(_codec.Decode(change.Id, _codec.Encode(change)));
+        var removed = Assert.IsType<MemberRemoved>(_codec.Decode(removal.Id, _codec.Encode(removal)));
 
         Assert.Equal((member.Account, member.Identity, member.Email, member.Role), (decoded.Member.Account, decoded.Member.Identity, decoded.Member.Email, decoded.Member.Role));
         Assert.Equal(member.PublicKey, decoded.Member.PublicKey);
+        Assert.Equal(member.SigningKey, decoded.Member.SigningKey);
+        Assert.Equal(change.Signature, decoded.Signature);
+        Assert.Equal((member.Account, removal.Signature[0]), (removed.Account, removed.Signature[0]));
         var json = Encoding.UTF8.GetString(_keyed.Open(SealKind.Change, _codec.Encode(change), change.Id.ToByteArray()));
         Assert.Contains("\"op\":\"addMember\"", json);
         Assert.Contains("\"role\":\"writer\"", json);
@@ -161,6 +166,9 @@ public sealed class ChangeCodecTests
 
     [Theory]
     [InlineData("{\"format\":6,\"op\":\"addMember\",\"at\":\"2026-10-16T09:12:00Z\"}")]
+    [InlineData("{\"format\":6,\"op\":\"addMember\",\"at\":\"2026-10-16T09:12:00Z\",\"member\":{\"account\":\"3f2504e0-4f89-11d3-9a0c-0305e82c3301\",\"identity\":\"3f2504e0-4f89-11d3-9a0c-0305e82c3301\",\"publicKey\":\"AQ==\",\"email\":\"b@x\",\"role\":\"reader\"}}")]
+    [InlineData("{\"format\":6,\"op\":\"removeMember\",\"at\":\"2026-10-16T09:12:00Z\",\"memberRemoval\":{\"account\":\"3f2504e0-4f89-11d3-9a0c-0305e82c3301\"}}")]
+    [InlineData("{\"format\":6,\"op\":\"removeMember\",\"at\":\"2026-10-16T09:12:00Z\",\"memberRemoval\":{\"signature\":\"AQ==\"}}")]
     [InlineData("{\"format\":6,\"op\":\"addMember\",\"at\":\"2026-10-16T09:12:00Z\",\"member\":{\"identity\":\"3f2504e0-4f89-11d3-9a0c-0305e82c3301\",\"publicKey\":\"AQ==\",\"email\":\"b@x\",\"role\":\"reader\"}}")]
     [InlineData("{\"format\":6,\"op\":\"addMember\",\"at\":\"2026-10-16T09:12:00Z\",\"member\":{\"account\":\"3f2504e0-4f89-11d3-9a0c-0305e82c3301\",\"publicKey\":\"AQ==\",\"email\":\"b@x\",\"role\":\"reader\"}}")]
     [InlineData("{\"format\":6,\"op\":\"addMember\",\"at\":\"2026-10-16T09:12:00Z\",\"member\":{\"account\":\"3f2504e0-4f89-11d3-9a0c-0305e82c3301\",\"identity\":\"3f2504e0-4f89-11d3-9a0c-0305e82c3301\",\"email\":\"b@x\",\"role\":\"reader\"}}")]

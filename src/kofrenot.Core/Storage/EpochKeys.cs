@@ -5,17 +5,21 @@ namespace Kofrenot.Core.Storage;
 
 /// <summary>
 /// Wraps a vault key of one epoch for an identity: ECDH P-256 between a one-time key pair and the
-/// identity's public key, HKDF-SHA256, then AES-256-GCM. <c>"KFW1" · one-time public key
-/// (uncompressed point) · nonce · vault key · tag</c>, bound to the vault, the epoch and the identity.
+/// identity's public key, HKDF-SHA256, then AES-256-GCM, signed by who wrote it (<see cref="Signing"/>):
+/// <c>"KFW2" · one-time public key (uncompressed point) · nonce · vault key · tag · signature</c>,
+/// bound to the vault, the epoch and the identity. <c>"KFW1"</c> (unsigned) is still read where no
+/// signature is asked.
 /// </summary>
 public static class EpochKeys
 {
     private const int PointSize = 65;
     private const int CoordinateSize = 32;
-    private static ReadOnlySpan<byte> Magic => "KFW1"u8;
+    private static ReadOnlySpan<byte> Magic => "KFW2"u8;
+    private static ReadOnlySpan<byte> Unsigned => "KFW1"u8;
     private static ReadOnlySpan<byte> Info => "kofrenot vault key"u8;
 
-    public static byte[] Wrap(byte[] vaultKey, byte[] identityPublicKey, Guid vault, int epoch, Guid identity)
+    /// <summary>The vault key of <paramref name="epoch"/> wrapped for an identity, signed by <paramref name="signer"/>.</summary>
+    public static byte[] Wrap(byte[] vaultKey, byte[] identityPublicKey, Guid vault, int epoch, Guid identity, UnlockedIdentity signer)
     {
         using var recipient = ECDiffieHellman.Create();
         recipient.ImportSubjectPublicKeyInfo(identityPublicKey, out _);
@@ -26,19 +30,43 @@ public static class EpochKeys
         Magic.CopyTo(header);
         point.CopyTo(header, Magic.Length);
         var key = BoxKey(oneTime.DeriveRawSecretAgreement(recipient.PublicKey), point);
-        return new SecretBox(key).Seal(header, vaultKey, Associated(vault, epoch, identity));
+        var associated = Associated(vault, epoch, identity);
+        var body = new SecretBox(key).Seal(header, vaultKey, associated);
+        return [.. body, .. Signing.Sign(signer, [.. associated, .. body])];
     }
 
-    /// <exception cref="InvalidDataException">Damaged, or wrapped for another identity, vault or epoch.</exception>
-    public static byte[] Unwrap(byte[] wrapped, UnlockedIdentity identity, Guid vault, int epoch)
+    /// <summary>Whether <paramref name="wrapped"/> is a key of this vault, epoch and identity signed by <paramref name="signedBy"/>; no key needed to tell.</summary>
+    public static bool IsSignedBy(byte[] wrapped, Guid vault, int epoch, Guid identity, byte[] signedBy) =>
+        wrapped.AsSpan().StartsWith(Magic) && wrapped.Length > Magic.Length + PointSize + Signing.SignatureSize
+        && Signing.Verify(signedBy, [.. Associated(vault, epoch, identity), .. wrapped.AsSpan(..^Signing.SignatureSize)], wrapped.AsSpan(^Signing.SignatureSize..));
+
+    /// <summary>The vault key; when <paramref name="signedBy"/> is given, only from a wrap that key signed.</summary>
+    /// <exception cref="InvalidDataException">Damaged, wrapped for another identity, vault or epoch, or not signed as asked.</exception>
+    public static byte[] Unwrap(byte[] wrapped, UnlockedIdentity identity, Guid vault, int epoch, byte[]? signedBy = null)
     {
-        if (wrapped.Length < Magic.Length + PointSize || !wrapped.AsSpan().StartsWith(Magic))
+        var associated = Associated(vault, epoch, identity.Id);
+        var body = wrapped.AsSpan();
+        if (body.StartsWith(Magic) && body.Length > Signing.SignatureSize)
+        {
+            var signature = body[^Signing.SignatureSize..];
+            body = body[..^Signing.SignatureSize];
+            if (signedBy is not null && !Signing.Verify(signedBy, [.. associated, .. body], signature))
+            {
+                throw new InvalidDataException("The wrapped vault key is not signed by the vault's owner");
+            }
+        }
+        else if (!body.StartsWith(Unsigned) || signedBy is not null)
+        {
+            throw new InvalidDataException(signedBy is not null ? "The wrapped vault key is not signed" : "Not a wrapped vault key");
+        }
+
+        if (body.Length < Magic.Length + PointSize)
         {
             throw new InvalidDataException("Not a wrapped vault key");
         }
 
-        var header = wrapped.AsSpan(0, Magic.Length + PointSize);
-        var point = header[Magic.Length..].ToArray();
+        var header = body[..(Magic.Length + PointSize)].ToArray();
+        var point = header[Magic.Length..];
         byte[] secret;
         try
         {
@@ -57,7 +85,7 @@ public static class EpochKeys
             throw new InvalidDataException("The wrapped vault key is damaged", ex);
         }
 
-        return new SecretBox(BoxKey(secret, point)).Open(header, wrapped, Associated(vault, epoch, identity.Id));
+        return new SecretBox(BoxKey(secret, point)).Open(header, body.ToArray(), associated);
     }
 
     private static byte[] PointOf(ECParameters parameters) => [0x04, .. parameters.Q.X!, .. parameters.Q.Y!];

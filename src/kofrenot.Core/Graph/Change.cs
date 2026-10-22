@@ -69,7 +69,10 @@ public sealed record ViewEdited(Guid Id, DateTimeOffset At, Guid Node, ViewDefin
 
 /// <summary>
 /// Records a member of a shared vault, encrypted like any change, so every member's device knows
-/// who shares it and their keys. A later one for the same account replaces it (a role changed);
-/// removed by a <see cref="ChangesRemoved"/>.
+/// who shares it and their keys. Signed by the vault's owner: a record it did not sign is ignored
+/// (<c>VaultSharing.Members</c>). A later one for the same account replaces it (a role changed).
 /// </summary>
-public sealed record MemberAdded(Guid Id, DateTimeOffset At, VaultMember Member) : Change(Id, At);
+public sealed record MemberAdded(Guid Id, DateTimeOffset At, VaultMember Member, byte[] Signature) : Change(Id, At);
+
+/// <summary>Takes a member out of a shared vault's records, signed by its owner as <see cref="MemberAdded"/>.</summary>
+public sealed record MemberRemoved(Guid Id, DateTimeOffset At, Guid Account, byte[] Signature) : Change(Id, At);

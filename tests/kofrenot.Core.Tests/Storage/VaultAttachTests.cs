@@ -15,7 +15,7 @@ public sealed class VaultAttachTests : IDisposable
         var access = VaultFolder.Create(Folder, _account.Identity, _account.Unlocked);
 
         Assert.False(VaultKeys.HasIdentities(Folder));
-        Assert.True(VaultKeys.IsAttached(Folder, _account.Identity.Id));
+        Assert.True(VaultKeys.IsAttached(Folder, IdOf(access), _account.Identity.Id, AccountSigningKey));
         Assert.Equal(access.Keys.CurrentKey, VaultKeys.Unlock(Folder, access.Header, "account phrase", account: _account.Identity)?.Keys.CurrentKey);
         Assert.NotNull(VaultKeys.Unlock(Folder, access.Header, _account.Recovery, account: _account.Identity));
         Assert.Null(VaultKeys.Unlock(Folder, access.Header, "account phrase"));
@@ -31,8 +31,9 @@ public sealed class VaultAttachTests : IDisposable
         Assert.Equal(1, attached.Keys.CurrentEpoch);
         Assert.Equal(1, VaultKeys.LatestEpoch(Folder));
         Assert.Equal(_account.Unlocked, attached.Identity);
-        Assert.True(VaultKeys.IsAttached(Folder, _account.Identity.Id));
-        Assert.False(VaultKeys.IsAttached(Folder, own.Identity!.Id));
+        Assert.True(VaultKeys.IsAttached(Folder, IdOf(own), _account.Identity.Id, AccountSigningKey));
+        Assert.Equal(1, VaultKeys.LatestEpoch(Folder, IdOf(own), AccountSigningKey));
+        Assert.False(VaultKeys.IsAttached(Folder, IdOf(own), own.Identity!.Id, AccountSigningKey));
         var byOld = VaultKeys.Unlock(Folder, own.Header, "own phrase")!;
         Assert.False(VaultKeys.IsCurrent(Folder, byOld));
         var byAccount = VaultKeys.Unlock(Folder, own.Header, "account phrase", account: _account.Identity)!;
@@ -71,13 +72,15 @@ public sealed class VaultAttachTests : IDisposable
     }
 
     [Fact]
-    public void AnAccessBehind_OrAnotherIdentity_CannotAttach()
+    public void AttachingAgain_GivesTheSameKey_ButNotForAnotherIdentity()
     {
         var (own, _) = VaultFolder.Create(Folder, "own phrase", Iterations);
-        VaultKeys.Attach(Folder, own, _account.Identity, _account.Unlocked);
+        var first = VaultKeys.Attach(Folder, own, _account.Identity, _account.Unlocked);
         var (_, stranger, _) = Identity.Create("other", Iterations);
 
-        Assert.Throws<InvalidOperationException>(() => VaultKeys.Attach(Folder, own, _account.Identity, _account.Unlocked));
+        Assert.Equal(first.Keys.CurrentKey, VaultKeys.Attach(Folder, own, _account.Identity, _account.Unlocked).Keys.CurrentKey);
+        Assert.Single(Directory.GetFiles(Path.Combine(Folder, VaultFolder.KeysFolder, "epoch-1")));
+        Assert.Throws<InvalidOperationException>(() => VaultKeys.Attach(Folder, first with { Keys = KeyRing.Of(first.Keys.KeyOf(0)) }, _account.Identity, _account.Unlocked));
         Assert.Throws<ArgumentException>(() => VaultKeys.Attach(Folder, own, _account.Identity, stranger));
     }
 
@@ -97,6 +100,10 @@ public sealed class VaultAttachTests : IDisposable
         Assert.Equal(2, Vault.Open(Folder, own.Header, attached.Keys).Graph.Nodes.Count);
         Assert.Single(Vault.Open(Folder, own.Header, own.Keys).Graph.Nodes);
     }
+
+    private byte[] AccountSigningKey => Signing.PublicKeyOf(_account.Unlocked);
+
+    private static Guid IdOf(VaultAccess access) => access.Header.Id;
 
     public void Dispose() => _temp.Dispose();
 

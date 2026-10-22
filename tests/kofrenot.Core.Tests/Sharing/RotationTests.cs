@@ -22,18 +22,49 @@ public sealed class RotationTests : IDisposable
         var (access, vault) = SharedVault();
         AddNode(vault, "before");
 
-        var (rotated, removal) = VaultSharing.Remove(Folder, access, vault.Graph, [_leavingAccount], OwnerKey, Now);
+        var (rotated, removals) = VaultSharing.Remove(Folder, access, vault.Graph, [_leavingAccount], OwnerAccountKey, Now.AddMinutes(1));
         vault.UseKeys(rotated.Keys);
-        vault.Append(removal);
+        vault.Append(Assert.Single(removals));
         AddNode(vault, "after");
 
         Assert.Equal(1, rotated.Keys.CurrentEpoch);
-        Assert.Equal(2, vault.Graph.Members.Count);
-        Assert.DoesNotContain(vault.Graph.Members, member => member.Account == _leavingAccount);
+        Assert.Equal(2, Members(vault).Count);
+        Assert.DoesNotContain(Members(vault), member => member.Account == _leavingAccount);
         Assert.Equal(0, Unlock(_leaving.Unlocked).Keys.CurrentEpoch);
         Assert.Single(Vault.Open(Folder, access.Header, Unlock(_leaving.Unlocked).Keys).Graph.Nodes);
         Assert.Equal(2, Vault.Open(Folder, access.Header, Unlock(_staying.Unlocked).Keys).Graph.Nodes.Count);
         Assert.Equal(2, Vault.Open(Folder, access.Header, Unlock(_owner.Unlocked).Keys).Graph.Nodes.Count);
+    }
+
+    [Fact]
+    public void AKeyPlantedByAWriter_IsNeverTakenUp_ByTheOwnerOrTheMembers()
+    {
+        var (access, vault) = SharedVault();
+        // A writer wraps a key of its own, at the next epoch, for everyone, signed by itself.
+        var mallory = VaultKeys.Rotate(Folder, access with { Identity = _staying.Unlocked }, [(_owner.Identity.Id, _owner.Identity.PublicKey), (_staying.Identity.Id, _staying.Identity.PublicKey)]);
+
+        Assert.Equal(1, VaultKeys.LatestEpoch(Folder));
+        Assert.Equal(0, VaultKeys.LatestEpoch(Folder, access.Header.Id, OwnerSigningKey));
+        Assert.Equal(0, Unlock(_owner.Unlocked).Keys.CurrentEpoch);
+        Assert.Equal(0, Unlock(_staying.Unlocked).Keys.CurrentEpoch);
+        Assert.True(VaultKeys.IsCurrent(Folder, access, OwnerSigningKey));
+        Assert.False(VaultKeys.IsCurrent(Folder, access));
+        Assert.NotEqual(mallory.Keys.CurrentKey, access.Keys.CurrentKey);
+        Assert.NotNull(vault);
+    }
+
+    [Fact]
+    public void AFileAtTheNameTheOwnerWritesNext_DoesNotStopItsRotation()
+    {
+        var (access, _) = SharedVault();
+        var squatted = Path.Combine(Folder, VaultFolder.KeysFolder, "epoch-1", _owner.Identity.Id.ToString("N") + ".kfw");
+        Directory.CreateDirectory(Path.GetDirectoryName(squatted)!);
+        File.WriteAllBytes(squatted, [1, 2, 3]);
+
+        var rotated = VaultKeys.Rotate(Folder, access, [(_owner.Identity.Id, _owner.Identity.PublicKey)]);
+
+        Assert.Equal(rotated.Keys.CurrentKey, Unlock(_owner.Unlocked).Keys.CurrentKey);
+        Assert.True(VaultKeys.IsAttached(Folder, access.Header.Id, _owner.Identity.Id, OwnerSigningKey));
     }
 
     [Fact]
@@ -63,7 +94,7 @@ public sealed class RotationTests : IDisposable
     {
         var (_, vault) = SharedVault();
 
-        var gone = VaultSharing.Gone(vault.Graph, [new StoreMember(_stayingAccount, StoreRole.Writer)]);
+        var gone = VaultSharing.Gone(Members(vault), [new StoreMember(_stayingAccount, StoreRole.Writer)]);
 
         Assert.Equal([_leavingAccount], gone.Select(member => member.Account));
     }
@@ -105,14 +136,18 @@ public sealed class RotationTests : IDisposable
 
     public void Dispose() => _temp.Dispose();
 
-    private AccountKey OwnerKey => new(_owner.Identity.Id, _owner.Identity.PublicKey);
+    private AccountKey OwnerAccountKey => new(_owner.Identity.Id, _owner.Identity.PublicKey, _owner.Identity.SigningKey);
+
+    private byte[] OwnerSigningKey => Signing.PublicKeyOf(_owner.Unlocked);
+
+    private IReadOnlyList<VaultMember> Members(Vault vault) => MemberRecords.Members(vault.Graph, vault.Id, OwnerSigningKey);
 
     // Shared by its owner with two members: one staying, one leaving.
     private (VaultAccess Access, Vault Vault) SharedVault()
     {
         var access = VaultFolder.Create(Folder, _owner.Identity, _owner.Unlocked);
         var vault = Vault.Open(Folder, access.Header, access.Keys);
-        var owner = new VaultMember(Guid.NewGuid(), _owner.Identity.Id, _owner.Identity.PublicKey, "ada@example.com", MemberRole.Owner);
+        var owner = new VaultMember(Guid.NewGuid(), _owner.Identity.Id, _owner.Identity.PublicKey, "ada@example.com", MemberRole.Owner, _owner.Identity.SigningKey);
         Share(access, vault, owner, new ShareCandidate(_stayingAccount, "bob@example.com", _staying.Identity.Id, _staying.Identity.PublicKey));
         Share(access, vault, owner, new ShareCandidate(_leavingAccount, "eve@example.com", _leaving.Identity.Id, _leaving.Identity.PublicKey));
         return (access, vault);
@@ -126,7 +161,7 @@ public sealed class RotationTests : IDisposable
         }
     }
 
-    private VaultAccess Unlock(UnlockedIdentity identity) => VaultKeys.Unlock(Folder, VaultHeader.Read(VaultFolder.HeaderOf(Folder)), identity)!;
+    private VaultAccess Unlock(UnlockedIdentity identity) => VaultKeys.Unlock(Folder, VaultHeader.Read(VaultFolder.HeaderOf(Folder)), identity, signer: new KeySigner(OwnerSigningKey))!;
 
     private static Node AddNode(Vault vault, string name)
     {

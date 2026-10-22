@@ -467,7 +467,7 @@ public partial class VaultsSection : UserControl
         MembersList.ItemsSource = members
             .OrderBy(member => member.Role == MemberRole.Owner ? 0 : 1)
             .ThenBy(member => member.Email, StringComparer.CurrentCultureIgnoreCase)
-            .Select(member => new MemberRow(member, $"{member.Email} · {member.Role.ToString().ToLowerInvariant()} · {Fingerprint.Of(member.PublicKey)}"))
+            .Select(member => new MemberRow(member, $"{member.Email} · {member.Role.ToString().ToLowerInvariant()} · {Fingerprint.Of(member.PublicKey, member.SigningKey)}"))
             .ToList();
         MembersList.Visibility = members.Count == 0 ? Visibility.Collapsed : Visibility.Visible;
         NotSharedText.Visibility = members.Count == 0 ? Visibility.Visible : Visibility.Collapsed;

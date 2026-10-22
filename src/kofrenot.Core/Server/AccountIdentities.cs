@@ -86,8 +86,27 @@ public sealed class AccountIdentities(string path, ILog? log = null)
         return changed;
     }
 
+    /// <summary>
+    /// Adds the public part of the signing key to an identity made before it had one, on the
+    /// server and here: its owner then signs the keys and members of the vaults it shares.
+    /// </summary>
+    /// <exception cref="ServerException">Another device changed it meanwhile (<see cref="ServerFailure.Conflict"/>), or the call failed.</exception>
+    public async Task<AccountIdentity> PublishSigningKeyAsync(KofreClient client, AccountIdentity current, UnlockedIdentity unlocked, CancellationToken cancel = default)
+    {
+        if (current.Identity.SigningKey is not null)
+        {
+            return current;
+        }
+
+        var identity = current.Identity.WithSigningKey(unlocked);
+        var published = current with { Version = await WriteAsync(client, current.Version, identity, cancel), Identity = identity };
+        Keep(published);
+        _log.Info(Category, "Server account signing key published");
+        return published;
+    }
+
     private static Task<long> WriteAsync(KofreClient client, long replaces, Identity identity, CancellationToken cancel) =>
-        client.WriteAccountDataAsync(replaces, JsonSerializer.SerializeToUtf8Bytes(new AccountKey(identity.Id, identity.PublicKey)), identity.ToJson(), cancel);
+        client.WriteAccountDataAsync(replaces, JsonSerializer.SerializeToUtf8Bytes(new AccountKey(identity.Id, identity.PublicKey, identity.SigningKey)), identity.ToJson(), cancel);
 
     private void Keep(AccountIdentity identity) =>
         _file.Save(new KeptFile { Server = identity.Server, Email = identity.Email, Version = identity.Version, Identity = identity.Identity.ToJson() });
@@ -123,4 +142,7 @@ public sealed class AccountIdentities(string path, ILog? log = null)
 /// The public part of a server account's data: its identity's id and public key, what another
 /// account needs to share a vault with it.
 /// </summary>
-public sealed record AccountKey(Guid Id, byte[] PublicKey);
+public sealed record AccountKey(Guid Id, byte[] PublicKey, byte[]? SigningKey = null)
+{
+    public string Fingerprint => Storage.Fingerprint.Of(PublicKey, SigningKey);
+}

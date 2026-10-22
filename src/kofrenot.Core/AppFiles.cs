@@ -77,6 +77,9 @@ public sealed class AppFiles
     /// <summary>The server account's identity, as on the server (sealed), so server vaults unlock offline.</summary>
     public string AccountIdentity => Path.Combine(DataDirectory, "account-identity.json");
 
+    /// <summary>The owners of the server vaults (their public keys), to check their signatures offline.</summary>
+    public string VaultOwners => Path.Combine(DataDirectory, "vault-owners.json");
+
     /// <summary>The local mirrors of the server vaults, one folder each, with their sync states.</summary>
     public string Mirrors => Path.Combine(DataDirectory, "stores");
 
@@ -104,6 +107,7 @@ public sealed class AppFiles
         new("Vault snapshots", Cache),
         new("Server session", ServerSession),
         new("Server account identity", AccountIdentity),
+        new("Owners of server vaults", VaultOwners),
         new("Server vault mirrors", Mirrors),
         new("Logs", Logs),
         new("Program", ProgramDirectory),

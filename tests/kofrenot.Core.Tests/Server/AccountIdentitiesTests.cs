@@ -93,6 +93,26 @@ public sealed class AccountIdentitiesTests : IDisposable
     }
 
     [Fact]
+    public async Task AnIdentityWithoutSigningKey_GetsIt_OnTheServerAndHere_Once()
+    {
+        var (identity, unlocked, _) = Identity.Create("account phrase", Iterations);
+        var old = new AccountIdentity(Address, Email, 3, identity with { SigningKey = null });
+        var stub = new StubHandler(_ => Json(HttpStatusCode.OK, """{"version":4}"""));
+
+        var published = await Identities().PublishSigningKeyAsync(Client(stub), old, unlocked);
+        var again = await Identities().PublishSigningKeyAsync(Client(stub), published, unlocked);
+
+        Assert.Equal(Signing.PublicKeyOf(unlocked), published.Identity.SigningKey);
+        Assert.Equal(4, published.Version);
+        Assert.Same(published, again);
+        Assert.Single(stub.Requests);
+        var publicPart = JsonDocument.Parse(JsonDocument.Parse(stub.Requests[0].Body!).RootElement.GetProperty("public").GetBytesFromBase64()).RootElement;
+        Assert.Equal(Convert.ToBase64String(published.Identity.SigningKey!), publicPart.GetProperty("SigningKey").GetString());
+        Assert.NotNull(Identities().Kept(Address, Email)?.Identity.SigningKey);
+        Assert.Throws<ArgumentException>(() => identity.WithSigningKey(Identity.Create("x", Iterations).Unlocked));
+    }
+
+    [Fact]
     public void AnAccountsKey_IsReadFromItsPublicPart_OrNone()
     {
         var id = Guid.NewGuid();

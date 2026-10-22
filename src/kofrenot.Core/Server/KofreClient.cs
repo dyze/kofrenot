@@ -129,6 +129,20 @@ public sealed class KofreClient(HttpClient http, ServerSession? session = null, 
         }
     }
 
+    /// <summary>The public part of an active account's data; null when there is no such account.</summary>
+    public async Task<byte[]?> PublicPartAsync(Guid account, CancellationToken cancel = default)
+    {
+        try
+        {
+            using var response = await SendAsync(() => new HttpRequestMessage(HttpMethod.Get, $"v1/accounts/{account}/public"), authorized: true, cancel);
+            return (await Read<PublicBody>(response, cancel)).Public;
+        }
+        catch (ServerException ex) when (ex.Failure == ServerFailure.NotFound)
+        {
+            return null;
+        }
+    }
+
     public async Task<IReadOnlyList<StoreMember>> MembersAsync(Guid store, CancellationToken cancel = default)
     {
         using var response = await SendAsync(() => new HttpRequestMessage(HttpMethod.Get, $"v1/stores/{store}/members"), authorized: true, cancel);
@@ -372,6 +386,8 @@ public sealed class KofreClient(HttpClient http, ServerSession? session = null, 
     private sealed record VersionBody(string? Version);
 
     private sealed record VersionNumber(long Version);
+
+    private sealed record PublicBody(byte[]? Public);
 
     private sealed record ErrorBody(string? Error);
 }

@@ -19,7 +19,7 @@ public sealed class VaultKeysTests : IDisposable
         Assert.True(VaultKeys.HasIdentities(Folder));
         Assert.NotNull(access.Identity);
         Assert.Single(Directory.GetFiles(Path.Combine(Keys, "identities"), "*.json"));
-        Assert.True(File.Exists(Path.Combine(Keys, "epoch-0", access.Identity.Id.ToString("N") + ".kfw")));
+        Assert.Single(Directory.GetFiles(Path.Combine(Keys, "epoch-0"), access.Identity.Id.ToString("N") + ".*.kfw"));
     }
 
     [Fact]

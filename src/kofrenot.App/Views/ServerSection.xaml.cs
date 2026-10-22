@@ -71,7 +71,7 @@ public partial class ServerSection : UserControl
         TooOldText.Visibility = connection.TooOld is null ? Visibility.Collapsed : Visibility.Visible;
         ChangePassPhraseButton.IsEnabled = signedIn && connection.TooOld is null && connection.Identity is not null;
         ChangePasswordButton.IsEnabled = signedIn;
-        KeyText.Text = connection.Identity is { } identity ? $"Your key: {Fingerprint.Of(identity.Identity.PublicKey)}" : string.Empty;
+        KeyText.Text = connection.Identity is { } identity ? $"Your key: {Fingerprint.Of(identity.Identity.PublicKey, identity.Identity.SigningKey)}" : string.Empty;
         KeyText.Visibility = connection.Identity is null ? Visibility.Collapsed : Visibility.Visible;
     }
 

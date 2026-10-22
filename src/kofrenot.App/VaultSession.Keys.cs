@@ -44,12 +44,12 @@ public sealed partial class VaultSession
         var hint = Selected?.Location.IsOnServer == true ? "Type your server account's pass phrase (a vault not handed to it yet: its own)." : null;
         var answer = PassphraseDialog.Ask(owner, PlaceOf(Selected, folder), passPhrase =>
         {
-            access = VaultKeys.Unlock(folder, header, passPhrase, _log, account);
+            access = VaultKeys.Unlock(folder, header, passPhrase, _log, account, SignerOf(folder, header.Id));
             if (access is null)
             {
                 _log.Warn(Category, $"Wrong pass phrase for vault {header.Id}");
             }
-            else if (!VaultKeys.IsCurrent(folder, access))
+            else if (!IsCurrent(folder, access))
             {
                 throw new IOException("This pass phrase opens only the vault's older files: type your server account's pass phrase.");
             }
@@ -78,10 +78,10 @@ public sealed partial class VaultSession
     // opens the latest files (a vault handed to its server account since: no longer).
     private VaultAccess? Remembered(string folder, VaultHeader header)
     {
-        var remembered = _keys.RecallIdentity(header.Id) is { } identity ? VaultKeys.Unlock(folder, header, identity, _log)
+        var remembered = _keys.RecallIdentity(header.Id) is { } identity ? VaultKeys.Unlock(folder, header, identity, _log, SignerOf(folder, header.Id))
             : _keys.RecallMasterKey(header.Id) is { } masterKey && !VaultKeys.HasIdentities(folder) ? new VaultAccess(header, KeyRing.Of(masterKey), Identity: null)
             : null;
-        return remembered is not null && VaultKeys.IsCurrent(folder, remembered) ? remembered : null;
+        return remembered is not null && IsCurrent(folder, remembered) ? remembered : null;
     }
 
     /// <summary>Unlocks a vault with its recovery key (or its server account's), then asks a new pass phrase.</summary>
@@ -92,7 +92,7 @@ public sealed partial class VaultSession
         VaultAccess? access = null;
         var remember = RecoveryKeyDialog.Ask(owner, place, recovery =>
         {
-            access = VaultKeys.Unlock(folder, header, recovery, _log, account);
+            access = VaultKeys.Unlock(folder, header, recovery, _log, account, SignerOf(folder, header.Id));
             if (access is null)
             {
                 _log.Warn(Category, $"Wrong recovery key for vault {header.Id}");

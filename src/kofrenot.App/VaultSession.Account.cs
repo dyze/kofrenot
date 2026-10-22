@@ -53,7 +53,7 @@ public sealed partial class VaultSession
         {
             unlocked = kept is null
                 ? CreateAccountIdentity(client, account.Server, account.Email, passPhrase)
-                : kept.Identity.Unlock(passPhrase) is { } opened ? (kept, opened, null) : null;
+                : kept.Identity.Unlock(passPhrase) is { } opened ? (Published(client, kept, opened), opened, null) : null;
             return unlocked is not null;
         });
         if (!done || unlocked is not { } result)
@@ -136,7 +136,7 @@ public sealed partial class VaultSession
     private bool AttachToAccount(Window owner, string folder, Vault vault)
     {
         if (Selected?.Location.IsOnServer != true || _access is not { } access
-            || (_server.Identity is { } kept && VaultKeys.IsAttached(folder, kept.Identity.Id)))
+            || (_server.Identity is { Identity.SigningKey: { } key } kept && VaultKeys.IsAttached(folder, access.Header.Id, kept.Identity.Id, key)))
         {
             return true;
         }

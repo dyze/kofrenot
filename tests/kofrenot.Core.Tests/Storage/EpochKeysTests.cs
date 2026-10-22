@@ -15,7 +15,7 @@ public sealed class EpochKeysTests
         var wrapped = Wrap(epoch: 3);
 
         Assert.Equal(VaultKey, EpochKeys.Unwrap(wrapped, _member.Unlocked, Vault, 3));
-        Assert.Equal("KFW1"u8.ToArray(), wrapped[..4]);
+        Assert.Equal("KFW2"u8.ToArray(), wrapped[..4]);
     }
 
     [Fact]
@@ -42,8 +42,33 @@ public sealed class EpochKeysTests
     }
 
     [Fact]
+    public void ASignedWrap_IsTold_AndOpensOnlyWithItsSignersKey_WhenOneIsAsked()
+    {
+        var wrapped = Wrap(epoch: 2);
+        var signer = Signing.PublicKeyOf(_member.Unlocked);
+        var stranger = Signing.PublicKeyOf(Identity.Create("other", iterations: 10).Unlocked);
+
+        Assert.True(EpochKeys.IsSignedBy(wrapped, Vault, 2, _member.Identity.Id, signer));
+        Assert.False(EpochKeys.IsSignedBy(wrapped, Vault, 3, _member.Identity.Id, signer));
+        Assert.False(EpochKeys.IsSignedBy(wrapped, Vault, 2, _member.Identity.Id, stranger));
+        Assert.False(EpochKeys.IsSignedBy([1, 2], Vault, 2, _member.Identity.Id, signer));
+        Assert.Equal(VaultKey, EpochKeys.Unwrap(wrapped, _member.Unlocked, Vault, 2, signer));
+        Assert.Throws<InvalidDataException>(() => EpochKeys.Unwrap(wrapped, _member.Unlocked, Vault, 2, stranger));
+    }
+
+    [Fact]
+    public void AnUnsignedWrap_IsRead_OnlyWhereNoSignatureIsAsked()
+    {
+        var signed = Wrap(epoch: 0);
+        byte[] unsigned = [.. "KFW1"u8, .. signed[4..^Signing.SignatureSize]];
+
+        Assert.Throws<InvalidDataException>(() => EpochKeys.Unwrap(unsigned, _member.Unlocked, Vault, 0, Signing.PublicKeyOf(_member.Unlocked)));
+        Assert.Throws<InvalidDataException>(() => EpochKeys.Unwrap(unsigned, _member.Unlocked, Vault, 0));
+    }
+
+    [Fact]
     public void WrappingTwice_GivesDifferentData() =>
         Assert.NotEqual(Wrap(epoch: 0), Wrap(epoch: 0));
 
-    private byte[] Wrap(int epoch) => EpochKeys.Wrap(VaultKey, _member.Identity.PublicKey, Vault, epoch, _member.Identity.Id);
+    private byte[] Wrap(int epoch) => EpochKeys.Wrap(VaultKey, _member.Identity.PublicKey, Vault, epoch, _member.Identity.Id, _member.Unlocked);
 }

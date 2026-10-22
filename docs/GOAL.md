@@ -69,7 +69,8 @@ What could go wrong, and how it is addressed today:
 | A server sending a file outside the vault | Only a vault's file names are accepted from it | Implemented |
 | Pass phrase lost | A recovery key, shown once, unwraps the identity too ([Keys](SERVER-CONCEPT.md#keys)) | Implemented: a folder vault's, or the server account's for its vaults; a new pass phrase is then chosen |
 | A member removed from a shared vault | Server access removed at once, then key rotation: files added later are unreadable to them ([Rotation](SERVER-CONCEPT.md#rotation)) | Implemented |
-| A server reading or swapping keys | The server only stores wrapped keys; fingerprints are compared out of band before sharing ([Sharing](SERVER-CONCEPT.md#sharing)) | Implemented |
+| A server reading or swapping keys | The server only stores wrapped keys; fingerprints (of both public keys) are compared out of band before sharing, the owner's by its members too ([Sharing](SERVER-CONCEPT.md#sharing)) | Implemented |
+| A writer taking over the keys or the members | Key epochs and member records count only when signed by the vault's owner; wrap files have unguessable names ([Sharing](SERVER-CONCEPT.md#sharing)) | Implemented |
 
 ## Versioning
 - Format `MAJOR.MINOR`, starting at **0.1**, then 0.2, and so on. No `v` prefix, and no 1.0 until I decide.

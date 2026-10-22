@@ -224,7 +224,7 @@ public sealed partial class VaultSession
             // In the background: the dialog waits for it, as for the key derivation.
             var (identity, unlocked, recovery) = kept is null
                 ? CreateAccountIdentity(client, account.Server, account.Email, passPhrase)
-                : kept.Identity.Unlock(passPhrase) is { } opened ? (kept, opened, null) : default;
+                : kept.Identity.Unlock(passPhrase) is { } opened ? (Published(client, kept, opened), opened, null) : default;
             if (identity is null)
             {
                 return false;

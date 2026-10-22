@@ -17,7 +17,7 @@ public sealed partial class VaultSession
     private const string ReadOnlyMessage = "This vault is shared with you to read only: it cannot be changed.";
 
     /// <summary>The members of the open vault; none before it is shared.</summary>
-    public IReadOnlyList<VaultMember> Members => Current?.Graph.Members ?? [];
+    public IReadOnlyList<VaultMember> Members => Current is { } vault && OwnerKey is { } owner ? MemberRecords.Members(vault.Graph, vault.Id, owner) : [];
 
     /// <summary>The open vault is shared with this account to read only.</summary>
     public bool IsReadOnly => Current is { } vault && MyRoleIn(vault) == MemberRole.Reader;
@@ -48,6 +48,12 @@ public sealed partial class VaultSession
 
         try
         {
+            // Members check the owner's signatures: its signing key public first.
+            if (_server.Identity is { } kept)
+            {
+                await _server.Identities.PublishSigningKeyAsync(client, kept, access.Identity!);
+            }
+
             var me = await OwnerRecord(client, account.Email, access);
             var changes = VaultSharing.Share(folder, access, vault.Graph, me, choice.Candidate, choice.Role, DateTimeOffset.UtcNow);
             if (!Append(owner, vault, changes, $"Vault shared with an account as {choice.Role}"))
@@ -74,14 +80,14 @@ public sealed partial class VaultSession
     private static async Task<VaultMember> OwnerRecord(KofreClient client, string email, VaultAccess access)
     {
         var (_, me) = await VaultSharing.FindAsync(client, email);
-        return me is not null && me.Identity == access.Identity!.Id
+        return me is { SigningKey: { } signingKey } && me.Identity == access.Identity!.Id && signingKey.AsSpan().SequenceEqual(Signing.PublicKeyOf(access.Identity))
             ? me.As(MemberRole.Owner)
             : throw new InvalidOperationException("Your account's key on the server is not the one on this computer: sign out, then in again.");
     }
 
     // Null: not shared with this account (its own vault, or not shared yet).
     private MemberRole? MyRoleIn(Vault vault) =>
-        _server.Identity is { } account ? VaultSharing.RoleOf(vault.Graph, account.Identity.Id) : null;
+        _server.Identity is { } account && Current == vault ? VaultSharing.RoleOf(Members, account.Identity.Id) : null;
 
     /// <summary>False, the user told, when the open vault is read only for this account.</summary>
     private bool CanWrite(Window owner)

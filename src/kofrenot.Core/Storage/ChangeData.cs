@@ -22,7 +22,8 @@ internal sealed record ChangeData(
     List<Guid>? Removes = null,
     ChangeData.VaultNameData? Vault = null,
     ChangeData.RetypeData? Retype = null,
-    ChangeData.MemberData? Member = null)
+    ChangeData.MemberData? Member = null,
+    ChangeData.MemberRemovalData? MemberRemoval = null)
 {
     private const string NodeAddedOp = "addNode";
     private const string LinkAddedOp = "addLink";
@@ -36,6 +37,7 @@ internal sealed record ChangeData(
     private const string VaultNamedOp = "nameVault";
     private const string NodeRetypedOp = "retypeNode";
     private const string MemberAddedOp = "addMember";
+    private const string MemberRemovedOp = "removeMember";
 
     public static ChangeData From(Change change) => change switch
     {
@@ -50,7 +52,8 @@ internal sealed record ChangeData(
         ViewEdited view => new(VaultFormat.Current, ViewEditedOp, view.At, View: ViewData.From(view)),
         VaultNamed name => new(VaultFormat.Current, VaultNamedOp, name.At, Vault: new VaultNameData(name.Name, [.. name.Replaces])),
         NodeRetyped retype => new(VaultFormat.Current, NodeRetypedOp, retype.At, Retype: new RetypeData(retype.Node, retype.Type, [.. retype.Replaces])),
-        MemberAdded added => new(VaultFormat.Current, MemberAddedOp, added.At, Member: MemberData.From(added.Member)),
+        MemberAdded added => new(VaultFormat.Current, MemberAddedOp, added.At, Member: MemberData.From(added)),
+        MemberRemoved removed => new(VaultFormat.Current, MemberRemovedOp, removed.At, MemberRemoval: new MemberRemovalData(removed.Account, removed.Signature)),
         _ => throw new ArgumentOutOfRangeException(nameof(change), change.GetType().Name, "Unknown change"),
     };
 
@@ -82,7 +85,9 @@ internal sealed record ChangeData(
                 => new VaultNamed(id, At, name, replaces),
             NodeRetypedOp when Retype is { Type: { Length: > 0 } type, Replaces: { Count: > 0 } replaces } && Retype.Node != Guid.Empty
                 => new NodeRetyped(id, At, Retype.Node, type, replaces),
-            MemberAddedOp when Member?.ToMember() is { } member => new MemberAdded(id, At, member),
+            MemberAddedOp when Member?.ToMember() is { } member && Member.Signature is { Length: > 0 } signature => new MemberAdded(id, At, member, signature),
+            MemberRemovedOp when MemberRemoval is { Signature: { Length: > 0 } signature } && MemberRemoval.Account != Guid.Empty
+                => new MemberRemoved(id, At, MemberRemoval.Account, signature),
             _ => throw new InvalidDataException($"Unknown or incomplete change '{Op}'"),
         };
     }
@@ -155,16 +160,20 @@ internal sealed record ChangeData(
     /// <summary><c>"vault": { "name": "Personal", "replaces": ["…"] }</c></summary>
     internal sealed record VaultNameData(string? Name, List<Guid>? Replaces);
 
-    /// <summary><c>"member": { "account": "…", "identity": "…", "publicKey": "…", "email": "…", "role": "writer" }</c></summary>
-    internal sealed record MemberData(Guid Account, Guid Identity, byte[]? PublicKey, string? Email, string? Role)
+    /// <summary><c>"member": { "account": "…", "identity": "…", "publicKey": "…", "email": "…", "role": "writer", "signingKey": "…", "signature": "…" }</c></summary>
+    /// <summary><c>"memberRemoval": { "account": "…", "signature": "…" }</c></summary>
+    internal sealed record MemberRemovalData(Guid Account, byte[]? Signature);
+
+    internal sealed record MemberData(Guid Account, Guid Identity, byte[]? PublicKey, string? Email, string? Role, byte[]? SigningKey = null, byte[]? Signature = null)
     {
-        public static MemberData From(VaultMember member) => new(member.Account, member.Identity, member.PublicKey, member.Email, member.Role.ToString().ToLowerInvariant());
+        public static MemberData From(MemberAdded added) =>
+            new(added.Member.Account, added.Member.Identity, added.Member.PublicKey, added.Member.Email, added.Member.Role.ToString().ToLowerInvariant(), added.Member.SigningKey, added.Signature);
 
         /// <summary>The member, or null when incomplete.</summary>
         public VaultMember? ToMember() =>
             Account != Guid.Empty && Identity != Guid.Empty && PublicKey is { Length: > 0 } && !string.IsNullOrWhiteSpace(Email)
             && Enum.TryParse<MemberRole>(Role, ignoreCase: true, out var role) && Enum.IsDefined(role)
-                ? new VaultMember(Account, Identity, PublicKey, Email, role)
+                ? new VaultMember(Account, Identity, PublicKey, Email, role, SigningKey)
                 : null;
     }
 

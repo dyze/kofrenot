@@ -11,6 +11,7 @@ public enum MemberRole
 /// <summary>
 /// A member of a shared server vault: their server account, the identity the vault's keys are
 /// wrapped for and its public key (so a rotation never asks the server for it, and the server
-/// cannot swap it), the email they were found by, and their role.
+/// cannot swap it), the email they were found by, their role, and the public part of their
+/// signing key (the owner's: what the members check its signatures with).
 /// </summary>
-public sealed record VaultMember(Guid Account, Guid Identity, byte[] PublicKey, string Email, MemberRole Role);
+public sealed record VaultMember(Guid Account, Guid Identity, byte[] PublicKey, string Email, MemberRole Role, byte[]? SigningKey = null);

@@ -20,10 +20,12 @@ public sealed class VaultSharingTests : IDisposable
 
     private string Folder => _temp.Sub("vault");
 
+    private byte[] OwnerKey => Signing.PublicKeyOf(_owner.Unlocked);
+
     [Fact]
     public async Task AnAccountWithAKey_IsFound_WithItsFingerprint()
     {
-        var publicPart = JsonSerializer.SerializeToUtf8Bytes(new AccountKey(_member.Identity.Id, _member.Identity.PublicKey));
+        var publicPart = JsonSerializer.SerializeToUtf8Bytes(new AccountKey(_member.Identity.Id, _member.Identity.PublicKey, _member.Identity.SigningKey));
         var account = Guid.NewGuid();
         var stub = new StubHandler(_ => Json(HttpStatusCode.OK, JsonSerializer.Serialize(new { id = account, @public = publicPart })));
 
@@ -31,7 +33,8 @@ public sealed class VaultSharingTests : IDisposable
 
         Assert.Equal(Lookup.Found, result);
         Assert.Equal((account, "bob@example.com", _member.Identity.Id), (candidate!.Account, candidate.Email, candidate.Identity));
-        Assert.Equal(Fingerprint.Of(_member.Identity.PublicKey), candidate.Fingerprint);
+        Assert.Equal(Fingerprint.Of(_member.Identity.PublicKey, _member.Identity.SigningKey), candidate.Fingerprint);
+        Assert.Equal(_member.Identity.SigningKey, candidate.As(MemberRole.Reader).SigningKey);
         Assert.Equal("/v1/accounts?email=bob%40example.com", stub.Requests[0].Path);
     }
 
@@ -47,39 +50,30 @@ public sealed class VaultSharingTests : IDisposable
     }
 
     [Fact]
-    public void Sharing_WrapsEveryKeyForTheMember_AndRecordsTheOwnerTheFirstTime()
+    public void Sharing_WrapsEveryKeyForTheMember_AndRecordsTheOwnerTheFirstTime_AllSigned()
     {
         var (access, vault) = OwnersVault();
 
         var changes = VaultSharing.Share(Folder, access, vault.Graph, Owner, Candidate, MemberRole.Writer, Now);
 
         Assert.Equal([MemberRole.Owner, MemberRole.Writer], changes.Cast<MemberAdded>().Select(change => change.Member.Role));
-        var opened = VaultKeys.Unlock(Folder, access.Header, _member.Unlocked);
-        Assert.Equal(access.Keys.CurrentKey, opened?.Keys.CurrentKey);
-        foreach (var change in changes)
-        {
-            vault.Append(change);
-        }
-
-        Assert.Equal(MemberRole.Writer, VaultSharing.RoleOf(vault.Graph, _member.Identity.Id));
-        Assert.Null(VaultSharing.RoleOf(vault.Graph, Guid.NewGuid()));
+        Assert.Equal(access.Keys.CurrentKey, VaultKeys.Unlock(Folder, access.Header, _member.Unlocked, signer: new KeySigner(OwnerKey))?.Keys.CurrentKey);
+        Append(vault, changes);
+        Assert.Equal(MemberRole.Writer, VaultSharing.RoleOf(Members(vault), _member.Identity.Id));
+        Assert.Null(VaultSharing.RoleOf(Members(vault), Guid.NewGuid()));
         Assert.Empty(VaultSharing.Share(Folder, access, vault.Graph, Owner, Candidate, MemberRole.Writer, Now));
-        var roleChanged = Assert.Single(VaultSharing.Share(Folder, access, vault.Graph, Owner, Candidate, MemberRole.Reader, Now.AddMinutes(1)));
-        vault.Append(roleChanged);
-        Assert.Equal(MemberRole.Reader, VaultSharing.RoleOf(vault.Graph, _member.Identity.Id));
-        Assert.Equal(2, vault.Graph.Members.Count);
+        Append(vault, VaultSharing.Share(Folder, access, vault.Graph, Owner, Candidate, MemberRole.Reader, Now.AddMinutes(1)));
+        Assert.Equal(MemberRole.Reader, VaultSharing.RoleOf(Members(vault), _member.Identity.Id));
+        Assert.Equal(2, Members(vault).Count);
     }
 
     [Fact]
     public void TheMembers_AreReadBack_FromTheVaultsFiles()
     {
         var (access, vault) = OwnersVault();
-        foreach (var change in VaultSharing.Share(Folder, access, vault.Graph, Owner, Candidate, MemberRole.Reader, Now))
-        {
-            vault.Append(change);
-        }
+        Append(vault, VaultSharing.Share(Folder, access, vault.Graph, Owner, Candidate, MemberRole.Reader, Now));
 
-        var members = Vault.Open(Folder, access.Header, access.Keys).Graph.Members;
+        var members = MemberRecords.Members(Vault.Open(Folder, access.Header, access.Keys).Graph, access.Header.Id, OwnerKey);
 
         var bob = Assert.Single(members, member => member.Email == "bob@example.com");
         Assert.Equal((MemberRole.Reader, _member.Identity.Id), (bob.Role, bob.Identity));
@@ -87,24 +81,37 @@ public sealed class VaultSharingTests : IDisposable
     }
 
     [Fact]
-    public void ARemovedMember_IsNoLongerListed()
+    public void ARecordNotSignedByTheOwner_IsIgnored()
     {
         var (access, vault) = OwnersVault();
-        foreach (var change in VaultSharing.Share(Folder, access, vault.Graph, Owner, Candidate, MemberRole.Reader, Now))
-        {
-            vault.Append(change);
-        }
+        Append(vault, VaultSharing.Share(Folder, access, vault.Graph, Owner, Candidate, MemberRole.Reader, Now));
+        var mallory = Identity.Create("mallory", Iterations);
 
-        vault.Append(new ChangesRemoved(Guid.NewGuid(), Now, vault.Graph.MemberRecordsOf(Candidate.Account)));
+        // A writer adds a member with its own key, and drops the reader.
+        vault.Append(MemberRecords.Added(access.Header.Id, new VaultMember(Guid.NewGuid(), mallory.Identity.Id, mallory.Identity.PublicKey, "mallory@example.com", MemberRole.Writer), Now.AddMinutes(1), mallory.Unlocked));
+        vault.Append(MemberRecords.Removed(access.Header.Id, MemberAccount, Now.AddMinutes(1), mallory.Unlocked));
+        var tampered = MemberRecords.Added(access.Header.Id, Candidate.As(MemberRole.Reader), Now.AddMinutes(2), _owner.Unlocked) with { Member = Candidate.As(MemberRole.Writer) };
+        vault.Append(tampered);
 
-        Assert.Equal([Owner.Account], vault.Graph.Members.Select(member => member.Account));
+        Assert.Equal(new[] { OwnerAccount, MemberAccount }.Order(), Members(vault).Select(member => member.Account).Order());
+        Assert.Equal(MemberRole.Reader, VaultSharing.RoleOf(Members(vault), _member.Identity.Id));
     }
 
     [Fact]
-    public void AnAccessBehind_CannotShare()
+    public void ARecordOfAnotherVault_IsIgnored()
     {
         var (access, vault) = OwnersVault();
-        VaultKeys.Attach(Folder, access, _member.Identity, _member.Unlocked);
+
+        vault.Append(MemberRecords.Added(Guid.NewGuid(), Candidate.As(MemberRole.Writer), Now, _owner.Unlocked));
+
+        Assert.Empty(Members(vault));
+    }
+
+    [Fact]
+    public void AnAccessBehind_OrWithoutIdentity_CannotShare()
+    {
+        var (access, vault) = OwnersVault();
+        VaultKeys.Rotate(Folder, access, [(_owner.Identity.Id, _owner.Identity.PublicKey)]);
 
         Assert.Throws<InvalidOperationException>(() => VaultSharing.Share(Folder, access, vault.Graph, Owner, Candidate, MemberRole.Reader, Now));
     }
@@ -118,9 +125,19 @@ public sealed class VaultSharingTests : IDisposable
 
     public void Dispose() => _temp.Dispose();
 
-    private VaultMember Owner => new(OwnerAccount, _owner.Identity.Id, _owner.Identity.PublicKey, "ada@example.com", MemberRole.Owner);
+    private VaultMember Owner => new(OwnerAccount, _owner.Identity.Id, _owner.Identity.PublicKey, "ada@example.com", MemberRole.Owner, _owner.Identity.SigningKey);
 
-    private ShareCandidate Candidate => new(MemberAccount, "bob@example.com", _member.Identity.Id, _member.Identity.PublicKey);
+    private ShareCandidate Candidate => new(MemberAccount, "bob@example.com", _member.Identity.Id, _member.Identity.PublicKey, _member.Identity.SigningKey);
+
+    private IReadOnlyList<VaultMember> Members(Vault vault) => MemberRecords.Members(vault.Graph, vault.Id, OwnerKey);
+
+    private static void Append(Vault vault, IEnumerable<Change> changes)
+    {
+        foreach (var change in changes)
+        {
+            vault.Append(change);
+        }
+    }
 
     private (VaultAccess Access, Vault Vault) OwnersVault()
     {

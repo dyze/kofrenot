@@ -3,6 +3,7 @@ using System.Windows.Threading;
 using Kofrenot.Core.Logging;
 using Kofrenot.Core.Server;
 using Kofrenot.Core.Settings;
+using Kofrenot.Core.Sharing;
 
 namespace Kofrenot.UI.Sync;
 
@@ -22,11 +23,12 @@ public sealed class ServerConnection : IDisposable
     private readonly Dispatcher _dispatcher = Dispatcher.CurrentDispatcher;
     private HttpClient? _http;
 
-    public ServerConnection(SettingsStore settings, ServerSessionMemory sessions, AccountIdentities identities, ILog log)
+    public ServerConnection(SettingsStore settings, ServerSessionMemory sessions, AccountIdentities identities, VaultOwners owners, ILog log)
     {
         _settings = settings;
         _sessions = sessions;
         Identities = identities;
+        Owners = owners;
         _log = log;
         if (settings.Server is { } account)
         {
@@ -48,6 +50,9 @@ public sealed class ServerConnection : IDisposable
     public string? TooOld { get; private set; }
 
     public AccountIdentities Identities { get; }
+
+    /// <summary>The owners of the server vaults, kept to check their signatures.</summary>
+    public VaultOwners Owners { get; }
 
     /// <summary>The account's identity kept on this computer; null before it has one, or before it was read.</summary>
     public AccountIdentity? Identity => Account is { } account ? Identities.Kept(account.Server, account.Email) : null;

@@ -171,6 +171,7 @@ Everything stays on your computer, in `%LOCALAPPDATA%\kofrenot` (a portable copy
 | `cache\` | One encrypted snapshot per vault opened here, so it opens fast. Safe to delete |
 | `server-session.json` | The session on your server, so kofrenot stays signed in (protected by Windows for your account) |
 | `account-identity.json` | Your server account's identity, as on the server (sealed by its pass phrase), so server vaults open offline |
+| `vault-owners.json` | The owner of each server vault (their public keys), to check what only the owner may write: its keys and members |
 | `stores\` | Each server vault, kept whole on this computer (encrypted), with where its sync stands. Files not uploaded yet are only here |
 | `logs\kofrenot.log` | Log, at most 3 files of 1 MB, oldest deleted |
 

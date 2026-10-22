@@ -136,6 +136,9 @@ public sealed class SyncService : IDisposable
         try
         {
             await Task.Run(() => new ServerSync(mirror, state, store.Id, client, _log).RunAsync());
+
+            // Read once, then kept: the owner whose signatures the vault's keys and members need.
+            await _server.Owners.OwnerOfAsync(client, store.Id);
             return new SyncStatus(DateTimeOffset.Now, null, await Waiting());
         }
         catch (ServerException ex)
