@@ -70,7 +70,7 @@ Type in the box at the top of the main window:
 | `Kitchen contains Knives` or `Knives contained by Kitchen` | the same link, from *Kitchen* to *Knives* |
 | `Dune is a novel` (or `is an`) or `novel has instance Dune` | the same link, from *Dune* to *novel* |
 
-*relates to* reads the same both ways. The other link types read from each side: the details of *Knives* show *contained by Kitchen*. A node name cannot contain a link phrase, so a name like *This is a test* cannot be typed.
+*relates to* reads the same both ways. Your own link types (Settings > Link types) are typed the same way. The other link types read from each side: the details of *Knives* show *contained by Kitchen*. A node name cannot contain a link phrase, so a name like *This is a test* cannot be typed.
 
 - While you type, the nodes whose name has a word starting with the text are listed; a node matched exactly shows its links. Case, accents and extra spaces are ignored.
 - The line under the box says what Enter will add.
@@ -150,7 +150,7 @@ Gear button in the main window, or tray menu > Settings. A dialog over the main 
 | Key bindings | Every shortcut, by area (main window, input box, node details, notes, datasets, views, creation screen, image window, Settings), with the global hotkeys: read only |
 | General | Hotkey that shows kofrenot (click the box, then press the new shortcut; *Default*: Ctrl+Alt+K); main window position: centered on the mouse's monitor (default), at the mouse, or where you left it. Its size is kept, and it always stays fully on screen |
 | Vault | The vaults, in the order of the main window's box: *Add...*, *Remove*, *Up*, *Down*. For the one chosen in the list: its name (*Rename*, when open), its hotkey (click the box, then press the shortcut; *None*), its folder (*Explore to*), whether it is open; its pass phrase (*Change...*, when open; folder vaults); the remembered pass phrase (*Forget*) |
-| Link types | Each link type, both ways, with its phrases. Add your own aliases (for example `-` for *relates to*): pick the link type, type the phrase, *Add*; × removes one. They are stored in the vault, so every device has them. A phrase in use is refused, and node names containing it are warned about (the input box would read them as links) |
+| Link types | Each link type, both ways, with its phrases. Add your own aliases (for example `-` for *relates to*): pick the link type, type the phrase, *Add*; × removes one. Add your own link types under *Your link types*: its name (*wrote*) and how it reads the other way (*written by*), or nothing there for one that reads the same both ways (*knows*), then *Add*. *Rename* changes its names, not the way it reads; × removes it once no link has it. Both are stored in the vault, so every device has them. A phrase in use is refused, and node names containing it are warned about (the input box would read them as links) |
 | Appearance | Theme: follow Windows (default), light or dark |
 | Logging | Detailed (debug) logging; open the log window |
 | About | Version, with the commit it was built from (`-dirty`: uncommitted changes), website, report an issue, changelog; update check (once a day, on by default; a dot on the gear button and on the tab when a newer release exists); kofrenot's files, each with *Show in folder* |

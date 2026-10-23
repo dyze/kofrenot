@@ -47,7 +47,7 @@ public static class SettingsCatalog
             "database", "folder", "sync", "dropbox", "share", "nodes", "open", "create", "add", "remove", "several", "order", "name", "rename",
             "password", "passphrase", "forget", "remember", "unlock", "secret"]),
         new(ServerId, ServerTab, "Server account: sign up, sign in, sign out", ["kofre", "web", "url", "account", "email", "signup", "online", "offline", "cloud"]),
-        new(LinkAliasesId, LinkTypesTab, "Link types and their aliases", ["alias", "phrase", "relates", "contains", "instance", "reverse", "input"]),
+        new(LinkAliasesId, LinkTypesTab, "Link types and their aliases", ["alias", "phrase", "relates", "contains", "instance", "reverse", "input", "custom"]),
         new(ThemeId, AppearanceTab, "Theme", ["dark", "light", "mode", "color", "colour"]),
         new(DebugLoggingId, LoggingTab, "Detailed (debug) logging", ["log", "verbose", "trace"]),
         new(LogWindowId, LoggingTab, "Open log window", ["log", "view", "errors"]),

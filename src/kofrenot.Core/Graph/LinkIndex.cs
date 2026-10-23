@@ -4,9 +4,10 @@ namespace Kofrenot.Core.Graph;
 /// The links of a graph. Copies of a link (same type and nodes, either direction when symmetric:
 /// added on two devices before they synced) count as one: the oldest is shown. A removed link is
 /// not shown, and the next copy is, so a removal names every copy (<see cref="CopiesOf"/>). A
-/// removal may arrive before its link.
+/// removal may arrive before its link. A link of a type not known yet reads one way until its type
+/// arrives (<see cref="Refile"/>).
 /// </summary>
-internal sealed class LinkIndex(TypeCatalog types, ISet<Guid> removed)
+internal sealed class LinkIndex(Func<TypeCatalog> types, ISet<Guid> removed)
 {
     private readonly Dictionary<Guid, Link> _added = [];
     private readonly Dictionary<LinkKey, List<Link>> _copies = [];
@@ -66,6 +67,26 @@ internal sealed class LinkIndex(TypeCatalog types, ISet<Guid> removed)
         }
     }
 
+    /// <summary>Files the links of these types again: whether they read the same both ways changed.</summary>
+    public void Refile(ISet<string> linkTypes)
+    {
+        foreach (var key in _copies.Keys.Where(key => linkTypes.Contains(key.Type)).ToList())
+        {
+            _copies.Remove(key);
+        }
+
+        foreach (var shown in _shown.Values.Where(link => linkTypes.Contains(link.Type)).ToList())
+        {
+            Replace(shown, null);
+        }
+
+        foreach (var link in _added.Values.Where(link => linkTypes.Contains(link.Type)).ToList())
+        {
+            _added.Remove(link.Id);
+            Add(link);
+        }
+    }
+
     private bool Replace(Link? shown, Link? next)
     {
         if (ReferenceEquals(shown, next))
@@ -109,7 +130,7 @@ internal sealed class LinkIndex(TypeCatalog types, ISet<Guid> removed)
 
     private LinkKey KeyOf(string type, Guid from, Guid to)
     {
-        var symmetric = types.FindLinkType(type)?.IsSymmetric ?? false;
+        var symmetric = types().FindLinkType(type)?.IsSymmetric ?? false;
         return symmetric && from.CompareTo(to) > 0 ? new LinkKey(type, to, from) : new LinkKey(type, from, to);
     }
 

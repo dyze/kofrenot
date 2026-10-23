@@ -2,7 +2,8 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
   <!-- Settings > Link types: each link type, each way it reads, with its phrases. The built-in
-       ones are fixed; the user's aliases can be added and removed (×). Stored in the vault. -->
+       ones are fixed; the user's aliases and link types can be added and removed (×), their link
+       types renamed. Stored in the vault. -->
   <StackPanel>
     <TextBlock x:Name="StateText" Margin="0,10,0,0" Opacity="0.7" TextWrapping="Wrap" />
 
@@ -76,5 +77,55 @@
       <Button x:Name="AddButton" Margin="8,0,0,0" Padding="12,4" Content="Add" Click="AddButton_Click" />
     </StackPanel>
     <TextBlock x:Name="PlanText" Margin="0,6,0,0" Opacity="0.7" TextWrapping="Wrap" />
+
+    <!-- The user's link types: renamed (the form below fills with its names) or removed (×) unless links have them. -->
+    <TextBlock Margin="0,22,0,0" FontWeight="SemiBold" Text="Your link types" />
+    <TextBlock x:Name="NoTypesText" Margin="0,6,0,0" Opacity="0.7" Text="None yet." />
+    <ItemsControl x:Name="TypeList" Margin="0,6,0,0" Grid.IsSharedSizeScope="True">
+      <ItemsControl.ItemTemplate>
+        <DataTemplate>
+          <Grid Margin="0,3">
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="Auto" SharedSizeGroup="TypeNames" />
+              <ColumnDefinition Width="Auto" />
+              <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <TextBlock Margin="0,0,16,0" VerticalAlignment="Center" Text="{Binding Names}" />
+            <StackPanel Grid.Column="1" Orientation="Horizontal">
+              <Button Padding="8,1" Content="Rename" ToolTip="Rename this link type" Click="RenameType_Click" />
+              <Button Margin="4,0,0,0"
+                      Padding="6,1"
+                      Content="&#xE711;"
+                      FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
+                      FontSize="10"
+                      ToolTip="Remove this link type"
+                      Click="RemoveType_Click" />
+            </StackPanel>
+            <TextBlock Grid.Column="2" Margin="12,0,0,0" VerticalAlignment="Center" Opacity="0.7" TextWrapping="Wrap" Text="{Binding Warning}" />
+          </Grid>
+        </DataTemplate>
+      </ItemsControl.ItemTemplate>
+    </ItemsControl>
+
+    <!-- A new link type, or new names for one: its name, how it reads the other way (empty: the same both ways), then Add or Rename (or Enter). -->
+    <StackPanel x:Name="TypePanel" Margin="0,14,0,0" Orientation="Horizontal">
+      <TextBlock x:Name="TypeFormText" Margin="0,0,8,0" VerticalAlignment="Center" Text="New link type" />
+      <TextBox x:Name="TypeNameBox"
+               Width="140"
+               VerticalContentAlignment="Center"
+               ToolTip="Its name, as typed in the input box: wrote"
+               TextChanged="TypeBox_TextChanged"
+               KeyDown="TypeBox_KeyDown" />
+      <TextBlock Margin="8,0" VerticalAlignment="Center" Text="other way" />
+      <TextBox x:Name="TypeReverseBox"
+               Width="140"
+               VerticalContentAlignment="Center"
+               ToolTip="How it reads from the other node: written by. Empty when it reads the same both ways"
+               TextChanged="TypeBox_TextChanged"
+               KeyDown="TypeBox_KeyDown" />
+      <Button x:Name="TypeButton" Margin="8,0,0,0" Padding="12,4" Content="Add" Click="TypeButton_Click" />
+      <Button x:Name="CancelRenameButton" Margin="4,0,0,0" Padding="12,4" Content="Cancel" Visibility="Collapsed" Click="CancelRename_Click" />
+    </StackPanel>
+    <TextBlock x:Name="TypePlanText" Margin="0,6,0,0" Opacity="0.7" TextWrapping="Wrap" />
   </StackPanel>
 </UserControl>

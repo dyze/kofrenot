@@ -1,8 +1,8 @@
 namespace Kofrenot.Core.Graph;
 
 /// <summary>
-/// The node and link types known to this version, offered by the creation screen. Built in for
-/// now; user-defined types will be added to it later.
+/// The node and link types offered by the creation screen: the built-in ones (<see cref="BuiltIn"/>),
+/// or a vault's, with the user's link types and aliases (<see cref="KnowledgeGraph.Types"/>).
 /// </summary>
 public sealed class TypeCatalog
 {

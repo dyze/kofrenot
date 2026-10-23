@@ -22,7 +22,8 @@ internal sealed record ChangeData(
     List<Guid>? Removes = null,
     ChangeData.VaultNameData? Vault = null,
     ChangeData.RetypeData? Retype = null,
-    ChangeData.MemberData? Member = null)
+    ChangeData.MemberData? Member = null,
+    ChangeData.LinkTypeData? LinkType = null)
 {
     private const string NodeAddedOp = "addNode";
     private const string LinkAddedOp = "addLink";
@@ -36,6 +37,7 @@ internal sealed record ChangeData(
     private const string VaultNamedOp = "nameVault";
     private const string NodeRetypedOp = "retypeNode";
     private const string MemberAddedOp = "addMember";
+    private const string LinkTypeDefinedOp = "defineLinkType";
 
     public static ChangeData From(Change change) => change switch
     {
@@ -51,6 +53,7 @@ internal sealed record ChangeData(
         VaultNamed name => new(VaultFormat.Current, VaultNamedOp, name.At, Vault: new VaultNameData(name.Name, [.. name.Replaces])),
         NodeRetyped retype => new(VaultFormat.Current, NodeRetypedOp, retype.At, Retype: new RetypeData(retype.Node, retype.Type, [.. retype.Replaces])),
         MemberAdded added => new(VaultFormat.Current, MemberAddedOp, added.At, Member: MemberData.From(added.Member)),
+        LinkTypeDefined defined => new(VaultFormat.Current, LinkTypeDefinedOp, defined.At, LinkType: new LinkTypeData(defined.LinkType, defined.Name, defined.ReverseName, [.. defined.Replaces])),
         _ => throw new ArgumentOutOfRangeException(nameof(change), change.GetType().Name, "Unknown change"),
     };
 
@@ -83,6 +86,9 @@ internal sealed record ChangeData(
             NodeRetypedOp when Retype is { Type: { Length: > 0 } type, Replaces: { Count: > 0 } replaces } && Retype.Node != Guid.Empty
                 => new NodeRetyped(id, At, Retype.Node, type, replaces),
             MemberAddedOp when Member?.ToMember() is { } member => new MemberAdded(id, At, member),
+            LinkTypeDefinedOp when LinkType is { Id: { Length: > 0 } type, Name: { } name, Replaces: { } replaces }
+                && !string.IsNullOrWhiteSpace(name) && LinkType.Reverse is null or { Length: > 0 }
+                => new LinkTypeDefined(id, At, type, name, LinkType.Reverse, replaces),
             _ => throw new InvalidDataException($"Unknown or incomplete change '{Op}'"),
         };
     }
@@ -151,6 +157,9 @@ internal sealed record ChangeData(
 
     /// <summary><c>"retype": { "node": "…", "type": "note", "replaces": ["…"] }</c></summary>
     internal sealed record RetypeData(Guid Node, string? Type, List<Guid>? Replaces);
+
+    /// <summary><c>"linkType": { "id": "…", "name": "wrote", "reverse": "written by", "replaces": [] }</c>; no reverse when symmetric.</summary>
+    internal sealed record LinkTypeData(string? Id, string? Name, string? Reverse, List<Guid>? Replaces);
 
     /// <summary><c>"vault": { "name": "Personal", "replaces": ["…"] }</c></summary>
     internal sealed record VaultNameData(string? Name, List<Guid>? Replaces);
