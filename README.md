@@ -74,9 +74,11 @@ Type in the box at the top of the main window:
 
 - While you type, the nodes whose name has a word starting with the text are listed; a node matched exactly shows its links. Case, accents and extra spaces are ignored.
 - The line under the box says what Enter will add.
+- **Labels**: once a link type is recognized and you type a space after it, the first node and the link type become labels in the box, so you see at once how it is read. A node's label shows its icon, with the number of nodes of that name when there are several; a new node's label is green and dashed, with a `+` icon (Enter will add it); the link type's is in the accent color. **Enter** first turns the rest into labels, the second node too, then opens the creation screen; cancelled, the labels stay. **Backspace** at the start of the text turns the last label back into text.
+- **Proposals**: while you type at the end of the text, the rest of an existing node's name (the shortest first), or else of a link type, is shown in grey. **Tab** or **→** accepts it, as a label; typing more narrows it, **Esc** hides it.
 - **Enter** opens the creation screen, in steps: one per new node (its type, *Generic* by default, for a *Note* its content, for a *Dataset* its file), then for a link its two nodes and the link type. Each step starts on its list of types, on the right, each with its icon: **Up/Down** or a click choose one; **Tab** goes to a note's content. **Enter** (or **Ctrl+Enter** in a note's content) goes to the next step, and on the last one adds everything at once; **Back** returns to a step. **Esc** cancels the whole creation, asking first if you typed note content or chose a file.
 - A node name that exists already is warned about on the creation screen: adding makes another node with that name. A link that exists already cannot be added again.
-- Nodes with the same name are marked `¹`, `²`, ... When one side of a link matches several, **Up/Down** picks one (the oldest first), **Tab** switches to the other side.
+- Nodes with the same name are marked `¹`, `²`, ... When one side of a link matches several, **Up/Down** picks one (the oldest first), **Tab** switches to the other side (when nothing is proposed in grey).
 - While the box is empty, the **pinned** nodes are listed, then the **recent** ones (the last 10 opened, added or linked on this computer, the latest first): **Down** selects one, **Enter** opens it.
 - **Esc** clears the box, then hides the window.
 

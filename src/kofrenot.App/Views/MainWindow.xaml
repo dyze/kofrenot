@@ -163,13 +163,94 @@
     </Grid>
 
     <!-- Enter adds (or opens the selected node), Up/Down select a node or choose among homonyms,
-         Tab switches the side of a link, Esc clears then hides. -->
+         Tab or Right accept the proposal in grey (else Tab switches the side of a link), Backspace
+         turns the last label back into text, Esc hides the proposal, clears, then hides.
+         The labels (ChipInput) sit over the start of the box, whose text starts after them. -->
     <Grid x:Name="InputArea" Grid.Row="1" Margin="0,14,0,0">
       <TextBox x:Name="InputBox"
                Padding="8,6"
                FontSize="{StaticResource BodyFontSize}"
                TextChanged="InputBox_TextChanged"
+               SelectionChanged="InputBox_SelectionChanged"
                PreviewKeyDown="InputBox_PreviewKeyDown" />
+      <ItemsControl x:Name="InputChips"
+                    Margin="8,0,0,0"
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Center"
+                    Focusable="False"
+                    IsHitTestVisible="False"
+                    SizeChanged="InputChips_SizeChanged">
+        <ItemsControl.ItemsPanel>
+          <ItemsPanelTemplate>
+            <StackPanel Orientation="Horizontal" />
+          </ItemsPanelTemplate>
+        </ItemsControl.ItemsPanel>
+        <ItemsControl.ItemTemplate>
+          <DataTemplate>
+            <Grid Margin="0,0,4,0">
+              <Rectangle x:Name="NewOutline"
+                         RadiusX="4"
+                         RadiusY="4"
+                         Fill="{DynamicResource SystemFillColorSuccessBackgroundBrush}"
+                         Stroke="{DynamicResource SystemFillColorSuccessBrush}"
+                         StrokeThickness="1"
+                         StrokeDashArray="3 2"
+                         Visibility="Collapsed" />
+              <Border x:Name="Chip"
+                      Padding="5,1,7,1"
+                      CornerRadius="4"
+                      BorderThickness="1"
+                      BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
+                      Background="{DynamicResource SubtleFillColorSecondaryBrush}">
+                <StackPanel Orientation="Horizontal">
+                  <local:NodeVisualView x:Name="ChipVisual" Width="16" Height="16" Margin="0,0,4,0" Visual="{Binding Visual}" />
+                  <TextBlock x:Name="NewMark"
+                             Margin="0,0,4,0"
+                             VerticalAlignment="Center"
+                             FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
+                             FontSize="{StaticResource CaptionFontSize}"
+                             Foreground="{DynamicResource SystemFillColorSuccessBrush}"
+                             Text="&#xE710;"
+                             ToolTip="New node: added with Enter"
+                             Visibility="Collapsed" />
+                  <TextBlock x:Name="ChipText" VerticalAlignment="Center" Text="{Binding Text}" />
+                  <TextBlock x:Name="HomonymMark"
+                             Margin="4,0,0,0"
+                             VerticalAlignment="Center"
+                             FontSize="{StaticResource CaptionFontSize}"
+                             Opacity="0.7"
+                             Text="{Binding HomonymMark}" />
+                </StackPanel>
+              </Border>
+            </Grid>
+            <DataTemplate.Triggers>
+              <DataTrigger Binding="{Binding IsNew}" Value="True">
+                <Setter TargetName="NewOutline" Property="Visibility" Value="Visible" />
+                <Setter TargetName="NewMark" Property="Visibility" Value="Visible" />
+                <Setter TargetName="ChipVisual" Property="Visibility" Value="Collapsed" />
+                <Setter TargetName="Chip" Property="BorderBrush" Value="Transparent" />
+                <Setter TargetName="Chip" Property="Background" Value="Transparent" />
+              </DataTrigger>
+              <DataTrigger Binding="{Binding IsLinkType}" Value="True">
+                <Setter TargetName="ChipVisual" Property="Visibility" Value="Collapsed" />
+                <Setter TargetName="Chip" Property="Padding" Value="7,1" />
+                <Setter TargetName="Chip" Property="BorderBrush" Value="Transparent" />
+                <Setter TargetName="Chip" Property="Background" Value="{DynamicResource AccentFillColorDefaultBrush}" />
+                <Setter TargetName="ChipText" Property="Foreground" Value="{DynamicResource TextOnAccentFillColorPrimaryBrush}" />
+              </DataTrigger>
+              <DataTrigger Binding="{Binding HomonymMark}" Value="">
+                <Setter TargetName="HomonymMark" Property="Visibility" Value="Collapsed" />
+              </DataTrigger>
+            </DataTemplate.Triggers>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+      <TextBlock x:Name="InputProposal"
+                 HorizontalAlignment="Left"
+                 VerticalAlignment="Center"
+                 FontSize="{StaticResource BodyFontSize}"
+                 IsHitTestVisible="False"
+                 Opacity="0.45" />
       <TextBlock x:Name="InputPlaceholder"
                  Margin="12,0,0,0"
                  VerticalAlignment="Center"

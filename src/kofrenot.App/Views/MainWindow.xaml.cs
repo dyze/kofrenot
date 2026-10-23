@@ -186,9 +186,9 @@ public partial class MainWindow : Window
             return;
         }
 
-        InputPlaceholder.Visibility = InputBox.Text.Length == 0 ? Visibility.Visible : Visibility.Collapsed;
+        InputPlaceholder.Visibility = _chips.IsEmpty ? Visibility.Visible : Visibility.Collapsed;
         _input.Recent = _recent.Of(vault.Id);
-        _input.Update(vault.Graph, InputBox.Text);
+        _input.Update(vault.Graph, _chips.Text);
         ShowPresented();
     }
 
@@ -196,13 +196,16 @@ public partial class MainWindow : Window
     {
         PreviewText.Text = _input.Preview;
         ResultsList.ItemsSource = _input.Rows;
+        if (_session.Current is { } vault)
+        {
+            ShowChips(vault.Graph);
+        }
     }
-
-    private void InputBox_TextChanged(object sender, TextChangedEventArgs e) => ShowInput();
 
     /// <summary>
     /// Enter opens the selected node's details, or else adds; Up/Down choose among homonyms
-    /// while a link is typed, or else select a node; Tab switches the side of a link.
+    /// while a link is typed, or else select a node; Tab accepts the proposal, or else switches the
+    /// side of a link; Right at the end accepts the proposal; Backspace at the start unlabels.
     /// </summary>
     private void InputBox_PreviewKeyDown(object sender, KeyEventArgs e)
     {
@@ -217,7 +220,9 @@ public partial class MainWindow : Window
             Key.Enter => AddInput(),
             Key.Up => Presented(_input.MoveChoice(-1) || _input.MoveSelection(-1)),
             Key.Down => Presented(_input.MoveChoice(1) || _input.MoveSelection(1)),
-            Key.Tab => Presented(_input.SwitchSide()),
+            Key.Tab => AcceptProposal() || Presented(_input.SwitchSide()),
+            Key.Right => AcceptProposal(),
+            Key.Back => UnlabelLast(),
             _ => false,
         };
     }
@@ -286,15 +291,20 @@ public partial class MainWindow : Window
     }
 
     /// <summary>
-    /// Enter: opens the creation screen for what the preview says. Once it is added, its nodes (new
+    /// Enter: turns what is typed into labels, then opens the creation screen for what the preview says. Once it is added, its nodes (new
     /// or existing) go first among the recent ones, the first typed on top, and the input box is cleared.
     /// </summary>
     private bool AddInput()
     {
+        if (_input is { Plan.CanAdd: true, Request: not null })
+        {
+            LabelAll();
+        }
+
         if (_input is { Plan.CanAdd: true, Request: { } request }
             && RecordRecent(_session.Create(this, request, _input.Choices)) is { } added)
         {
-            InputBox.Clear();
+            ClearInput();
 
             // A new view opens in a tab.
             if (added.NewNodes.LastOrDefault(node => node.Type == TypeCatalog.View.Id) is { } view)
@@ -322,7 +332,7 @@ public partial class MainWindow : Window
         return added;
     }
 
-    /// <summary>In the details, their keys (Esc goes back). In the search, Esc clears the input box, then hides the window.</summary>
+    /// <summary>In the details, their keys (Esc goes back). In the search, Esc hides the proposal, clears the input box, then hides the window.</summary>
     private void Window_PreviewKeyDown(object sender, KeyEventArgs e)
     {
         if (e.Key == Key.Tab && Keyboard.Modifiers.HasFlag(ModifierKeys.Control))
@@ -366,9 +376,15 @@ public partial class MainWindow : Window
             return;
         }
 
-        if (InputBox.Text.Length > 0)
+        if (InputBox.IsKeyboardFocusWithin && DismissProposal())
         {
-            InputBox.Clear();
+            e.Handled = true;
+            return;
+        }
+
+        if (!_chips.IsEmpty)
+        {
+            ClearInput();
         }
         else
         {
@@ -472,6 +488,10 @@ public partial class MainWindow : Window
         }
         else if (_session.Current is not null)
         {
+            // All of it selected, so typing replaces it: labels included.
+            _chips.Unlabel();
+            SetInputText(_chips.Tail);
+            ShowInput();
             InputBox.Focus();
             InputBox.SelectAll();
         }

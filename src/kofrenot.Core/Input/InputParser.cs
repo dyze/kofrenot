@@ -12,7 +12,7 @@ public static class InputParser
     /// <summary>The request, or null for an empty text.</summary>
     public static InputRequest? Parse(string text, TypeCatalog? types = null)
     {
-        var words = text.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries);
+        var words = Words(text);
         if (words.Length == 0)
         {
             return null;
@@ -36,6 +36,9 @@ public static class InputParser
 
         return new NodeRequest(Join(words));
     }
+
+    /// <summary>The words of a text, as the parser reads them.</summary>
+    internal static string[] Words(string text) => text.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries);
 
     private static bool StartsAt(string[] keys, int start, string[] phrase) =>
         start + phrase.Length <= keys.Length && phrase.Select((word, index) => keys[start + index] == word).All(same => same);

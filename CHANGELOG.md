@@ -7,6 +7,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [Unreleased]
 
 ### Added
+- **Input box labels and proposals**: the first node and the link type become labels once the link type is recognized, a new node in green with a `+`, homonyms counted; Enter turns the rest into labels before the creation screen; Backspace turns the last label back into text. The rest of a node's name or of a link type is proposed in grey while typing; **Tab** or **→** accepts it, and Tab switches the side of a link only when nothing is proposed.
 - **Recovery key**: shown once when a vault is created or upgraded, it opens the vault when its pass phrase is lost (*Lost it? Use the recovery key* when unlocking); a folder vault then asks a new pass phrase.
 - **Change the pass phrase** of a folder vault: Settings > Vault > *Pass phrase* > *Change...*, the vault open. The recovery key and the remembered pass phrase stay valid.
 - **Server account's pass phrase**: one pass phrase, and one recovery key, open all your server vaults. Chosen with your first new server vault (or when an older one moves to it), changed in Settings > Server > *Pass phrase*. Kept, sealed, in your account on the server, and copied on each computer so server vaults open offline.
