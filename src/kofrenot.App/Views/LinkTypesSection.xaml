@@ -110,7 +110,7 @@
 
       <!-- A new alias, under the line of its way. -->
       <DataTemplate DataType="{x:Type local:AliasEditor}">
-        <StackPanel Margin="16,3,0,6">
+        <StackPanel x:Name="Editor" Margin="16,3,0,6">
           <StackPanel Orientation="Horizontal">
             <TextBox Width="180"
                      VerticalContentAlignment="Center"
@@ -118,16 +118,21 @@
                      ToolTip="Another phrase for this way, as typed in the input box"
                      Loaded="EditorBox_Loaded"
                      KeyDown="EditorBox_KeyDown" />
-            <Button Margin="8,0,0,0" Padding="12,4" Content="Add" IsEnabled="{Binding CanApply}" Click="ApplyEditor_Click" />
+            <Button x:Name="ApplyButton" Margin="8,0,0,0" Padding="12,4" Content="Add" IsEnabled="{Binding CanApply}" Click="ApplyEditor_Click" />
             <Button Margin="4,0,0,0" Padding="12,4" Content="Cancel" Click="CancelEditor_Click" />
           </StackPanel>
           <TextBlock Style="{StaticResource EditorStatus}" Text="{Binding Status}" />
         </StackPanel>
+        <DataTemplate.Triggers>
+          <Trigger SourceName="Editor" Property="IsKeyboardFocusWithin" Value="True">
+            <Setter TargetName="ApplyButton" Property="Style" Value="{DynamicResource AccentButtonStyle}" />
+          </Trigger>
+        </DataTemplate.Triggers>
       </DataTemplate>
 
       <!-- A link type of the user's: renamed in place of its lines, or added at the end of the list. -->
       <DataTemplate DataType="{x:Type local:TypeEditor}">
-        <StackPanel Margin="0,3,0,6">
+        <StackPanel x:Name="Editor" Margin="0,3,0,6">
           <StackPanel Orientation="Horizontal">
             <TextBox Width="140"
                      VerticalContentAlignment="Center"
@@ -142,7 +147,7 @@
                      IsEnabled="{Binding CanTypeReverse}"
                      ToolTip="How it reads from the other node: written by. Empty when it reads the same both ways"
                      KeyDown="EditorBox_KeyDown" />
-            <Button Margin="8,0,0,0" Padding="12,4" Content="{Binding ApplyText}" IsEnabled="{Binding CanApply}" Click="ApplyEditor_Click" />
+            <Button x:Name="ApplyButton" Margin="8,0,0,0" Padding="12,4" Content="{Binding ApplyText}" IsEnabled="{Binding CanApply}" Click="ApplyEditor_Click" />
             <Button Margin="4,0,0,0"
                     Padding="12,4"
                     Content="Cancel"
@@ -151,6 +156,12 @@
           </StackPanel>
           <TextBlock Style="{StaticResource EditorStatus}" Text="{Binding Status}" />
         </StackPanel>
+        <!-- Enter applies the editor being typed in: its button is accented then, as a dialog's default one. -->
+        <DataTemplate.Triggers>
+          <Trigger SourceName="Editor" Property="IsKeyboardFocusWithin" Value="True">
+            <Setter TargetName="ApplyButton" Property="Style" Value="{DynamicResource AccentButtonStyle}" />
+          </Trigger>
+        </DataTemplate.Triggers>
       </DataTemplate>
     </ResourceDictionary>
   </UserControl.Resources>
