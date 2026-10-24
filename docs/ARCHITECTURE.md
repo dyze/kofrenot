@@ -216,7 +216,7 @@ VaultKeys.Unlock(…, account): the account's identity first, then the vault's o
 | Server vault | Its keys |
 | --- | --- |
 | New | Epoch 0 wrapped for the account's identity (`VaultFolder.Create(folder, identity, unlocked)`); no identity of its own, no recovery key of its own |
-| From 0.6 (format 5), moved from a folder, or made by an early 0.7 | Opened with its own pass phrase, then **attached** (`VaultKeys.Attach`): at its upgrade, or at its next opening when the server can be asked. Its keys are wrapped for the account, then a new epoch for the account only: the old pass phrase opens only the files written before |
+| From 0.6 (format 5), moved from a folder, or made by an early 0.7 | Opened with its own pass phrase, then **attached** (`VaultKeys.Attach`, when `VaultKeys.NeedsAttach`: never a vault another account owns, whose keys are its owner's to give): at its upgrade, or at its next opening when the server can be asked. Its keys are wrapped for the account, then a new epoch for the account only: the old pass phrase opens only the files written before |
 | Remembered key | Used only while it opens the latest epoch (`VaultKeys.IsCurrent`); else the pass phrase is asked |
 
 - **The account's pass phrase** is chosen at the first need (a new server vault, or the first attach), or earlier: offered right after signing in, and in Settings > Server (*Pass phrase* > *Choose...*), so others can share with the account before it has a vault. Its recovery key is then shown once. Changed in Settings > Server (*Pass phrase* > *Change...*: its current one asked, then the new one); after the recovery key unlocks a server vault, a new one is asked too.

@@ -73,15 +73,24 @@ public sealed class SyncStatusTests
         Assert.Equal("sign in to sync", status.Describe());
     }
 
-    [Theory]
-    [InlineData(ServerFailure.Refused)]
-    [InlineData(ServerFailure.NotFound)]
-    public void AVaultGoneFromTheServer_CountsNoFileToUpload(ServerFailure failure)
+    [Fact]
+    public void AVaultGoneFromTheServer_CountsNoFileToUpload()
     {
-        var status = new SyncStatus(At, failure, 3);
+        var status = new SyncStatus(At, ServerFailure.NotFound, 3);
 
         Assert.Equal("Not on the server", status.Summary);
-        Assert.StartsWith("The server no longer has this vault", status.Details);
-        Assert.Equal("no longer on the server, or no longer shared with you, 3 files to upload", status.Describe());
+        Assert.StartsWith("The server no longer has this vault.", status.Details);
+        Assert.Equal("no longer on the server, 3 files to upload", status.Describe());
+    }
+
+    [Fact]
+    public void ASyncRefused_SaysItMayNoLongerBeShared_OrNotBeChanged()
+    {
+        var status = new SyncStatus(At, ServerFailure.Refused, 2);
+
+        Assert.Equal(SyncLevel.Problem, status.Level);
+        Assert.Equal("Not allowed · 2 to upload", status.Summary);
+        Assert.StartsWith("The server refused this sync: the vault is no longer shared with you, or you may not change it.", status.Details);
+        Assert.Equal("refused by the server: no longer shared with you, or not yours to change, 2 files to upload", status.Describe());
     }
 }

@@ -94,6 +94,17 @@ public static partial class VaultKeys
         return new VaultAccess(header, KeyRing.Of(key), unlocked);
     }
 
+    /// <summary>
+    /// Whether a server vault is to be handed to <paramref name="account"/> (<see cref="Attach"/>):
+    /// not when another identity owns it, as its keys are the owner's to give (a member's are
+    /// signed by the owner, not by itself), nor when it has its key in the latest epoch it signed.
+    /// </summary>
+    /// <param name="account">The account's identity; null before it has one (it is then chosen).</param>
+    /// <param name="owner">The identity of the vault's owner, when known.</param>
+    public static bool NeedsAttach(string folder, Guid vault, Identity? account, Guid? owner) =>
+        (owner is null || owner == account?.Id)
+        && !(account is { SigningKey: { } key } && IsAttached(folder, vault, account.Id, key));
+
     // The access's own signing key: the keys it changes are the ones it signed (none for a format 5 access).
     private static byte[]? OwnKey(VaultAccess access) => access.Identity is { } identity ? Signing.PublicKeyOf(identity) : null;
 

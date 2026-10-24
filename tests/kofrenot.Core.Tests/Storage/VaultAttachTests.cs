@@ -101,6 +101,31 @@ public sealed class VaultAttachTests : IDisposable
         Assert.Single(Vault.Open(Folder, own.Header, own.Keys).Graph.Nodes);
     }
 
+    [Fact]
+    public void AVaultOfItsOwn_NeedsAttach_UntilAttached()
+    {
+        var (own, _) = VaultFolder.Create(Folder, "own phrase", Iterations);
+
+        Assert.True(VaultKeys.NeedsAttach(Folder, IdOf(own), _account.Identity, owner: null));
+        Assert.True(VaultKeys.NeedsAttach(Folder, IdOf(own), _account.Identity, owner: _account.Identity.Id));
+        Assert.True(VaultKeys.NeedsAttach(Folder, IdOf(own), account: null, owner: null));
+
+        VaultKeys.Attach(Folder, own, _account.Identity, _account.Unlocked);
+
+        Assert.False(VaultKeys.NeedsAttach(Folder, IdOf(own), _account.Identity, owner: _account.Identity.Id));
+    }
+
+    [Fact]
+    public void AVaultSharedWithTheAccount_IsNeverAttached_ItsKeysAreTheOwners()
+    {
+        var (owner, ownerUnlocked, _) = Identity.Create("owner phrase", Iterations);
+        var access = VaultFolder.Create(Folder, owner, ownerUnlocked);
+
+        Assert.False(VaultKeys.NeedsAttach(Folder, IdOf(access), _account.Identity, owner: owner.Id));
+        Assert.False(VaultKeys.NeedsAttach(Folder, IdOf(access), account: null, owner: owner.Id));
+        Assert.False(VaultKeys.NeedsAttach(Folder, IdOf(access), owner, owner: owner.Id));
+    }
+
     private byte[] AccountSigningKey => Signing.PublicKeyOf(_account.Unlocked);
 
     private static Guid IdOf(VaultAccess access) => access.Header.Id;

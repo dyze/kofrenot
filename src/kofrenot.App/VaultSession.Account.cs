@@ -137,14 +137,15 @@ public sealed partial class VaultSession
     }
 
     /// <summary>
-    /// Hands the open server vault to the account's identity, unless it is already: its pass
+    /// Hands the open server vault to the account's identity, unless it is already or another
+    /// account owns it (<see cref="VaultKeys.NeedsAttach"/>): its pass
     /// phrase asked (chosen the first time). True when done or not needed; false when cancelled or
     /// not possible now.
     /// </summary>
     private bool AttachToAccount(Window owner, string folder, Vault vault)
     {
-        if (Selected?.Location.IsOnServer != true || _access is not { } access
-            || (_server.Identity is { Identity.SigningKey: { } key } kept && VaultKeys.IsAttached(folder, access.Header.Id, kept.Identity.Id, key)))
+        if (Selected?.Location.Store is not { } store || _access is not { } access
+            || !VaultKeys.NeedsAttach(folder, access.Header.Id, _server.Identity?.Identity, _server.Owners.Kept(store.Id)?.Key.Id))
         {
             return true;
         }

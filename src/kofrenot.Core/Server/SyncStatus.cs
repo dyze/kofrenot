@@ -44,7 +44,8 @@ public sealed record SyncStatus(DateTimeOffset? Synced, ServerFailure? Failure, 
             null => "synced",
             ServerFailure.Offline => "offline",
             ServerFailure.SignInNeeded => "sign in to sync",
-            ServerFailure.Refused or ServerFailure.NotFound => "no longer on the server, or no longer shared with you",
+            ServerFailure.Refused => "refused by the server: no longer shared with you, or not yours to change",
+            ServerFailure.NotFound => "no longer on the server",
             _ => "sync failed",
         };
         return Waiting > 0 ? $"{state}, {Files} to upload" : state;
@@ -61,10 +62,11 @@ public sealed record SyncStatus(DateTimeOffset? Synced, ServerFailure? Failure, 
                 null => $"Synced {Time(Synced.Value)}",
                 ServerFailure.Offline => "Offline",
                 ServerFailure.SignInNeeded => "Sign in to sync",
-                ServerFailure.Refused or ServerFailure.NotFound => "Not on the server",
+                ServerFailure.Refused => "Not allowed",
+                ServerFailure.NotFound => "Not on the server",
                 _ => "Sync failed",
             };
-            return Waiting > 0 && Failure is not (ServerFailure.Refused or ServerFailure.NotFound) ? $"{state} · {Waiting} to upload" : state;
+            return Waiting > 0 && Failure != ServerFailure.NotFound ? $"{state} · {Waiting} to upload" : state;
         }
     }
 
@@ -80,7 +82,8 @@ public sealed record SyncStatus(DateTimeOffset? Synced, ServerFailure? Failure, 
                 null => $"Synced with the server at {Time(Synced.Value)}.",
                 ServerFailure.Offline => $"The server cannot be reached: you keep working on this computer, and {retry}",
                 ServerFailure.SignInNeeded => "Signed out of the server: sign in (Settings > Server) to sync.",
-                ServerFailure.Refused or ServerFailure.NotFound => "The server no longer has this vault, or no longer shares it with you.",
+                ServerFailure.Refused => "The server refused this sync: the vault is no longer shared with you, or you may not change it.",
+                ServerFailure.NotFound => "The server no longer has this vault.",
                 _ => $"The last sync failed (the log window says why); {retry}",
             };
             var last = Failure is not null && Synced is { } synced ? $" Last synced at {Time(synced)}." : string.Empty;
