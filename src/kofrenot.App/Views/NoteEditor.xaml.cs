@@ -21,6 +21,8 @@ public sealed record ConflictChoice(ConflictVersion Version)
 /// </summary>
 public partial class NoteEditor : UserControl
 {
+    private const double CardPadding = 8;
+
     private KnowledgeGraph? _graph;
     private Node? _node;
     private NoteState? _state;
@@ -52,6 +54,7 @@ public partial class NoteEditor : UserControl
         _graph = graph;
         _node = node;
         _read = read;
+        ShowColor();
         Load();
     }
 
@@ -61,7 +64,13 @@ public partial class NoteEditor : UserControl
     /// </summary>
     public void Refresh()
     {
-        if (_node is not null && !IsDirty)
+        if (_node is null)
+        {
+            return;
+        }
+
+        ShowColor();
+        if (!IsDirty)
         {
             Load();
         }
@@ -76,6 +85,13 @@ public partial class NoteEditor : UserControl
         _graph = null;
         _node = null;
         _state = null;
+    }
+
+    /// <summary>The note's colour as the background of its text, with room around it; nothing without one.</summary>
+    private void ShowColor()
+    {
+        Card.Background = NoteColors.Tint(_graph!.ColorOf(_node!.Id));
+        Card.Padding = new Thickness(Card.Background is null ? 0 : CardPadding);
     }
 
     private void Load()

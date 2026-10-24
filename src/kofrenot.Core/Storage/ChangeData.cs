@@ -24,7 +24,8 @@ internal sealed record ChangeData(
     ChangeData.RetypeData? Retype = null,
     ChangeData.MemberData? Member = null,
     ChangeData.MemberRemovalData? MemberRemoval = null,
-    ChangeData.LinkTypeData? LinkType = null)
+    ChangeData.LinkTypeData? LinkType = null,
+    ChangeData.ColorData? Color = null)
 {
     private const string NodeAddedOp = "addNode";
     private const string LinkAddedOp = "addLink";
@@ -40,6 +41,7 @@ internal sealed record ChangeData(
     private const string MemberAddedOp = "addMember";
     private const string MemberRemovedOp = "removeMember";
     private const string LinkTypeDefinedOp = "defineLinkType";
+    private const string NodeColoredOp = "colorNode";
 
     public static ChangeData From(Change change) => change switch
     {
@@ -57,6 +59,7 @@ internal sealed record ChangeData(
         MemberAdded added => new(VaultFormat.Current, MemberAddedOp, added.At, Member: MemberData.From(added)),
         MemberRemoved removed => new(VaultFormat.Current, MemberRemovedOp, removed.At, MemberRemoval: new MemberRemovalData(removed.Account, removed.Signature)),
         LinkTypeDefined defined => new(VaultFormat.Current, LinkTypeDefinedOp, defined.At, LinkType: new LinkTypeData(defined.LinkType, defined.Name, defined.ReverseName, [.. defined.Replaces])),
+        NodeColored color => new(VaultFormat.Current, NodeColoredOp, color.At, Color: new ColorData(color.Node, color.Color, [.. color.Replaces])),
         _ => throw new ArgumentOutOfRangeException(nameof(change), change.GetType().Name, "Unknown change"),
     };
 
@@ -94,6 +97,8 @@ internal sealed record ChangeData(
             LinkTypeDefinedOp when LinkType is { Id: { Length: > 0 } type, Name: { } name, Replaces: { } replaces }
                 && !string.IsNullOrWhiteSpace(name) && LinkType.Reverse is null or { Length: > 0 }
                 => new LinkTypeDefined(id, At, type, name, LinkType.Reverse, replaces),
+            NodeColoredOp when Color is { Replaces: { } replaces } && Color.Node != Guid.Empty && Color.Color is null or { Length: > 0 }
+                => new NodeColored(id, At, Color.Node, Color.Color, replaces),
             _ => throw new InvalidDataException($"Unknown or incomplete change '{Op}'"),
         };
     }
@@ -162,6 +167,9 @@ internal sealed record ChangeData(
 
     /// <summary><c>"retype": { "node": "…", "type": "note", "replaces": ["…"] }</c></summary>
     internal sealed record RetypeData(Guid Node, string? Type, List<Guid>? Replaces);
+
+    /// <summary><c>"color": { "node": "…", "color": "yellow", "replaces": [] }</c>; a null colour takes it away.</summary>
+    internal sealed record ColorData(Guid Node, string? Color, List<Guid>? Replaces);
 
     /// <summary><c>"linkType": { "id": "…", "name": "wrote", "reverse": "written by", "replaces": [] }</c>; no reverse when symmetric.</summary>
     internal sealed record LinkTypeData(string? Id, string? Name, string? Reverse, List<Guid>? Replaces);

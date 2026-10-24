@@ -63,7 +63,7 @@ public sealed record NodePinned(Guid Id, DateTimeOffset At, Guid Node) : Change(
 /// are the versions it was written over (none for the first). Two versions replacing the same one,
 /// neither knowing the other (two devices before syncing), make a conflict.
 /// </summary>
-public abstract record ContentEdited(Guid Id, DateTimeOffset At, Guid Node, IReadOnlyList<Guid> Replaces) : Change(Id, At), IReplacing;
+public abstract record ContentEdited(Guid Id, DateTimeOffset At, Guid Node, IReadOnlyList<Guid> Replaces) : Change(Id, At), INodeVersion;
 
 /// <summary>A new version of a note's Markdown text.</summary>
 public sealed record NoteEdited(Guid Id, DateTimeOffset At, Guid Node, IReadOnlyList<Guid> Replaces)
@@ -86,3 +86,10 @@ public sealed record MemberAdded(Guid Id, DateTimeOffset At, VaultMember Member,
 
 /// <summary>Takes a member out of a shared vault's records, signed by its owner as <see cref="MemberAdded"/>.</summary>
 public sealed record MemberRemoved(Guid Id, DateTimeOffset At, Guid Account, byte[] Signature) : Change(Id, At);
+
+/// <summary>
+/// Gives <see cref="Node"/> a colour (<see cref="Color"/>, a <see cref="NodeColor"/>'s name), or none
+/// when null. <see cref="Replaces"/> are the colours it was given over (none for the first). Two
+/// colours replacing the same one, neither knowing the other, make a conflict.
+/// </summary>
+public sealed record NodeColored(Guid Id, DateTimeOffset At, Guid Node, string? Color, IReadOnlyList<Guid> Replaces) : Change(Id, At), INodeVersion;

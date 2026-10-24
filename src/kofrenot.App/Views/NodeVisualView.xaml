@@ -5,7 +5,8 @@
              Height="26"
              Focusable="False">
   <!-- A node's picture in a row or a dataset's header: its icon, replaced by its thumbnail once
-       read. No visual: nothing shown, the room kept (so link rows stay aligned). -->
+       read, with a dot of its colour at the bottom right. No visual: nothing shown, the room kept
+       (so link rows stay aligned). -->
   <Grid>
     <Viewbox>
       <TextBlock x:Name="Glyph"
@@ -16,5 +17,11 @@
     <Border x:Name="ThumbnailFrame" CornerRadius="3" ClipToBounds="True" Visibility="Collapsed">
       <Image x:Name="Thumbnail" Stretch="UniformToFill" />
     </Border>
+    <Ellipse x:Name="ColorDot"
+             HorizontalAlignment="Right"
+             VerticalAlignment="Bottom"
+             Stroke="{DynamicResource SolidBackgroundFillColorBaseBrush}"
+             StrokeThickness="1.5"
+             Visibility="Collapsed" />
   </Grid>
 </UserControl>

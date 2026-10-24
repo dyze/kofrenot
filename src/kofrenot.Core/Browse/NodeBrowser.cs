@@ -129,7 +129,11 @@ public sealed class NodeBrowser
         IReadOnlyList<NodeType> typeConflict = types.Count > 1
             ? types.Select(version => graph.Types.FindNodeType(version.Type) ?? new NodeType(version.Type, version.Type)).ToList()
             : [];
-        return new NodeDetails(node, text.NodeLabel(node), graph.Types.NodeTypeName(node.Type), rows.ToList(), conflict, IsPinned: graph.PinsOf(node.Id).Count > 0, typeConflict);
+        var colors = graph.ColorsOf(node.Id);
+        IReadOnlyList<NodeColor> colorConflict = colors.Count > 1 ? colors.Select(version => version.Color).ToList() : [];
+        return new NodeDetails(
+            node, text.NodeLabel(node), graph.Types.NodeTypeName(node.Type), rows.ToList(), conflict, IsPinned: graph.PinsOf(node.Id).Count > 0, typeConflict,
+            graph.ColorOf(node.Id), colorConflict);
     }
 
     private sealed class Level(Guid nodeId)

@@ -39,7 +39,7 @@ One namespace per folder (`Kofrenot.Core.Settings`, `Kofrenot.UI.Views`, ...). T
 | --- | --- |
 | *(root)* | `AppVersion`; `RunningCopy` + `AppCopy` (another copy running: same or not, and what the user is told); `QuitRefusal` (why kofrenot must not quit, or switch vaults, now); `AppFiles` (where every file of kofrenot is, including `keys.json` and the snapshots in `cache\`: the only place their names are written, listed in Settings > About; `AppFiles.For` picks the data folder, see [Portable copy](#portable-copy)); `Changelog` (reads the text shown by Settings > About); `ProjectLinks` (website, issues, releases) |
 | `Settings/` | `SettingsStore` (`settings.json`: theme, debug logging, update check, the registered vaults and the one selected, hotkey, server account; `IsHotkeyTaken`), `Hotkey`, `KeyBindings` (every shortcut, by area, for Settings > Key bindings: written by hand, **update it with the key handlers**), `VaultList` + `RegisteredVault` + `VaultLocation` + `StoreAddress` (see [Registered vaults](#registered-vaults)), `ServerAccount`, `SettingsCatalog` (the entries of the Settings window, their tabs, and the search that finds them) |
-| `Graph/` | `Node`, `Link`, `NodeType`, `LinkType`, `LinkVerb` (a link type read one way), `TypeCatalog` (built-in node and link types, or a vault's with the user's link types and aliases; `LinkName`, `VerbOf`: how a link reads from one of its nodes), `CustomLinkTypes` + `CustomLinkType` (the user's link types, see [User link types](#user-link-types)), `LinkAliases` (the user's aliases, see [Aliases and removals](#aliases-and-removals)), `RemovableChanges`, `NameKey` (the form names are compared in), `Change` (`NodeAdded`, `LinkAdded`, `NodeRenamed`, `NodeRetyped`, `AliasAdded`, `LinkTypeDefined`, `NodePinned`, `ChangesRemoved`, `ContentEdited`: `NoteEdited`, `DatasetEdited`, `ViewEdited`; `VaultNamed`), `DatasetFile` (a dataset version's file: name, size, SHA-256), `CurrentVersions` + `IReplacing` (the versions no other replaces: shared by names, types, contents and the vault's name), `NodeNames` + `NameVersion` (a node's current names, see [Renames](#renames)), `NodeTypes` + `TypeVersion` (a node's current types, see [Type changes](#type-changes)), `ContentVersions` (the current versions of a note or dataset, see [Notes](#notes)), `KnowledgeGraph` (in-memory state, built by applying changes) |
+| `Graph/` | `Node`, `Link`, `NodeType`, `LinkType`, `LinkVerb` (a link type read one way), `TypeCatalog` (built-in node and link types, or a vault's with the user's link types and aliases; `LinkName`, `VerbOf`: how a link reads from one of its nodes), `CustomLinkTypes` + `CustomLinkType` (the user's link types, see [User link types](#user-link-types)), `LinkAliases` (the user's aliases, see [Aliases and removals](#aliases-and-removals)), `RemovableChanges`, `NameKey` (the form names are compared in), `Change` (`NodeAdded`, `LinkAdded`, `NodeRenamed`, `NodeRetyped`, `NodeColored`, `AliasAdded`, `LinkTypeDefined`, `NodePinned`, `ChangesRemoved`, `ContentEdited`: `NoteEdited`, `DatasetEdited`, `ViewEdited`; `VaultNamed`), `NodeColor` + `ColorVersion` + `NodeColorNames` (the palette, see [Colours](#colours)), `DatasetFile` (a dataset version's file: name, size, SHA-256), `CurrentVersions` + `IReplacing` (the versions no other replaces: shared by names, types, contents and the vault's name), `NodeNames` + `NameVersion` (a node's current names, see [Renames](#renames)), `NodeTypes` + `TypeVersion` (a node's current types, see [Type changes](#type-changes)), `NodeVersions` + `INodeVersion` (the current versions of a note, dataset or view, or of a colour, see [Notes](#notes)), `KnowledgeGraph` (in-memory state, built by applying changes) |
 | `Storage/` | `VaultFormat` (+ `NewerVaultFormatException`, `Since`, `UpgradeQuestion`), `VaultUpgrades` (upgrades agreed, `vault-upgrades.json`, see [Upgrade](#upgrade)), `SecretBox` (AES-GCM seal / open), `ChunkedBox` (AES-GCM over 1 MB chunks, streamed), `KeyWrap` (KDF, wrap / unwrap the master key), `ChangeData` (a change as JSON, shared with the snapshot), `ChangeCodec` (change ⇄ sealed JSON), `VaultHeader`, `VaultFolder` (layout, inspect, create, `SizeOf` + `FolderSize`: its files and bytes, shown in Settings > Vault, measured off the UI thread), `SnapshotStore`, `NoteFiles` (note content, `content/`), `DatasetFiles` (dataset content, `content/`: describe a file, write, export, open), `ThumbnailFiles` (thumbnails, `content/`), `Vault` (open, append, refresh, save a note or a dataset version, `WriteDataset`: its files only, off the UI thread; `Vault.Upgrade`: its format, writes refused until an upgrade is agreed), `AtomicFile` (write as `.tmp`, then rename), `KeyMemory` (remembered master keys, `keys.json`) and `VaultNameMemory` (the last name read in each vault, `vault-names.json`), both through `ProtectedStore`, `ISecretProtector` |
 | `Input/` | `InputParser` (text → `NodeRequest` / `LinkRequest`), `GraphSearch` (`SearchHit`), `AddPlanner` (`AddChoices` → `AddPlan`: `NodePlan`, `LinkPlan`, `PlannedSide`), `InputPresenter` (the input box: preview, result rows, homonym choices), `ChipInput` (`InputChip`: its labels) and `InputCompletion` (`Proposal`: the rest shown in grey), `CreationForm` (the creation screen: steps, types, note content, dataset file, status, what exists), `PlanText` (wording shared by both), `RenamePlanner` (`RenamePlan`: a new name, its problem, homonyms), `VaultNamePlanner` (`VaultNamePlan`), `RetypePlanner` (`RetypePlan`), `LinkChangePlanner` (`LinkChangePlan`: a link's type or direction, as a removal and a new link), `DetailsLink` (the link row of the details: + Link, Ctrl+K), `AliasPlanner` (`AliasPlan`), `LinkTypePlanner` (`LinkTypePlan`, `LinkTypeRemoval`) |
 | `Browse/` | `NodeBrowser` (the details screen: trail of open nodes, at most 4, the selected link of each), `NodeDetails`, `LinkRow`, `NodeVisual` (`NodeIcon`: how a node is pictured in rows, see [Datasets](#datasets)), `NodeFacts` (type, size, last change: a view's Details), `PinPlanner` (pin or unpin), `RecentNodes` (the nodes last opened on this device), `ViewTabs` and `ViewStates` (the tabs open, the nodes expanded in each tree, on this device), through `LocalJsonFile` |
@@ -269,6 +269,7 @@ One number for the whole vault, `VaultFormat.Current`, written in the header and
 | 4 | 0.4 | `remove` of nodes and links: a 0.3 app would still show them; `editView` |
 | 5 | 0.5 | `nameVault`, `retypeNode`: a 0.4 app cannot read them |
 | 6 | 0.7 | `keys/` and the key epoch in every file (`KFC2`, `KFN2`, `KFT2`, `KFD2`); a header without key: a 0.6 app cannot open the keys; `defineLinkType` (added before 0.7 was released, so the number did not change: owner's decision) |
+| 7 | 0.8 | `colorNode`: a 0.7 app cannot read it |
 
 | Found | This kofrenot |
 | --- | --- |
@@ -361,6 +362,7 @@ UTF-8 JSON before encryption:
 { "format": 6, "at": "…", "op": "defineLinkType",
   "linkType": { "id": "<first definition id>", "name": "wrote", "reverse": "written by", "replaces": ["<definition id>", "…"] } }
 { "format": 4, "at": "…", "op": "pinNode", "pin": { "node": "<node id>" } }
+{ "format": 7, "at": "…", "op": "colorNode", "color": { "node": "<node id>", "color": "yellow", "replaces": ["<colour change id>", "…"] } }
 { "format": 4, "at": "…", "op": "editNote", "note": { "node": "<node id>", "replaces": ["<version id>", "…"] } }
 { "format": 4, "at": "…", "op": "editDataset",
   "dataset": { "node": "<node id>", "file": { "name": "survey.csv", "size": 52430, "sha256": "9f86…08" }, "replaces": ["<version id>", "…"] } }
@@ -415,6 +417,20 @@ A type change works as a rename: a `retypeNode` change (`NodeRetyped`) listing t
 
 - `RetypePlanner` lets a *generic* node become a note, a dataset or a view (`TargetsOf`), so no content is hidden; a node in conflict may keep any of its types. A view asks its definition first (`VaultSession.Retype`): its first `editView` is written with the type.
 - A **link** keeps no history of its own: `LinkChangePlanner` changes its type or direction with a `remove` of the link and its copies, and a new `addLink`. Changed on two devices before they synced, both new links show, as any two links.
+
+### Colours
+Any node can have a colour of a fixed palette (`NodeColor`: none, yellow, green, blue, pink, purple, teal, grey), given by a `colorNode` change (`NodeColored`) that names it in lower case (null for none; `NodeColorNames`) and lists the colours it **replaces**, as a type change. A node has none until the first one, which replaces nothing.
+
+```
+c1 (yellow, replaces [])
+c1 ◄─ c2 (green, device A)
+c1 ◄─ c3 (blue, device B, before syncing) ⇒ conflict: green, blue; blue (the latest) shown
+ColorPlanner: the colour chosen replaces every current one ⇒ conflict resolved
+```
+
+- Kept per node by `NodeVersions<NodeColored>` (shared with content versions); `KnowledgeGraph.ColorsOf` gives the current ones, `ColorOf` the one shown, `ColoringsOf` all of them for `NodeFacts.Modified`. A name this version does not know (a later palette's) is kept and shown as none.
+- Shown in `NodeVisual.Color`, so every row with a node's picture (search, links, input box labels, views) draws a dot on it (`NodeVisualView`), and in the details' *Colour* row (`NodeDetailsPanel.Color`: a swatch per colour, the current one ringed, each one ringed in a conflict; a click writes the change). A note's text gets it as its background (`NoteEditor`).
+- `NoteColors` (App) draws each colour in one mid shade, seen on both themes, for dots and swatches, and see-through (25 %) as a background, so it stays pale on the light theme and dark on the dark one.
 
 ### Aliases and removals
 What the user can take back (nodes, links, aliases, link types, pins) is added by one change and removed by another, `remove`, listing the ids it removes. Nothing is deleted from the vault.
@@ -480,7 +496,7 @@ v1 ◄─ v3 (device B, before syncing) ⇒ conflict: v2, v3 offered; the next s
 - Note content is never logged. The search does not look into it (an open question: [GOAL.md](GOAL.md#open-questions), *Search*).
 
 ### Datasets
-A dataset is a node of type `dataset` holding one file, in versions like a note (`ContentVersions`, shared with notes): each import is a content file (`content/<id>.kfd`, chunked: see [Encryption](#encryption)) and an `editDataset` change of the same id, holding the file's name, size and SHA-256, and naming the versions it **replaces**.
+A dataset is a node of type `dataset` holding one file, in versions like a note (`NodeVersions`, shared with notes): each import is a content file (`content/<id>.kfd`, chunked: see [Encryption](#encryption)) and an `editDataset` change of the same id, holding the file's name, size and SHA-256, and naming the versions it **replaces**.
 
 ```
 import ──DatasetFiles.Describe──► DatasetFile(name, size, sha256) ──DatasetPlanner.Import──► DatasetEdited(replaces = versions loaded)
@@ -526,7 +542,7 @@ row    ──NodeVisual.Of(graph, node)──► Icon (type, or the file's categ
 - Icons are Segoe Fluent glyphs (`NodeVisualView.GlyphOf`): generic, note, file, image, text, code, audio, video, archive, PDF, view.
 
 ### Views
-A view is a node of type `view`. Its definition is in `editView` versions, as a dataset's file description: the change holds it, so it is in the graph and the snapshot, and a view works offline. Versions replace one another as for notes (`ContentVersions`, `KnowledgeGraph.ViewVersionsOf`).
+A view is a node of type `view`. Its definition is in `editView` versions, as a dataset's file description: the change holds it, so it is in the graph and the snapshot, and a view works offline. Versions replace one another as for notes (`NodeVersions`, `KnowledgeGraph.ViewVersionsOf`).
 
 | Definition | Display | Read by (`Core/Views`) |
 | --- | --- | --- |

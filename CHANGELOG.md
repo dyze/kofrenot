@@ -8,6 +8,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 - **Task lists** in notes, as in Google Keep: **Checkboxes** on a note's toolbar shows its lines as items with a checkbox, checked items crossed out and listed below the others; Enter adds an item, Backspace in an empty one removes it. Clicked again, the items become lines of text. A note whose lines are all items opens as a list, and its status says how many are done. Stored as Markdown task lines (`- [ ] text`), so the vault format does not change.
+- **Colours**: any node can be given a colour in its details (yellow, green, blue, pink, purple, teal, grey, or none), shown as a dot on its icon in every list and as the background of a note's text. Synced with the vault; chosen differently on two devices before they synced, both are shown, to keep one.
+
+### Changed
+- **Vault format 7**, for colours: kofrenot asks before upgrading a vault when it opens it; kofrenot 0.7 then asks to be updated to open it.
 
 ## [0.7] - 2026-10-24
 

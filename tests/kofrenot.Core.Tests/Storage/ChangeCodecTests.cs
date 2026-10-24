@@ -133,6 +133,33 @@ public sealed class ChangeCodecTests
         Assert.Throws<InvalidDataException>(() => _codec.Decode(id, data));
     }
 
+    [Theory]
+    [InlineData("yellow")]
+    [InlineData(null)]
+    public void AColour_RoundTrips(string? color)
+    {
+        var change = new NodeColored(Guid.NewGuid(), At, Guid.NewGuid(), color, [Guid.NewGuid()]);
+
+        var decoded = Assert.IsType<NodeColored>(_codec.Decode(change.Id, _codec.Encode(change)));
+
+        Assert.Equal((change.Id, change.At, change.Node, change.Color), (decoded.Id, decoded.At, decoded.Node, decoded.Color));
+        Assert.Equal(change.Replaces, decoded.Replaces);
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData(",\"color\":{\"color\":\"yellow\",\"replaces\":[]}")]
+    [InlineData(",\"color\":{\"node\":\"" + Node + "\",\"color\":\"yellow\"}")]
+    [InlineData(",\"color\":{\"node\":\"" + Node + "\",\"color\":\"\",\"replaces\":[]}")]
+    public void AnIncompleteColour_IsRefused(string color)
+    {
+        var id = Guid.NewGuid();
+        var json = "{\"format\":7,\"op\":\"colorNode\",\"at\":\"2026-10-16T09:12:00Z\"" + color + "}";
+        var data = _box.Seal("KFC1"u8, Encoding.UTF8.GetBytes(json), id.ToByteArray());
+
+        Assert.Throws<InvalidDataException>(() => _codec.Decode(id, data));
+    }
+
     [Fact]
     public void APin_RoundTrips()
     {

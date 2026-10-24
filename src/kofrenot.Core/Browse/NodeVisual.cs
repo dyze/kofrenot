@@ -22,20 +22,20 @@ public enum NodeIcon
 /// <summary>
 /// How a node is pictured in the rows (search, links) and a dataset's details: its icon, and for
 /// an image dataset the version whose thumbnail replaces it once read (<see cref="Thumbnail"/>;
-/// the icon stays while it is missing).
+/// the icon stays while it is missing), with the node's colour (<see cref="Color"/>).
 /// </summary>
-public sealed record NodeVisual(NodeIcon Icon, Guid? Thumbnail = null)
+public sealed record NodeVisual(NodeIcon Icon, Guid? Thumbnail = null, NodeColor Color = NodeColor.None)
 {
     public static NodeVisual Of(KnowledgeGraph graph, Node node)
     {
         var versions = node.Type == TypeCatalog.Dataset.Id ? graph.DatasetVersionsOf(node.Id) : [];
         if (versions.Count == 0)
         {
-            return OfType(node.Type);
+            return OfType(node.Type) with { Color = graph.ColorOf(node.Id) };
         }
 
         var file = versions[^1].File;
-        return new NodeVisual(IconOf(DatasetType.Of(file).Category), DatasetType.HasThumbnail(file) ? versions[^1].Id : null);
+        return new NodeVisual(IconOf(DatasetType.Of(file).Category), DatasetType.HasThumbnail(file) ? versions[^1].Id : null, graph.ColorOf(node.Id));
     }
 
     /// <summary>The icon of a node type alone (a node without file, or a type on the creation screen).</summary>

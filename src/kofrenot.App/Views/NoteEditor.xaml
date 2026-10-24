@@ -9,52 +9,55 @@
     <ResourceDictionary Source="SharedStyles.xaml" />
   </UserControl.Resources>
 
-  <Grid Margin="2,14,0,0">
-    <Grid.RowDefinitions>
-      <RowDefinition Height="Auto" />
-      <RowDefinition Height="*" />
-      <RowDefinition Height="Auto" />
-    </Grid.RowDefinitions>
+  <!-- Card: the note's colour, as a background (NoteColors.Tint). -->
+  <Border x:Name="Card" Margin="2,14,0,0" CornerRadius="6">
+    <Grid>
+      <Grid.RowDefinitions>
+        <RowDefinition Height="Auto" />
+        <RowDefinition Height="*" />
+        <RowDefinition Height="Auto" />
+      </Grid.RowDefinitions>
 
-    <StackPanel x:Name="ConflictPanel" Margin="0,0,0,4" Visibility="Collapsed">
-      <TextBlock Foreground="{DynamicResource SystemFillColorCautionBrush}"
-                 TextWrapping="Wrap"
-                 Text="Edited on two devices before they synced. Keep a version, or merge them below and save:" />
-      <ItemsControl x:Name="ConflictVersions">
-        <ItemsControl.ItemsPanel>
-          <ItemsPanelTemplate>
-            <WrapPanel />
-          </ItemsPanelTemplate>
-        </ItemsControl.ItemsPanel>
-        <ItemsControl.ItemTemplate>
-          <DataTemplate>
-            <Button Margin="0,4,8,0"
-                    Padding="10,2"
-                    Focusable="False"
-                    Content="{Binding Label}"
-                    IsEnabled="{Binding CanKeep}"
-                    Click="KeepVersion_Click" />
-          </DataTemplate>
-        </ItemsControl.ItemTemplate>
-      </ItemsControl>
-    </StackPanel>
+      <StackPanel x:Name="ConflictPanel" Margin="0,0,0,4" Visibility="Collapsed">
+        <TextBlock Foreground="{DynamicResource SystemFillColorCautionBrush}"
+                   TextWrapping="Wrap"
+                   Text="Edited on two devices before they synced. Keep a version, or merge them below and save:" />
+        <ItemsControl x:Name="ConflictVersions">
+          <ItemsControl.ItemsPanel>
+            <ItemsPanelTemplate>
+              <WrapPanel />
+            </ItemsPanelTemplate>
+          </ItemsControl.ItemsPanel>
+          <ItemsControl.ItemTemplate>
+            <DataTemplate>
+              <Button Margin="0,4,8,0"
+                      Padding="10,2"
+                      Focusable="False"
+                      Content="{Binding Label}"
+                      IsEnabled="{Binding CanKeep}"
+                      Click="KeepVersion_Click" />
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </StackPanel>
 
-    <local:MarkdownBox x:Name="Box" Grid.Row="1" PreviewKeyDown="Box_PreviewKeyDown" />
+      <local:MarkdownBox x:Name="Box" Grid.Row="1" PreviewKeyDown="Box_PreviewKeyDown" />
 
-    <Grid Grid.Row="2" Margin="0,4,0,0">
-      <Grid.ColumnDefinitions>
-        <ColumnDefinition Width="*" />
-        <ColumnDefinition Width="Auto" />
-      </Grid.ColumnDefinitions>
-      <TextBlock x:Name="StatusText" VerticalAlignment="Center" Style="{StaticResource CaptionText}" />
-      <Button x:Name="SaveButton"
-              Grid.Column="1"
-              Style="{StaticResource FlatButton}"
-              FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
-              FontSize="14"
-              Content="&#xE74E;"
-              ToolTip="Save (Ctrl+S)"
-              Click="Save_Click" />
+      <Grid Grid.Row="2" Margin="0,4,0,0">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="*" />
+          <ColumnDefinition Width="Auto" />
+        </Grid.ColumnDefinitions>
+        <TextBlock x:Name="StatusText" VerticalAlignment="Center" Style="{StaticResource CaptionText}" />
+        <Button x:Name="SaveButton"
+                Grid.Column="1"
+                Style="{StaticResource FlatButton}"
+                FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
+                FontSize="14"
+                Content="&#xE74E;"
+                ToolTip="Save (Ctrl+S)"
+                Click="Save_Click" />
+      </Grid>
     </Grid>
-  </Grid>
+  </Border>
 </UserControl>

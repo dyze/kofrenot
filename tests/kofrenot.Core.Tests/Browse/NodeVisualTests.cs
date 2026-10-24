@@ -15,6 +15,27 @@ public sealed class NodeVisualTests
     public void ANodeWithoutFile_HasTheIconOfItsType(string type, NodeIcon icon) =>
         Assert.Equal(new NodeVisual(icon), NodeVisual.Of(_graph, Add(type)));
 
+    [Theory]
+    [InlineData("note")]
+    [InlineData("dataset")]
+    public void ANode_HasItsColour(string type)
+    {
+        var node = Add(type);
+        _graph.Apply(new NodeColored(Guid.NewGuid(), Start, node.Id, "green", []));
+
+        Assert.Equal(NodeColor.Green, NodeVisual.Of(_graph, node).Color);
+    }
+
+    [Fact]
+    public void ADatasetWithAFile_HasItsColour()
+    {
+        var node = Add("dataset");
+        _graph.Apply(new DatasetEdited(Guid.NewGuid(), Start, node.Id, new DatasetFile("a.txt", 1, new string('0', 64)), []));
+        _graph.Apply(new NodeColored(Guid.NewGuid(), Start, node.Id, "pink", []));
+
+        Assert.Equal(new NodeVisual(NodeIcon.Text, null, NodeColor.Pink), NodeVisual.Of(_graph, node));
+    }
+
     [Fact]
     public void ATypeAlone_HasItsIcon() =>
         Assert.Equal(

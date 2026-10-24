@@ -33,6 +33,15 @@ public sealed class NodeFactsTests
     }
 
     [Fact]
+    public void AColour_ChangesIt()
+    {
+        var node = Add(TypeCatalog.Generic.Id);
+        _graph.Apply(new NodeColored(Guid.NewGuid(), Start.AddMinutes(6), node.Id, "teal", []));
+
+        Assert.Equal(Start.AddMinutes(6), NodeFacts.Of(_graph, node).Modified);
+    }
+
+    [Fact]
     public void ANote_ChangesWithItsContent()
     {
         var note = Add(TypeCatalog.Note.Id);

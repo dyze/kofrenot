@@ -241,6 +241,22 @@ public sealed class NodeBrowserTests
     }
 
     [Fact]
+    public void TheDetails_ShowTheColour_AndAColourConflict_OldestFirst()
+    {
+        var dune = Add("Dune");
+        _browser.Open(_graph, dune);
+
+        Assert.Equal((NodeColor.None, 0), (_browser.Details!.Color, _browser.Details.ColorConflict.Count));
+
+        _graph.Apply(new NodeColored(Guid.NewGuid(), Start.AddMinutes(2), dune.Id, "blue", []));
+        _graph.Apply(new NodeColored(Guid.NewGuid(), Start.AddMinutes(1), dune.Id, "yellow", []));
+        _browser.Open(_graph, dune);
+
+        Assert.Equal(NodeColor.Blue, _browser.Details!.Color);
+        Assert.Equal([NodeColor.Yellow, NodeColor.Blue], _browser.Details.ColorConflict);
+    }
+
+    [Fact]
     public void ATypeUnknownToThisVersion_InAConflict_IsShownByItsId()
     {
         var dune = Add("Dune");

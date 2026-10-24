@@ -81,6 +81,7 @@ public partial class NodeDetailsPanel : UserControl
         PinButton.ToolTip = details.IsPinned ? "Unpin" : "Pin: listed while the input box is empty";
         ConflictPanel.Visibility = details.NameConflict.Count > 0 && !_editing ? Visibility.Visible : Visibility.Collapsed;
         ShowType(details);
+        ShowColor(details);
         ShowNote(details);
         ShowDataset(details);
         ShowView(details);

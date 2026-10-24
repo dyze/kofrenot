@@ -22,9 +22,10 @@ public sealed class KnowledgeGraph
     private readonly HashSet<Guid> _removed = [];
     private readonly HashSet<Guid> _removals = [];
     private readonly RemovableChanges<NodePinned> _pins;
-    private readonly ContentVersions<NoteEdited> _notes = new();
-    private readonly ContentVersions<DatasetEdited> _datasets = new();
-    private readonly ContentVersions<ViewEdited> _views = new();
+    private readonly NodeVersions<NoteEdited> _notes = new();
+    private readonly NodeVersions<DatasetEdited> _datasets = new();
+    private readonly NodeVersions<ViewEdited> _views = new();
+    private readonly NodeVersions<NodeColored> _colors = new();
     private readonly Dictionary<Guid, VaultNamed> _vaultNames = [];
     private readonly Dictionary<Guid, Change> _memberChanges = [];
 
@@ -66,6 +67,7 @@ public sealed class KnowledgeGraph
         NoteEdited version => _notes.Add(version),
         DatasetEdited version => _datasets.Add(version),
         ViewEdited version => _views.Add(version),
+        NodeColored color => _colors.Add(color),
         VaultNamed name => _vaultNames.TryAdd(name.Id, name),
         MemberAdded or MemberRemoved => _memberChanges.TryAdd(change.Id, change),
         _ => throw new ArgumentOutOfRangeException(nameof(change), change.GetType().Name, "Unknown change"),
@@ -176,6 +178,19 @@ public sealed class KnowledgeGraph
 
     /// <summary>The retypes of a node, whatever they replace: when it last changed.</summary>
     public IEnumerable<NodeRetyped> RetypesOf(Guid node) => _types.Of(node);
+
+    /// <summary>
+    /// The current colours of a node, oldest first: none before it is given one, one, or several
+    /// when it was given different colours on two devices before they synced (a conflict).
+    /// </summary>
+    public IReadOnlyList<ColorVersion> ColorsOf(Guid node) =>
+        _colors.Current(node).Select(color => new ColorVersion(color.Id, NodeColorNames.Parse(color.Color), color.At)).ToList();
+
+    /// <summary>The colour shown for a node: the latest current one; none before it is given one.</summary>
+    public NodeColor ColorOf(Guid node) => ColorsOf(node) is [.., var latest] ? latest.Color : NodeColor.None;
+
+    /// <summary>The colour changes of a node, whatever they replace: when it last changed.</summary>
+    public IEnumerable<NodeColored> ColoringsOf(Guid node) => _colors.Of(node);
 
     /// <summary><paramref name="added"/> as shown: its current name and type.</summary>
     private Node Shown(Node added)
