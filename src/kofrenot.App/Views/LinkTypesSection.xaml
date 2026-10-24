@@ -1,131 +1,166 @@
 <UserControl x:Class="Kofrenot.UI.Views.LinkTypesSection"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-  <!-- Settings > Link types: each link type, each way it reads, with its phrases. The built-in
-       ones are fixed; the user's aliases and link types can be added and removed (×), their link
-       types renamed. Stored in the vault. -->
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:Kofrenot.UI.Views">
+  <!-- Settings > Link types: one list of the link types, built-in then the user's, a line per way
+       each reads, with its phrases. "Add alias" opens a box under a line, × removes one; the user's link
+       types are renamed in place (✎) or removed (×). A new link type is typed at the end. Stored in the vault. -->
+  <UserControl.Resources>
+    <ResourceDictionary>
+      <ResourceDictionary.MergedDictionaries>
+        <ResourceDictionary Source="SharedStyles.xaml" />
+      </ResourceDictionary.MergedDictionaries>
+
+      <BooleanToVisibilityConverter x:Key="VisibleWhen" />
+
+      <!-- A small icon button at the end of a line: + (add an alias), ✎ (rename), × (remove). -->
+      <Style x:Key="LineButton" TargetType="Button" BasedOn="{StaticResource FlatButton}">
+        <Setter Property="Margin" Value="2,0,0,0" />
+        <Setter Property="Padding" Value="6,2" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="FontFamily" Value="Segoe Fluent Icons, Segoe MDL2 Assets" />
+        <Setter Property="FontSize" Value="11" />
+      </Style>
+
+      <Style x:Key="EditorStatus" TargetType="TextBlock">
+        <Setter Property="Margin" Value="0,4,0,0" />
+        <Setter Property="Opacity" Value="0.7" />
+        <Setter Property="TextWrapping" Value="Wrap" />
+      </Style>
+
+      <DataTemplate DataType="{x:Type local:WayLine}">
+        <Grid x:Name="Line" Margin="0,3">
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto" SharedSizeGroup="Way" />
+            <ColumnDefinition Width="*" />
+          </Grid.ColumnDefinitions>
+          <TextBlock x:Name="WayName" Margin="0,0,16,0" VerticalAlignment="Center" FontWeight="SemiBold" Text="{Binding Name}" />
+          <WrapPanel Grid.Column="1">
+            <TextBlock Margin="0,0,10,0" VerticalAlignment="Center" Opacity="0.7" Text="{Binding BuiltIn}" />
+            <TextBlock Margin="0,0,10,0"
+                       VerticalAlignment="Center"
+                       Opacity="0.7"
+                       Text="(both ways)"
+                       Visibility="{Binding IsBothWays, Converter={StaticResource VisibleWhen}}" />
+            <ItemsControl ItemsSource="{Binding Phrases.Aliases}">
+              <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                  <WrapPanel />
+                </ItemsPanelTemplate>
+              </ItemsControl.ItemsPanel>
+              <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                  <Border x:Name="Chip"
+                          Margin="0,0,6,0"
+                          Padding="8,1,2,1"
+                          CornerRadius="4"
+                          BorderThickness="1"
+                          BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
+                          ToolTip="Your alias">
+                    <StackPanel Orientation="Horizontal">
+                      <TextBlock x:Name="Phrase" VerticalAlignment="Center" Text="{Binding Phrase}" />
+                      <Button Style="{StaticResource LineButton}"
+                              Padding="4,0"
+                              FontSize="10"
+                              Content="&#xE711;"
+                              ToolTip="Remove this alias"
+                              Click="RemoveAlias_Click" />
+                    </StackPanel>
+                  </Border>
+                  <DataTemplate.Triggers>
+                    <DataTrigger Binding="{Binding IsUsed}" Value="False">
+                      <Setter TargetName="Phrase" Property="TextDecorations" Value="Strikethrough" />
+                      <Setter TargetName="Chip" Property="Opacity" Value="0.6" />
+                      <Setter TargetName="Chip" Property="ToolTip" Value="Not used: another link type has this phrase already (added on another device)" />
+                    </DataTrigger>
+                  </DataTemplate.Triggers>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+            <Button Style="{StaticResource LineButton}"
+                    FontFamily="{x:Static SystemFonts.MessageFontFamily}"
+                    FontSize="{StaticResource CaptionFontSize}"
+                    Content="Add alias"
+                    ToolTip="Another phrase for this way"
+                    Click="AddAlias_Click" />
+            <StackPanel x:Name="YoursPanel" Orientation="Horizontal" Visibility="Collapsed">
+              <Border Margin="8,0,2,0"
+                      Padding="6,0"
+                      VerticalAlignment="Center"
+                      CornerRadius="4"
+                      Background="{DynamicResource SubtleFillColorSecondaryBrush}">
+                <TextBlock Text="yours" FontSize="{StaticResource CaptionFontSize}" Opacity="0.8" />
+              </Border>
+              <Button Style="{StaticResource LineButton}" Content="&#xE70F;" ToolTip="Rename this link type" Click="RenameType_Click" />
+              <Button Style="{StaticResource LineButton}" Content="&#xE711;" ToolTip="Remove this link type" Click="RemoveType_Click" />
+            </StackPanel>
+            <TextBlock Margin="8,0,0,0" VerticalAlignment="Center" Opacity="0.7" TextWrapping="Wrap" Text="{Binding Warning}" />
+          </WrapPanel>
+        </Grid>
+        <DataTemplate.Triggers>
+          <DataTrigger Binding="{Binding IsOtherWay}" Value="True">
+            <Setter TargetName="WayName" Property="Margin" Value="16,0,16,0" />
+            <Setter TargetName="WayName" Property="FontWeight" Value="Normal" />
+          </DataTrigger>
+          <DataTrigger Binding="{Binding IsYours}" Value="True">
+            <Setter TargetName="YoursPanel" Property="Visibility" Value="Visible" />
+          </DataTrigger>
+        </DataTemplate.Triggers>
+      </DataTemplate>
+
+      <!-- A new alias, under the line of its way. -->
+      <DataTemplate DataType="{x:Type local:AliasEditor}">
+        <StackPanel Margin="16,3,0,6">
+          <StackPanel Orientation="Horizontal">
+            <TextBox Width="180"
+                     VerticalContentAlignment="Center"
+                     Text="{Binding Text, UpdateSourceTrigger=PropertyChanged}"
+                     ToolTip="Another phrase for this way, as typed in the input box"
+                     Loaded="EditorBox_Loaded"
+                     KeyDown="EditorBox_KeyDown" />
+            <Button Margin="8,0,0,0" Padding="12,4" Content="Add" IsEnabled="{Binding CanApply}" Click="ApplyEditor_Click" />
+            <Button Margin="4,0,0,0" Padding="12,4" Content="Cancel" Click="CancelEditor_Click" />
+          </StackPanel>
+          <TextBlock Style="{StaticResource EditorStatus}" Text="{Binding Status}" />
+        </StackPanel>
+      </DataTemplate>
+
+      <!-- A link type of the user's: renamed in place of its lines, or added at the end of the list. -->
+      <DataTemplate DataType="{x:Type local:TypeEditor}">
+        <StackPanel Margin="0,3,0,6">
+          <StackPanel Orientation="Horizontal">
+            <TextBox Width="140"
+                     VerticalContentAlignment="Center"
+                     Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}"
+                     ToolTip="Its name, as typed in the input box: wrote"
+                     Loaded="EditorBox_Loaded"
+                     KeyDown="EditorBox_KeyDown" />
+            <TextBlock Margin="8,0" VerticalAlignment="Center" Text="other way" />
+            <TextBox Width="140"
+                     VerticalContentAlignment="Center"
+                     Text="{Binding Reverse, UpdateSourceTrigger=PropertyChanged}"
+                     IsEnabled="{Binding CanTypeReverse}"
+                     ToolTip="How it reads from the other node: written by. Empty when it reads the same both ways"
+                     KeyDown="EditorBox_KeyDown" />
+            <Button Margin="8,0,0,0" Padding="12,4" Content="{Binding ApplyText}" IsEnabled="{Binding CanApply}" Click="ApplyEditor_Click" />
+            <Button Margin="4,0,0,0"
+                    Padding="12,4"
+                    Content="Cancel"
+                    Visibility="{Binding IsRename, Converter={StaticResource VisibleWhen}}"
+                    Click="CancelEditor_Click" />
+          </StackPanel>
+          <TextBlock Style="{StaticResource EditorStatus}" Text="{Binding Status}" />
+        </StackPanel>
+      </DataTemplate>
+    </ResourceDictionary>
+  </UserControl.Resources>
+
   <StackPanel>
     <TextBlock x:Name="StateText" Margin="0,10,0,0" Opacity="0.7" TextWrapping="Wrap" />
 
-    <ItemsControl x:Name="VerbList" Margin="0,10,0,0" Grid.IsSharedSizeScope="True">
-      <ItemsControl.ItemTemplate>
-        <DataTemplate>
-          <Grid Margin="0,3">
-            <Grid.ColumnDefinitions>
-              <ColumnDefinition Width="Auto" SharedSizeGroup="Verb" />
-              <ColumnDefinition Width="*" />
-            </Grid.ColumnDefinitions>
-            <TextBlock Margin="0,0,16,0" VerticalAlignment="Center" FontWeight="SemiBold" Text="{Binding Name}" />
-            <WrapPanel Grid.Column="1">
-              <TextBlock Margin="0,0,10,0" VerticalAlignment="Center" Opacity="0.7" Text="{Binding BuiltIn}" />
-              <ItemsControl ItemsSource="{Binding Aliases}">
-                <ItemsControl.ItemsPanel>
-                  <ItemsPanelTemplate>
-                    <WrapPanel />
-                  </ItemsPanelTemplate>
-                </ItemsControl.ItemsPanel>
-                <ItemsControl.ItemTemplate>
-                  <DataTemplate>
-                    <Border x:Name="Chip"
-                            Margin="0,0,6,0"
-                            Padding="8,1,2,1"
-                            CornerRadius="4"
-                            BorderThickness="1"
-                            BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
-                            ToolTip="Your alias">
-                      <StackPanel Orientation="Horizontal">
-                        <TextBlock x:Name="Phrase" VerticalAlignment="Center" Text="{Binding Phrase}" />
-                        <Button Margin="4,0,0,0"
-                                Padding="4,0"
-                                MinHeight="0"
-                                MinWidth="0"
-                                Background="Transparent"
-                                BorderThickness="0"
-                                Content="&#xE711;"
-                                FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
-                                FontSize="10"
-                                ToolTip="Remove this alias"
-                                Click="RemoveAlias_Click" />
-                      </StackPanel>
-                    </Border>
-                    <DataTemplate.Triggers>
-                      <DataTrigger Binding="{Binding IsUsed}" Value="False">
-                        <Setter TargetName="Phrase" Property="TextDecorations" Value="Strikethrough" />
-                        <Setter TargetName="Chip" Property="Opacity" Value="0.6" />
-                        <Setter TargetName="Chip" Property="ToolTip" Value="Not used: another link type has this phrase already (added on another device)" />
-                      </DataTrigger>
-                    </DataTemplate.Triggers>
-                  </DataTemplate>
-                </ItemsControl.ItemTemplate>
-              </ItemsControl>
-            </WrapPanel>
-          </Grid>
-        </DataTemplate>
-      </ItemsControl.ItemTemplate>
-    </ItemsControl>
+    <ItemsControl x:Name="LineList" Margin="0,10,0,0" Grid.IsSharedSizeScope="True" />
 
-    <!-- A new alias: which link type (and way), the phrase, then Add (or Enter). -->
-    <StackPanel x:Name="AddPanel" Margin="0,14,0,0" Orientation="Horizontal">
-      <TextBlock Margin="0,0,8,0" VerticalAlignment="Center" Text="New alias of" />
-      <ComboBox x:Name="VerbBox" Width="150" DisplayMemberPath="Name" SelectionChanged="VerbBox_SelectionChanged" />
-      <TextBox x:Name="PhraseBox"
-               Width="160"
-               Margin="8,0,0,0"
-               VerticalContentAlignment="Center"
-               TextChanged="PhraseBox_TextChanged"
-               KeyDown="PhraseBox_KeyDown" />
-      <Button x:Name="AddButton" Margin="8,0,0,0" Padding="12,4" Content="Add" Click="AddButton_Click" />
-    </StackPanel>
-    <TextBlock x:Name="PlanText" Margin="0,6,0,0" Opacity="0.7" TextWrapping="Wrap" />
-
-    <!-- The user's link types: renamed (the form below fills with its names) or removed (×) unless links have them. -->
-    <TextBlock Margin="0,22,0,0" FontWeight="SemiBold" Text="Your link types" />
-    <TextBlock x:Name="NoTypesText" Margin="0,6,0,0" Opacity="0.7" Text="None yet." />
-    <ItemsControl x:Name="TypeList" Margin="0,6,0,0" Grid.IsSharedSizeScope="True">
-      <ItemsControl.ItemTemplate>
-        <DataTemplate>
-          <Grid Margin="0,3">
-            <Grid.ColumnDefinitions>
-              <ColumnDefinition Width="Auto" SharedSizeGroup="TypeNames" />
-              <ColumnDefinition Width="Auto" />
-              <ColumnDefinition Width="*" />
-            </Grid.ColumnDefinitions>
-            <TextBlock Margin="0,0,16,0" VerticalAlignment="Center" Text="{Binding Names}" />
-            <StackPanel Grid.Column="1" Orientation="Horizontal">
-              <Button Padding="8,1" Content="Rename" ToolTip="Rename this link type" Click="RenameType_Click" />
-              <Button Margin="4,0,0,0"
-                      Padding="6,1"
-                      Content="&#xE711;"
-                      FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
-                      FontSize="10"
-                      ToolTip="Remove this link type"
-                      Click="RemoveType_Click" />
-            </StackPanel>
-            <TextBlock Grid.Column="2" Margin="12,0,0,0" VerticalAlignment="Center" Opacity="0.7" TextWrapping="Wrap" Text="{Binding Warning}" />
-          </Grid>
-        </DataTemplate>
-      </ItemsControl.ItemTemplate>
-    </ItemsControl>
-
-    <!-- A new link type, or new names for one: its name, how it reads the other way (empty: the same both ways), then Add or Rename (or Enter). -->
-    <StackPanel x:Name="TypePanel" Margin="0,14,0,0" Orientation="Horizontal">
-      <TextBlock x:Name="TypeFormText" Margin="0,0,8,0" VerticalAlignment="Center" Text="New link type" />
-      <TextBox x:Name="TypeNameBox"
-               Width="140"
-               VerticalContentAlignment="Center"
-               ToolTip="Its name, as typed in the input box: wrote"
-               TextChanged="TypeBox_TextChanged"
-               KeyDown="TypeBox_KeyDown" />
-      <TextBlock Margin="8,0" VerticalAlignment="Center" Text="other way" />
-      <TextBox x:Name="TypeReverseBox"
-               Width="140"
-               VerticalContentAlignment="Center"
-               ToolTip="How it reads from the other node: written by. Empty when it reads the same both ways"
-               TextChanged="TypeBox_TextChanged"
-               KeyDown="TypeBox_KeyDown" />
-      <Button x:Name="TypeButton" Margin="8,0,0,0" Padding="12,4" Content="Add" Click="TypeButton_Click" />
-      <Button x:Name="CancelRenameButton" Margin="4,0,0,0" Padding="12,4" Content="Cancel" Visibility="Collapsed" Click="CancelRename_Click" />
-    </StackPanel>
-    <TextBlock x:Name="TypePlanText" Margin="0,6,0,0" Opacity="0.7" TextWrapping="Wrap" />
+    <TextBlock Margin="0,18,0,4" FontWeight="SemiBold" Text="New link type" />
+    <ContentControl x:Name="NewTypeLine" Focusable="False" />
   </StackPanel>
 </UserControl>

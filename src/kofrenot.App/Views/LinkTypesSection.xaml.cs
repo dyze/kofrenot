@@ -6,24 +6,28 @@ using Kofrenot.Core.Input;
 
 namespace Kofrenot.UI.Views;
 
-/// <summary>A row of the list: a link type read one way, its built-in phrases, and the user's aliases.</summary>
-public sealed record VerbRow(string Name, string BuiltIn, IReadOnlyList<LinkAlias> Aliases);
-
-/// <summary>A link type of the user's in the list: its names, and what is wrong with them.</summary>
-public sealed record TypeRow(CustomLinkType Type, string Names, string Warning);
-
 /// <summary>
-/// Settings > Link types: shows the aliases and link types of the open vault, adds or removes
-/// aliases (<see cref="AliasPlanner"/>), and adds, renames or removes link types (<see cref="LinkTypePlanner"/>).
+/// Settings > Link types: lists the link types of the open vault, a line per way each reads; adds
+/// or removes aliases (<see cref="AliasPlanner"/>), and adds, renames or removes the user's link
+/// types (<see cref="LinkTypePlanner"/>), each typed in place.
 /// </summary>
 public partial class LinkTypesSection : UserControl
 {
+    private readonly TypeEditor _newType;
     private VaultSession? _session;
-    private CustomLinkType? _renamed;
+    private AliasEditor? _aliasEditor;
+    private TypeEditor? _renameEditor;
+    private LineEditor? _toFocus;
+    private (string TypeId, string Status)? _removal;
 
-    public LinkTypesSection() => InitializeComponent();
+    public LinkTypesSection()
+    {
+        InitializeComponent();
+        _newType = new TypeEditor(renamed: null, PlanType);
+        NewTypeLine.Content = _newType;
+    }
 
-    /// <summary>The vault whose aliases are shown; set once by the Settings window.</summary>
+    /// <summary>The vault whose link types are shown; set once by the Settings window.</summary>
     public VaultSession Session
     {
         set
@@ -41,60 +45,133 @@ public partial class LinkTypesSection : UserControl
         StateText.Text = graph is null
             ? "Open a vault to see and edit its link types and aliases."
             : "Type a link with any of these phrases. Your link types and aliases are stored in the vault, so every device shares them.";
-        AddPanel.IsEnabled = graph is not null;
-        TypePanel.IsEnabled = graph is not null;
-        VerbList.ItemsSource = graph?.Aliases.ByVerb()
-            .Select(verb => new VerbRow(verb.Verb.Name, string.Join(", ", verb.BuiltIn.Skip(1)), verb.Aliases))
-            .ToList();
-        if (graph is not null)
+        NewTypeLine.IsEnabled = graph is not null;
+        if (_renameEditor is { Renamed: { } renamed })
         {
-            var selected = VerbBox.SelectedItem as LinkVerb;
-            VerbBox.ItemsSource = graph.Types.Verbs;
-            VerbBox.SelectedIndex = selected is null ? 0 : Math.Max(0, graph.Types.Verbs.ToList().IndexOf(selected));
+            _renameEditor.Renamed = graph?.LinkTypes.Find(renamed.Type.Id);
+            _renameEditor = _renameEditor.Renamed is null ? null : _renameEditor;
         }
 
-        // Renamed from what it is now: another device may have changed it meanwhile.
-        _renamed = _renamed is null ? null : graph?.LinkTypes.Find(_renamed.Type.Id);
-        var types = graph?.LinkTypes.All ?? [];
-        TypeList.ItemsSource = types.Select(RowOf).ToList();
-        NoTypesText.Visibility = types.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
-        ShowPlan();
-        ShowTypePlan();
+        LineList.ItemsSource = graph is null ? null : Lines(graph);
+        _aliasEditor?.Refresh();
+        _renameEditor?.Refresh();
+        _newType.Refresh();
     }
 
-    private static TypeRow RowOf(CustomLinkType type) => new(
-        type,
-        type.Type.Reverse is { } reverse ? $"{type.Type.Name} / {reverse.Name}" : $"{type.Type.Name} (both ways)",
-        type switch
+    private List<object> Lines(KnowledgeGraph graph)
+    {
+        var lines = new List<object>();
+        foreach (var type in graph.Aliases.ByType())
         {
-            { IsConflict: true } => "Renamed on two devices: rename it to settle which name to keep.",
-            { TakenBy: { } other } => $"Another link type has one of its names already (added on another device): “{other.Name}” is read instead. Rename it.",
-            _ => string.Empty,
-        });
+            var custom = graph.LinkTypes.Find(type.Type.Id);
+            if (custom is not null && _renameEditor?.Renamed?.Type == type.Type)
+            {
+                lines.Add(_renameEditor);
+                continue;
+            }
 
-    private AliasPlan? Plan() =>
-        Graph is { } graph && VerbBox.SelectedItem is LinkVerb verb ? new AliasPlanner(graph).Plan(verb, PhraseBox.Text) : null;
+            AddWay(lines, new WayLine(type.Forward, IsOtherWay: false, IsBothWays: type.Reverse is null, custom, WarningOf(type.Type, custom)));
+            if (type.Reverse is { } reverse)
+            {
+                AddWay(lines, new WayLine(reverse, IsOtherWay: true, IsBothWays: false, Custom: null, Warning: string.Empty));
+            }
+        }
 
-    private void ShowPlan()
-    {
-        var plan = Plan();
-        PlanText.Text = plan is null || plan.Problem == AliasProblem.Empty ? string.Empty : plan.Status;
-        AddButton.IsEnabled = plan?.CanAdd == true;
+        return lines;
     }
 
-    private void Add()
+    private void AddWay(List<object> lines, WayLine line)
     {
-        if (_session is null || Plan() is not { Change: { } change } plan)
+        lines.Add(line);
+        if (_aliasEditor?.Verb == line.Phrases.Verb)
+        {
+            lines.Add(_aliasEditor);
+        }
+    }
+
+    private string WarningOf(LinkType type, CustomLinkType? custom) => custom switch
+    {
+        _ when _removal is { } removal && removal.TypeId == type.Id => removal.Status,
+        { IsConflict: true } => "Renamed on two devices: rename it to settle which name to keep.",
+        { TakenBy: { } other } => $"Another link type has one of its names already (added on another device): “{other.Name}” is read instead. Rename it.",
+        _ => string.Empty,
+    };
+
+    private AliasPlan? PlanAlias(LinkVerb verb, string text) => Graph is { } graph ? new AliasPlanner(graph).Plan(verb, text) : null;
+
+    private LinkTypePlan? PlanType(CustomLinkType? renamed, string name, string reverse)
+    {
+        if (Graph is not { } graph)
+        {
+            return null;
+        }
+
+        var planner = new LinkTypePlanner(graph);
+        return renamed is null ? planner.Plan(name, reverse) : planner.Rename(renamed, name, reverse);
+    }
+
+    private void Edit(LineEditor editor)
+    {
+        _removal = null;
+        _toFocus = editor;
+        Show();
+    }
+
+    private void Apply(LineEditor editor)
+    {
+        if (_session is null)
         {
             return;
         }
 
-        if (_session.Write(Window.GetWindow(this)!, change, $"Alias added to {plan.Verb.Type.Id}{(plan.Verb.IsReverse ? " (reverse)" : string.Empty)}"))
+        var window = Window.GetWindow(this)!;
+        switch (editor)
         {
-            PhraseBox.Clear();
+            case AliasEditor alias when alias.Plan() is { Change: { } change } plan:
+                if (_session.Write(window, change, $"Alias added to {plan.Verb.Type.Id}{(plan.Verb.IsReverse ? " (reverse)" : string.Empty)}"))
+                {
+                    Close(alias);
+                }
+
+                break;
+            case TypeEditor type when type.Plan() is { Change: { } change }:
+                var action = type.IsRename ? $"Link type {change.LinkType} renamed" : $"Link type {change.LinkType} added";
+                if (_session.Write(window, change, action))
+                {
+                    Close(type);
+                }
+
+                break;
+            default:
+                return;
         }
 
         Show();
+    }
+
+    private void Close(LineEditor editor)
+    {
+        if (editor == _newType)
+        {
+            _newType.Clear();
+        }
+        else if (editor == _aliasEditor)
+        {
+            _aliasEditor = null;
+        }
+        else
+        {
+            _renameEditor = null;
+        }
+    }
+
+    private void AddAlias_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is FrameworkElement { DataContext: WayLine line })
+        {
+            _aliasEditor = new AliasEditor(line.Phrases.Verb, PlanAlias);
+            Edit(_aliasEditor);
+        }
     }
 
     private void RemoveAlias_Click(object sender, RoutedEventArgs e)
@@ -106,126 +183,82 @@ public partial class LinkTypesSection : UserControl
         }
     }
 
-    private LinkTypePlan? TypePlan()
-    {
-        if (Graph is not { } graph)
-        {
-            return null;
-        }
-
-        var planner = new LinkTypePlanner(graph);
-        return _renamed is null
-            ? planner.Plan(TypeNameBox.Text, TypeReverseBox.Text)
-            : planner.Rename(_renamed, TypeNameBox.Text, TypeReverseBox.Text);
-    }
-
-    private void ShowTypePlan()
-    {
-        var plan = TypePlan();
-        TypeFormText.Text = _renamed is null ? "New link type" : $"Rename “{_renamed.Type.Name}”";
-        TypeButton.Content = _renamed is null ? "Add" : "Rename";
-        CancelRenameButton.Visibility = _renamed is null ? Visibility.Collapsed : Visibility.Visible;
-        TypeReverseBox.IsEnabled = _renamed?.Type.IsSymmetric != true;
-        TypePlanText.Text = plan is null || plan.Problem == LinkTypeProblem.Empty ? string.Empty : plan.Status;
-        TypeButton.IsEnabled = plan?.CanApply == true;
-    }
-
-    private void ApplyType()
-    {
-        if (_session is null || TypePlan() is not { Change: { } change })
-        {
-            return;
-        }
-
-        var action = _renamed is null ? $"Link type {change.LinkType} added" : $"Link type {change.LinkType} renamed";
-        if (_session.Write(Window.GetWindow(this)!, change, action))
-        {
-            EndForm();
-        }
-
-        Show();
-    }
-
-    private void EndForm()
-    {
-        _renamed = null;
-        TypeNameBox.Clear();
-        TypeReverseBox.Clear();
-    }
-
     private void RenameType_Click(object sender, RoutedEventArgs e)
     {
-        if (sender is FrameworkElement { DataContext: TypeRow row })
+        if (sender is FrameworkElement { DataContext: WayLine { Custom: { } custom } })
         {
-            _renamed = row.Type;
-            TypeNameBox.Text = row.Type.Type.Name;
-            TypeReverseBox.Text = row.Type.Type.Reverse?.Name ?? string.Empty;
-            ShowTypePlan();
-            TypeNameBox.Focus();
-            TypeNameBox.SelectAll();
+            _renameEditor = new TypeEditor(custom, PlanType);
+            Edit(_renameEditor);
         }
     }
 
     private void RemoveType_Click(object sender, RoutedEventArgs e)
     {
-        if (_session is null || Graph is not { } graph || sender is not FrameworkElement { DataContext: TypeRow row })
+        if (_session is null || Graph is not { } graph || sender is not FrameworkElement { DataContext: WayLine { Custom: { } custom } })
         {
             return;
         }
 
-        var removal = new LinkTypePlanner(graph).Remove(row.Type);
+        var removal = new LinkTypePlanner(graph).Remove(custom);
         if (removal.Change is { } change)
         {
-            _session.Write(Window.GetWindow(this)!, change, $"Link type {row.Type.Type.Id} removed");
-            if (_renamed?.Type == row.Type.Type)
-            {
-                EndForm();
-            }
-
-            Show();
+            _removal = null;
+            _session.Write(Window.GetWindow(this)!, change, $"Link type {custom.Type.Id} removed");
         }
         else
         {
-            TypePlanText.Text = removal.Status;
+            _removal = (custom.Type.Id, removal.Status);
+        }
+
+        Show();
+    }
+
+    private void ApplyEditor_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is FrameworkElement { DataContext: LineEditor editor })
+        {
+            Apply(editor);
         }
     }
 
-    private void CancelRename_Click(object sender, RoutedEventArgs e)
+    private void CancelEditor_Click(object sender, RoutedEventArgs e)
     {
-        EndForm();
-        ShowTypePlan();
+        if (sender is FrameworkElement { DataContext: LineEditor editor })
+        {
+            Close(editor);
+            Show();
+        }
     }
 
-    private void TypeBox_TextChanged(object sender, TextChangedEventArgs e) => ShowTypePlan();
-
-    private void TypeBox_KeyDown(object sender, KeyEventArgs e)
+    private void EditorBox_KeyDown(object sender, KeyEventArgs e)
     {
+        if (sender is not FrameworkElement { DataContext: LineEditor editor })
+        {
+            return;
+        }
+
         if (e.Key == Key.Enter)
         {
-            ApplyType();
+            Apply(editor);
             e.Handled = true;
         }
-        else if (e.Key == Key.Escape && _renamed is not null)
+        // Esc on the empty new link type is left to the window: it closes Settings.
+        else if (e.Key == Key.Escape && !(editor == _newType && _newType.IsEmpty))
         {
-            CancelRename_Click(sender, e);
+            Close(editor);
+            Show();
             e.Handled = true;
         }
     }
 
-    private void TypeButton_Click(object sender, RoutedEventArgs e) => ApplyType();
-
-    private void VerbBox_SelectionChanged(object sender, SelectionChangedEventArgs e) => ShowPlan();
-
-    private void PhraseBox_TextChanged(object sender, TextChangedEventArgs e) => ShowPlan();
-
-    private void PhraseBox_KeyDown(object sender, KeyEventArgs e)
+    // The line just opened takes the caret; the others, built again by Show, leave it where it is.
+    private void EditorBox_Loaded(object sender, RoutedEventArgs e)
     {
-        if (e.Key == Key.Enter)
+        if (sender is TextBox { DataContext: LineEditor editor } box && editor == _toFocus)
         {
-            Add();
-            e.Handled = true;
+            _toFocus = null;
+            box.Focus();
+            box.SelectAll();
         }
     }
-
-    private void AddButton_Click(object sender, RoutedEventArgs e) => Add();
 }

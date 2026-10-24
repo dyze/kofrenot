@@ -104,18 +104,21 @@ public sealed class LinkAliasesTests
     }
 
     [Fact]
-    public void ByVerb_ListsEachWay_WithItsBuiltInPhrases_AndAliases()
+    public void ByType_ListsEachType_BothWays_WithItsBuiltInPhrases_AndAliases()
     {
         var alias = Alias("contains", reverse: true, "is in");
         _graph.Apply(alias);
 
-        var verbs = _graph.Aliases.ByVerb();
+        var types = _graph.Aliases.ByType();
 
-        Assert.Equal(["relates to", "contains", "contained by", "is a", "has instance"], verbs.Select(verb => verb.Verb.Name));
-        Assert.Equal(["relates to", "related to"], verbs[0].BuiltIn);
-        Assert.Equal(["contained by"], verbs[2].BuiltIn);
-        Assert.Equal([alias.Id], verbs[2].Aliases.Select(row => row.Id));
-        Assert.All(verbs.Where(verb => verb.Verb != TypeCatalog.Contains.Reverse), verb => Assert.Empty(verb.Aliases));
+        Assert.Equal(["relates-to", "contains", "is-a"], types.Select(type => type.Type.Id));
+        Assert.Equal(["relates to", "related to"], types[0].Forward.BuiltIn);
+        Assert.Null(types[0].Reverse);
+        Assert.Equal(TypeCatalog.Contains.Reverse, types[1].Reverse!.Verb);
+        Assert.Equal(["contained by"], types[1].Reverse!.BuiltIn);
+        Assert.Equal([alias.Id], types[1].Reverse!.Aliases.Select(row => row.Id));
+        Assert.Empty(types[1].Forward.Aliases);
+        Assert.Equal(["has instance"], types[2].Reverse!.BuiltIn);
     }
 
     private static AliasAdded Alias(string type, bool reverse, string phrase, int minutes = 0) =>

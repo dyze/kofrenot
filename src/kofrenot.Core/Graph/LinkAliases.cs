@@ -10,6 +10,9 @@ public sealed record LinkAlias(Guid Id, LinkVerb Verb, string Phrase, bool IsUse
 /// <summary>A link type read one way, with its own phrases (its name first) and the user's aliases.</summary>
 public sealed record VerbPhrases(LinkVerb Verb, IReadOnlyList<string> BuiltIn, IReadOnlyList<LinkAlias> Aliases);
 
+/// <summary>A link type with its phrases each way it reads; no <see cref="Reverse"/> when it reads the same both ways.</summary>
+public sealed record LinkTypePhrases(LinkType Type, VerbPhrases Forward, VerbPhrases? Reverse);
+
 /// <summary>
 /// The aliases of a vault, on top of its link types (the built-in ones and the user's):
 /// <see cref="Catalog"/> is what the input box reads. Built again after each change. An alias of a
@@ -33,9 +36,13 @@ public sealed class LinkAliases
     /// <summary>The aliases not removed, oldest first.</summary>
     public IReadOnlyList<LinkAlias> All => Build().All;
 
-    /// <summary>Each link type, each way it reads, with its phrases: what the link types screen lists.</summary>
-    public IReadOnlyList<VerbPhrases> ByVerb() =>
-        _types().Verbs.Select(verb => new VerbPhrases(verb, verb.Phrases, All.Where(alias => alias.Verb == verb).ToList())).ToList();
+    /// <summary>Each link type, the built-in ones first, with its phrases each way: what the link types screen lists.</summary>
+    public IReadOnlyList<LinkTypePhrases> ByType() =>
+        _types().LinkTypes
+            .Select(type => new LinkTypePhrases(type, PhrasesOf(type.Forward), type.Reverse is { } reverse ? PhrasesOf(reverse) : null))
+            .ToList();
+
+    private VerbPhrases PhrasesOf(LinkVerb verb) => new(verb, verb.Phrases, All.Where(alias => alias.Verb == verb).ToList());
 
     internal bool Add(AliasAdded alias)
     {

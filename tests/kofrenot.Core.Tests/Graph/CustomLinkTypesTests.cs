@@ -177,7 +177,19 @@ public sealed class CustomLinkTypesTests
 
         var type = _graph.Types.FindLinkType(wrote.LinkType)!;
         Assert.Equal(["written by", "by"], type.ReversePhrases);
-        Assert.Contains(_graph.Aliases.ByVerb(), verb => verb.Verb == type.Reverse && verb.Aliases.Single().Phrase == "by");
+        var listed = _graph.Aliases.ByType()[^1];
+        Assert.Equal(type, listed.Type);
+        Assert.Equal("by", listed.Reverse!.Aliases.Single().Phrase);
+    }
+
+    [Fact]
+    public void AUserType_ReadTheSameBothWays_IsListedWithoutReverse()
+    {
+        _graph.Apply(Define("knows"));
+
+        var listed = _graph.Aliases.ByType()[^1];
+        Assert.Equal(["knows"], listed.Forward.BuiltIn);
+        Assert.Null(listed.Reverse);
     }
 
     private static LinkTypeDefined Define(string name, string? reverse = null, int minutes = 0)
