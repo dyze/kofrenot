@@ -7,26 +7,35 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [Unreleased]
 
 ### Added
-- **Your own link types**: Settings > Link types > *New link type*, with a name (*wrote*) and how it reads the other way (*written by*), or the same both ways (*knows*). Listed with the built-in ones, marked *yours*; typed in the input box, proposed and labelled like the built-in ones, offered on the creation screen, in *Change link type* and for trees; aliases can be added to them. ✎ renames one in place, keeping the way it reads; × removes one, after asking, once no link has it. Stored in the vault (format 6), so every device has them; renames made on two devices are flagged.
-- **Input box labels and proposals**: the first node and the link type become labels once the link type is recognized, a new node in green with a `+`, homonyms counted; Enter turns the rest into labels before the creation screen; Backspace turns the last label back into text. The rest of a node's name or of a link type is proposed in grey while typing; **Tab** or **→** accepts it, and Tab switches the side of a link only when nothing is proposed.
-- **Another set of data**: `kofrenot.exe --data <folder>` keeps the settings, vaults list, remembered pass phrases and server account in that folder, to use another account or test data.
-- **Show what you type** in a pass phrase or password box: hold its eye button; released, it is masked again.
-- **Recovery key**: shown once when a vault is created or upgraded, it opens the vault when its pass phrase is lost (*Lost it? Use the recovery key* when unlocking); a folder vault then asks a new pass phrase.
-- **Change the pass phrase** of a folder vault: Settings > Vault > *Pass phrase* > *Change...*, the vault open. The recovery key and the remembered pass phrase stay valid.
-- **Server account's pass phrase**: one pass phrase, and one recovery key, open all your server vaults. Chosen when offered after signing in, in Settings > Server > *Pass phrase* > *Choose...*, or with your first new server vault (or when an older one moves to it); changed there too (*Change...*). Kept, sealed, in your account on the server, and copied on each computer so server vaults open offline.
-- **Share a server vault** (its owner): Settings > Vault > *Members* > *Share...*, with another account on the server found by its email, as a reader or a writer, once the fingerprint of their key is compared with them (theirs: Settings > Server, *Your key*). In *Vault from the server…* it is marked *shared with you*, as reader or writer; they open it with their own pass phrase; a reader cannot change it, and sees *Read only* in the window's title and header. The members are listed with their fingerprint, the owner's included, for them to compare too. Only the owner changes the vault's keys and its members: what it did not sign is ignored, so a writer cannot let anyone else in, nor drop anyone.
-- **Change a member's role**: *Members* > *Change role...* makes a writer a reader, or a reader a writer, after a confirmation; no new key.
-- **Remove a member, or leave**: the owner removes a member (*Members* > *Remove...*); a member leaves (*Leave...*). The vault's key then changes: what is written from now on is unreadable to them, what they had stays theirs. The owner's kofrenot changes it when it removes them, or at its next opening after they left; the server then refuses files sealed with the old key, which the other devices seal again on their own.
-- **Change the server password**: Settings > Server > *Password* > *Change...*, the current one asked again. Your other devices are signed out.
-- **Server too old**: Settings > Server says when the server runs a version older than 0.2; your server vaults still sync, but cannot move to the account's pass phrase until it is upgraded.
+- **Sharing**
+  - **Share a server vault** (its owner): Settings > Vault > *Members* > *Share...*, with another account on the server found by its email, as a reader or a writer, once the fingerprint of their key is compared with them (theirs: Settings > Server, *Your key*). In *Vault from the server…* it is marked *shared with you*, as reader or writer; they open it with their own pass phrase; a reader cannot change it, and sees *Read only* in the window's title and header. The members are listed with their fingerprint, the owner's included, for them to compare too. Only the owner changes the vault's keys and its members: what it did not sign is ignored, so a writer cannot let anyone else in, nor drop anyone.
+  - **Change a member's role**: *Members* > *Change role...* makes a writer a reader, or a reader a writer, after a confirmation; no new key.
+  - **Remove a member, or leave**: the owner removes a member (*Members* > *Remove...*); a member leaves (*Leave...*). The vault's key then changes: what is written from now on is unreadable to them, what they had stays theirs. The owner's kofrenot changes it when it removes them, or at its next opening after they left; the server then refuses files sealed with the old key, which the other devices seal again on their own.
+- **Keys and pass phrases**
+  - **Recovery key**: shown once when a vault is created or upgraded, it opens the vault when its pass phrase is lost (*Lost it? Use the recovery key* when unlocking); a folder vault then asks a new pass phrase.
+  - **Change the pass phrase** of a folder vault: Settings > Vault > *Pass phrase* > *Change...*, the vault open. The recovery key and the remembered pass phrase stay valid.
+  - **Server account's pass phrase**: one pass phrase, and one recovery key, open all your server vaults. Chosen when offered after signing in, in Settings > Server > *Pass phrase* > *Choose...*, or with your first new server vault (or when an older one moves to it); changed there too (*Change...*). Kept, sealed, in your account on the server, and copied on each computer so server vaults open offline.
+  - **Show what you type** in a pass phrase or password box: hold its eye button; released, it is masked again.
+- **Server**
+  - **Change the server password**: Settings > Server > *Password* > *Change...*, the current one asked again. Your other devices are signed out.
+  - **Server too old**: Settings > Server says when the server runs a version older than 0.2; your server vaults still sync, but cannot move to the account's pass phrase until it is upgraded.
+- **Link types and input box**
+  - **Your own link types**: Settings > Link types > *New link type*, with a name (*wrote*) and how it reads the other way (*written by*), or the same both ways (*knows*). Listed with the built-in ones, marked *yours*; typed in the input box, proposed and labelled like the built-in ones, offered on the creation screen, in *Change link type* and for trees; aliases can be added to them. ✎ renames one in place, keeping the way it reads; × removes one, after asking, once no link has it. Stored in the vault (format 6), so every device has them; renames made on two devices are flagged.
+  - **Input box labels and proposals**: the first node and the link type become labels once the link type is recognized, a new node in green with a `+`, homonyms counted; Enter turns the rest into labels before the creation screen; Backspace turns the last label back into text. The rest of a node's name or of a link type is proposed in grey while typing; **Tab** or **→** accepts it, and Tab switches the side of a link only when nothing is proposed.
+- **App**
+  - **Another set of data**: `kofrenot.exe --data <folder>` keeps the settings, vaults list, remembered pass phrases and server account in that folder, to use another account or test data.
 
 ### Changed
-- **Sync status in the header**: a server vault shows where its sync stands next to the lock, a dot coloured green (synced), grey, amber (offline) or red (sign in, failed), with the files waiting to be uploaded; its tooltip says more, a click syncs now or opens Settings > Server. It is no longer in the footer. A server stopped behind its proxy now counts as offline, not as a failed sync.
-- **Removing an alias asks first**, as every other removal does.
-- **Aliases are added in place**: *Add alias* at the end of a way's line in Settings > Link types, instead of the *New alias of* form.
-- **The button Enter presses** is drawn in the accent color in every dialog (*Next*, *OK*, *Save*, *Find* then *Share*, ...), so it is clear before pressing.
-- **Vault format 6**: a vault's key is wrapped for an identity (a key pair) that the pass phrase and the recovery key unlock, kept in the vault's `keys/` folder; every file says which key epoch sealed it. An existing vault is upgraded without rewriting a file: its pass phrase is asked again, then its recovery key shown. kofrenot 0.6 and older no longer open an upgraded vault.
-- **Server vaults** open with your server account's pass phrase. A vault from 0.6, or moved from a folder, opens once more with its own, then moves to the account's: its own pass phrase then opens only its older files. Needs a Kofre server from 0.2.
+- **Keys and pass phrases**
+  - **Vault format 6**: a vault's key is wrapped for an identity (a key pair) that the pass phrase and the recovery key unlock, kept in the vault's `keys/` folder; every file says which key epoch sealed it. An existing vault is upgraded without rewriting a file: its pass phrase is asked again, then its recovery key shown. kofrenot 0.6 and older no longer open an upgraded vault.
+  - **Server vaults** open with your server account's pass phrase. A vault from 0.6, or moved from a folder, opens once more with its own, then moves to the account's: its own pass phrase then opens only its older files. Needs a Kofre server from 0.2.
+- **Server**
+  - **Sync status in the header**: a server vault shows where its sync stands next to the lock, a dot coloured green (synced), grey, amber (offline) or red (sign in, failed), with the files waiting to be uploaded; its tooltip says more, a click syncs now or opens Settings > Server. It is no longer in the footer. A server stopped behind its proxy now counts as offline, not as a failed sync.
+- **Link types**
+  - **Removing an alias asks first**, as every other removal does.
+  - **Aliases are added in place**: *Add alias* at the end of a way's line in Settings > Link types, instead of the *New alias of* form.
+- **Dialogs**
+  - **The button Enter presses** is drawn in the accent color in every dialog (*Next*, *OK*, *Save*, *Find* then *Share*, ...), so it is clear before pressing.
 
 ## [0.6] - 2026-10-21
 
