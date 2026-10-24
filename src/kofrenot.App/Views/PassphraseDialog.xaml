@@ -1,6 +1,7 @@
 <Window x:Class="Kofrenot.UI.Views.PassphraseDialog"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:Kofrenot.UI.Views"
         Title="kofrenot"
         Icon="/Assets/kofrenot.ico"
         Width="440"
@@ -25,11 +26,11 @@
     </StackPanel>
 
     <TextBlock x:Name="FirstLabel" Margin="0,14,0,4" Text="Pass phrase" />
-    <PasswordBox x:Name="FirstBox" Padding="6,4" />
+    <local:SecretBox x:Name="FirstBox" />
 
     <StackPanel x:Name="SecondPanel" Visibility="Collapsed">
       <TextBlock Margin="0,10,0,4" Text="Pass phrase again" />
-      <PasswordBox x:Name="SecondBox" Padding="6,4" />
+      <local:SecretBox x:Name="SecondBox" />
     </StackPanel>
 
     <CheckBox x:Name="RememberCheckBox"
