@@ -62,7 +62,7 @@ public partial class ShareDialog : Window
                     MakeDefault(ShareButton);
                     break;
                 case Lookup.NoKeyYet:
-                    ShowError("This account has no pass phrase yet: ask them to open kofrenot 0.7 or later, signed in, and create a server vault or choose their pass phrase.");
+                    ShowError("This account has no pass phrase yet: ask them to sign in with kofrenot 0.7 or later, and choose it (Settings > Server > Pass phrase > Choose...).");
                     break;
                 default:
                     ShowError("No account on this server has this email.");

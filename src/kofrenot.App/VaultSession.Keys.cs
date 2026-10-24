@@ -8,7 +8,7 @@ namespace Kofrenot.UI;
 /// <summary>
 /// The keys of the vault: unlocked with what is remembered, its pass phrase or its recovery key;
 /// its pass phrase changed. A server vault opens with its account's pass phrase, changed in
-/// Settings > Server (<see cref="ChangeAccountPassPhrase(Window)"/>).
+/// Settings > Server (<see cref="SetAccountPassPhrase(Window)"/>).
 /// </summary>
 public sealed partial class VaultSession
 {

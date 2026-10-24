@@ -27,8 +27,11 @@ public partial class ServerSection : UserControl
 
     public ILog Log { private get; set; } = NullLog.Instance;
 
-    /// <summary>Changes the account's pass phrase (<see cref="VaultSession.ChangeAccountPassPhrase"/>).</summary>
-    public Action<Window>? ChangePassPhrase { private get; set; }
+    /// <summary>Chooses or changes the account's pass phrase (<see cref="VaultSession.SetAccountPassPhrase"/>).</summary>
+    public Action<Window>? SetPassPhrase { private get; set; }
+
+    // Signed in to an account without a pass phrase: others cannot share with it yet.
+    private bool NeedsPassPhrase => _connection is { IsSignedIn: true, TooOld: null, Identity: null };
 
     /// <summary>The account shown; set once by the Settings window.</summary>
     public ServerConnection Connection
@@ -69,7 +72,12 @@ public partial class ServerSection : UserControl
         };
         TooOldText.Text = connection.TooOld ?? string.Empty;
         TooOldText.Visibility = connection.TooOld is null ? Visibility.Collapsed : Visibility.Visible;
-        ChangePassPhraseButton.IsEnabled = signedIn && connection.TooOld is null && connection.Identity is not null;
+        var hasPassPhrase = connection.Identity is not null;
+        PassPhraseButton.IsEnabled = signedIn && connection.TooOld is null;
+        PassPhraseButton.Content = hasPassPhrase ? "Change..." : "Choose...";
+        PassPhraseButton.ToolTip = hasPassPhrase
+            ? "The account's pass phrase opens all your server vaults: it is sealed again, the recovery key stays the same"
+            : "The account's pass phrase opens all your server vaults, and lets others share theirs with you";
         ChangePasswordButton.IsEnabled = signedIn;
         KeyText.Text = connection.Identity is { } identity ? $"Your key: {Fingerprint.Of(identity.Identity.PublicKey, identity.Identity.SigningKey)}" : string.Empty;
         KeyText.Visibility = connection.Identity is null ? Visibility.Collapsed : Visibility.Visible;
@@ -105,34 +113,68 @@ public partial class ServerSection : UserControl
         }
     }
 
-    private void ChangePassPhraseButton_Click(object sender, RoutedEventArgs e) => ChangePassPhrase?.Invoke(Window.GetWindow(this));
+    private void PassPhraseButton_Click(object sender, RoutedEventArgs e) => SetAccountPassPhrase();
 
-    private async void SignInButton_Click(object sender, RoutedEventArgs e) =>
-        await Call("Sign in", (connection, server, email, password) => connection.SignInAsync(server, email, password), signedUp: false);
+    private void SetAccountPassPhrase()
+    {
+        SetPassPhrase?.Invoke(Window.GetWindow(this));
+        Show();
+    }
+
+    // Right after signing in: the pass phrase lets others share with this account, so it is offered then.
+    private void OfferPassPhrase()
+    {
+        if (!NeedsPassPhrase)
+        {
+            return;
+        }
+
+        if (MessageDialog.Confirm(
+            Window.GetWindow(this),
+            "Choose your account's pass phrase now?\n\nIt opens all your server vaults, and lets others share theirs with you.",
+            "Choose...",
+            "Later"))
+        {
+            SetAccountPassPhrase();
+        }
+        else
+        {
+            Log.Info("Action", "Server account pass phrase offered after sign in: later");
+        }
+    }
+
+    private async void SignInButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (await Call("Sign in", (connection, server, email, password) => connection.SignInAsync(server, email, password), signedUp: false))
+        {
+            OfferPassPhrase();
+        }
+    }
 
     private async void SignUpButton_Click(object sender, RoutedEventArgs e) =>
         await Call("Sign up", (connection, server, email, password) => connection.SignUpAsync(server, email, password), signedUp: true);
 
     private void SignOutButton_Click(object sender, RoutedEventArgs e) => _connection?.SignOut();
 
-    private async Task Call(string action, Func<ServerConnection, Uri, string, string, Task> call, bool signedUp)
+    /// <summary>True when the server took it.</summary>
+    private async Task<bool> Call(string action, Func<ServerConnection, Uri, string, string, Task> call, bool signedUp)
     {
         if (_connection is not { } connection)
         {
-            return;
+            return false;
         }
 
         if (AddressOf(ServerBox.Text) is not { } server)
         {
             StatusText.Text = "Type the server's address, as https://kofre.example.org.";
-            return;
+            return false;
         }
 
         var email = EmailBox.Text.Trim();
         if (email.Length == 0 || PasswordBox.Password.Length == 0)
         {
             StatusText.Text = "Type your email and password.";
-            return;
+            return false;
         }
 
         Log.Info("Action", action);
@@ -147,11 +189,14 @@ public partial class ServerSection : UserControl
             {
                 StatusText.Text = "Account created: you can sign in once the server's admin approves it.";
             }
+
+            return true;
         }
         catch (ServerException ex)
         {
             Log.Warn("Action", $"{action} refused: {ex.Message}");
             StatusText.Text = Explain(ex);
+            return false;
         }
         finally
         {

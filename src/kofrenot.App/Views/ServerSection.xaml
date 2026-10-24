@@ -56,12 +56,11 @@
 
     <StackPanel Margin="0,8,0,0" Orientation="Horizontal">
       <TextBlock Width="110" VerticalAlignment="Center" Text="Pass phrase" />
-      <Button x:Name="ChangePassPhraseButton"
+      <!-- Choose... while the account has none, then Change...: set by the code behind. -->
+      <Button x:Name="PassPhraseButton"
               Padding="12,4"
-              Content="Change..."
-              ToolTip="The account's pass phrase opens all your server vaults: it is sealed again, the recovery key stays the same"
               ToolTipService.ShowOnDisabled="True"
-              Click="ChangePassPhraseButton_Click" />
+              Click="PassPhraseButton_Click" />
     </StackPanel>
   </StackPanel>
 </UserControl>

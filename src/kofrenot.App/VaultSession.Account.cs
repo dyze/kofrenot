@@ -19,10 +19,18 @@ public sealed partial class VaultSession
     private Identity? AccountIdentityOf(string folder) =>
         Selected is { Location: { IsOnServer: true } location } && location.Folder == folder ? _server.Identity?.Identity : null;
 
-    /// <summary>Asks the account's pass phrase, and seals its identity again with a new one.</summary>
-    public void ChangeAccountPassPhrase(Window owner)
+    /// <summary>
+    /// Chooses the account's pass phrase when it has none (its recovery key then shown); else asks
+    /// the current one, and seals its identity again with a new one.
+    /// </summary>
+    public void SetAccountPassPhrase(Window owner)
     {
-        if (UnlockAccount(owner, "Type your server account's current pass phrase.") is { } account)
+        if (_server.Identity is null)
+        {
+            _log.Info("Action", "Choose the server account pass phrase");
+            UnlockAccount(owner, "Others can then share their server vaults with you.");
+        }
+        else if (UnlockAccount(owner, "Type your server account's current pass phrase.") is { } account)
         {
             ChangeAccountPassPhrase(owner, account.Identity, account.Unlocked);
         }
