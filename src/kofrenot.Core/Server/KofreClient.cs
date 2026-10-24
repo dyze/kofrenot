@@ -362,6 +362,9 @@ public sealed class KofreClient(HttpClient http, ServerSession? session = null, 
             HttpStatusCode.Conflict => ServerFailure.Conflict,
             HttpStatusCode.RequestEntityTooLarge => ServerFailure.TooLarge,
             HttpStatusCode.TooManyRequests => ServerFailure.TooManyRequests,
+
+            // The proxy in front answers for a server that is stopped or restarting.
+            HttpStatusCode.BadGateway or HttpStatusCode.ServiceUnavailable or HttpStatusCode.GatewayTimeout => ServerFailure.Offline,
             _ => ServerFailure.Failed,
         };
         _log.Debug(Category, $"{response.RequestMessage?.Method} {response.RequestMessage?.RequestUri?.AbsolutePath} refused: {(int)response.StatusCode} {code}");

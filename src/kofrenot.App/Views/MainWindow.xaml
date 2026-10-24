@@ -84,6 +84,21 @@
           <TextBlock VerticalAlignment="Center" FontSize="{StaticResource CaptionFontSize}" Text="Read only" />
         </StackPanel>
       </Border>
+
+      <!-- A server vault's sync: a dot coloured by how it stands, a few words; the tooltip says
+           more. Click: sync now, or Settings when signed out. -->
+      <Button x:Name="SyncButton"
+              Margin="8,0,0,0"
+              Padding="6,1"
+              VerticalAlignment="Center"
+              Style="{StaticResource FlatButton}"
+              Visibility="Collapsed"
+              Click="SyncButton_Click">
+        <StackPanel Orientation="Horizontal">
+          <Ellipse x:Name="SyncDot" Width="8" Height="8" Margin="0,0,6,0" VerticalAlignment="Center" />
+          <TextBlock x:Name="SyncText" VerticalAlignment="Center" FontSize="{StaticResource CaptionFontSize}" />
+        </StackPanel>
+      </Button>
       </StackPanel>
 
       <TextBlock x:Name="TitleText" Grid.Column="1" VerticalAlignment="Center" Style="{StaticResource HeadingText}" Text="kofrenot" />

@@ -309,6 +309,9 @@ public partial class SettingsWindow : Window
     private void Window_SourceInitialized(object? sender, EventArgs e) =>
         NativeWindows.RemoveMinimizeMaximizeButtons(new System.Windows.Interop.WindowInteropHelper(this).Handle);
 
+    /// <summary>Shows one tab (<see cref="SettingsCatalog.Tabs"/>): the one asked, when Settings opens for it.</summary>
+    public void SelectTab(string tab) => TabList.SelectedItem = tab;
+
     private void TabList_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         UpdateSections();

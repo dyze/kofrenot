@@ -7,43 +7,20 @@ using Kofrenot.Core.Settings;
 
 namespace Kofrenot.UI.Sync;
 
-/// <summary>Where a server vault's sync stands.</summary>
-/// <param name="Synced">When it last went through; null when not yet since kofrenot started.</param>
-/// <param name="Failure">Why the last one failed; null when it went through.</param>
-/// <param name="Waiting">Files of the mirror the store does not have yet.</param>
-public sealed record SyncStatus(DateTimeOffset? Synced, ServerFailure? Failure, int Waiting)
-{
-    /// <summary>"synced", "offline, 3 files waiting", "sign in to sync"...</summary>
-    public string Describe()
-    {
-        var state = Failure switch
-        {
-            null when Synced is null => "not synced yet",
-            null => "synced",
-            ServerFailure.Offline => "offline",
-            ServerFailure.SignInNeeded => "sign in to sync",
-            ServerFailure.Refused or ServerFailure.NotFound => "no longer on the server, or no longer shared with you",
-            _ => "sync failed",
-        };
-        return Waiting > 0 ? $"{state}, {Waiting} {(Waiting == 1 ? "file" : "files")} to upload" : state;
-    }
-}
-
 /// <summary>
-/// Syncs the server vaults with their stores, in the background, one sync at a time: every 30
-/// seconds, soon after a change (<see cref="Soon"/>), and when asked.
+/// Syncs the server vaults with their stores, in the background, one sync at a time: every
+/// <see cref="SyncStatus.Every"/>, soon after a change (<see cref="Soon"/>), and when asked.
 /// </summary>
 public sealed class SyncService : IDisposable
 {
     private const string Category = "Sync";
-    private static readonly TimeSpan Interval = TimeSpan.FromSeconds(30);
     private static readonly TimeSpan Settle = TimeSpan.FromSeconds(2);
 
     private readonly SettingsStore _settings;
     private readonly AppFiles _files;
     private readonly ServerConnection _server;
     private readonly ILog _log;
-    private readonly DispatcherTimer _every = new() { Interval = Interval };
+    private readonly DispatcherTimer _every = new() { Interval = SyncStatus.Every };
     private readonly DispatcherTimer _soon = new() { Interval = Settle };
     private readonly Dictionary<Guid, SyncStatus> _statuses = [];
     private Task? _running;
@@ -139,6 +116,11 @@ public sealed class SyncService : IDisposable
 
             // Read once, then kept: the owner whose signatures the vault's keys and members need.
             await _server.Owners.OwnerOfAsync(client, store.Id);
+            if (before.Failure is not null)
+            {
+                _log.Info(Category, $"Store {store.Id} synced again");
+            }
+
             return new SyncStatus(DateTimeOffset.Now, null, await Waiting());
         }
         catch (ServerException ex)

@@ -20,6 +20,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **Server too old**: Settings > Server says when the server runs a version older than 0.2; your server vaults still sync, but cannot move to the account's pass phrase until it is upgraded.
 
 ### Changed
+- **Sync status in the header**: a server vault shows where its sync stands next to the lock, a dot coloured green (synced), grey, amber (offline) or red (sign in, failed), with the files waiting to be uploaded; its tooltip says more, a click syncs now or opens Settings > Server. It is no longer in the footer. A server stopped behind its proxy now counts as offline, not as a failed sync.
 - **Removing an alias asks first**, as every other removal does.
 - **Aliases are added in place**: *Add alias* at the end of a way's line in Settings > Link types, instead of the *New alias of* form.
 - **The button Enter presses** is drawn in the accent color in every dialog (*Next*, *OK*, *Save*, *Find* then *Share*, ...), so it is clear before pressing.

@@ -57,6 +57,20 @@ public sealed class KofreClientTests
         Assert.Equal((ServerFailure.Conflict, "email-taken"), (error.Failure, error.Code));
     }
 
+    [Theory]
+    [InlineData(HttpStatusCode.BadGateway, ServerFailure.Offline)]
+    [InlineData(HttpStatusCode.ServiceUnavailable, ServerFailure.Offline)]
+    [InlineData(HttpStatusCode.GatewayTimeout, ServerFailure.Offline)]
+    [InlineData(HttpStatusCode.InternalServerError, ServerFailure.Failed)]
+    public async Task AServerDownBehindItsProxy_IsOffline(HttpStatusCode status, ServerFailure failure)
+    {
+        var client = Client(new StubHandler(_ => new HttpResponseMessage(status)));
+
+        var refused = await Assert.ThrowsAsync<ServerException>(() => client.ListStoresAsync());
+
+        Assert.Equal(failure, refused.Failure);
+    }
+
     [Fact]
     public async Task SigningOut_ForgetsTheSession()
     {
@@ -150,7 +164,7 @@ public sealed class KofreClientTests
         _clock.Advance(TimeSpan.FromMinutes(15));
         var error = await Assert.ThrowsAsync<ServerException>(() => client.ListStoresAsync());
 
-        Assert.Equal(ServerFailure.Failed, error.Failure);
+        Assert.Equal(ServerFailure.Offline, error.Failure);
         Assert.Null(error.Code);
         Assert.Equal(session, client.Session);
     }

@@ -85,6 +85,8 @@ public partial class MainWindow : Window
             {
                 VaultText.Text = FooterOf(open);
             }
+
+            ShowSync();
         };
         ShowVault();
         ShowVaults();
@@ -114,9 +116,7 @@ public partial class MainWindow : Window
     }
 
     /// <summary>"Personal · 120 nodes · 80 links", and a server vault's sync ("· offline, 2 files to upload").</summary>
-    private string FooterOf(Vault vault) =>
-        $"{SelectedName} · {vault.Graph.Nodes.Count} nodes · {vault.Graph.Links.Count} links"
-        + (_session.Selected?.Location.Store is { } store ? $" · {_session.Sync.StatusOf(store).Describe()}" : string.Empty);
+    private string FooterOf(Vault vault) => $"{SelectedName} · {vault.Graph.Nodes.Count} nodes · {vault.Graph.Links.Count} links";
 
     private void ShowVault()
     {
@@ -144,6 +144,7 @@ public partial class MainWindow : Window
         LockButton.Visibility = open ? Visibility.Visible : Visibility.Collapsed;
         var readOnly = open && _session.IsReadOnly;
         ReadOnlyTag.Visibility = readOnly ? Visibility.Visible : Visibility.Collapsed;
+        ShowSync();
         Title = (SelectedName.Length > 0 ? SelectedName : "kofrenot") + (readOnly ? " (read only)" : string.Empty);
         if (vault is not null)
         {
@@ -500,14 +501,19 @@ public partial class MainWindow : Window
     }
 
     /// <summary>
-    /// Shows this window, then Settings as a dialog over it (gear button, tray menu). Returns at
-    /// once when Settings is already open.
+    /// Shows this window, then Settings as a dialog over it (gear button, tray menu), at
+    /// <paramref name="tab"/> when given. Returns at once when Settings is already open.
     /// </summary>
-    public void ShowSettings()
+    public void ShowSettings(string? tab = null)
     {
         if (_settingsDialog is not null)
         {
             _settingsDialog.Activate();
+            if (tab is not null)
+            {
+                _settingsDialog.SelectTab(tab);
+            }
+
             return;
         }
 
@@ -515,6 +521,10 @@ public partial class MainWindow : Window
 
         var dialog = _createSettings();
         dialog.Owner = this;
+        if (tab is not null)
+        {
+            dialog.SelectTab(tab);
+        }
         _log.Debug("Window", "Settings shown");
 
         _settingsDialog = dialog;
