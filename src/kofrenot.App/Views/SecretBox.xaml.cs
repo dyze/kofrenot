@@ -39,6 +39,8 @@ public partial class SecretBox : UserControl
     {
         RevealedBox.Text = Box.Password;
         RevealedBox.Visibility = Visibility.Visible;
+        // The theme's text box is see-through; Opacity, not Visibility, so the box keeps the focus.
+        Box.Opacity = 0;
     }
 
     private void RevealButton_PreviewMouseLeftButtonUp(object sender, MouseButtonEventArgs e) => Hide();
@@ -49,5 +51,6 @@ public partial class SecretBox : UserControl
     {
         RevealedBox.Visibility = Visibility.Collapsed;
         RevealedBox.Text = string.Empty;
+        Box.Opacity = 1;
     }
 }
