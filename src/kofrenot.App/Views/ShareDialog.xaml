@@ -22,7 +22,7 @@
     <TextBlock Margin="0,14,0,4" Text="Their email on the server" />
     <StackPanel Orientation="Horizontal">
       <TextBox x:Name="EmailBox" Width="300" Padding="4,3" TextChanged="EmailBox_TextChanged" />
-      <Button x:Name="FindButton" Margin="8,0,0,0" Padding="12,4" Content="Find" IsDefault="True" Click="FindButton_Click" />
+      <Button x:Name="FindButton" Margin="8,0,0,0" Padding="12,4" Content="Find" Style="{DynamicResource AccentButtonStyle}" IsDefault="True" Click="FindButton_Click" />
     </StackPanel>
 
     <StackPanel x:Name="FoundPanel" Visibility="Collapsed">

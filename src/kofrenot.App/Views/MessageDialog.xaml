@@ -44,6 +44,7 @@
               MinWidth="90"
               Padding="12,4"
               Content="OK"
+              Style="{DynamicResource AccentButtonStyle}"
               IsDefault="True"
               IsCancel="True"
               Click="OkButton_Click" />

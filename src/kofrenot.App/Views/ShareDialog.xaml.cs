@@ -1,4 +1,5 @@
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Interop;
 using Kofrenot.Core.Graph;
@@ -58,8 +59,7 @@ public partial class ShareDialog : Window
                     FingerprintBox.Text = candidate!.Fingerprint;
                     FoundPanel.Visibility = Visibility.Visible;
                     ErrorText.Visibility = Visibility.Collapsed;
-                    FindButton.IsDefault = false;
-                    ShareButton.IsDefault = true;
+                    MakeDefault(ShareButton);
                     break;
                 case Lookup.NoKeyYet:
                     ShowError("This account has no pass phrase yet: ask them to open kofrenot 0.7 or later, signed in, and create a server vault or choose their pass phrase.");
@@ -91,8 +91,17 @@ public partial class ShareDialog : Window
         _found = null;
         FoundPanel.Visibility = Visibility.Collapsed;
         MatchesCheckBox.IsChecked = false;
-        FindButton.IsDefault = true;
-        ShareButton.IsDefault = false;
+        MakeDefault(FindButton);
+    }
+
+    // Enter presses Find until someone is found, then Share; the accent shows which.
+    private void MakeDefault(Button button)
+    {
+        var other = button == FindButton ? ShareButton : FindButton;
+        other.IsDefault = false;
+        other.ClearValue(StyleProperty);
+        button.IsDefault = true;
+        button.SetResourceReference(StyleProperty, "AccentButtonStyle");
     }
 
     private void MatchesCheckBox_Changed(object sender, RoutedEventArgs e) => ShareButton.IsEnabled = MatchesCheckBox.IsChecked == true && _found is not null;

@@ -24,7 +24,7 @@
     <ListBox x:Name="StoreList" Height="180" DisplayMemberPath="Text" MouseDoubleClick="StoreList_MouseDoubleClick" />
 
     <StackPanel Margin="0,20,0,0" HorizontalAlignment="Right" Orientation="Horizontal">
-      <Button x:Name="AddButton" MinWidth="90" Padding="12,4" Content="Add" IsDefault="True" Click="AddButton_Click" />
+      <Button x:Name="AddButton" MinWidth="90" Padding="12,4" Content="Add" Style="{DynamicResource AccentButtonStyle}" IsDefault="True" Click="AddButton_Click" />
       <Button MinWidth="90" Margin="8,0,0,0" Padding="12,4" Content="Cancel" IsCancel="True" />
     </StackPanel>
   </StackPanel>

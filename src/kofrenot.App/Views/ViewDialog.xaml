@@ -44,6 +44,7 @@
               MinWidth="90"
               Padding="12,4"
               Content="Save"
+              Style="{DynamicResource AccentButtonStyle}"
               IsDefault="True"
               Click="SaveButton_Click" />
       <Button MinWidth="90"

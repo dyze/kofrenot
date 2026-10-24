@@ -19,6 +19,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **Server too old**: Settings > Server says when the server runs a version older than 0.2; your server vaults still sync, but cannot move to the account's pass phrase until it is upgraded.
 
 ### Changed
+- **The button Enter presses** is drawn in the accent color in every dialog (*Next*, *OK*, *Save*, *Find* then *Share*, ...), so it is clear before pressing.
 - **Vault format 6**: a vault's key is wrapped for an identity (a key pair) that the pass phrase and the recovery key unlock, kept in the vault's `keys/` folder; every file says which key epoch sealed it. An existing vault is upgraded without rewriting a file: its pass phrase is asked again, then its recovery key shown. kofrenot 0.6 and older no longer open an upgraded vault.
 - **Server vaults** open with your server account's pass phrase. A vault from 0.6, or moved from a folder, opens once more with its own, then moves to the account's: its own pass phrase then opens only its older files. Needs a Kofre server from 0.2.
 

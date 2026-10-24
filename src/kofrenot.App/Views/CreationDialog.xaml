@@ -164,6 +164,7 @@
       <Button x:Name="NextButton"
               MinWidth="90"
               Padding="12,4"
+              Style="{DynamicResource AccentButtonStyle}"
               IsDefault="True"
               Click="NextButton_Click" />
       <Button MinWidth="90"
