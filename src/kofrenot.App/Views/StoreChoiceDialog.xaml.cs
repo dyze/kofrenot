@@ -7,12 +7,14 @@ using Kofrenot.UI.Platform;
 
 namespace Kofrenot.UI.Views;
 
-/// <summary>A row of the list: a store, by its id and size.</summary>
+/// <summary>A row of the list: a store, by its id, whose it is, and its size.</summary>
 public sealed record StoreRow(ServerStore Store)
 {
-    public string Text => Store.Files == 0
-        ? $"Vault {Store.Id.ToString()[..8]} · empty"
-        : $"Vault {Store.Id.ToString()[..8]} · {ByteSize.Format(Store.Bytes)} in {Store.Files} files";
+    public string Text => $"Vault {Store.Id.ToString()[..8]} · {Whose} · " + (Store.Files == 0
+        ? "empty"
+        : $"{ByteSize.Format(Store.Bytes)} in {Store.Files} files");
+
+    private string Whose => Store.Role == StoreRole.Owner ? "yours" : $"shared with you, {Store.Role.ToString().ToLowerInvariant()}";
 }
 
 /// <summary>Chooses one of the server's vaults not listed here yet.</summary>
