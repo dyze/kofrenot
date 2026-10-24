@@ -44,7 +44,13 @@ public partial class VaultsSection : UserControl
         {
             _session = value;
             value.Sync.Changed += ShowSync;
-            Unloaded += (_, _) => value.Sync.Changed -= ShowSync;
+            // Signed in or out: sharing, leaving and deleting from the server change with it.
+            value.Server.Changed += Show;
+            Unloaded += (_, _) =>
+            {
+                value.Sync.Changed -= ShowSync;
+                value.Server.Changed -= Show;
+            };
             Show();
         }
     }
