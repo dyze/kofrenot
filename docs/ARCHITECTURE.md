@@ -235,7 +235,7 @@ email ─► GET /v1/accounts?email= ─► {id, public}: AccountIdentities.KeyO
 
 | | |
 | --- | --- |
-| Members | Recorded in the vault (`MemberAdded`, `MemberRemoved`: account, identity, public keys, email, role), each **signed by the owner** (`MemberRecords`): only those count, the latest per account; listed in Settings > Vault with their fingerprint, the owner's included |
+| Members | Recorded in the vault (`MemberAdded`, `MemberRemoved`: account, identity, public keys, email, role), each **signed by the owner** (`MemberRecords`): only those count, the latest per account (a role changed: a new record, `VaultSharing.ChangeRole`, and the role on the server; no key change); listed in Settings > Vault with their fingerprint, the owner's included |
 | Fingerprint | First 160 bits of the SHA-256 of the public keys (encryption, signing), 8 groups of 4 Base32 characters; the account's own in Settings > Server (*Your key*) |
 | Owner's key | `KeySigner`: this account's signing key for its own vaults (the vault's own identity before it is attached); for a vault shared with it, the owner kept in `vault-owners.json` (`VaultOwners`: read once from the store's members and the owner's public data). Epoch wraps (`KFW2`) not signed by it are ignored, by `Unlock` and the latest epoch alike |
 | Member's side | The store appears in *Vault from the server…*; it opens with the member's own account pass phrase (their identity's wraps) |

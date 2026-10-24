@@ -95,6 +95,30 @@ public static class VaultSharing
         return (rotated, [.. accounts.Select(account => MemberRecords.Removed(access.Header.Id, account, now, signer))]);
     }
 
+    /// <summary>
+    /// Gives a member of the open vault another role: a new record, signed by the owner, replaces
+    /// its last. No key changes: a reader cannot write on the server, and what the owner did not
+    /// sign is ignored. Null when the member has that role already.
+    /// </summary>
+    /// <exception cref="InvalidOperationException">Not a member, the owner, the role of owner, or an access without identity.</exception>
+    public static MemberAdded? ChangeRole(VaultAccess access, KnowledgeGraph graph, Guid account, MemberRole role, DateTimeOffset now)
+    {
+        var signer = access.Identity ?? throw new InvalidOperationException("The vault has no identity to sign with");
+        if (role == MemberRole.Owner)
+        {
+            throw new InvalidOperationException("A vault has one owner");
+        }
+
+        var member = MemberRecords.Members(graph, access.Header.Id, Signing.PublicKeyOf(signer)).FirstOrDefault(recorded => recorded.Account == account)
+            ?? throw new InvalidOperationException("Not a member of this vault");
+        if (member.Role == MemberRole.Owner)
+        {
+            throw new InvalidOperationException("The owner's role does not change");
+        }
+
+        return member.Role == role ? null : MemberRecords.Added(access.Header.Id, member with { Role = role }, now, signer);
+    }
+
     /// <summary>The members who are no longer members on the server: they left (or were removed from another device).</summary>
     public static IReadOnlyList<VaultMember> Gone(IReadOnlyList<VaultMember> members, IEnumerable<StoreMember> onServer)
     {

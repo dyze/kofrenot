@@ -125,6 +125,37 @@ public sealed class VaultSharingTests : IDisposable
 
     public void Dispose() => _temp.Dispose();
 
+    [Fact]
+    public void ChangingARole_ReplacesTheMembersRecord_WithoutTouchingTheKeys()
+    {
+        var (access, vault) = OwnersVault();
+        Append(vault, VaultSharing.Share(Folder, access, vault.Graph, Owner, Candidate, MemberRole.Writer, Now));
+        var keyFiles = Directory.GetFiles(Path.Combine(Folder, VaultFolder.KeysFolder), "*", SearchOption.AllDirectories).Length;
+
+        var changed = VaultSharing.ChangeRole(access, vault.Graph, MemberAccount, MemberRole.Reader, Now.AddMinutes(1))!;
+        vault.Append(changed);
+
+        Assert.Equal(MemberRole.Reader, VaultSharing.RoleOf(Members(vault), _member.Identity.Id));
+        Assert.Equal(2, Members(vault).Count);
+        Assert.Equal(keyFiles, Directory.GetFiles(Path.Combine(Folder, VaultFolder.KeysFolder), "*", SearchOption.AllDirectories).Length);
+        Assert.Equal(MemberRole.Reader, MemberRecords.Members(Vault.Open(Folder, access.Header, access.Keys).Graph, access.Header.Id, OwnerKey).Single(member => member.Account == MemberAccount).Role);
+        Assert.Null(VaultSharing.ChangeRole(access, vault.Graph, MemberAccount, MemberRole.Reader, Now.AddMinutes(2)));
+        vault.Append(VaultSharing.ChangeRole(access, vault.Graph, MemberAccount, MemberRole.Writer, Now.AddMinutes(2))!);
+        Assert.Equal(MemberRole.Writer, VaultSharing.RoleOf(Members(vault), _member.Identity.Id));
+    }
+
+    [Fact]
+    public void TheOwner_ANonMember_AndTheOwnersRole_CannotBeGiven()
+    {
+        var (access, vault) = OwnersVault();
+        Append(vault, VaultSharing.Share(Folder, access, vault.Graph, Owner, Candidate, MemberRole.Writer, Now));
+
+        Assert.Throws<InvalidOperationException>(() => VaultSharing.ChangeRole(access, vault.Graph, OwnerAccount, MemberRole.Reader, Now));
+        Assert.Throws<InvalidOperationException>(() => VaultSharing.ChangeRole(access, vault.Graph, Guid.NewGuid(), MemberRole.Reader, Now));
+        Assert.Throws<InvalidOperationException>(() => VaultSharing.ChangeRole(access, vault.Graph, MemberAccount, MemberRole.Owner, Now));
+        Assert.Throws<InvalidOperationException>(() => VaultSharing.ChangeRole(access with { Identity = null }, vault.Graph, MemberAccount, MemberRole.Reader, Now));
+    }
+
     private VaultMember Owner => new(OwnerAccount, _owner.Identity.Id, _owner.Identity.PublicKey, "ada@example.com", MemberRole.Owner, _owner.Identity.SigningKey);
 
     private ShareCandidate Candidate => new(MemberAccount, "bob@example.com", _member.Identity.Id, _member.Identity.PublicKey, _member.Identity.SigningKey);

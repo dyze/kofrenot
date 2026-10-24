@@ -106,6 +106,13 @@
                     ToolTip="Shares the vault with another account on the server, after comparing the fingerprint of their key. The vault must be open"
                     ToolTipService.ShowOnDisabled="True"
                     Click="ShareButton_Click" />
+            <Button x:Name="ChangeRoleButton"
+                    Margin="8,0,0,0"
+                    Padding="12,4"
+                    Content="Change role..."
+                    ToolTip="Makes the chosen member a reader if a writer, a writer if a reader"
+                    ToolTipService.ShowOnDisabled="True"
+                    Click="ChangeRoleButton_Click" />
             <Button x:Name="RemoveMemberButton"
                     Margin="8,0,0,0"
                     Padding="12,4"

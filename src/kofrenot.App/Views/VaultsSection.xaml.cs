@@ -480,12 +480,16 @@ public partial class VaultsSection : UserControl
         ShareButton.Visibility = session.CanLeave ? Visibility.Collapsed : Visibility.Visible;
         ShareButton.IsEnabled = session.CanShare;
         RemoveMemberButton.Visibility = ShareButton.Visibility;
+        ChangeRoleButton.Visibility = ShareButton.Visibility;
         LeaveButton.Visibility = session.CanLeave ? Visibility.Visible : Visibility.Collapsed;
         ShowMemberChosen();
     }
 
-    private void ShowMemberChosen() =>
+    private void ShowMemberChosen()
+    {
         RemoveMemberButton.IsEnabled = _session is { CanRemoveMembers: true } && MembersList.SelectedItem is MemberRow { Member.Role: not MemberRole.Owner };
+        ChangeRoleButton.IsEnabled = RemoveMemberButton.IsEnabled;
+    }
 
     private void MembersList_SelectionChanged(object sender, SelectionChangedEventArgs e) => ShowMemberChosen();
 
@@ -494,6 +498,15 @@ public partial class VaultsSection : UserControl
         if (_session is { } session)
         {
             await session.Share(Owner);
+            ShowChosen();
+        }
+    }
+
+    private async void ChangeRoleButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (_session is { } session && MembersList.SelectedItem is MemberRow row)
+        {
+            await session.ChangeRole(Owner, row.Member);
             ShowChosen();
         }
     }

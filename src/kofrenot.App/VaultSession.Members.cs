@@ -48,6 +48,47 @@ public sealed partial class VaultSession
         }
     }
 
+    /// <summary>Makes a member a reader if a writer, a writer if a reader: their record in the vault, then their role on the server.</summary>
+    public async Task ChangeRole(Window owner, VaultMember member)
+    {
+        if (!CanRemoveMembers || member.Role == MemberRole.Owner || Current is not { } vault || _access is not { } access
+            || Selected?.Location.Store is not { } store || _server.Client is not { } client)
+        {
+            return;
+        }
+
+        var role = member.Role == MemberRole.Writer ? MemberRole.Reader : MemberRole.Writer;
+        var question = role == MemberRole.Reader
+            ? $"Make {member.Email} a reader?\n\nThey can still read the vault, no longer change it."
+            : $"Make {member.Email} a writer?\n\nThey can then change the vault too.";
+        if (!MessageDialog.Confirm(owner, question, role == MemberRole.Reader ? "Make reader" : "Make writer"))
+        {
+            _log.Info("Action", "Role change cancelled");
+            return;
+        }
+
+        try
+        {
+            if (VaultSharing.ChangeRole(access, vault.Graph, member.Account, role, DateTimeOffset.UtcNow) is { } record
+                && !Append(owner, vault, [record], $"Member role changed to {role}"))
+            {
+                return;
+            }
+
+            await client.SetMemberAsync(store.Id, member.Account, VaultSharing.ToStoreRole(role));
+            _sync.Soon();
+        }
+        catch (ServerException ex)
+        {
+            Inform(owner, "The role cannot be changed", ex);
+        }
+        catch (InvalidOperationException ex)
+        {
+            _log.Error("Action", "Cannot change the role", ex);
+            MessageDialog.Inform(owner, $"The role cannot be changed.\n\n{ex.Message}");
+        }
+    }
+
     /// <summary>Leaves the open vault, shared by someone else: it goes out of the list; its copy here stays until removed.</summary>
     public async Task Leave(Window owner)
     {
