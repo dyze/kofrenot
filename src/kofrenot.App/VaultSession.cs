@@ -258,8 +258,9 @@ public sealed partial class VaultSession : IDisposable
     public bool Write(Window owner, Change change, string action) => Write(owner, [change], action);
 
     /// <summary>
-    /// Shows what a view shows, to edit it, then saves a new version. False when no vault is open,
-    /// the user cancels, nothing changed, or it cannot be written (the user is told).
+    /// Shows a view's name and what it shows, to edit them, then saves a new version and the
+    /// rename. False when no vault is open, the user cancels, nothing changed, or it cannot be
+    /// written (the user is told).
     /// </summary>
     public bool EditView(Window owner, Node view)
     {
@@ -270,15 +271,20 @@ public sealed partial class VaultSession : IDisposable
 
         var planner = new ViewPlanner(vault.Graph);
         var loaded = planner.Load(view);
-        if (ViewDialog.Ask(owner, vault.Graph, view, loaded) is not { } definition)
+        if (ViewDialog.Ask(owner, vault.Graph, view, loaded) is not { } edit)
         {
             _log.Info("Action", "View edit cancelled");
             return false;
         }
 
-        return planner.Save(view, definition, loaded) is { } version
-            && Current == vault
-            && Append(owner, vault, [version], loaded.IsConflict ? $"View edited (a conflict of {loaded.Versions.Count} versions resolved)" : "View edited");
+        var version = planner.Save(view, edit.Definition, loaded);
+        Change?[] planned = [edit.Rename, version];
+        var changes = planned.OfType<Change>().ToList();
+        var action = version is null
+            ? "View renamed"
+            : (loaded.IsConflict ? $"View edited (a conflict of {loaded.Versions.Count} versions resolved)" : "View edited")
+                + (edit.Rename is null ? string.Empty : " and renamed");
+        return changes.Count > 0 && Current == vault && Append(owner, vault, changes, action);
     }
 
     /// <summary>
@@ -298,16 +304,14 @@ public sealed partial class VaultSession : IDisposable
             var view = node with { Type = retype.Type };
             var planner = new ViewPlanner(vault.Graph);
             var loaded = planner.Load(view);
-            if (ViewDialog.Ask(owner, vault.Graph, view, loaded) is not { } definition)
+            if (ViewDialog.Ask(owner, vault.Graph, view, loaded) is not { } edit)
             {
                 _log.Info("Action", "Node type change cancelled");
                 return false;
             }
 
-            if (planner.Save(view, definition, loaded) is { } version)
-            {
-                changes = [retype, version];
-            }
+            Change?[] planned = [retype, planner.Save(view, edit.Definition, loaded), edit.Rename];
+            changes = planned.OfType<Change>().ToList();
         }
 
         var resolved = retype.Replaces.Count > 1 ? $", a conflict of {retype.Replaces.Count} types resolved" : string.Empty;

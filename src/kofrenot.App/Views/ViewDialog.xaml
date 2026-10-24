@@ -11,13 +11,14 @@
         WindowStartupLocation="CenterOwner"
         SourceInitialized="Window_SourceInitialized"
         FontSize="{DynamicResource BodyFontSize}">
-  <!-- Edits what a view shows. Enter saves, Esc cancels. -->
+  <!-- Edits a view: its name, and what it shows. Enter saves, Esc cancels. -->
   <Window.Resources>
     <ResourceDictionary Source="SharedStyles.xaml" />
   </Window.Resources>
 
   <Grid Margin="20,18,20,16">
     <Grid.RowDefinitions>
+      <RowDefinition Height="Auto" />
       <RowDefinition Height="Auto" />
       <RowDefinition Height="Auto" />
       <RowDefinition Height="Auto" />
@@ -34,9 +35,23 @@
                TextWrapping="Wrap"
                Visibility="Collapsed" />
 
-    <local:ViewDefinitionEditor x:Name="Editor" Grid.Row="2" Margin="0,14,0,0" />
+    <!-- The view's name, checked as a rename in place (RenamePlanner): an empty name or one with a
+         link phrase is refused, a name another node has is allowed with a warning. -->
+    <Grid Grid.Row="2" Margin="0,14,0,0">
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="140" />
+        <ColumnDefinition Width="*" />
+      </Grid.ColumnDefinitions>
+      <TextBlock Margin="0,5,0,0" VerticalAlignment="Top" Opacity="0.7" Text="Name" />
+      <StackPanel Grid.Column="1">
+        <TextBox x:Name="NameBox" Padding="6,4" />
+        <TextBlock x:Name="NameStatus" Margin="2,4,0,0" Style="{StaticResource CaptionText}" Visibility="Collapsed" />
+      </StackPanel>
+    </Grid>
 
-    <StackPanel Grid.Row="3"
+    <local:ViewDefinitionEditor x:Name="Editor" Grid.Row="3" Margin="0,10,0,0" />
+
+    <StackPanel Grid.Row="4"
                 Margin="0,20,0,0"
                 HorizontalAlignment="Right"
                 Orientation="Horizontal">

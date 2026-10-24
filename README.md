@@ -144,7 +144,7 @@ A node of type *View* shows the vault another way, in a tab of its own. Choose o
   Or **drag** a node onto another to move it there, holding **Ctrl** to copy it instead; the node under the pointer is highlighted, and the cursor says when it cannot go there. A node cannot move under itself. A note or dataset whose content has not arrived on this computer yet cannot be copied.
 - **Drag a dataset out** of a tree to a folder (or any program that takes files): its file is exported only when it leaves kofrenot, so moving it in the tree stays instant. **Drop a file** from elsewhere on a node of a tree: the creation screen proposes a new dataset with that file, named after it (full file name), under that node. One file at a time.
 - A view is a node like the others: found by the search, pinned, linked, synced. Its definition is kept in the vault.
-- **Edit what a view shows**: **Edit…** next to *Shows* in its details, or **⚙** on its tab, when selected. Each change is a new version; a view edited on two computers before they synced shows the latest definition, and saving keeps yours.
+- **Edit a view** (its name and what it shows): **Edit…** next to *Shows* in its details, or **⚙** on its tab, when selected. Its name is checked as a rename: an empty one, or one with a link phrase, cannot be saved. Each change is a new version; a view edited on two computers before they synced shows the latest definition, and saving keeps yours.
 
 ## Settings
 
