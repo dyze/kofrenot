@@ -86,7 +86,8 @@ public class SettingsCatalogTests
     [InlineData("account", SettingsCatalog.ServerId)]
     [InlineData("sign in", SettingsCatalog.ServerId)]
     [InlineData("offline", SettingsCatalog.ServerId)]
-    public void Find_FindsTheVaultAndHotkeySettings(string query, string id)
+    [InlineData("custom", SettingsCatalog.LinkAliasesId)]
+    public void Find_FindsTheVaultHotkeyAndLinkTypeSettings(string query, string id)
     {
         Assert.Equal(id, Assert.Single(SettingsCatalog.Find(query)).Id);
     }

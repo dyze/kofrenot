@@ -13,7 +13,7 @@ kofrenot.App   (WPF, Windows only)
 │  implements ▼  IReleaseFeed · ILog · ISecretProtector
 │
 kofrenot.Core  (no Windows dependency, fully unit-tested on any OS)
-   Graph: KnowledgeGraph · Node · Link · TypeCatalog · LinkAliases · Change
+   Graph: KnowledgeGraph · Node · Link · TypeCatalog · CustomLinkTypes · LinkAliases · Change
    Storage: Vault · VaultFolder · VaultFormat · SecretBox · ChunkedBox · KeyWrap · SnapshotStore · NoteFiles · DatasetFiles · ThumbnailFiles · KeyMemory · VaultNameMemory
    Server: KofreClient · ServerSync · VaultMove · ServerSessionMemory   ── HTTPS ──►  Kofre server (own repository: kofreserver)
    Input: InputParser · GraphSearch · AddPlanner · InputPresenter · CreationForm
@@ -39,9 +39,9 @@ One namespace per folder (`Kofrenot.Core.Settings`, `Kofrenot.UI.Views`, ...). T
 | --- | --- |
 | *(root)* | `AppVersion`; `RunningCopy` + `AppCopy` (another copy running: same or not, and what the user is told); `QuitRefusal` (why kofrenot must not quit, or switch vaults, now); `AppFiles` (where every file of kofrenot is, including `keys.json` and the snapshots in `cache\`: the only place their names are written, listed in Settings > About; `AppFiles.For` picks the data folder, see [Portable copy](#portable-copy)); `Changelog` (reads the text shown by Settings > About); `ProjectLinks` (website, issues, releases) |
 | `Settings/` | `SettingsStore` (`settings.json`: theme, debug logging, update check, the registered vaults and the one selected, hotkey, server account; `IsHotkeyTaken`), `Hotkey`, `KeyBindings` (every shortcut, by area, for Settings > Key bindings: written by hand, **update it with the key handlers**), `VaultList` + `RegisteredVault` + `VaultLocation` + `StoreAddress` (see [Registered vaults](#registered-vaults)), `ServerAccount`, `SettingsCatalog` (the entries of the Settings window, their tabs, and the search that finds them) |
-| `Graph/` | `Node`, `Link`, `NodeType`, `LinkType`, `LinkVerb` (a link type read one way), `TypeCatalog` (built-in node and link types, link aliases; `LinkName`, `VerbOf`: how a link reads from one of its nodes), `LinkAliases` (the user's aliases, see [Aliases and removals](#aliases-and-removals)), `RemovableChanges`, `NameKey` (the form names are compared in), `Change` (`NodeAdded`, `LinkAdded`, `NodeRenamed`, `NodeRetyped`, `AliasAdded`, `NodePinned`, `ChangesRemoved`, `ContentEdited`: `NoteEdited`, `DatasetEdited`, `ViewEdited`; `VaultNamed`), `DatasetFile` (a dataset version's file: name, size, SHA-256), `CurrentVersions` + `IReplacing` (the versions no other replaces: shared by names, types, contents and the vault's name), `NodeNames` + `NameVersion` (a node's current names, see [Renames](#renames)), `NodeTypes` + `TypeVersion` (a node's current types, see [Type changes](#type-changes)), `ContentVersions` (the current versions of a note or dataset, see [Notes](#notes)), `KnowledgeGraph` (in-memory state, built by applying changes) |
+| `Graph/` | `Node`, `Link`, `NodeType`, `LinkType`, `LinkVerb` (a link type read one way), `TypeCatalog` (built-in node and link types, or a vault's with the user's link types and aliases; `LinkName`, `VerbOf`: how a link reads from one of its nodes), `CustomLinkTypes` + `CustomLinkType` (the user's link types, see [User link types](#user-link-types)), `LinkAliases` (the user's aliases, see [Aliases and removals](#aliases-and-removals)), `RemovableChanges`, `NameKey` (the form names are compared in), `Change` (`NodeAdded`, `LinkAdded`, `NodeRenamed`, `NodeRetyped`, `AliasAdded`, `LinkTypeDefined`, `NodePinned`, `ChangesRemoved`, `ContentEdited`: `NoteEdited`, `DatasetEdited`, `ViewEdited`; `VaultNamed`), `DatasetFile` (a dataset version's file: name, size, SHA-256), `CurrentVersions` + `IReplacing` (the versions no other replaces: shared by names, types, contents and the vault's name), `NodeNames` + `NameVersion` (a node's current names, see [Renames](#renames)), `NodeTypes` + `TypeVersion` (a node's current types, see [Type changes](#type-changes)), `ContentVersions` (the current versions of a note or dataset, see [Notes](#notes)), `KnowledgeGraph` (in-memory state, built by applying changes) |
 | `Storage/` | `VaultFormat` (+ `NewerVaultFormatException`, `Since`, `UpgradeQuestion`), `VaultUpgrades` (upgrades agreed, `vault-upgrades.json`, see [Upgrade](#upgrade)), `SecretBox` (AES-GCM seal / open), `ChunkedBox` (AES-GCM over 1 MB chunks, streamed), `KeyWrap` (KDF, wrap / unwrap the master key), `ChangeData` (a change as JSON, shared with the snapshot), `ChangeCodec` (change ⇄ sealed JSON), `VaultHeader`, `VaultFolder` (layout, inspect, create, `SizeOf` + `FolderSize`: its files and bytes, shown in Settings > Vault, measured off the UI thread), `SnapshotStore`, `NoteFiles` (note content, `content/`), `DatasetFiles` (dataset content, `content/`: describe a file, write, export, open), `ThumbnailFiles` (thumbnails, `content/`), `Vault` (open, append, refresh, save a note or a dataset version, `WriteDataset`: its files only, off the UI thread; `Vault.Upgrade`: its format, writes refused until an upgrade is agreed), `AtomicFile` (write as `.tmp`, then rename), `KeyMemory` (remembered master keys, `keys.json`) and `VaultNameMemory` (the last name read in each vault, `vault-names.json`), both through `ProtectedStore`, `ISecretProtector` |
-| `Input/` | `InputParser` (text → `NodeRequest` / `LinkRequest`), `GraphSearch` (`SearchHit`), `AddPlanner` (`AddChoices` → `AddPlan`: `NodePlan`, `LinkPlan`, `PlannedSide`), `InputPresenter` (the input box: preview, result rows, homonym choices), `CreationForm` (the creation screen: steps, types, note content, dataset file, status, what exists), `PlanText` (wording shared by both), `RenamePlanner` (`RenamePlan`: a new name, its problem, homonyms), `VaultNamePlanner` (`VaultNamePlan`), `RetypePlanner` (`RetypePlan`), `LinkChangePlanner` (`LinkChangePlan`: a link's type or direction, as a removal and a new link), `DetailsLink` (the link row of the details: + Link, Ctrl+K), `AliasPlanner` (`AliasPlan`) |
+| `Input/` | `InputParser` (text → `NodeRequest` / `LinkRequest`), `GraphSearch` (`SearchHit`), `AddPlanner` (`AddChoices` → `AddPlan`: `NodePlan`, `LinkPlan`, `PlannedSide`), `InputPresenter` (the input box: preview, result rows, homonym choices), `ChipInput` (`InputChip`: its labels) and `InputCompletion` (`Proposal`: the rest shown in grey), `CreationForm` (the creation screen: steps, types, note content, dataset file, status, what exists), `PlanText` (wording shared by both), `RenamePlanner` (`RenamePlan`: a new name, its problem, homonyms), `VaultNamePlanner` (`VaultNamePlan`), `RetypePlanner` (`RetypePlan`), `LinkChangePlanner` (`LinkChangePlan`: a link's type or direction, as a removal and a new link), `DetailsLink` (the link row of the details: + Link, Ctrl+K), `AliasPlanner` (`AliasPlan`), `LinkTypePlanner` (`LinkTypePlan`, `LinkTypeRemoval`) |
 | `Browse/` | `NodeBrowser` (the details screen: trail of open nodes, at most 4, the selected link of each), `NodeDetails`, `LinkRow`, `NodeVisual` (`NodeIcon`: how a node is pictured in rows, see [Datasets](#datasets)), `NodeFacts` (type, size, last change: a view's Details), `PinPlanner` (pin or unpin), `RecentNodes` (the nodes last opened on this device), `ViewTabs` and `ViewStates` (the tabs open, the nodes expanded in each tree, on this device), through `LocalJsonFile` |
 | `Notes/` | `NotePlanner` (`NoteState`, `ConflictVersion`: load a note, plan its next version), `MarkdownFormat` (`TextEdit`: the toolbar's Markdown) |
 | `Datasets/` | `DatasetPlanner` (`DatasetState`, `DatasetChoice`: load a dataset, plan an import or the version kept from a conflict), `ByteSize` (sizes as shown: 1.2 MB), `DatasetType` (`DatasetCategory`, `DatasetViewer`: the inner type, from the extension, its category and viewer), `IThumbnailMaker` (implemented by App), `TextPreview` (the beginning of a text, for the viewer), `ImageZoom` (the image window's zoom: fit, steps, percent) |
@@ -267,7 +267,7 @@ One number for the whole vault, `VaultFormat.Current`, written in the header and
 | 3 | 0.3 | `editDataset` with its chunked `.kfd` content files: a 0.2 app does not know them |
 | 4 | 0.4 | `remove` of nodes and links: a 0.3 app would still show them; `editView` |
 | 5 | 0.5 | `nameVault`, `retypeNode`: a 0.4 app cannot read them |
-| 6 | 0.7 | `keys/` and the key epoch in every file (`KFC2`, `KFN2`, `KFT2`, `KFD2`); a header without key: a 0.6 app cannot open the keys |
+| 6 | 0.7 | `keys/` and the key epoch in every file (`KFC2`, `KFN2`, `KFT2`, `KFD2`); a header without key: a 0.6 app cannot open the keys; `defineLinkType` (added before 0.7 was released, so the number did not change: owner's decision) |
 
 | Found | This kofrenot |
 | --- | --- |
@@ -357,13 +357,15 @@ UTF-8 JSON before encryption:
   "rename": { "node": "<node id>", "name": "Dune (novel)", "replaces": ["<node id or rename id>", "…"] } }
 { "format": 4, "at": "…", "op": "addAlias",
   "alias": { "linkType": "contains", "reverse": true, "phrase": "is in" } }
+{ "format": 6, "at": "…", "op": "defineLinkType",
+  "linkType": { "id": "<first definition id>", "name": "wrote", "reverse": "written by", "replaces": ["<definition id>", "…"] } }
 { "format": 4, "at": "…", "op": "pinNode", "pin": { "node": "<node id>" } }
 { "format": 4, "at": "…", "op": "editNote", "note": { "node": "<node id>", "replaces": ["<version id>", "…"] } }
 { "format": 4, "at": "…", "op": "editDataset",
   "dataset": { "node": "<node id>", "file": { "name": "survey.csv", "size": 52430, "sha256": "9f86…08" }, "replaces": ["<version id>", "…"] } }
 { "format": 4, "at": "…", "op": "editView",
   "view": { "node": "<node id>", "display": "tree", "query": { "root": "<node id>", "linkType": "contains" }, "replaces": ["<version id>", "…"] } }
-{ "format": 4, "at": "…", "op": "remove", "removes": ["<node, link, alias or pin id>", "…"] }
+{ "format": 4, "at": "…", "op": "remove", "removes": ["<node, link, alias, link type definition or pin id>", "…"] }
 ```
 
 `renameNode` was added to format 1 before 0.1 was released, so the format number did not change (owner's decision).
@@ -414,7 +416,7 @@ A type change works as a rename: a `retypeNode` change (`NodeRetyped`) listing t
 - A **link** keeps no history of its own: `LinkChangePlanner` changes its type or direction with a `remove` of the link and its copies, and a new `addLink`. Changed on two devices before they synced, both new links show, as any two links.
 
 ### Aliases and removals
-What the user can take back (nodes, links, aliases, pins) is added by one change and removed by another, `remove`, listing the ids it removes. Nothing is deleted from the vault.
+What the user can take back (nodes, links, aliases, link types, pins) is added by one change and removed by another, `remove`, listing the ids it removes. Nothing is deleted from the vault.
 
 ```
 a1 addAlias "is in" → contained by      device A
@@ -426,11 +428,26 @@ current = added − removed               (RemovableChanges; a removal may arriv
 - **Nodes and links** (since format 4): a removed node is no longer shown, nor searched, pinned or linked; a rename or version arriving after changes nothing. A removal wins, whatever the order the files arrive in.
 - A removed link shows its next copy, if any: `KnowledgeGraph.CopiesOf` gives every copy, so a removal names them all.
 
-- `LinkAliases` builds `KnowledgeGraph.Types`: the built-in types with the aliases in use added to their phrases, oldest first. Everything that reads the input (`InputPresenter`, `CreationForm`, `RenamePlanner`, `NodeBrowser`) uses it.
+- `LinkAliases` builds `KnowledgeGraph.Types`: the link types (built in and the user's, `CustomLinkTypes`) with the aliases in use added to their phrases, oldest first. Everything that reads the input (`InputPresenter`, `CreationForm`, `RenamePlanner`, `NodeBrowser`) uses it.
 - A phrase taken already (built in, or by an older alias: the same phrase added for two types on two devices) leaves the alias unused: it is listed struck through, and can be removed.
 - An alias of a type this version does not know is kept, not shown.
 - `AliasPlanner` refuses an empty phrase and one in use, and warns about the node names containing it: the input box would read them as links.
-- Settings > Link types (`LinkTypesSection`) lists each type both ways, with its built-in phrases and the user's aliases (× removes). Phrases are not logged, only the link type.
+- Settings > Link types (`LinkTypesSection`) lists each type both ways, with its own phrases and the user's aliases (× removes). Phrases are not logged, only the link type.
+
+### User link types
+A link type of the user's is named by `defineLinkType` changes (`LinkTypeDefined`), as a node by renames: the first one adds it, its id (a GUID) being the type's id in links, aliases and views; later ones rename it, listing the names they **replace**. Two renames made apart are a conflict: the latest is shown, and Settings asks to rename it.
+
+```
+d1 defineLinkType id=d1 "wrote" / "written by"           adds the type
+d2 defineLinkType id=d1 "authored" / "authored by" [d1]  renames it
+r1 remove [d1, d2, its aliases]                          removes it, once no link has it
+```
+
+- `CustomLinkTypes` builds the vault's types: the built-in ones, then the user's, oldest first. The input box reads the first type with a phrase (`InputParser`), so a phrase added on two devices is read as the older type's; the newer has `TakenBy`, flagged in Settings. A definition with a built-in id is ignored.
+- Everything reading `KnowledgeGraph.Types` gets them: the input box, labels and proposals (`ChipInput`, `InputCompletion`), the creation screen, *Change link type*, trees, `RenamePlanner`'s link phrase rule.
+- A link of a type not arrived yet reads one way; when its type arrives or is removed and its symmetry changes, `LinkIndex.Refile` files its links again, so copies either way count once.
+- `LinkTypePlanner` refuses an empty name, the same name both ways, a phrase in use (its own excepted, for a rename), a rename that changes which way it reads (its links would read wrong), and a rename to the same names outside a conflict; it warns about node names containing a name. It removes a type with its names and aliases, refused while links between shown nodes have it. Names are not logged, only the type's id.
+- Link types have no icon: their labels use the accent color.
 - Recent nodes (`RecentNodes`, `recent.json`) are kept on each device, never in the vault: opening a node writes nothing there. `MainWindow` records each node the details show, and the nodes a creation involves, new or existing (`AddPlan.Nodes`), and passes the list to `InputPresenter.Recent`, which lists the known ones not pinned.
 - Pins: `KnowledgeGraph.PinnedNodes` lists each pinned node once, the first pinned first; a node pinned on two devices has two pins, and `PinPlanner` unpins by removing both. `InputPresenter` lists them under a header (`ResultRow.IsHeader`) while the input box is empty.
 
@@ -561,13 +578,14 @@ text ──InputParser──► NodeRequest(name) | LinkRequest(left, verb, righ
 - The dialog only shows a `CreationForm`. Each type change makes a new plan, so a different link type can turn `AlreadyLinked` into a link that can be added. Only a new node gets a step (`CreationForm.Steps`): an existing node keeps its type.
 - A creation without typed text (`CreationForm.NewNode`, from **New view…**) is one node request: `IsNameEditable`, the name typed on the screen (`Name`; `CanAdd` waits for one), and with a type given, `IsTypeFixed`: the type list is hidden, and changing it throws.
 - Nothing is written before the last step. `NotesToSave` gives the first version of each new note with content, for its `NodeAdded`, and `DatasetsToSave` each new dataset's with a file chosen (by a file dialog or a drop on its step); the dialog asks before discarding typed content or a chosen file.
-- The types offered come from `TypeCatalog`: node type *generic*; link types *relates to* (symmetric), *contains* and *is a*. The creation screen offers each link type both ways (`TypeCatalog.Verbs`): a `LinkVerb` is a type read forward or reverse, and a reverse verb links from the right node to the left one.
+- The types offered come from `KnowledgeGraph.Types`: node type *generic*; link types *relates to* (symmetric), *contains* and *is a*, then the user's. The creation screen offers each link type both ways (`TypeCatalog.Verbs`): a `LinkVerb` is a type read forward or reverse, and a reverse verb links from the right node to the left one.
 
 - Names are compared by `NameKey`: lower case, accents removed, spaces collapsed. They are stored as typed, trimmed, with single spaces.
 - A link phrase counts after at least one word; with nothing after it, the link is still being typed (`LinkProblem.SecondNodeMissing`).
 - `GraphSearch`: exact names first, then names starting with the text, then the others, alphabetically; at most 20. Homonyms are listed oldest first, marked `¹`, `²`, ... (`SearchHit.Mark`).
 - `AddPlanner` builds the `AddPlan` shown as preview: the nodes to create, the link, and `NeedsConfirmation` when a node of that name exists (warned about on the creation screen). An existing link is not added again (`LinkProblem.AlreadyLinked`). `AddChoices` gives, for each side, the chosen node among homonyms (the oldest by default) and the type of a new node (*generic* by default). A link from a node to itself is refused.
 - A name containing a link alias cannot be entered (no quoting).
+- Labels and proposals (`MainWindow.Chips`): `ChipInput` keeps the labels (first node, link type, second node) and the text after them (`Tail`), the only text of the `TextBox`; the labels sit over its start, its padding following their width. `ChipInput.Text` joins them and is what `InputPresenter` reads, so labels change how the text shows, never what it means. Labels form, and a proposal shows, only for text added at the end (`Type`): a label turned back into text (`Backspace`) forms again with the next space. `InputCompletion` proposes one `Proposal`: a node name starting with the side typed (case ignored, the shortest first), else a link phrase starting with the last words, never a complete one; accepted (`Accept`), it replaces that side as a label. The grey rest is a `TextBlock` placed at the text's end (`GetRectFromCharacterIndex`). Enter, when the plan can be added, first labels everything as read (`LabelAll`) and lets the labels render before the modal creation screen; cancelled, they stay. Showing the window again turns the labels back into text (`Unlabel`), selected.
 
 ### Node details
 Behavior for the user: [README.md](../README.md#node-details).

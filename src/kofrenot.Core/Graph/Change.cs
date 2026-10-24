@@ -38,7 +38,17 @@ public sealed record VaultNamed(Guid Id, DateTimeOffset At, string Name, IReadOn
 public sealed record AliasAdded(Guid Id, DateTimeOffset At, string LinkType, bool IsReverse, string Phrase) : Change(Id, At);
 
 /// <summary>
-/// Removes earlier changes that can be removed (nodes, links, aliases, pins), by id. Files are never deleted:
+/// Names a link type of the user's (<see cref="LinkType"/> is its id), read forward as
+/// <see cref="Name"/> and reverse as <see cref="ReverseName"/>, or the same both ways when it has
+/// none. The first one (no <see cref="Replaces"/>) adds the type; later ones rename it over the
+/// names they replace. Two renames replacing the same name, neither knowing the other, make a
+/// conflict. Removed, with all its names, by a <see cref="ChangesRemoved"/>.
+/// </summary>
+public sealed record LinkTypeDefined(Guid Id, DateTimeOffset At, string LinkType, string Name, string? ReverseName, IReadOnlyList<Guid> Replaces)
+    : Change(Id, At), IReplacing;
+
+/// <summary>
+/// Removes earlier changes that can be removed (nodes, links, aliases, link types, pins), by id. Files are never deleted:
 /// a removal is a change of its own, and what is added again later has a new id.
 /// </summary>
 public sealed record ChangesRemoved(Guid Id, DateTimeOffset At, IReadOnlyList<Guid> Removes) : Change(Id, At);

@@ -23,7 +23,8 @@ internal sealed record ChangeData(
     ChangeData.VaultNameData? Vault = null,
     ChangeData.RetypeData? Retype = null,
     ChangeData.MemberData? Member = null,
-    ChangeData.MemberRemovalData? MemberRemoval = null)
+    ChangeData.MemberRemovalData? MemberRemoval = null,
+    ChangeData.LinkTypeData? LinkType = null)
 {
     private const string NodeAddedOp = "addNode";
     private const string LinkAddedOp = "addLink";
@@ -38,6 +39,7 @@ internal sealed record ChangeData(
     private const string NodeRetypedOp = "retypeNode";
     private const string MemberAddedOp = "addMember";
     private const string MemberRemovedOp = "removeMember";
+    private const string LinkTypeDefinedOp = "defineLinkType";
 
     public static ChangeData From(Change change) => change switch
     {
@@ -54,6 +56,7 @@ internal sealed record ChangeData(
         NodeRetyped retype => new(VaultFormat.Current, NodeRetypedOp, retype.At, Retype: new RetypeData(retype.Node, retype.Type, [.. retype.Replaces])),
         MemberAdded added => new(VaultFormat.Current, MemberAddedOp, added.At, Member: MemberData.From(added)),
         MemberRemoved removed => new(VaultFormat.Current, MemberRemovedOp, removed.At, MemberRemoval: new MemberRemovalData(removed.Account, removed.Signature)),
+        LinkTypeDefined defined => new(VaultFormat.Current, LinkTypeDefinedOp, defined.At, LinkType: new LinkTypeData(defined.LinkType, defined.Name, defined.ReverseName, [.. defined.Replaces])),
         _ => throw new ArgumentOutOfRangeException(nameof(change), change.GetType().Name, "Unknown change"),
     };
 
@@ -88,6 +91,9 @@ internal sealed record ChangeData(
             MemberAddedOp when Member?.ToMember() is { } member && Member.Signature is { Length: > 0 } signature => new MemberAdded(id, At, member, signature),
             MemberRemovedOp when MemberRemoval is { Signature: { Length: > 0 } signature } && MemberRemoval.Account != Guid.Empty
                 => new MemberRemoved(id, At, MemberRemoval.Account, signature),
+            LinkTypeDefinedOp when LinkType is { Id: { Length: > 0 } type, Name: { } name, Replaces: { } replaces }
+                && !string.IsNullOrWhiteSpace(name) && LinkType.Reverse is null or { Length: > 0 }
+                => new LinkTypeDefined(id, At, type, name, LinkType.Reverse, replaces),
             _ => throw new InvalidDataException($"Unknown or incomplete change '{Op}'"),
         };
     }
@@ -157,13 +163,16 @@ internal sealed record ChangeData(
     /// <summary><c>"retype": { "node": "…", "type": "note", "replaces": ["…"] }</c></summary>
     internal sealed record RetypeData(Guid Node, string? Type, List<Guid>? Replaces);
 
+    /// <summary><c>"linkType": { "id": "…", "name": "wrote", "reverse": "written by", "replaces": [] }</c>; no reverse when symmetric.</summary>
+    internal sealed record LinkTypeData(string? Id, string? Name, string? Reverse, List<Guid>? Replaces);
+
     /// <summary><c>"vault": { "name": "Personal", "replaces": ["…"] }</c></summary>
     internal sealed record VaultNameData(string? Name, List<Guid>? Replaces);
 
-    /// <summary><c>"member": { "account": "…", "identity": "…", "publicKey": "…", "email": "…", "role": "writer", "signingKey": "…", "signature": "…" }</c></summary>
     /// <summary><c>"memberRemoval": { "account": "…", "signature": "…" }</c></summary>
     internal sealed record MemberRemovalData(Guid Account, byte[]? Signature);
 
+    /// <summary><c>"member": { "account": "…", "identity": "…", "publicKey": "…", "email": "…", "role": "writer", "signingKey": "…", "signature": "…" }</c></summary>
     internal sealed record MemberData(Guid Account, Guid Identity, byte[]? PublicKey, string? Email, string? Role, byte[]? SigningKey = null, byte[]? Signature = null)
     {
         public static MemberData From(MemberAdded added) =>

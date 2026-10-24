@@ -30,14 +30,17 @@ public sealed class KnowledgeGraph
 
     public KnowledgeGraph(TypeCatalog? types = null)
     {
-        var catalog = types ?? TypeCatalog.BuiltIn;
-        Aliases = new LinkAliases(catalog, _removed);
-        _links = new LinkIndex(catalog, _removed);
+        LinkTypes = new CustomLinkTypes(types ?? TypeCatalog.BuiltIn, _removed);
+        Aliases = new LinkAliases(() => LinkTypes.Catalog, _removed);
+        _links = new LinkIndex(() => LinkTypes.Catalog, _removed);
         _pins = new RemovableChanges<NodePinned>(_removed);
     }
 
-    /// <summary>The link types, with the user's aliases: what the input box reads.</summary>
+    /// <summary>The link types, the user's included, with the user's aliases: what the input box reads.</summary>
     public TypeCatalog Types => Aliases.Catalog;
+
+    /// <summary>The user's link types.</summary>
+    public CustomLinkTypes LinkTypes { get; }
 
     public LinkAliases Aliases { get; }
 
@@ -57,6 +60,7 @@ public sealed class KnowledgeGraph
         NodeRenamed renamed => Rename(renamed),
         NodeRetyped retyped => Retype(retyped),
         AliasAdded alias => Aliases.Add(alias),
+        LinkTypeDefined definition => Define(definition),
         ChangesRemoved removal => Remove(removal),
         NodePinned pin => _pins.Add(pin),
         NoteEdited version => _notes.Add(version),
@@ -198,13 +202,15 @@ public sealed class KnowledgeGraph
         return true;
     }
 
-    /// <summary>Takes back nodes, links, aliases or pins. False when this removal is already there.</summary>
+    /// <summary>Takes back nodes, links, aliases, link types or pins. False when this removal is already there.</summary>
     public bool Remove(ChangesRemoved removal)
     {
         if (!_removals.Add(removal.Id))
         {
             return false;
         }
+
+        var symmetry = SymmetryOf(LinkTypes.NamedBy(removal.Removes));
 
         _removed.UnionWith(removal.Removes);
         foreach (var id in removal.Removes)
@@ -216,8 +222,37 @@ public sealed class KnowledgeGraph
         }
 
         _links.Remove(removal.Removes);
-        Aliases.Changed();
+        LinkTypes.Changed();
+        LinkTypesChanged(symmetry);
         return true;
+    }
+
+    /// <summary>Adds or renames a link type of the user's (from a change or a snapshot). False when it is already there.</summary>
+    private bool Define(LinkTypeDefined definition)
+    {
+        var symmetry = SymmetryOf([definition.LinkType]);
+        if (!LinkTypes.Add(definition))
+        {
+            return false;
+        }
+
+        LinkTypesChanged(symmetry);
+        return true;
+    }
+
+    // Whether each link type reads the same both ways; a type not known reads one way.
+    private Dictionary<string, bool> SymmetryOf(IEnumerable<string> linkTypes) =>
+        linkTypes.ToDictionary(type => type, type => LinkTypes.Catalog.FindLinkType(type)?.IsSymmetric ?? false);
+
+    // The links of a type whose symmetry changed (it arrived, or was removed) are filed again.
+    private void LinkTypesChanged(Dictionary<string, bool> symmetry)
+    {
+        Aliases.Changed();
+        var changed = symmetry.Where(type => (LinkTypes.Catalog.FindLinkType(type.Key)?.IsSymmetric ?? false) != type.Value).Select(type => type.Key).ToHashSet();
+        if (changed.Count > 0)
+        {
+            _links.Refile(changed);
+        }
     }
 
     /// <summary>Adds a link (from a change or a snapshot). False when it is already there, removed, or repeats another one.</summary>

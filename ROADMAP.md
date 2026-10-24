@@ -32,4 +32,8 @@ Scope of each planned version. Implemented features move to [CHANGELOG.md](CHANG
 4. **Import/Export a server repo.**
 5. **Share folder vaults.** A member's identity added to the vault's `keys/identities/` by their kofrenot ([Sharing](docs/SERVER-CONCEPT.md#sharing)).
 6. **Rotate key on demand**, not only when a member is removed ([Rotation](docs/SERVER-CONCEPT.md#rotation)).
+7. **Edit a label in place.** A click on a label of the input box turns it back into text there, not only the last one with Backspace.
+8. **Quote a name** containing a link phrase in the input box (`"This is a test"`), so such names can be typed.
+9. **Cycle through proposals.** Several proposals in grey, the next one with a key, instead of typing more to narrow it.
+10. **Propose node types** while typing, in the input box, instead of only on the creation screen.
 

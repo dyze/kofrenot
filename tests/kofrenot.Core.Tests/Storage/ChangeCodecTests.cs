@@ -76,6 +76,36 @@ public sealed class ChangeCodecTests
         Assert.Throws<InvalidDataException>(() => _codec.Decode(id, data));
     }
 
+    [Theory]
+    [InlineData("written by")]
+    [InlineData(null)]
+    public void ALinkTypeName_RoundTrips(string? reverse)
+    {
+        var change = new LinkTypeDefined(Guid.NewGuid(), At, Guid.NewGuid().ToString(), "wrote", reverse, [Guid.NewGuid()]);
+
+        var decoded = Assert.IsType<LinkTypeDefined>(_codec.Decode(change.Id, _codec.Encode(change)));
+
+        Assert.Equal((change.Id, change.At, change.LinkType, change.Name, change.ReverseName), (decoded.Id, decoded.At, decoded.LinkType, decoded.Name, decoded.ReverseName));
+        Assert.Equal(change.Replaces, decoded.Replaces);
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData(",\"linkType\":{\"name\":\"wrote\",\"replaces\":[]}")]
+    [InlineData(",\"linkType\":{\"id\":\"\",\"name\":\"wrote\",\"replaces\":[]}")]
+    [InlineData(",\"linkType\":{\"id\":\"x\",\"replaces\":[]}")]
+    [InlineData(",\"linkType\":{\"id\":\"x\",\"name\":\" \",\"replaces\":[]}")]
+    [InlineData(",\"linkType\":{\"id\":\"x\",\"name\":\"wrote\",\"reverse\":\"\",\"replaces\":[]}")]
+    [InlineData(",\"linkType\":{\"id\":\"x\",\"name\":\"wrote\"}")]
+    public void AnIncompleteLinkTypeName_IsRefused(string linkType)
+    {
+        var id = Guid.NewGuid();
+        var json = "{\"format\":6,\"op\":\"defineLinkType\",\"at\":\"2026-10-23T09:12:00Z\"" + linkType + "}";
+        var data = _box.Seal("KFC1"u8, Encoding.UTF8.GetBytes(json), id.ToByteArray());
+
+        Assert.Throws<InvalidDataException>(() => _codec.Decode(id, data));
+    }
+
     [Fact]
     public void ARetype_RoundTrips()
     {
