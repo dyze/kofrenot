@@ -116,7 +116,8 @@ App.OnStartup
 - Settings is a modal dialog over the main window. The log window can be opened in front of it and stays open after it closes.
 
 ## Portable copy
-- `AppFiles.For` picks the data folder: `<exe folder>\data` when `portable.txt` (`AppFiles.PortableMarker`) is next to kofrenot.exe, else `%LOCALAPPDATA%\kofrenot`. The start line of the log says `(portable)`.
+- `AppFiles.For` picks the data folder: the one after `--data` (`AppFiles.DataOption`, made full) among the start arguments; else `<exe folder>\data` when `portable.txt` (`AppFiles.PortableMarker`) is next to kofrenot.exe; else `%LOCALAPPDATA%\kofrenot`. The start line of the log says `(portable)` or `(data in <folder>)`.
+- One copy runs at a time whatever its data folder: the single-instance lock and the running-copy check go by session and program path, not by data folder.
 - `build\installer.cmd` copies the published app to `artifacts\installer\portable\kofrenot`, adds the marker and zips that folder (`Compress-Archive`). The update check links to the release page, which has both files.
 
 ## Changelog

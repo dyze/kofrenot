@@ -13,32 +13,63 @@ public sealed class AppFiles
     /// <summary>Next to kofrenot.exe, it makes a portable copy: the data is kept beside the program.</summary>
     public const string PortableMarker = "portable.txt";
 
+    /// <summary>The start option that picks the data folder: <c>--data D:\test</c> or <c>--data=D:\test</c>.</summary>
+    public const string DataOption = "--data";
+
     /// <param name="dataDirectory">The user data folder (<c>%LOCALAPPDATA%\kofrenot</c>).</param>
     /// <param name="programDirectory">The folder of kofrenot.exe.</param>
     /// <param name="isPortable">True when the data is kept beside the program.</param>
-    public AppFiles(string dataDirectory, string programDirectory, bool isPortable = false)
+    /// <param name="isChosen">True when the data folder was given by <see cref="DataOption"/>.</param>
+    public AppFiles(string dataDirectory, string programDirectory, bool isPortable = false, bool isChosen = false)
     {
         DataDirectory = dataDirectory;
         ProgramDirectory = programDirectory;
         IsPortable = isPortable;
+        IsChosen = isChosen;
     }
 
     /// <summary>
-    /// The files of the copy in <paramref name="programDirectory"/>: with the
-    /// <see cref="PortableMarker"/> beside it, the data goes to its <c>data</c> folder (a USB stick,
-    /// say), else to <c>kofrenot</c> in <paramref name="localAppData"/>.
+    /// The files of the copy in <paramref name="programDirectory"/>: in the folder given by
+    /// <see cref="DataOption"/> among <paramref name="arguments"/> (another set of data, to test
+    /// with another account, say); else, with the <see cref="PortableMarker"/> beside it, in its
+    /// <c>data</c> folder (a USB stick, say); else in <c>kofrenot</c> in <paramref name="localAppData"/>.
     /// </summary>
-    public static AppFiles For(string programDirectory, string localAppData, Func<string, bool>? fileExists = null)
+    public static AppFiles For(string programDirectory, string localAppData, Func<string, bool>? fileExists = null, IReadOnlyList<string>? arguments = null)
     {
+        if (DataFolderIn(arguments ?? []) is { } chosen)
+        {
+            return new AppFiles(Path.GetFullPath(chosen), programDirectory, isChosen: true);
+        }
+
         fileExists ??= File.Exists;
         return fileExists(Path.Combine(programDirectory, PortableMarker))
             ? new AppFiles(Path.Combine(programDirectory, "data"), programDirectory, isPortable: true)
             : new AppFiles(Path.Combine(localAppData, "kofrenot"), programDirectory);
     }
 
+    // The folder after --data, or after --data=; null when not given, or given empty.
+    private static string? DataFolderIn(IReadOnlyList<string> arguments)
+    {
+        for (var i = 0; i < arguments.Count; i++)
+        {
+            var folder = string.Equals(arguments[i], DataOption, StringComparison.OrdinalIgnoreCase)
+                ? arguments.ElementAtOrDefault(i + 1)
+                : arguments[i].StartsWith(DataOption + "=", StringComparison.OrdinalIgnoreCase) ? arguments[i][(DataOption.Length + 1)..] : null;
+            if (!string.IsNullOrWhiteSpace(folder))
+            {
+                return folder;
+            }
+        }
+
+        return null;
+    }
+
     public string DataDirectory { get; }
 
     public bool IsPortable { get; }
+
+    /// <summary>The data folder was given at start (<see cref="DataOption"/>).</summary>
+    public bool IsChosen { get; }
 
     public string ProgramDirectory { get; }
 

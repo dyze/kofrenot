@@ -158,7 +158,11 @@ Gear button in the main window, or tray menu > Settings. A dialog over the main 
 
 ## Data and logs
 
-Everything stays on your computer, in `%LOCALAPPDATA%\kofrenot` (a portable copy: its `data` folder):
+Everything stays on your computer, in `%LOCALAPPDATA%\kofrenot` (a portable copy: its `data` folder).
+
+**Another set of data**: `kofrenot.exe --data D:\kofre-test` keeps everything below in that folder instead: other vaults, settings, remembered pass phrases and server account (to try sharing with a second account, say). One kofrenot runs at a time: quit the running one first (tray icon > *Quit*), else starting it again only shows the running one.
+
+What is kept:
 
 | File | Content |
 | --- | --- |

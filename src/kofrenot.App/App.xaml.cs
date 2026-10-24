@@ -41,7 +41,8 @@ public partial class App : Application
 
         var files = AppFiles.For(
             AppContext.BaseDirectory,
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData));
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            arguments: e.Args);
         var settings = new SettingsStore(files.Settings, files.MirrorOf);
 
         // Before any window (the dialogs about another copy too) or the tray menu is created.
@@ -60,6 +61,7 @@ public partial class App : Application
         var version = AppVersion.Of(typeof(App).Assembly);
         log.Info("App", $"kofrenot {AppVersion.WithCommitOf(typeof(App).Assembly)} started"
             + (files.IsPortable ? " (portable)" : string.Empty)
+            + (files.IsChosen ? $" (data in {files.DataDirectory})" : string.Empty)
             + (settings.DebugLogging ? " (debug logging on)" : string.Empty));
         if (replaced is not null)
         {

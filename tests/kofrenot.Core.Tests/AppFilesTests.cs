@@ -44,6 +44,44 @@ public class AppFilesTests
         Assert.True(files.IsPortable);
     }
 
+    [Theory]
+    [InlineData("--data", "chosen")]
+    [InlineData("--DATA", "chosen")]
+    public void TheDataOption_PicksTheDataFolder_BeforeTheMarker(string option, string folder)
+    {
+        var chosen = Path.Combine(Path.GetTempPath(), folder);
+
+        var files = AppFiles.For(Program, Data, _ => true, ["--other", option, chosen]);
+
+        Assert.Equal(chosen, files.DataDirectory);
+        Assert.True(files.IsChosen);
+        Assert.False(files.IsPortable);
+        Assert.Equal(Path.Combine(chosen, "settings.json"), files.Settings);
+    }
+
+    [Fact]
+    public void TheDataOption_TakesItsFolderAfterAnEqualSign_MadeFull()
+    {
+        var files = AppFiles.For(Program, Data, _ => false, ["--data=test-data"]);
+
+        Assert.Equal(Path.GetFullPath("test-data"), files.DataDirectory);
+        Assert.True(files.IsChosen);
+    }
+
+    [Theory]
+    [InlineData]
+    [InlineData("--data")]
+    [InlineData("--data", " ")]
+    [InlineData("--data=")]
+    [InlineData("--database", "x")]
+    public void WithoutAFolder_TheDataOptionIsIgnored(params string[] arguments)
+    {
+        var files = AppFiles.For(Program, Data, _ => false, arguments);
+
+        Assert.Equal(Path.Combine(Data, "kofrenot"), files.DataDirectory);
+        Assert.False(files.IsChosen);
+    }
+
     [Fact]
     public void ByDefault_TheMarkerIsLookedForOnDisk()
     {
