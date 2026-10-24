@@ -177,6 +177,16 @@ Everything stays on your computer, in `%LOCALAPPDATA%\kofrenot` (a portable copy
 
 Your vaults are in the folders you chose, not here.
 
+### Backup and restore
+
+| What | Back up | Restore |
+| --- | --- | --- |
+| Folder vault | Its folder (a copy, or a sync tool's history) | Settings > Vault > *Add* the folder, then its pass phrase |
+| Server vault | On the server, by its admin ([backup](https://github.com/dyze/kofreserver#backup-and-restore)); each of your computers also keeps it whole in `stores\` | Sign in (Settings > Server), then *Vault from the server…* and your account's pass phrase |
+| Pass phrases and recovery keys | Write them down or keep them in a password manager: kofrenot keeps no copy you can move | Needed to open any restored vault |
+
+This folder (`%LOCALAPPDATA%\kofrenot`) needs no backup: its keys and session are protected by Windows for your account on this computer, and are of no use elsewhere.
+
 kofrenot logs start/stop, every action you trigger (settings change, links opened, nodes added) and errors, never the names you type, the names of your files, or your pass phrase.
 
 A dataset dragged out of kofrenot is first exported into `%TEMP%\kofrenot`, and deleted there once dropped.
