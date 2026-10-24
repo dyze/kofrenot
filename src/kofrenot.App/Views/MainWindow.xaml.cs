@@ -142,7 +142,9 @@ public partial class MainWindow : Window
         TabStrip.Visibility = open ? Visibility.Visible : Visibility.Collapsed;
         TitleText.Visibility = open ? Visibility.Collapsed : Visibility.Visible;
         LockButton.Visibility = open ? Visibility.Visible : Visibility.Collapsed;
-        Title = SelectedName.Length > 0 ? SelectedName : "kofrenot";
+        var readOnly = open && _session.IsReadOnly;
+        ReadOnlyTag.Visibility = readOnly ? Visibility.Visible : Visibility.Collapsed;
+        Title = (SelectedName.Length > 0 ? SelectedName : "kofrenot") + (readOnly ? " (read only)" : string.Empty);
         if (vault is not null)
         {
             VaultText.Text = FooterOf(vault);

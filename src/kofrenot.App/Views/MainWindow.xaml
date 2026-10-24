@@ -65,6 +65,25 @@
               ToolTip="Lock the vault (Ctrl+L): it stays locked, also after a restart, until Unlock, which asks its pass phrase"
               Visibility="Collapsed"
               Click="LockButton_Click" />
+
+      <!-- A vault shared with this account to read only: said here and in the window's title. -->
+      <Border x:Name="ReadOnlyTag"
+              Margin="8,0,0,0"
+              Padding="6,1"
+              VerticalAlignment="Center"
+              CornerRadius="4"
+              Background="{DynamicResource SubtleFillColorSecondaryBrush}"
+              ToolTip="Shared with you to read only: you can see and search it, not change it"
+              Visibility="Collapsed">
+        <StackPanel Orientation="Horizontal">
+          <TextBlock Margin="0,0,4,0"
+                     VerticalAlignment="Center"
+                     FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
+                     FontSize="11"
+                     Text="&#xE890;" />
+          <TextBlock VerticalAlignment="Center" FontSize="{StaticResource CaptionFontSize}" Text="Read only" />
+        </StackPanel>
+      </Border>
       </StackPanel>
 
       <TextBlock x:Name="TitleText" Grid.Column="1" VerticalAlignment="Center" Style="{StaticResource HeadingText}" Text="kofrenot" />
