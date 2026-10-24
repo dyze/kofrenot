@@ -74,7 +74,17 @@ public sealed class WindowPlacer
             }
         }
 
+        // Every move and new scaling, whatever made it: a move no code of kofrenot asked for shows in the log.
+        void LogMove(object? sender, EventArgs e)
+        {
+            if (NativeWindows.WindowBounds(Handle(window)) is { } bounds)
+            {
+                _log.Debug("Window", $"{name} moved to {bounds.Left},{bounds.Top} ({bounds.Width}x{bounds.Height})");
+            }
+        }
+
         window.LocationChanged += TrackNormalBounds;
+        window.LocationChanged += LogMove;
         window.SizeChanged += (sender, e) => TrackNormalBounds(sender, e);
         window.IsVisibleChanged += (_, e) =>
         {
@@ -85,10 +95,23 @@ public sealed class WindowPlacer
             else
             {
                 // Once WPF has finished sizing the window for its monitor.
-                window.Dispatcher.BeginInvoke(() => KeepOnScreen(window), DispatcherPriority.Loaded);
+                window.Dispatcher.BeginInvoke(() => KeepOnScreen(window, name, "shown"), DispatcherPriority.Loaded);
             }
         };
-        window.DpiChanged += (_, _) => window.Dispatcher.BeginInvoke(() => KeepOnScreen(window), DispatcherPriority.Loaded);
+        // WPF also raises it with the same scaling (when the window's content changes, a tab switched):
+        // only a new scaling can push the window off screen.
+        window.DpiChanged += (_, e) =>
+        {
+            var (from, to) = (e.OldDpi.PixelsPerInchX, e.NewDpi.PixelsPerInchX);
+            if (from == to)
+            {
+                _log.Debug("Window", $"{name} scaling notice ignored: still {to} dpi");
+                return;
+            }
+
+            _log.Debug("Window", $"{name} scaling changed from {from} to {to} dpi");
+            window.Dispatcher.BeginInvoke(() => KeepOnScreen(window, name, "scaling changed"), DispatcherPriority.Loaded);
+        };
         window.Closing += (_, _) => Save(window, name, lastNormal, columns);
     }
 
@@ -97,14 +120,16 @@ public sealed class WindowPlacer
     /// scaling, monitor gone) back inside the work area of the monitor showing most of it.
     /// A maximized or minimized window is left alone.
     /// </summary>
-    public static void KeepOnScreen(Window window)
+    /// <param name="why">What asked for it ("shown"), for the log.</param>
+    private void KeepOnScreen(Window window, string name, string why)
     {
         var handle = Handle(window);
+        var monitors = NativeWindows.Monitors();
         if (!window.IsVisible
             || window.WindowState != WindowState.Normal
             || NativeWindows.WindowBounds(handle) is not { } bounds
             || NativeWindows.VisibleBounds(handle) is not { } frame
-            || PlacementRules.KeepVisible(frame, NativeWindows.Monitors()) is not { } visible
+            || PlacementRules.KeepVisible(frame, monitors) is not { } visible
             || visible == frame)
         {
             return;
@@ -112,12 +137,21 @@ public sealed class WindowPlacer
 
         // The check is on the visible frame (a window snapped to an edge is fine); the move is
         // on the whole window, invisible borders included.
-        NativeWindows.SetWindowBounds(handle, new ScreenRect(
+        var kept = new ScreenRect(
             bounds.Left + (visible.Left - frame.Left),
             bounds.Top + (visible.Top - frame.Top),
             bounds.Width + (visible.Width - frame.Width),
-            bounds.Height + (visible.Height - frame.Height)));
+            bounds.Height + (visible.Height - frame.Height));
+        var monitor = PlacementRules.Capture(frame, monitors)?.Monitor;
+        var work = monitors.FirstOrDefault(m => m.DeviceName == monitor)?.WorkArea;
+        _log.Debug(
+            "Window",
+            $"{name} kept on screen ({why}): from {Describe(bounds)} to {Describe(kept)};"
+            + $" visible frame {Describe(frame)}, kept in {monitor} work area {(work is null ? "?" : Describe(work))}");
+        NativeWindows.SetWindowBounds(handle, kept);
     }
+
+    private static string Describe(ScreenRect rect) => $"{rect.Left},{rect.Top} ({rect.Width}x{rect.Height})";
 
     /// <summary>
     /// Call just before the main window is shown: puts it in the middle of the monitor under the
