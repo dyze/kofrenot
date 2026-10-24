@@ -78,7 +78,7 @@ public partial class ViewPanel
         };
         TextElement.SetFontSize(card, (double)FindResource("SecondaryFontSize"));
 
-        var item = new ListBoxItem { Content = card, Tag = node, FocusVisualStyle = null, Margin = new Thickness(0, 0, 8, 8) };
+        var item = new ListBoxItem { Content = card, Tag = node, Style = (Style)FindResource("CardItem") };
         _unreadCards.Add((item, node, body));
         return item;
     }
