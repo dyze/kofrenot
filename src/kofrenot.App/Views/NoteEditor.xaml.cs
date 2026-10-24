@@ -89,13 +89,19 @@ public partial class NoteEditor : UserControl
         ShowStatus();
     }
 
-    private void ShowStatus() => StatusText.Text = _state switch
+    /// <summary>Whether the note is saved, after how many of its items are checked when it has some.</summary>
+    private void ShowStatus()
     {
-        { IsMissing: true } => "The content of this note is not synced to this computer yet.",
-        _ when IsDirty => "Not saved: Ctrl+S saves, and so does leaving the note.",
-        { Versions.Count: 0 } => "Empty note. Markdown: **bold**, *italic*, # heading, - list, [link](url).",
-        _ => "Saved.",
-    };
+        var status = _state switch
+        {
+            { IsMissing: true } => "The content of this note is not synced to this computer yet.",
+            _ when IsDirty => "Not saved: Ctrl+S saves, and so does leaving the note.",
+            { Versions.Count: 0 } => "Empty note. Markdown: **bold**, *italic*, # heading, - list, [link](url).",
+            _ => "Saved.",
+        };
+        var progress = TaskList.ProgressOf(Box.Text);
+        StatusText.Text = progress.Total > 0 ? $"{progress.Done}/{progress.Total} done. {status}" : status;
+    }
 
     private bool Write(string text)
     {

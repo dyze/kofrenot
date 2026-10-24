@@ -466,7 +466,17 @@ v1 ◄─ v3 (device B, before syncing) ⇒ conflict: v2, v3 offered; the next s
 - A version whose file is not synced yet (the sync tool copied the change first) shows as such; the note cannot be edited until it arrives, so no version is replaced unseen.
 - A save replaces the versions *loaded*: a version saved meanwhile on another device stays current, as a new conflict.
 - `NoteEditor` (in `NodeDetailsPanel`) saves on Ctrl+S, the save button, and when the note is left (another node, back, window hidden). While it has the focus, the details leave the keys to it, except Esc (leaves the note, saving it).
-- `MarkdownBox` (text and toolbar) is shared by `NoteEditor` and the creation steps. The toolbar inserts Markdown (`MarkdownFormat`): bold, italic, heading, list, link. The text is not rendered.
+- `MarkdownBox` (text and toolbar) is shared by `NoteEditor` and the creation steps. The toolbar inserts Markdown (`MarkdownFormat`): bold, italic, heading, list, link. The text is not rendered, except as a task list.
+- **Task lists** (`TaskList`): items are Markdown task lines, so nothing else is stored and the vault format is unchanged. The text stays the one source: the list view only rewrites it.
+
+  ```
+  text ──TaskList.IsList (every filled line an item)──► TaskListBox: rows of checkbox + text
+       ◄─TaskList.Format(items)── row checked, typed in, added (Enter), removed (Backspace)
+  Checkboxes on:  TaskList.Show  (each line → "- [ ] line", items kept, blank lines dropped)
+  Checkboxes off: TaskList.Hide  (each item → its text, checked or not)
+  ```
+
+  The text's line breaks are kept (`\r\n` typed in a text box, or `\n`). `TaskListBox` shows the items not checked, then those checked under their count; `NoteEditor`'s status starts with `TaskList.ProgressOf` (*2/4 done*).
 - Note content is never logged. The search does not look into it (an open question: [GOAL.md](GOAL.md#open-questions), *Search*).
 
 ### Datasets

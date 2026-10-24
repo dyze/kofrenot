@@ -6,6 +6,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+- **Task lists** in notes, as in Google Keep: **Checkboxes** on a note's toolbar shows its lines as items with a checkbox, checked items crossed out and listed below the others; Enter adds an item, Backspace in an empty one removes it. Clicked again, the items become lines of text. A note whose lines are all items opens as a list, and its status says how many are done. Stored as Markdown task lines (`- [ ] text`), so the vault format does not change.
+
 ## [0.7] - 2026-10-24
 
 ### Added

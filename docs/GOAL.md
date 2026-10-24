@@ -94,7 +94,7 @@ What each version contains: [ROADMAP.md](../ROADMAP.md).
 | Sync | Folder vaults: outside kofrenot, by copying files. Server vaults: kofrenot mirrors them in a local folder (since 0.6: [ARCHITECTURE.md](ARCHITECTURE.md#server-vaults)) |
 | Conflicts | Concurrent duplicates, renames and note edits are flagged, not merged |
 | Security | AES-256-GCM, random master key wrapped by a pass-phrase key (PBKDF2-SHA256); optionally remembered by Windows (DPAPI) |
-| Notes | A node type; content in Markdown, each save a new version (since 0.2) |
+| Notes | A node type; content in Markdown, each save a new version (since 0.2); task lists as Markdown task lines (`- [ ]`), shown as checkboxes (since 0.8) |
 | Content on demand | Content files are in the vault folder on every device (the sync tool copies them); kofrenot reads one only when needed: a note shown, a dataset exported (since 0.3) |
 | Datasets | A node type holding one file of any size, each import a new version; encrypted in 1 MB chunks, so memory use does not depend on the size (since 0.3) |
 | Server | A generic, blind, write-once store of files with accounts and members, on Linux, knowing nothing of kofrenot so other apps can use it, in its own repository ([kofreserver](https://github.com/dyze/kofreserver)); no email, the admin approves accounts in a JSON file (since 0.6) |
@@ -107,7 +107,6 @@ Decisions to take with the owner before the matching features:
 
 | Topic | Question |
 | --- | --- |
-| Note format | Markdown files, rich text, or both? |
 | Sharing | Below a complete vault: a single node or view? |
 | Versioning | Show and restore history? |
 | Packs | One file per change makes many small files. Pack old changes into bigger files in the vault folder, as git's packs? Who packs, when, and how does it stay safe with several apps and the sync tool? |

@@ -1,8 +1,10 @@
 <UserControl x:Class="Kofrenot.UI.Views.MarkdownBox"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:Kofrenot.UI.Views">
   <!-- Markdown text with its toolbar: the content of a note, in its details (NoteEditor) and on
-       the creation screen. The text is not rendered. -->
+       the creation screen. The text is not rendered, except as a task list when its checkboxes
+       are shown (TaskListBox). -->
   <UserControl.Resources>
     <ResourceDictionary Source="SharedStyles.xaml" />
   </UserControl.Resources>
@@ -15,15 +17,30 @@
 
     <!-- Not focusable: the text keeps its selection. -->
     <StackPanel x:Name="Toolbar" Orientation="Horizontal" TextElement.FontSize="{StaticResource SecondaryFontSize}">
-      <Button Style="{StaticResource FlatButton}" FontWeight="Bold" Content="B" ToolTip="Bold" Click="Bold_Click" />
-      <Button Style="{StaticResource FlatButton}" FontStyle="Italic" Content="I" ToolTip="Italic" Click="Italic_Click" />
-      <Button Style="{StaticResource FlatButton}" Content="H" ToolTip="Heading" Click="Heading_Click" />
-      <Button Style="{StaticResource FlatButton}" Content="•" ToolTip="List" Click="List_Click" />
-      <Button Style="{StaticResource FlatButton}"
-              FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
-              Content="&#xE71B;"
-              ToolTip="Link"
-              Click="Link_Click" />
+      <StackPanel x:Name="FormatButtons" Orientation="Horizontal">
+        <Button Style="{StaticResource FlatButton}" FontWeight="Bold" Content="B" ToolTip="Bold" Click="Bold_Click" />
+        <Button Style="{StaticResource FlatButton}" FontStyle="Italic" Content="I" ToolTip="Italic" Click="Italic_Click" />
+        <Button Style="{StaticResource FlatButton}" Content="H" ToolTip="Heading" Click="Heading_Click" />
+        <Button Style="{StaticResource FlatButton}" Content="•" ToolTip="List" Click="List_Click" />
+        <Button Style="{StaticResource FlatButton}"
+                FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
+                Content="&#xE71B;"
+                ToolTip="Link"
+                Click="Link_Click" />
+      </StackPanel>
+      <Border Width="1" Margin="6,4" Background="{DynamicResource DividerStrokeColorDefaultBrush}" />
+      <ToggleButton x:Name="ChecklistButton"
+                    MinHeight="0"
+                    MinWidth="0"
+                    Padding="6,2"
+                    Focusable="False"
+                    ToolTip="Show checkboxes: each line becomes an item of a task list"
+                    Click="Checklist_Click">
+        <StackPanel Orientation="Horizontal">
+          <TextBlock VerticalAlignment="Center" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="12" Text="&#xE9D5;" />
+          <TextBlock Margin="6,0,0,0" VerticalAlignment="Center" Text="Checkboxes" />
+        </StackPanel>
+      </ToggleButton>
     </StackPanel>
 
     <TextBox x:Name="Box"
@@ -38,5 +55,7 @@
              FontFamily="Cascadia Mono, Consolas"
              FontSize="{StaticResource BodyFontSize}"
              TextChanged="Box_TextChanged" />
+
+    <local:TaskListBox x:Name="Items" Grid.Row="1" Visibility="Collapsed" />
   </Grid>
 </UserControl>

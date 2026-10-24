@@ -99,6 +99,7 @@ Type in the box at the top of the main window:
 A node of type *Note* (chosen on the creation screen) has content: Markdown text, typed on its creation step, then edited under its properties in the details.
 
 - Type in the box (**Tab** or a click gets there). The toolbar adds **bold**, *italic*, a heading, a list or a link; the text stays as typed, it is not rendered.
+- **Task lists**, as in Google Keep: **Checkboxes** on the toolbar shows each line as an item, with a checkbox and its text; checked items are crossed out and listed below the others, under their count; the status line says how many are done (*2/4 done*). **Enter** adds an item after the one you type in, **Backspace** in an empty item removes it, **Up/Down** go from item to item, *+ List item* adds one at the end. Clicked again, the items become lines of text, checked or not. A note whose lines are all items opens as a list. In the Markdown, an item is `- [ ] text`, checked `- [x] text`.
 - **Ctrl+S** or the save button saves, and so does leaving the note (another node, back, hiding the window). **Esc** leaves the text box.
 - Each save is a new version in the vault: older versions are kept. The content is read only when the note is opened.
 - A note edited on two computers before they synced shows both versions: keep one, or merge them by hand and save.
