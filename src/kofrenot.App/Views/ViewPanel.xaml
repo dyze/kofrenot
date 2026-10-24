@@ -4,7 +4,15 @@
   <!-- A view tab's content: its tree (children read when expanded; copy, cut, paste, delete) or its list. Enter or a
        double-click opens a node's details; Back returns here. -->
   <UserControl.Resources>
-    <ResourceDictionary Source="SharedStyles.xaml" />
+    <ResourceDictionary>
+      <ResourceDictionary.MergedDictionaries>
+        <ResourceDictionary Source="SharedStyles.xaml" />
+      </ResourceDictionary.MergedDictionaries>
+      <!-- A list's panel while it shows cards: they wrap, row after row. -->
+      <ItemsPanelTemplate x:Key="CardsPanel">
+        <WrapPanel />
+      </ItemsPanelTemplate>
+    </ResourceDictionary>
   </UserControl.Resources>
 
   <Grid>
@@ -67,6 +75,13 @@
           <StackPanel Orientation="Horizontal">
             <TextBlock VerticalAlignment="Center" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="12" Text="&#xE8FD;" />
             <TextBlock Margin="6,0,0,0" VerticalAlignment="Center" Text="Details" />
+          </StackPanel>
+        </ToggleButton>
+        <!-- A list: its nodes as cards (ViewPanel.Cards), not rows. -->
+        <ToggleButton x:Name="CardsButton" Margin="8,0,4,0" Padding="8,4" ToolTip="Show the nodes as cards, with a preview of each" Click="Cards_Click">
+          <StackPanel Orientation="Horizontal">
+            <TextBlock VerticalAlignment="Center" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="12" Text="&#xE8A9;" />
+            <TextBlock Margin="6,0,0,0" VerticalAlignment="Center" Text="Cards" />
           </StackPanel>
         </ToggleButton>
       </StackPanel>
@@ -171,7 +186,7 @@
         <ListBox.ContextMenu>
           <ContextMenu />
         </ListBox.ContextMenu>
-        <!-- Its rows are built in code (ViewPanel.RowOf), as the tree's. -->
+        <!-- Its rows are built in code (ViewPanel.RowOf), as the tree's, or its cards (ViewPanel.CardOf). -->
       </ListBox>
     </Grid>
   </Grid>

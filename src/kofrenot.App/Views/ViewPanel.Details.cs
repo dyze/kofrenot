@@ -114,11 +114,12 @@ public partial class ViewPanel
         return null;
     }
 
-    /// <summary>The picture and name of a row, with or without its details.</summary>
+    /// <summary>The picture and name of a row, with or without its details, or of a card.</summary>
     private static StackPanel? NamePanelOf(object? header) => header switch
     {
         StackPanel name => name,
         Grid { Children: [StackPanel name, ..] } => name,
+        Border { Child: DockPanel { Children: [StackPanel name, ..] } } => name,
         _ => null,
     };
 }

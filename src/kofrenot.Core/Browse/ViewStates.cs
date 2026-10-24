@@ -3,7 +3,7 @@ using Kofrenot.Core.Views;
 
 namespace Kofrenot.Core.Browse;
 
-/// <summary>How a view was left on this device: the nodes expanded in its tree, and whether it shows details.</summary>
+/// <summary>How a view was left on this device: the nodes expanded in its tree, whether it shows details, and a list's cards.</summary>
 public sealed class ViewState
 {
     /// <summary>The <see cref="TreeItem.Key"/> of each node expanded.</summary>
@@ -11,6 +11,9 @@ public sealed class ViewState
 
     /// <summary>The details (type, size, modified) are shown next to each node.</summary>
     public bool ShowsDetails { get; set; }
+
+    /// <summary>A list shows its nodes as cards, not rows.</summary>
+    public bool ShowsCards { get; set; }
 }
 
 /// <summary>
@@ -39,6 +42,16 @@ public sealed class ViewStates(string path, ILog? log = null)
     {
         var changed = state.ShowsDetails != showsDetails;
         state.ShowsDetails = showsDetails;
+        return changed;
+    });
+
+    /// <summary>Whether a list view shows its nodes as cards (off by default: rows).</summary>
+    public bool ShowsCards(Guid vault, Guid view) => Find(vault, view)?.ShowsCards ?? false;
+
+    public void SetShowsCards(Guid vault, Guid view, bool showsCards) => Change(vault, view, state =>
+    {
+        var changed = state.ShowsCards != showsCards;
+        state.ShowsCards = showsCards;
         return changed;
     });
 

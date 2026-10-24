@@ -32,9 +32,11 @@ public partial class ViewPanel
             treeOnly.Visibility = isTree ? Visibility.Visible : Visibility.Collapsed;
         }
 
-        DetailsButton.Visibility = isTree || isList ? Visibility.Visible : Visibility.Collapsed;
+        DetailsButton.Visibility = isTree || (isList && !ShowsCards) ? Visibility.Visible : Visibility.Collapsed;
+        CardsButton.Visibility = isList ? Visibility.Visible : Visibility.Collapsed;
+        CardsButton.IsChecked = ShowsCards;
         DetailsButton.IsChecked = ShowsDetails;
-        DetailsHeader.Visibility = (isTree || isList) && ShowsDetails ? Visibility.Visible : Visibility.Collapsed;
+        DetailsHeader.Visibility = (isTree || (isList && !ShowsCards)) && ShowsDetails ? Visibility.Visible : Visibility.Collapsed;
         UpdateActions();
     }
 

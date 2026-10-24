@@ -89,6 +89,32 @@ public sealed class ViewStatesTests : IDisposable
         Assert.DoesNotContain(_log.Entries, entry => entry.Message.Contains("cannot be saved"));
     }
 
+    [Fact]
+    public void Cards_AreOffByDefault_AndKeptPerView_ApartFromDetails()
+    {
+        var states = States();
+        Assert.False(states.ShowsCards(_vault, _view));
+
+        states.SetShowsCards(_vault, _view, showsCards: true);
+
+        Assert.True(States().ShowsCards(_vault, _view));
+        Assert.False(States().ShowsDetails(_vault, _view));
+        Assert.False(States().ShowsCards(_vault, Guid.NewGuid()));
+
+        states.SetShowsCards(_vault, _view, showsCards: false);
+        Assert.False(States().ShowsCards(_vault, _view));
+    }
+
+    [Fact]
+    public void TheSameCards_SaveNothing()
+    {
+        Directory.CreateDirectory(FilePath);
+
+        States().SetShowsCards(_vault, _view, showsCards: false);
+
+        Assert.DoesNotContain(_log.Entries, entry => entry.Message.Contains("cannot be saved"));
+    }
+
     public void Dispose() => _temp.Dispose();
 
     private ViewStates States() => new(FilePath, _log);

@@ -75,6 +75,7 @@ public partial class MainWindow : Window
         ViewContent.Write = (changes, action) => _session.Write(this, changes, action);
         ViewContent.Copy = plan => _session.Copy(this, plan);
         ViewContent.ContentExists = version => _session.Current?.HasContent(version) ?? false;
+        ViewContent.ReadNote = version => _session.Current?.Notes.Read(version);
         VersionText.Text = $"kofrenot {AppVersion.Of(typeof(MainWindow).Assembly)}";
         ShowUpdateMark();
         _session.Changed += ShowVault;

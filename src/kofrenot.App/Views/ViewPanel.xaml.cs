@@ -34,6 +34,7 @@ public partial class ViewPanel : UserControl
         InitializeComponent();
         Tree.AddHandler(TreeViewItem.ExpandedEvent, new RoutedEventHandler(Tree_Expanded));
         Tree.AddHandler(TreeViewItem.CollapsedEvent, new RoutedEventHandler(Tree_Collapsed));
+        List.AddHandler(ScrollViewer.ScrollChangedEvent, new ScrollChangedEventHandler((_, _) => ReadCardsInView()));
     }
 
     /// <summary>Asks to open a node's details.</summary>
@@ -47,6 +48,7 @@ public partial class ViewPanel : UserControl
         // The rows are built again: a name edited in place is given up.
         StopRename();
         _detailRows.Clear();
+        _unreadCards.Clear();
         if (_view?.Id != view.Id || _vault != vault)
         {
             _selectedPath = null;
@@ -75,11 +77,14 @@ public partial class ViewPanel : UserControl
             case FlatDefinition definition:
                 _listType = graph.Types.FindNodeType(definition.NodeType);
                 _list = new FlatView(graph, definition);
-                var rows = _list.Nodes.Select(RowOf).ToList();
+                UseCardsPanel(ShowsCards);
+                Func<Node, ListBoxItem> itemOf = ShowsCards ? CardOf : RowOf;
+                var rows = _list.Nodes.Select(itemOf).ToList();
                 List.Items.Clear();
                 rows.ForEach(row => List.Items.Add(row));
                 List.SelectedItem = rows.FirstOrDefault(row => NodeOf(row)?.Id == _selectedNode);
                 ShowOnly(List);
+                ReadCardsInViewSoon();
                 if (rows.Count == 0)
                 {
                     ShowMessage($"No node of type {graph.Types.NodeTypeName(definition.NodeType)} yet.");

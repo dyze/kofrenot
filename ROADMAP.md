@@ -15,7 +15,7 @@ Scope of each planned version. Implemented features move to [CHANGELOG.md](CHANG
 | 0.9     | To define | Large vaults: content on demand, offline pins, faster transfers; editing           |
 
 ## 0.8 (to define)
-1. **Cards.** A list view's bar switches between **List** (as today) and **Cards**, kept per view on this computer like Details: a grid of cards with each node's name and colour, and for a note its first lines, or its unchecked items and the number checked; a dataset shows its thumbnail. A card's content is read when it scrolls into view, never kept in the snapshot; one not synced yet says so.
+Everything planned for it is in [CHANGELOG.md](CHANGELOG.md#unreleased).
 
 ## 0.9 (to define)
 1. **Content on demand.** A server vault downloads change files at once, content only when shown or exported.
