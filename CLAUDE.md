@@ -57,6 +57,7 @@ Only those listed in `docs/ARCHITECTURE.md#stack`. Ask before adding one.
 * Follow Clean Architecture principles.
 * Avoid redundancies in explanations, try to update existing docs instead of creating new ones.
 * Ask clarifying questions before making architectural changes.
+* Every delete or remove asks for confirmation first (`MessageDialog.Confirm`), naming what goes.
 * Mark in documents what is implemented and what is not. In `ROADMAP.md`, only the version table holds a status: no "Done" or "Not implemented" on features.
 
 ## Coding rules

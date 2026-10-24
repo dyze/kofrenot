@@ -176,9 +176,15 @@ public partial class LinkTypesSection : UserControl
 
     private void RemoveAlias_Click(object sender, RoutedEventArgs e)
     {
-        if (_session is not null && Graph is { } graph && sender is FrameworkElement { DataContext: LinkAlias alias })
+        if (_session is null || Graph is not { } graph || sender is not FrameworkElement { DataContext: LinkAlias alias })
         {
-            _session.Write(Window.GetWindow(this)!, new AliasPlanner(graph).Remove(alias), $"Alias removed from {alias.Verb.Type.Id}");
+            return;
+        }
+
+        var window = Window.GetWindow(this)!;
+        if (MessageDialog.Confirm(window, $"Remove the alias “{alias.Phrase}” of “{alias.Verb.Name}”?", "Remove"))
+        {
+            _session.Write(window, new AliasPlanner(graph).Remove(alias), $"Alias removed from {alias.Verb.Type.Id}");
             Show();
         }
     }
@@ -200,14 +206,20 @@ public partial class LinkTypesSection : UserControl
         }
 
         var removal = new LinkTypePlanner(graph).Remove(custom);
-        if (removal.Change is { } change)
+        if (removal.Change is not { } change)
         {
-            _removal = null;
-            _session.Write(Window.GetWindow(this)!, change, $"Link type {custom.Type.Id} removed");
+            _removal = (custom.Type.Id, removal.Status);
         }
         else
         {
-            _removal = (custom.Type.Id, removal.Status);
+            var window = Window.GetWindow(this)!;
+            if (!MessageDialog.Confirm(window, $"Remove the link type “{custom.Type.Name}”?\n\nIts aliases go with it.", "Remove"))
+            {
+                return;
+            }
+
+            _removal = null;
+            _session.Write(window, change, $"Link type {custom.Type.Id} removed");
         }
 
         Show();

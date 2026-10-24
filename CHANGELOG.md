@@ -7,7 +7,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [Unreleased]
 
 ### Added
-- **Your own link types**: Settings > Link types > *New link type*, with a name (*wrote*) and how it reads the other way (*written by*), or the same both ways (*knows*). Listed with the built-in ones, marked *yours*; typed in the input box, proposed and labelled like the built-in ones, offered on the creation screen, in *Change link type* and for trees; aliases can be added to them. ✎ renames one in place, keeping the way it reads; × removes one once no link has it. Stored in the vault (format 6), so every device has them; renames made on two devices are flagged.
+- **Your own link types**: Settings > Link types > *New link type*, with a name (*wrote*) and how it reads the other way (*written by*), or the same both ways (*knows*). Listed with the built-in ones, marked *yours*; typed in the input box, proposed and labelled like the built-in ones, offered on the creation screen, in *Change link type* and for trees; aliases can be added to them. ✎ renames one in place, keeping the way it reads; × removes one, after asking, once no link has it. Stored in the vault (format 6), so every device has them; renames made on two devices are flagged.
 - **Input box labels and proposals**: the first node and the link type become labels once the link type is recognized, a new node in green with a `+`, homonyms counted; Enter turns the rest into labels before the creation screen; Backspace turns the last label back into text. The rest of a node's name or of a link type is proposed in grey while typing; **Tab** or **→** accepts it, and Tab switches the side of a link only when nothing is proposed.
 - **Show what you type** in a pass phrase or password box: hold its eye button; released, it is masked again.
 - **Recovery key**: shown once when a vault is created or upgraded, it opens the vault when its pass phrase is lost (*Lost it? Use the recovery key* when unlocking); a folder vault then asks a new pass phrase.
@@ -19,6 +19,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **Server too old**: Settings > Server says when the server runs a version older than 0.2; your server vaults still sync, but cannot move to the account's pass phrase until it is upgraded.
 
 ### Changed
+- **Removing an alias asks first**, as every other removal does.
 - **Aliases are added in place**: *Add alias* at the end of a way's line in Settings > Link types, instead of the *New alias of* form.
 - **The button Enter presses** is drawn in the accent color in every dialog (*Next*, *OK*, *Save*, *Find* then *Share*, ...), so it is clear before pressing.
 - **Vault format 6**: a vault's key is wrapped for an identity (a key pair) that the pass phrase and the recovery key unlock, kept in the vault's `keys/` folder; every file says which key epoch sealed it. An existing vault is upgraded without rewriting a file: its pass phrase is asked again, then its recovery key shown. kofrenot 0.6 and older no longer open an upgraded vault.
