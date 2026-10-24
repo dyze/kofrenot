@@ -45,6 +45,24 @@ public static class TaskList
     public static string Hide(string text) =>
         string.Join(LineBreakOf(text), Lines(text).Select(line => ItemOf(line)?.Text ?? line));
 
+    /// <summary>
+    /// <paramref name="items"/> with the item at <paramref name="from"/> moved to <paramref name="to"/>,
+    /// the place it takes once moved (the others keep their order).
+    /// </summary>
+    /// <exception cref="ArgumentOutOfRangeException">An index not in the list.</exception>
+    public static IReadOnlyList<TaskItem> Move(IReadOnlyList<TaskItem> items, int from, int to)
+    {
+        ArgumentOutOfRangeException.ThrowIfNegative(from);
+        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(from, items.Count);
+        ArgumentOutOfRangeException.ThrowIfNegative(to);
+        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(to, items.Count);
+        var moved = items.ToList();
+        var item = moved[from];
+        moved.RemoveAt(from);
+        moved.Insert(to, item);
+        return moved;
+    }
+
     /// <summary>The items checked, of all the items of the text (a list or not).</summary>
     public static TaskProgress ProgressOf(string text)
     {

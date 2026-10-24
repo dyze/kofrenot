@@ -54,6 +54,29 @@ public sealed class TaskListTests
     public void Show_ThenHide_GivesTheLinesBack() =>
         Assert.Equal("one\ntwo", TaskList.Hide(TaskList.Show("one\ntwo")));
 
+    private static readonly TaskItem[] Abcd = [new("a", false), new("b", false), new("c", true), new("d", false)];
+
+    [Theory]
+    [InlineData(0, 2, "bcad")]
+    [InlineData(3, 0, "dabc")]
+    [InlineData(1, 3, "acdb")]
+    [InlineData(2, 2, "abcd")]
+    public void Move_PutsTheItemAtItsNewPlace_KeepingTheOthersInOrder(int from, int to, string order)
+    {
+        var moved = TaskList.Move(Abcd, from, to);
+
+        Assert.Equal(order, string.Concat(moved.Select(item => item.Text)));
+        Assert.True(moved.Single(item => item.Text == "c").IsDone);
+    }
+
+    [Theory]
+    [InlineData(-1, 0)]
+    [InlineData(4, 0)]
+    [InlineData(0, -1)]
+    [InlineData(0, 4)]
+    public void Move_RefusesAnIndexNotInTheList(int from, int to) =>
+        Assert.Throws<ArgumentOutOfRangeException>(() => TaskList.Move(Abcd, from, to));
+
     [Fact]
     public void ProgressOf_CountsTheItemsChecked() =>
         Assert.Equal(new TaskProgress(1, 3), TaskList.ProgressOf("text\n- [ ] one\n- [x] two\n- [ ] three"));

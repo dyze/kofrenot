@@ -21,7 +21,8 @@
       <!-- The note editor: takes room only for a note. -->
       <RowDefinition x:Name="NoteRow" Height="Auto" />
       <RowDefinition Height="Auto" />
-      <RowDefinition Height="*" />
+      <!-- The links: no room kept when there are none, so a note takes it. -->
+      <RowDefinition x:Name="LinksRow" Height="*" />
     </Grid.RowDefinitions>
 
     <ItemsControl x:Name="Breadcrumb" FontSize="{StaticResource SecondaryFontSize}">
@@ -68,6 +69,7 @@
             <Grid.ColumnDefinitions>
               <ColumnDefinition Width="*" />
               <ColumnDefinition Width="Auto" />
+              <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
             <TextBlock x:Name="NameText"
                        VerticalAlignment="Center"
@@ -80,9 +82,55 @@
                      Visibility="Collapsed"
                      TextChanged="NameBox_TextChanged"
                      LostKeyboardFocus="NameBox_LostKeyboardFocus" />
+            <!-- Its colour (NodeDetailsPanel.Color): a dot of the current one on the palette; a click shows
+                 the swatches in a popup, the current one ringed and checked. -->
+            <Button x:Name="ColorButton"
+                    Grid.Column="1"
+                    Margin="2,0,0,0"
+                    VerticalAlignment="Center"
+                    Style="{StaticResource FlatButton}"
+                    ToolTip="Colour"
+                    Click="ColorButton_Click">
+              <Grid>
+                <TextBlock FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="14" Text="&#xE790;" />
+                <Ellipse x:Name="ColorDot"
+                         Width="8"
+                         Height="8"
+                         Margin="0,0,-4,-3"
+                         HorizontalAlignment="Right"
+                         VerticalAlignment="Bottom"
+                         Stroke="{DynamicResource SolidBackgroundFillColorBaseBrush}"
+                         StrokeThickness="1.5"
+                         Visibility="Collapsed" />
+              </Grid>
+            </Button>
+            <Popup x:Name="ColorPopup"
+                   AllowsTransparency="True"
+                   Placement="Bottom"
+                   PlacementTarget="{Binding ElementName=ColorButton}"
+                   StaysOpen="False">
+              <Border Padding="8"
+                      Background="{DynamicResource SolidBackgroundFillColorBaseBrush}"
+                      BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
+                      BorderThickness="1"
+                      CornerRadius="8">
+                <StackPanel>
+                  <StackPanel x:Name="ColorSwatches" Orientation="Horizontal" />
+                  <TextBlock x:Name="ColorConflictText"
+                             MaxWidth="320"
+                             Margin="2,6,0,0"
+                             HorizontalAlignment="Left"
+                             FontSize="{StaticResource CaptionFontSize}"
+                             Foreground="{DynamicResource SystemFillColorCautionBrush}"
+                             TextWrapping="Wrap"
+                             Text="Chosen differently on two devices: choose one."
+                             Visibility="Collapsed" />
+                </StackPanel>
+              </Border>
+            </Popup>
             <!-- Pinned nodes are listed while the input box is empty. Filled pin: pinned. -->
             <Button x:Name="PinButton"
-                    Grid.Column="1"
+                    Grid.Column="2"
                     Margin="2,0,0,0"
                     VerticalAlignment="Center"
                     Style="{StaticResource FlatButton}"
@@ -132,18 +180,18 @@
         <Grid Margin="2,8,0,0">
           <Grid.ColumnDefinitions>
             <ColumnDefinition Width="110" />
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="Auto" />
             <ColumnDefinition Width="*" />
           </Grid.ColumnDefinitions>
           <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
           </Grid.RowDefinitions>
           <TextBlock Opacity="0.7" Text="Type" />
           <!-- A generic node: its type in a combo, to make it a note, a dataset or a view (asked first: it cannot be undone). -->
-          <Grid Grid.Column="1">
+          <Grid Grid.Column="1" Grid.ColumnSpan="3">
             <TextBlock x:Name="TypeText" VerticalAlignment="Center" />
             <ComboBox x:Name="TypeBox"
                       MinWidth="120"
@@ -153,25 +201,15 @@
                       Visibility="Collapsed"
                       SelectionChanged="TypeBox_SelectionChanged" />
           </Grid>
+          <!-- Created and modified on one line, so a note has more room. Modified: the latest of its creation,
+               its names, types, colours and content versions (NodeFacts), as a view's Details. -->
           <TextBlock Grid.Row="1" Opacity="0.7" Text="Created" />
           <TextBlock x:Name="CreatedText" Grid.Row="1" Grid.Column="1" />
-          <!-- The latest of its creation, its names, types, colours and content versions (NodeFacts), as a view's Details. -->
-          <TextBlock Grid.Row="2" Opacity="0.7" Text="Modified" />
-          <TextBlock x:Name="ModifiedText" Grid.Row="2" Grid.Column="1" />
-          <!-- Its colour: a swatch per colour of the palette (NodeDetailsPanel.Color), the current one ringed; a click gives it. -->
-          <TextBlock Grid.Row="3" Margin="0,4,0,0" VerticalAlignment="Center" Opacity="0.7" Text="Colour" />
-          <StackPanel Grid.Row="3" Grid.Column="1" Margin="0,4,0,0">
-            <StackPanel x:Name="ColorSwatches" Orientation="Horizontal" />
-            <TextBlock x:Name="ColorConflictText"
-                       Margin="0,2,0,0"
-                       Foreground="{DynamicResource SystemFillColorCautionBrush}"
-                       TextWrapping="Wrap"
-                       Text="Chosen differently on two devices: choose one."
-                       Visibility="Collapsed" />
-          </StackPanel>
+          <TextBlock Grid.Row="1" Grid.Column="2" Margin="24,0,12,0" Opacity="0.7" Text="Modified" />
+          <TextBlock x:Name="ModifiedText" Grid.Row="1" Grid.Column="3" />
           <!-- A view: what it shows, and Edit… to change it. -->
-          <TextBlock x:Name="ShowsLabel" Grid.Row="4" Margin="0,4,0,0" VerticalAlignment="Center" Opacity="0.7" Text="Shows" Visibility="Collapsed" />
-          <StackPanel x:Name="ShowsPanel" Grid.Row="4" Grid.Column="1" Margin="0,4,0,0" Orientation="Horizontal" Visibility="Collapsed">
+          <TextBlock x:Name="ShowsLabel" Grid.Row="2" Margin="0,4,0,0" VerticalAlignment="Center" Opacity="0.7" Text="Shows" Visibility="Collapsed" />
+          <StackPanel x:Name="ShowsPanel" Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="3" Margin="0,4,0,0" Orientation="Horizontal" Visibility="Collapsed">
             <TextBlock x:Name="ShowsText" VerticalAlignment="Center" TextWrapping="Wrap" />
             <Button Margin="10,0,0,0" Padding="10,2" Content="Edit…" Click="EditView_Click" />
           </StackPanel>

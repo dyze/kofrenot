@@ -429,7 +429,7 @@ ColorPlanner: the colour chosen replaces every current one ⇒ conflict resolved
 ```
 
 - Kept per node by `NodeVersions<NodeColored>` (shared with content versions); `KnowledgeGraph.ColorsOf` gives the current ones, `ColorOf` the one shown, `ColoringsOf` all of them for `NodeFacts.Modified`. A name this version does not know (a later palette's) is kept and shown as none.
-- Shown in `NodeVisual.Color`, so every row with a node's picture (search, links, input box labels, views) draws a dot on it (`NodeVisualView`), and in the details' *Colour* row (`NodeDetailsPanel.Color`: a swatch per colour, the current one ringed, each one ringed in a conflict; a click writes the change). A note's text gets it as its background (`NoteEditor`).
+- Shown in `NodeVisual.Color`, so every row with a node's picture (search, links, input box labels, views) draws a dot on it (`NodeVisualView`), and on the palette button next to the details' pin (`NodeDetailsPanel.Color`: a dot of it; a click opens a popup with a swatch per colour, the current one ringed and checked, each one in a conflict; a click on a swatch writes the change). A note's text gets it as its background (`NoteEditor`).
 - `NoteColors` (App) draws each colour in one mid shade, seen on both themes, for dots and swatches, and see-through (25 %) as a background, so it stays pale on the light theme and dark on the dark one.
 
 ### Aliases and removals
@@ -487,12 +487,12 @@ v1 ◄─ v3 (device B, before syncing) ⇒ conflict: v2, v3 offered; the next s
 
   ```
   text ──TaskList.IsList (every filled line an item)──► TaskListBox: rows of checkbox + text
-       ◄─TaskList.Format(items)── row checked, typed in, added (Enter), removed (Backspace)
+       ◄─TaskList.Format(items)── row checked, typed in, added (Enter), removed (Backspace), moved (TaskList.Move)
   Checkboxes on:  TaskList.Show  (each line → "- [ ] line", items kept, blank lines dropped)
   Checkboxes off: TaskList.Hide  (each item → its text, checked or not)
   ```
 
-  The text's line breaks are kept (`\r\n` typed in a text box, or `\n`). `TaskListBox` shows the items not checked, then those checked under their count; `NoteEditor`'s status starts with `TaskList.ProgressOf` (*2/4 done*).
+  The text's line breaks are kept (`\r\n` typed in a text box, or `\n`). `TaskListBox` shows the items not checked, then those checked under their count; `NoteEditor`'s status starts with `TaskList.ProgressOf` (*2/4 done*). An item moves within its part only, by its grip (`TaskListBox.Drag`: a line over the row's top or bottom edge shows where it goes) or Alt+Up/Down.
 - Note content is never logged. The search does not look into it (an open question: [GOAL.md](GOAL.md#open-questions), *Search*).
 
 ### Datasets

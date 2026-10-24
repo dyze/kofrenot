@@ -41,6 +41,7 @@ public static class KeyBindings
         new(Notes, "Enter", "In a task list: add an item after this one"),
         new(Notes, "Backspace", "In an empty item of a task list: remove it"),
         new(Notes, "Up, Down", "In a task list: previous, next item"),
+        new(Notes, "Alt+Up, Alt+Down", "In a task list: move the item up, down"),
         new(Datasets, "Ctrl+I", "Import a file"),
         new(Datasets, "Ctrl+E", "Export the file"),
         new(Views, "Ctrl+F", "Find in the view"),

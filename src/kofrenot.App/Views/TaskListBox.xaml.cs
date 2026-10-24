@@ -9,7 +9,8 @@ namespace Kofrenot.UI.Views;
 
 /// <summary>
 /// The items of a task list, each a checkbox and its text. Enter adds an item after the one typed
-/// in, Backspace in an empty item removes it, Up/Down go from item to item in the order shown.
+/// in, Backspace in an empty item removes it, Up/Down go from item to item in the order shown;
+/// an item moves within its part (not checked, checked) by its grip or Alt+Up/Down (<see cref="Move"/>).
 /// </summary>
 public partial class TaskListBox : UserControl
 {
@@ -54,6 +55,7 @@ public partial class TaskListBox : UserControl
         OpenRows.Children.Clear();
         DoneRows.Children.Clear();
         _shownBoxes.Clear();
+        _dropLines.Clear();
         var shown = Enumerable.Range(0, _items.Count).OrderBy(index => _items[index].IsDone).ToList();
         foreach (var index in shown)
         {
@@ -100,12 +102,19 @@ public partial class TaskListBox : UserControl
             FocusLater(box);
         }
 
-        var row = new Grid();
+        var grip = GripOf(index);
+        var row = new Grid { Tag = index, Background = Brushes.Transparent, AllowDrop = !_isReadOnly };
+        row.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
         row.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
         row.ColumnDefinitions.Add(new ColumnDefinition());
-        Grid.SetColumn(box, 1);
+        Grid.SetColumn(check, 1);
+        Grid.SetColumn(box, 2);
+        row.Children.Add(grip);
         row.Children.Add(check);
         row.Children.Add(box);
+        AddDropLines(row, index);
+        row.MouseEnter += (_, _) => grip.Opacity = GripOpacity;
+        row.MouseLeave += (_, _) => grip.Opacity = 0;
         return row;
     }
 
@@ -142,7 +151,20 @@ public partial class TaskListBox : UserControl
 
     private void Item_PreviewKeyDown(object sender, KeyEventArgs e)
     {
-        if (sender is not TextBox { Tag: int index } box || _isReadOnly || Keyboard.Modifiers != ModifierKeys.None)
+        if (sender is not TextBox { Tag: int index } box || _isReadOnly)
+        {
+            return;
+        }
+
+        // Alt+Up/Down come as a system key.
+        if (Keyboard.Modifiers == ModifierKeys.Alt && e.Key == Key.System && e.SystemKey is Key.Up or Key.Down)
+        {
+            MoveNextTo(index, box, e.SystemKey == Key.Up ? -1 : 1);
+            e.Handled = true;
+            return;
+        }
+
+        if (Keyboard.Modifiers != ModifierKeys.None)
         {
             return;
         }

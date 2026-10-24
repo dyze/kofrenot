@@ -76,6 +76,7 @@ public partial class NodeDetailsPanel : UserControl
         ModifiedText.Text = Browser.Graph is { } graph ? DateOf(NodeFacts.Of(graph, details.Node).Modified) : string.Empty;
         LinksHeader.Text = details.Links.Count == 0 ? "No links" : $"Links ({details.Links.Count})";
         LinksList.ItemsSource = details.Links;
+        LinksRow.Height = details.Links.Count == 0 ? GridLength.Auto : new GridLength(1, GridUnitType.Star);
         ConflictNames.ItemsSource = details.NameConflict;
         PinButton.Content = details.IsPinned ? PinnedIcon : PinIcon;
         PinButton.ToolTip = details.IsPinned ? "Unpin" : "Pin: listed while the input box is empty";
