@@ -74,17 +74,7 @@ public sealed class WindowPlacer
             }
         }
 
-        // Every move and new scaling, whatever made it: a move no code of kofrenot asked for shows in the log.
-        void LogMove(object? sender, EventArgs e)
-        {
-            if (NativeWindows.WindowBounds(Handle(window)) is { } bounds)
-            {
-                _log.Debug("Window", $"{name} moved to {bounds.Left},{bounds.Top} ({bounds.Width}x{bounds.Height})");
-            }
-        }
-
         window.LocationChanged += TrackNormalBounds;
-        window.LocationChanged += LogMove;
         window.SizeChanged += (sender, e) => TrackNormalBounds(sender, e);
         window.IsVisibleChanged += (_, e) =>
         {
