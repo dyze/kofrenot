@@ -8,7 +8,7 @@
     <!-- Debug info inside each DLL: no .pdb files to ship, and logged stack traces keep their line numbers. -->
     <DebugType>embedded</DebugType>
     <!-- Single source of truth for the version (0.1, then 0.2, ...). Stamped into every assembly. -->
-    <Version>0.7</Version>
+    <Version>0.8</Version>
     <!-- Company in every assembly's file details; the installer's publisher (kofrenot.iss) matches it. -->
     <Company>dlabs</Company>
     <!-- Lets the Windows-only WPF project be restored/built on non-Windows machines (CI). -->
