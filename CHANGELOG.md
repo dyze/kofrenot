@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.7] - 2026-10-24
+
 ### Added
 - **Sharing**
   - **Share a server vault** (its owner): Settings > Vault > *Members* > *Share...*, with another account on the server found by its email, as a reader or a writer, once the fingerprint of their key is compared with them (theirs: Settings > Server, *Your key*). In *Vault from the server…* it is marked *shared with you*, as reader or writer; they open it with their own pass phrase; a reader cannot change it, and sees *Read only* in the window's title and header. The members are listed with their fingerprint, the owner's included, for them to compare too. Only the owner changes the vault's keys and its members: what it did not sign is ignored, so a writer cannot let anyone else in, nor drop anyone.
@@ -154,7 +156,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **Update check** once a day against GitHub releases, switchable in About.
 - **Installer and portable zip** (`build\installer.cmd`), self-contained.
 
-[Unreleased]: https://github.com/dyze/kofrenot/compare/0.6...HEAD
+[Unreleased]: https://github.com/dyze/kofrenot/compare/0.7...HEAD
+[0.7]: https://github.com/dyze/kofrenot/compare/0.6...0.7
 [0.6]: https://github.com/dyze/kofrenot/compare/0.5...0.6
 [0.5]: https://github.com/dyze/kofrenot/compare/0.4...0.5
 [0.4]: https://github.com/dyze/kofrenot/compare/0.3...0.4

@@ -11,7 +11,7 @@ A private, self-hosted knowledge system: store, organize, search, version and sh
 
 ## Status
 
-Version 0.6: nodes and links typed in one box (directed link types, your own aliases), notes with Markdown content, datasets (files of any size, with thumbnails and a viewer for images and texts), views (trees and lists over the graph, in tabs, where nodes are added, renamed, copied, moved and deleted, and files dropped), pinned and recent nodes, all stored encrypted in folders or on your own Kofre server, synced across your devices and usable offline: several vaults, each with its name, lock and hotkey. What comes next: [ROADMAP.md](ROADMAP.md).
+Version 0.7: nodes and links typed in one box (directed link types, your own link types and aliases), notes with Markdown content, datasets (files of any size, with thumbnails and a viewer for images and texts), views (trees and lists over the graph, in tabs, where nodes are added, renamed, copied, moved and deleted, and files dropped), pinned and recent nodes, all stored encrypted in folders or on your own Kofre server, synced across your devices and usable offline, and shared with other accounts as readers or writers: several vaults, each with its name, lock, hotkey and recovery key. What comes next: [ROADMAP.md](ROADMAP.md).
 
 ## Install
 

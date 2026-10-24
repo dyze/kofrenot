@@ -10,7 +10,7 @@ Scope of each planned version. Implemented features move to [CHANGELOG.md](CHANG
 | 0.4     | Released  | Views: flat and tree views over the graph, shown as tabs                           |
 | 0.5     | Released  | Vaults: several vaults, a hot key per vault; change types, link nodes              |
 | 0.6     | Released  | Server: own vaults stored on a web server, synced across devices                   |
-| 0.7     | To define | Sharing: identities, recovery key, vaults shared with other users                  |
+| 0.7     | Released  | Sharing: identities, recovery key, vaults shared with other users                  |
 | 0.8     | To define | Large vaults: content on demand, pinned for offline, faster transfers              |
 | 0.9     | To define | Editing: restore versions, drop files                                              |
 
