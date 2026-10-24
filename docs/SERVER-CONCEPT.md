@@ -10,7 +10,7 @@ Decisions: [GOAL.md](GOAL.md#decisions). Built in steps ([ROADMAP.md](../ROADMAP
 | 0.7 | [Keys](#keys): identities, recovery key, pass phrase change, [Format 6](#format-6); the account's identity in its account data, server vaults attached to it, the server's version checked | Implemented ([ARCHITECTURE.md](ARCHITECTURE.md#encryption)); account data, members, fence in [kofreserver](https://github.com/dyze/kofreserver) 0.2 |
 | 0.7 | [Sharing](#sharing) | Implemented ([ARCHITECTURE.md](ARCHITECTURE.md#sharing)) |
 | 0.7 | Members removed or leaving, [Rotation](#rotation) with the [fence](#fence) | Implemented ([ARCHITECTURE.md](ARCHITECTURE.md#members-leaving)) |
-| 0.8 | Content on demand and pinned nodes ([Client sync](#client-sync)), batch download, uploads in parts | Planned |
+| 0.9 | Content on demand and pinned nodes ([Client sync](#client-sync)), batch download, uploads in parts | Planned |
 
 ## Principles
 - **Generic and blind.** The server stores *stores*: sets of files addressed by path, with their members. It never sees a key, a name or a content, and knows nothing of kofrenot: other apps can use it.
