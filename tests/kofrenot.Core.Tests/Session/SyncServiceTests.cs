@@ -30,6 +30,20 @@ public sealed class SyncServiceTests : IDisposable
         Assert.Equal(new SyncStatus(null, null, 0), _sync.StatusOf(_fixture.AddServerVault()));
 
     [Fact]
+    public async Task Paused_ItStopsSyncingEvery30Seconds_UntilResumed()
+    {
+        var store = _fixture.AddServerVault();
+
+        _sync.Pause();
+        Assert.Equal(Timeout.InfiniteTimeSpan, Every.DueTime);
+        await _sync.ResumeAsync();
+
+        Assert.Equal(SyncStatus.Every, Every.DueTime);
+        Assert.Equal(SyncStatus.Every, Every.Period);
+        Assert.Equal(ServerFailure.SignInNeeded, _sync.StatusOf(store).Failure);
+    }
+
+    [Fact]
     public async Task SignedOut_EachServerVault_NeedsASignIn()
     {
         var store = _fixture.AddServerVault();

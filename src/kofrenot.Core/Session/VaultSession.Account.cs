@@ -23,6 +23,11 @@ public sealed partial class VaultSession
     /// </summary>
     public void SetAccountPassPhrase(ISessionQuestions ask)
     {
+        if (RefusesChanges(ask))
+        {
+            return;
+        }
+
         if (_server.Identity is null)
         {
             _log.Info("Action", "Choose the server account pass phrase");
@@ -134,6 +139,11 @@ public sealed partial class VaultSession
         return changed;
     }
 
+    /// <summary>The server vault opening in <paramref name="folder"/> is its account's own, not handed to its identity yet.</summary>
+    private bool NeedsAttach(string folder) =>
+        Selected?.Location.Store is { } store && _access is { } access
+        && VaultKeys.NeedsAttach(folder, access.Header.Id, _server.Identity?.Identity, _server.Owners.Kept(store.Id)?.Key.Id);
+
     /// <summary>
     /// Hands the open server vault to the account's identity, unless it is already or another
     /// account owns it (<see cref="VaultKeys.NeedsAttach"/>): its pass
@@ -142,8 +152,7 @@ public sealed partial class VaultSession
     /// </summary>
     private bool AttachToAccount(ISessionQuestions ask, string folder, Vault vault)
     {
-        if (Selected?.Location.Store is not { } store || _access is not { } access
-            || !VaultKeys.NeedsAttach(folder, access.Header.Id, _server.Identity?.Identity, _server.Owners.Kept(store.Id)?.Key.Id))
+        if (!NeedsAttach(folder) || _access is not { } access)
         {
             return true;
         }

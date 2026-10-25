@@ -19,7 +19,7 @@ public sealed partial class VaultSession
     public bool CanRemoveMembers => CanShare && Members.Count > 0;
 
     /// <summary>The open vault is shared with this account by someone else: it can leave it.</summary>
-    public bool CanLeave => Current is { } vault && MyRoleIn(vault) is MemberRole.Reader or MemberRole.Writer && _server.IsSignedIn;
+    public bool CanLeave => !ReadsOnly && Current is { } vault && MyRoleIn(vault) is MemberRole.Reader or MemberRole.Writer && _server.IsSignedIn;
 
     /// <summary>Removes a member from the open vault: their server access at once, then a new key they do not have.</summary>
     public async Task RemoveMember(ISessionQuestions ask, VaultMember member)
@@ -186,11 +186,17 @@ public sealed partial class VaultSession
     }
 
     /// <summary>
-    /// After a sync: the open vault's files refused below the fence sealed again, and the keys of a
-    /// newer epoch (written by another device) taken up.
+    /// After a sync: the changes downloaded read (a client without a folder watcher needs it), the
+    /// open vault's files refused below the fence sealed again, and the keys of a newer epoch
+    /// (written by another device) taken up.
     /// </summary>
     private void AfterSync()
     {
+        if (Selected?.Location.IsOnServer == true)
+        {
+            Refresh();
+        }
+
         // Content not downloaded (offline, signed out) is asked for again by what shows it.
         if (Current is { } open && Selected?.Location.Store is { } synced && _sync.StatusOf(synced).Failure is null && open.RetryFailed())
         {

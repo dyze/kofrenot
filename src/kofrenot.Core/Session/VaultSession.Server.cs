@@ -54,6 +54,11 @@ public sealed partial class VaultSession
     /// <summary>Creates a vault on the server, then switches to it. Nothing is made, on the server or here, until its pass phrase is given.</summary>
     public void CreateOnServer(ISessionQuestions ask)
     {
+        if (RefusesChanges(ask))
+        {
+            return;
+        }
+
         if (_server.Client is not { Session: not null, Server: { } server } client)
         {
             ask.Tell(NotSignedIn);
@@ -74,7 +79,11 @@ public sealed partial class VaultSession
 
         if (store.Files == 0)
         {
-            CreateVault(ask, client, server, store.Id);
+            if (!RefusesChanges(ask))
+            {
+                CreateVault(ask, client, server, store.Id);
+            }
+
             return;
         }
 
@@ -100,6 +109,11 @@ public sealed partial class VaultSession
     /// </summary>
     public async Task MoveToServer(ISessionQuestions ask, RegisteredVault vault)
     {
+        if (RefusesChanges(ask))
+        {
+            return;
+        }
+
         if (_server.Client is not { Session: not null, Server: { } server } client)
         {
             ask.Tell(NotSignedIn);
@@ -156,6 +170,11 @@ public sealed partial class VaultSession
     /// </summary>
     public async Task<bool> DeleteFromServer(ISessionQuestions ask, RegisteredVault vault, string password)
     {
+        if (RefusesChanges(ask))
+        {
+            return false;
+        }
+
         if (_server.Client is not { Session: not null } client || vault.Location.Store is not { } store)
         {
             ask.Tell(NotSignedIn);

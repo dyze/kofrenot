@@ -14,7 +14,7 @@ public sealed partial class VaultSession
     private VaultAccess? _access;
 
     /// <summary>The pass phrase of the open vault can be changed: a folder vault, upgraded.</summary>
-    public bool CanChangePassPhrase => Current is not null && _access?.Identity is not null && Selected?.Location.IsOnServer == false;
+    public bool CanChangePassPhrase => !ReadsOnly && Current is not null && _access?.Identity is not null && Selected?.Location.IsOnServer == false;
 
     /// <summary>Asks a new pass phrase for the open vault, and seals its identity with it.</summary>
     public void ChangePassPhrase(ISessionQuestions ask)

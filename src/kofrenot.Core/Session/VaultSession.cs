@@ -99,14 +99,14 @@ public sealed partial class VaultSession : IDisposable
     /// <summary>Makes an unlocked vault the current one, once its upgrade is agreed when it needs one, and watches its folder.</summary>
     private void Use(ISessionQuestions ask, string folder, Vault vault)
     {
-        if (!AgreesToUpgrade(ask, vault))
+        if (!CanUseHere(ask, folder, vault) || !AgreesToUpgrade(ask, vault))
         {
             return;
         }
 
         // A server vault still opening with its own pass phrase moves to its account's, when the
         // server can be asked; else at a later opening.
-        if (_server.IsSignedIn && _server.TooOld is null)
+        if (!ReadsOnly && _server.IsSignedIn && _server.TooOld is null)
         {
             AttachToAccount(ask, folder, vault);
         }
@@ -480,6 +480,11 @@ public sealed partial class VaultSession : IDisposable
 
     private Vault? Create(ISessionQuestions ask, string folder)
     {
+        if (RefusesChanges(ask))
+        {
+            return null;
+        }
+
         (VaultAccess Access, RecoveryKey Recovery)? created = null;
         var answer = ask.AskNewPassPhrase(folder, new VaultLocation(folder).FolderName, passPhrase =>
         {

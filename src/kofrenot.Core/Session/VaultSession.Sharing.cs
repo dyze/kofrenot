@@ -17,12 +17,13 @@ public sealed partial class VaultSession
     /// <summary>The members of the open vault; none before it is shared.</summary>
     public IReadOnlyList<VaultMember> Members => Current is { } vault && OwnerKey is { } ownerKey ? MemberRecords.Members(vault.Graph, vault.Id, ownerKey) : [];
 
-    /// <summary>The open vault is shared with this account to read only.</summary>
-    public bool IsReadOnly => Current is { } vault && MyRoleIn(vault) == MemberRole.Reader;
+    /// <summary>The open vault is read only: shared with this account to read, or this client only reads (<see cref="ReadsOnly"/>).</summary>
+    public bool IsReadOnly => Current is { } vault && (ReadsOnly || MyRoleIn(vault) == MemberRole.Reader);
 
     /// <summary>The open vault can be shared from here: a server vault of this account, opened with its pass phrase, the server recent enough.</summary>
     public bool CanShare =>
-        Current is { } vault
+        !ReadsOnly
+        && Current is { } vault
         && Selected?.Location.IsOnServer == true
         && _server.IsSignedIn && _server.TooOld is null
         && _server.Identity is { } account && _access?.Identity?.Id == account.Identity.Id
@@ -90,6 +91,11 @@ public sealed partial class VaultSession
     /// <summary>False, the user told, when the open vault is read only for this account.</summary>
     private bool CanWrite(ISessionQuestions ask)
     {
+        if (RefusesChanges(ask))
+        {
+            return false;
+        }
+
         if (!IsReadOnly)
         {
             return true;

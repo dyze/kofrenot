@@ -45,6 +45,18 @@ public sealed class ServerSyncTests : IDisposable
     }
 
     [Fact]
+    public async Task AClientThatOnlyReads_Downloads_NeverUploads()
+    {
+        _store.Add("changes/ab/ab12.kfc", "change");
+        Write("changes/cd/cd34.kfc", "written here");
+
+        var result = await new ServerSync(Mirror, State, FakeStore.Id, _store, _log, uploads: false).RunAsync();
+
+        Assert.Equal(new SyncResult(1, 0), result);
+        Assert.Empty(_store.Uploads);
+    }
+
+    [Fact]
     public async Task ContentDownloadedOnDemand_IsNotUploadedAgain()
     {
         _store.Add("content/cd/cd34.kfn", "note");

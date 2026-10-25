@@ -25,8 +25,10 @@ public sealed class SyncService : IDisposable
     private bool _again;
 
     /// <param name="time">Runs the timers; null for the system's.</param>
-    public SyncService(SettingsStore settings, AppFiles files, ServerConnection server, IUiThread ui, ILog log, TimeProvider? time = null)
+    /// <param name="downloadsOnly">A client that only reads: nothing is uploaded, and its <see cref="VaultSession"/> writes nothing.</param>
+    public SyncService(SettingsStore settings, AppFiles files, ServerConnection server, IUiThread ui, ILog log, TimeProvider? time = null, bool downloadsOnly = false)
     {
+        DownloadsOnly = downloadsOnly;
         _settings = settings;
         _files = files;
         _server = server;
@@ -41,8 +43,21 @@ public sealed class SyncService : IDisposable
     /// <summary>Raised on the UI thread when a sync ends.</summary>
     public event Action? Changed;
 
+    /// <summary>The stores' files are downloaded, never uploaded: a client that only reads.</summary>
+    public bool DownloadsOnly { get; }
+
     public SyncStatus StatusOf(StoreAddress store) =>
         _statuses.TryGetValue(store.Id, out var status) ? status : new SyncStatus(null, null, 0);
+
+    /// <summary>Stops the syncs every <see cref="SyncStatus.Every"/>: a client not shown (an app in the background).</summary>
+    public void Pause() => _every.Change(Timeout.InfiniteTimeSpan, Timeout.InfiniteTimeSpan);
+
+    /// <summary>Syncs now, then every <see cref="SyncStatus.Every"/> again: a client shown again.</summary>
+    public Task ResumeAsync()
+    {
+        _every.Change(SyncStatus.Every, SyncStatus.Every);
+        return SyncNowAsync();
+    }
 
     /// <summary>Syncs in a moment: changes come in bursts (a note and its content, a sync's own downloads).</summary>
     public void Soon() => _soon.Change(Settle, Timeout.InfiniteTimeSpan);
@@ -104,7 +119,7 @@ public sealed class SyncService : IDisposable
 
         try
         {
-            await Task.Run(() => new ServerSync(mirror, state, store.Id, client, _log).RunAsync());
+            await Task.Run(() => new ServerSync(mirror, state, store.Id, client, _log, uploads: !DownloadsOnly).RunAsync());
 
             // Read once, then kept: the owner whose signatures the vault's keys and members need.
             await _server.Owners.OwnerOfAsync(client, store.Id);

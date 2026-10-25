@@ -13,7 +13,8 @@ internal sealed class Device : IDisposable
 
     private readonly TempFolder _temp = new();
 
-    public Device(FakeKofre kofre)
+    /// <param name="readsOnly">A client that only reads: kofrenot for Android.</param>
+    public Device(FakeKofre kofre, bool readsOnly = false)
     {
         Files = new AppFiles(_temp.Sub("data"), _temp.Sub("program"));
         Settings = new SettingsStore(Files.Settings);
@@ -26,7 +27,7 @@ internal sealed class Device : IDisposable
             Ui,
             Log,
             kofre);
-        Sync = new SyncService(Settings, Files, Server, Ui, Log, Timers);
+        Sync = new SyncService(Settings, Files, Server, Ui, Log, Timers, downloadsOnly: readsOnly);
         Session = new VaultSession(
             Settings,
             Files,
