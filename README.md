@@ -148,7 +148,7 @@ A node of type *View* shows the vault another way, in a tab of its own. Choose o
 
 ## Settings
 
-Gear button in the main window, or tray menu > Settings. A dialog over the main window: changes are saved at once, Esc (or closing it) closes it. *Find a setting* (Ctrl+F) shows the matching settings of every tab; Ctrl+Tab changes tab.
+Gear button in the main window's title bar, or tray menu > Settings. A dialog over the main window, opened on the tab shown last (also after a restart): changes are saved at once, Esc (or closing it) closes it. *Find a setting* (Ctrl+F) shows the matching settings of every tab; Ctrl+Tab changes tab.
 
 | Tab | Options |
 | --- | --- |

@@ -97,7 +97,7 @@ public partial class SettingsWindow : Window
 
         LoadValues();
         TabList.ItemsSource = SettingsCatalog.Tabs;
-        TabList.SelectedIndex = 0;
+        TabList.SelectedItem = _settings.SettingsTab;
 
         Loaded += (_, _) => FindBox.Focus();
     }
@@ -316,6 +316,12 @@ public partial class SettingsWindow : Window
     private void TabList_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         UpdateSections();
+        if (TabList.SelectedItem is string tab)
+        {
+            // Settings opens on it next time, also after a restart.
+            _settings.SetSettingsTab(tab);
+        }
+
         if (TabList.SelectedItem as string == SettingsCatalog.AboutTab)
         {
             AcknowledgeUpdate();

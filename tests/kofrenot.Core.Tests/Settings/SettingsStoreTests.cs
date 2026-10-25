@@ -20,6 +20,28 @@ public sealed class SettingsStoreTests : IDisposable
     }
 
     [Fact]
+    public void TheSettingsTabShownLast_IsPersisted_GeneralByDefault()
+    {
+        var store = new SettingsStore(FilePath);
+        Assert.Equal(SettingsCatalog.GeneralTab, store.SettingsTab);
+
+        store.SetSettingsTab(SettingsCatalog.ServerTab);
+        store.SetSettingsTab(SettingsCatalog.ServerTab);
+
+        Assert.Equal(SettingsCatalog.ServerTab, new SettingsStore(FilePath).SettingsTab);
+        Assert.Throws<ArgumentException>(() => store.SetSettingsTab("Nowhere"));
+    }
+
+    [Fact]
+    public void ASettingsTabNoLongerThere_OpensGeneral()
+    {
+        Directory.CreateDirectory(_directory);
+        File.WriteAllText(FilePath, """{"SettingsTab":"Sync"}""");
+
+        Assert.Equal(SettingsCatalog.GeneralTab, new SettingsStore(FilePath).SettingsTab);
+    }
+
+    [Fact]
     public void TheVaults_AndTheSelectedOne_ArePersisted()
     {
         var first = new RegisteredVault(new VaultLocation(@"D:\Sync\private"), Guid.NewGuid(), new Hotkey(HotkeyModifiers.Ctrl | HotkeyModifiers.Alt, "I"));

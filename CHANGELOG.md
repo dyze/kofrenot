@@ -15,6 +15,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **Rename a view** in its edit dialog (**⚙** on its tab, or *Edit…* in its details): a *Name* box above what it shows, checked as a rename.
 
 ### Changed
+- **Settings opens on the tab shown last**, also after a restart, instead of General; a click on the sync status still opens Server.
 - **Vault in the title bar**: the vault box (or the vault's name), the lock, *Read only*, the sync status and Settings are in the main window's title bar, beside its minimize, maximize and close buttons; the tabs have the row below to themselves, so they no longer move when another vault is chosen.
 - **Sharper thumbnails**: an image imported from now on gets a thumbnail at least 256 px on its shorter side (512 at most on the longer), saved as JPEG (PNG when it has transparency), instead of 128 px on its longer side; a card shows it filling its frame, cropped around its centre instead of its top. Thumbnails made before stay as they are.
 - **The session is in kofrenot.Core**: signing in, syncing, opening, unlocking and sharing vaults no longer depend on Windows, so the coming Android client shares them ([ANDROID-CONCEPT.md](docs/ANDROID-CONCEPT.md#architecture)). Nothing changes for the user.

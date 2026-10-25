@@ -27,7 +27,7 @@ public enum MainWindowPosition
 /// <summary>
 /// User settings persisted as JSON: the theme, where the main window appears, whether the log
 /// records debug entries, whether to check for updates, the registered vaults and the one selected,
-/// and the hotkey. A missing, corrupt or partial file means defaults for whatever cannot be read.
+/// the hotkey, and the Settings tab shown last. A missing, corrupt or partial file means defaults for whatever cannot be read.
 /// </summary>
 public sealed class SettingsStore
 {
@@ -52,6 +52,7 @@ public sealed class SettingsStore
             ? new ServerAccount(server, email)
             : null;
         Hotkey = Hotkey.TryParse(data?.Hotkey, out var hotkey) ? hotkey : Hotkey.Default;
+        SettingsTab = data?.SettingsTab is { } tab && SettingsCatalog.Tabs.Contains(tab) ? tab : SettingsCatalog.GeneralTab;
     }
 
     /// <summary>When on, the log also records detailed (debug) entries. Off by default.</summary>
@@ -76,6 +77,9 @@ public sealed class SettingsStore
 
     /// <summary>The server account; null when none was set.</summary>
     public ServerAccount? Server { get; private set; }
+
+    /// <summary>The Settings tab shown last, where Settings opens again. General by default, or for a tab no longer there.</summary>
+    public string SettingsTab { get; private set; }
 
     public void SetServer(ServerAccount? server)
     {
@@ -139,6 +143,21 @@ public sealed class SettingsStore
     public bool IsHotkeyTaken(Hotkey hotkey, VaultLocation? forVault) =>
         (forVault is not null && hotkey == Hotkey) || Vaults.UsesHotkey(hotkey, forVault);
 
+    /// <exception cref="ArgumentException"><paramref name="tab"/> is not one of <see cref="SettingsCatalog.Tabs"/>.</exception>
+    public void SetSettingsTab(string tab)
+    {
+        if (!SettingsCatalog.Tabs.Contains(tab))
+        {
+            throw new ArgumentException("Not a Settings tab", nameof(tab));
+        }
+
+        if (tab != SettingsTab)
+        {
+            SettingsTab = tab;
+            Save();
+        }
+    }
+
     public void SetHotkey(Hotkey hotkey)
     {
         Hotkey = hotkey;
@@ -163,6 +182,7 @@ public sealed class SettingsStore
             })],
             SelectedVault = SelectedVault?.Folder,
             Server = Server is { } server ? new ServerData(server.Server.ToString(), server.Email) : null,
+            SettingsTab = SettingsTab,
         };
         File.WriteAllText(_path, JsonSerializer.Serialize(data));
     }
@@ -232,6 +252,8 @@ public sealed class SettingsStore
 
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public ServerData? Server { get; init; }
+
+        public string? SettingsTab { get; init; }
     }
 
     /// <param name="Folder">Missing in a damaged file: the entry is skipped.</param>
