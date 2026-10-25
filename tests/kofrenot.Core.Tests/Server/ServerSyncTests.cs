@@ -30,6 +30,34 @@ public sealed class ServerSyncTests : IDisposable
     }
 
     [Fact]
+    public async Task NotesAndDatasets_StayOnTheStore_ThumbnailsComeAtOnce()
+    {
+        _store.Add("content/cd/cd34.kfn", "note");
+        _store.Add("content/ef/ef56.kfd", "dataset");
+        _store.Add("content/ef/ef56.kft", "thumbnail");
+
+        var first = await Sync().RunAsync();
+        var second = await Sync().RunAsync();
+
+        Assert.Equal(new SyncResult(1, 0), first);
+        Assert.Equal(new SyncResult(0, 0), second);
+        Assert.Equal(["content/ef/ef56.kft"], Directory.GetFiles(Mirror, "*", SearchOption.AllDirectories).Select(file => Path.GetRelativePath(Mirror, file).Replace('\\', '/')));
+    }
+
+    [Fact]
+    public async Task ContentDownloadedOnDemand_IsNotUploadedAgain()
+    {
+        _store.Add("content/cd/cd34.kfn", "note");
+        await Sync().RunAsync();
+
+        await new ContentFetcher(Mirror, FakeStore.Id, () => _store).FetchAsync("content/cd/cd34.kfn");
+
+        Assert.Equal(new SyncResult(0, 0), await Sync().RunAsync());
+        Assert.Empty(_store.Uploads);
+        Assert.Equal(0, ServerSync.Waiting(Mirror, State));
+    }
+
+    [Fact]
     public async Task TheFeed_IsReadPageByPage()
     {
         _store.PageSize = 2;
@@ -194,6 +222,39 @@ public sealed class ServerSyncTests : IDisposable
         File.WriteAllBytes(Path.Combine(Mirror, "a.kfc"), [.. "KFC2"u8, 0, 0, 0, 2, 9, 9]);
         Assert.Equal(new SyncResult(0, 1, 0), await Sync().RunAsync());
         Assert.Empty(ServerSync.Fenced(State));
+    }
+
+    [Fact]
+    public async Task AFetch_DownloadsTheFileIntoTheMirror()
+    {
+        _store.Add("content/cd/cd34.kfn", "note");
+
+        await new ContentFetcher(Mirror, FakeStore.Id, () => _store, _log).FetchAsync("content/cd/cd34.kfn");
+
+        Assert.Equal("note", File.ReadAllText(Path.Combine(Mirror, "content", "cd", "cd34.kfn")));
+        Assert.Contains(_log.Entries, entry => entry.Level == LogLevel.Debug && entry.Message.Contains("on demand"));
+    }
+
+    [Fact]
+    public async Task AFetch_SignedOut_NeedsASignIn()
+    {
+        var failure = await Assert.ThrowsAsync<ServerException>(() => new ContentFetcher(Mirror, FakeStore.Id, () => null).FetchAsync("content/cd/cd34.kfn"));
+
+        Assert.Equal(ServerFailure.SignInNeeded, failure.Failure);
+    }
+
+    [Fact]
+    public async Task AFetch_OfAPathOutsideTheMirror_IsRefused() =>
+        await Assert.ThrowsAsync<ArgumentException>(() => new ContentFetcher(Mirror, FakeStore.Id, () => _store).FetchAsync("../outside"));
+
+    [Fact]
+    public async Task AFailedFetch_LeavesNoFile()
+    {
+        _store.Add("content/cd/cd34.kfn", "note");
+        _store.FailDownloads = true;
+
+        await Assert.ThrowsAsync<ServerException>(() => new ContentFetcher(Mirror, FakeStore.Id, () => _store).FetchAsync("content/cd/cd34.kfn"));
+        Assert.Empty(Directory.GetFiles(Mirror, "*", SearchOption.AllDirectories));
     }
 
     private ServerSync Sync() => new(Mirror, State, FakeStore.Id, _store, _log);

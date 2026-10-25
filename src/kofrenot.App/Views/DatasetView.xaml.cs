@@ -21,6 +21,9 @@ public partial class DatasetView : UserControl
     private Guid? _shown;
     private int _loading;
 
+    // The file shown was not downloaded: shown again, it is asked for again (after a sync).
+    private bool _waitsForFile;
+
     public DatasetView()
     {
         InitializeComponent();
@@ -38,10 +41,10 @@ public partial class DatasetView : UserControl
     /// <summary>The text shown has the keyboard: the details leave its keys alone.</summary>
     public bool IsReading => TextView.IsKeyboardFocusWithin;
 
-    /// <summary>Shows a version's file, unless it is shown already; null, or a file not synced yet, shows nothing.</summary>
-    public void Show(DatasetFiles files, DatasetEdited? version, bool isAvailable)
+    /// <summary>Shows a version's file, downloaded first when needed, unless it is shown already; null, or a file not synced yet, shows nothing.</summary>
+    public void Show(Vault vault, DatasetEdited? version, bool isAvailable)
     {
-        if (version is not null && isAvailable && version.Id == _shown)
+        if (version is not null && isAvailable && version.Id == _shown && !_waitsForFile)
         {
             return;
         }
@@ -61,7 +64,7 @@ public partial class DatasetView : UserControl
         else if (DatasetType.Of(version.File).Viewer == DatasetViewer.Text)
         {
             Visibility = Visibility.Visible;
-            _ = Load(files, version);
+            _ = Load(vault, version);
         }
     }
 
@@ -82,15 +85,32 @@ public partial class DatasetView : UserControl
         }
     }
 
-    private async Task Load(DatasetFiles files, DatasetEdited version)
+    private async Task Load(Vault vault, DatasetEdited version)
     {
         var loading = ++_loading;
-        MessageText.Text = "Loading…";
+        _waitsForFile = false;
+        MessageText.Text = vault.Datasets.Exists(version.Id) ? "Loading…" : ContentState.Downloading.Describe("this file");
+        if (!await vault.FetchAsync(version))
+        {
+            if (loading == _loading)
+            {
+                _waitsForFile = true;
+                MessageText.Text = vault.StateOf(version.Id).Describe("this file");
+            }
+
+            return;
+        }
+
+        if (loading != _loading)
+        {
+            return;
+        }
+
         try
         {
             var text = await Task.Run(() =>
             {
-                using var content = files.OpenRead(version.Id);
+                using var content = vault.Datasets.OpenRead(version.Id);
                 return TextPreview.Read(content);
             });
             if (loading != _loading)

@@ -17,8 +17,7 @@ Scope of each planned version. Implemented features move to [CHANGELOG.md](CHANG
 
 ## 0.8 (to define)
 What is implemented is in [CHANGELOG.md](CHANGELOG.md#unreleased). Still planned:
-1. **Content on demand.** A server vault downloads change files at once, content only when shown or exported.
-2. **Core holds the session.** Preparation for Android: signing in, opening a vault and the sync loop move from App to Core, behind interfaces for timers and questions, so both clients share them ([Architecture](docs/ANDROID-CONCEPT.md#architecture)).
+1. **Core holds the session.** Preparation for Android: signing in, opening a vault and the sync loop move from App to Core, behind interfaces for timers and questions, so both clients share them ([Architecture](docs/ANDROID-CONCEPT.md#architecture)).
 
 ## 0.9 (to define)
 1. **Pinned for offline.** When a node is pinned for offline access, its content is downloaded ahead, so it is always readable without access to the vault storage.

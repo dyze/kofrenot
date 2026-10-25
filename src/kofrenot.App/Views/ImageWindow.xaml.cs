@@ -33,7 +33,7 @@ public partial class ImageWindow : Window
     private BitmapSource? Image => Picture.Source as BitmapSource;
 
     /// <summary>Shows an image instead of the one shown, then brings the window to the front.</summary>
-    public void Open(DatasetFiles files, DatasetEdited version)
+    public void Open(Vault vault, DatasetEdited version)
     {
         _version = version;
         Title = $"{version.File.Name} - kofrenot";
@@ -46,15 +46,30 @@ public partial class ImageWindow : Window
         }
 
         Activate();
-        _ = Load(files, version);
+        _ = Load(vault, version);
     }
 
-    private async Task Load(DatasetFiles files, DatasetEdited version)
+    private async Task Load(Vault vault, DatasetEdited version)
     {
         var loading = ++_loading;
+        if (!vault.Datasets.Exists(version.Id))
+        {
+            StatusText.Text = ContentState.Downloading.Describe("this image");
+        }
+
+        if (!await vault.FetchAsync(version, retry: true))
+        {
+            if (loading == _loading)
+            {
+                StatusText.Text = vault.StateOf(version.Id).Describe("this image");
+            }
+
+            return;
+        }
+
         try
         {
-            var image = await Task.Run(() => Read(files, version.Id));
+            var image = await Task.Run(() => Read(vault.Datasets, version.Id));
             if (loading != _loading)
             {
                 return;

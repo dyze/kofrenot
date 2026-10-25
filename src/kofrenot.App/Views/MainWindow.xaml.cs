@@ -56,9 +56,10 @@ public partial class MainWindow : Window
         DetailsPanel.Rename = rename => _session.Rename(this, rename);
         DetailsPanel.Write = (change, action) => _session.Write(this, change, action);
         DetailsPanel.Visited = node => Visited(node);
-        DetailsPanel.ReadNote = version => _session.Current?.Notes.Read(version);
+        DetailsPanel.ReadNote = version => _session.Current?.ReadNote(version);
+        DetailsPanel.ContentStateOf = ContentStateOf;
         DetailsPanel.SaveNote = (version, content) => _session.SaveNote(this, version, content);
-        DetailsPanel.DatasetFiles = () => _session.Current?.Datasets;
+        DetailsPanel.OpenVault = () => _session.Current;
         DetailsPanel.SaveDataset = (version, open, progress) => _session.SaveDataset(this, version, open, progress);
         DetailsPanel.ExportDataset = (version, target) => _session.ExportDataset(this, version, target);
         DetailsPanel.IsImporting = _session.IsImporting;
@@ -74,8 +75,9 @@ public partial class MainWindow : Window
         ViewContent.Rename = rename => _session.Rename(this, rename);
         ViewContent.Write = (changes, action) => _session.Write(this, changes, action);
         ViewContent.Copy = plan => _session.Copy(this, plan);
-        ViewContent.ContentExists = version => _session.Current?.HasContent(version) ?? false;
-        ViewContent.ReadNote = version => _session.Current?.Notes.Read(version);
+        ViewContent.ContentExists = version => _session.Current is { } vault && (vault.HasContent(version) || vault.FetchesContent);
+        ViewContent.ReadNote = version => _session.Current?.ReadNote(version);
+        ViewContent.ContentStateOf = ContentStateOf;
         VersionText.Text = $"kofrenot {AppVersion.Of(typeof(MainWindow).Assembly)}";
         ShowUpdateMark();
         _session.Changed += ShowVault;
@@ -113,8 +115,10 @@ public partial class MainWindow : Window
             _imageWindow.Closed += (_, _) => _imageWindow = null;
         }
 
-        _imageWindow.Open(vault.Datasets, version);
+        _imageWindow.Open(vault, version);
     }
+
+    private ContentState ContentStateOf(Guid version) => _session.Current?.StateOf(version) ?? ContentState.NotHere;
 
     /// <summary>"Personal · 120 nodes · 80 links", and a server vault's sync ("· offline, 2 files to upload").</summary>
     private string FooterOf(Vault vault) => $"{SelectedName} · {vault.Graph.Nodes.Count} nodes · {vault.Graph.Links.Count} links";

@@ -1,8 +1,10 @@
 using System.Windows;
+using System.Windows.Threading;
 using Kofrenot.Core;
 using Kofrenot.Core.Graph;
 using Kofrenot.Core.Input;
 using Kofrenot.Core.Logging;
+using Kofrenot.Core.Server;
 using Kofrenot.Core.Settings;
 using Kofrenot.Core.Storage;
 using Kofrenot.Core.Views;
@@ -30,6 +32,7 @@ public sealed partial class VaultSession : IDisposable
     private readonly ILog _log;
     private readonly HashSet<Guid> _importing = [];
     private readonly WpfThumbnailMaker _thumbnails = new();
+    private readonly Dispatcher _dispatcher = Dispatcher.CurrentDispatcher;
     private VaultWatcher? _watcher;
     private string? _keptName;
 
@@ -224,10 +227,13 @@ public sealed partial class VaultSession : IDisposable
         return Current == vault && Append(owner, vault, [version], $"Dataset imported ({version.File.Size} bytes{replaced})");
     }
 
-    /// <summary>Exports a dataset version's file to <paramref name="target"/>, off the UI thread. False when it could not (the user is told).</summary>
+    /// <summary>
+    /// Exports a dataset version's file to <paramref name="target"/>, downloaded first when it is not
+    /// here, off the UI thread. False when it could not (the user is told).
+    /// </summary>
     public async Task<bool> ExportDataset(Window owner, DatasetEdited version, string target)
     {
-        if (Current is not { } vault)
+        if (Current is not { } vault || !await Fetch(owner, vault, [version], "export"))
         {
             return false;
         }
@@ -244,6 +250,26 @@ public sealed partial class VaultSession : IDisposable
             MessageDialog.Inform(owner, $"Cannot export the file.\n\n{ex.Message}");
             return false;
         }
+    }
+
+    /// <summary>
+    /// Downloads the content of versions that is not here yet (a server vault), for an action of the
+    /// user: a download that failed before is tried again. False when one could not be (the user is told).
+    /// </summary>
+    private async Task<bool> Fetch(Window owner, Vault vault, IReadOnlyList<ContentEdited> versions, string action)
+    {
+        foreach (var version in versions)
+        {
+            if (!await vault.FetchAsync(version, retry: true))
+            {
+                var state = vault.StateOf(version.Id);
+                _log.Warn("Action", $"Cannot {action}: content {version.Id} not here ({state.Level})");
+                MessageDialog.Inform(owner, $"Cannot {action}.\n\n{state.Describe(version is DatasetEdited ? "the file" : "the note")}");
+                return false;
+            }
+        }
+
+        return true;
     }
 
     /// <summary>Renames a node. False when no vault is open, or it cannot be written (the user is told).</summary>
@@ -329,7 +355,7 @@ public sealed partial class VaultSession : IDisposable
     /// </summary>
     public async Task<bool> Copy(Window owner, CopyPlan plan)
     {
-        if (Current is not { } vault || !CanWrite(owner))
+        if (Current is not { } vault || !CanWrite(owner) || !await Fetch(owner, vault, plan.Contents.Select(copy => copy.From).ToList(), "copy"))
         {
             return false;
         }
@@ -388,6 +414,21 @@ public sealed partial class VaultSession : IDisposable
             Changed?.Invoke();
         }
     }
+
+    /// <summary>A server vault's notes and datasets are downloaded when needed, with the account's client while signed in to its server.</summary>
+    private ContentFetcher? FetcherOf(string folder) =>
+        Selected?.Location.Store is { } store
+            ? new ContentFetcher(folder, store.Id, () => _server.Client is { Session: not null } client && _server.Account?.Server == store.Server ? client : null, _log)
+            : null;
+
+    /// <summary>Once its downloads are over, what shows the vault reads its content again.</summary>
+    private void AfterFetch(Vault vault) => _dispatcher.BeginInvoke(() =>
+    {
+        if (Current == vault && !vault.IsFetching)
+        {
+            Changed?.Invoke();
+        }
+    });
 
     public void Close()
     {
@@ -497,7 +538,8 @@ public sealed partial class VaultSession : IDisposable
                 _keys.Remember(access);
             }
 
-            var vault = Vault.Open(folder, access.Header, access.Keys, _files.Cache, _log);
+            var vault = Vault.Open(folder, access.Header, access.Keys, _files.Cache, _log, FetcherOf(folder));
+            vault.ContentFetched += () => AfterFetch(vault);
             _access = access;
             return vault;
         }

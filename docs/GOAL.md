@@ -43,7 +43,7 @@ Details: [ARCHITECTURE.md](ARCHITECTURE.md#vault).
 - **Private and self-hosted.** The data lives in the user's own folders. No third-party cloud required.
 - **Robust and secure, first.** The vault holds what matters to the user: no data lost, corrupted or readable by others, whatever the sync tool, the other apps or a crash do. A feature that weakens this is not done. Everything in the vault, names included, is encrypted; only the header (format, key parameters) is plain. How: [Robust and secure](#robust-and-secure).
 - **Offline first.** Every device has the full vault: browsing, searching and adding work without a network.
-- **Content on demand.** A note's or dataset's content is read only when needed, never kept in memory or in the snapshot. Fetching it from a server, and keeping it offline on request, come with the server.
+- **Content on demand.** A note's or dataset's content is read only when needed, never kept in memory or in the snapshot. A server vault downloads it when first needed (since 0.8); keeping it offline on request comes later.
 - **Versioned.** Changes are kept, never overwritten.
 - **Conflicts are easy.** Files are only added, so the only conflicts are in the meaning (the same name added twice, or a node renamed on two devices before they synced): they are shown, not resolved silently.
 - **Logic in Core.** The domain is plain .NET in `kofrenot.Core`, independent of Windows and of the UI.
@@ -95,7 +95,7 @@ What each version contains: [ROADMAP.md](../ROADMAP.md).
 | Conflicts | Concurrent duplicates, renames and note edits are flagged, not merged |
 | Security | AES-256-GCM, random master key wrapped by a pass-phrase key (PBKDF2-SHA256); optionally remembered by Windows (DPAPI) |
 | Notes | A node type; content in Markdown, each save a new version (since 0.2); task lists as Markdown task lines (`- [ ]`), shown as checkboxes (since 0.8) |
-| Content on demand | Content files are in the vault folder on every device (the sync tool copies them); kofrenot reads one only when needed: a note shown, a dataset exported (since 0.3) |
+| Content on demand | Content files are in the vault folder on every device (the sync tool copies them); kofrenot reads one only when needed: a note shown, a dataset exported (since 0.3). A server vault downloads notes' and datasets' files when first needed, thumbnails with the sync (since 0.8) |
 | Datasets | A node type holding one file of any size, each import a new version; encrypted in 1 MB chunks, so memory use does not depend on the size (since 0.3) |
 | Server | A generic, blind, write-once store of files with accounts and members, on Linux, knowing nothing of kofrenot so other apps can use it, in its own repository ([kofreserver](https://github.com/dyze/kofreserver)); no email, the admin approves accounts in a JSON file (since 0.6) |
 | Sharing | Complete server vaults, with roles reader, writer and one owner; removing a member rotates the vault key (since 0.7) |

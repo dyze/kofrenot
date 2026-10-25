@@ -193,6 +193,12 @@ public sealed partial class VaultSession
     /// </summary>
     private void AfterSync()
     {
+        // Content not downloaded (offline, signed out) is asked for again by what shows it.
+        if (Current is { } open && Selected?.Location.Store is { } synced && _sync.StatusOf(synced).Failure is null && open.RetryFailed())
+        {
+            Changed?.Invoke();
+        }
+
         if (Current is not { } vault || Folder is not { } folder || _access?.Identity is not { } identity || Selected?.Location.Store is not { } store)
         {
             return;

@@ -22,7 +22,7 @@ public partial class ViewPanel
 {
     private const string DragFormat = "kofrenot.TreeItem";
 
-    /// <summary>The open vault's dataset files, to drag a dataset's file out; null when none is open.</summary>
+    /// <summary>The open vault's dataset files, to drag a dataset's file out when it is here; null when none is open.</summary>
     public Func<DatasetFiles?>? DatasetFiles { get; set; }
 
     private Point? _dragStart;
@@ -52,7 +52,7 @@ public partial class ViewPanel
 
         _dragStart = null;
         Log.Debug("View", "Node dragged");
-        if (_graph?.DatasetVersionsOf(dragged.Node.Id) is [.., var latest] && DatasetFiles?.Invoke() is { } files)
+        if (_graph?.DatasetVersionsOf(dragged.Node.Id) is [.., var latest] && DatasetFiles?.Invoke() is { } files && files.Exists(latest.Id))
         {
             DragWithFile(dragged, latest, files);
         }

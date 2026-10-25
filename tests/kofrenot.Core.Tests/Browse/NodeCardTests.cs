@@ -35,9 +35,10 @@ public sealed class NodeCardTests
     public void ANoteWhoseContentHasNotArrived_SaysSo()
     {
         var note = Add(TypeCatalog.Note.Id);
-        _graph.Apply(new NoteEdited(Guid.NewGuid(), Start, note.Id, []));
+        var version = new NoteEdited(Guid.NewGuid(), Start, note.Id, []);
+        _graph.Apply(version);
 
-        Assert.IsType<MissingCardBody>(Card(note).Body);
+        Assert.Equal(new MissingCardBody(version.Id), Card(note).Body);
     }
 
     [Fact]

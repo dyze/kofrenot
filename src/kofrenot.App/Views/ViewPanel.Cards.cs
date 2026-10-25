@@ -8,6 +8,7 @@ using Kofrenot.Core.Browse;
 using Kofrenot.Core.Datasets;
 using Kofrenot.Core.Graph;
 using Kofrenot.Core.Logging;
+using Kofrenot.Core.Storage;
 
 namespace Kofrenot.UI.Views;
 
@@ -27,6 +28,9 @@ public partial class ViewPanel
 
     /// <summary>Reads a note version's content for its card; null when its file is not there.</summary>
     public Func<Guid, string?>? ReadNote { get; set; }
+
+    /// <summary>Where a note version's content stands while it is not here.</summary>
+    public Func<Guid, ContentState> ContentStateOf { get; set; } = _ => ContentState.NotHere;
 
     private bool ShowsCards => _view is not null && States?.ShowsCards(_vault, _view.Id) == true;
 
@@ -105,10 +109,10 @@ public partial class ViewPanel
     private static bool IsIn(FrameworkElement item, Visual viewer, Rect viewport) =>
         item.IsVisible && item.IsDescendantOf(viewer) && viewport.IntersectsWith(item.TransformToAncestor(viewer).TransformBounds(new Rect(item.RenderSize)));
 
-    private static UIElement? BodyOf(NodeCard card) => card.Body switch
+    private UIElement? BodyOf(NodeCard card) => card.Body switch
     {
         NoteCardBody note => NoteBodyOf(note.Preview),
-        MissingCardBody => Caption("Not synced to this computer yet."),
+        MissingCardBody missing => Caption(ContentStateOf(missing.Version).Summary),
         FileCardBody file when card.Visual.Thumbnail is not null => ThumbnailOf(card.Visual, file),
         FileCardBody file => Caption(FileText(file)),
         TextCardBody text => Caption(text.Text),

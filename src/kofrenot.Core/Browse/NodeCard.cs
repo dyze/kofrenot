@@ -10,8 +10,8 @@ public abstract record CardBody;
 /// <summary>A note's text, previewed.</summary>
 public sealed record NoteCardBody(NotePreview Preview) : CardBody;
 
-/// <summary>A note whose latest content has not arrived on this device yet.</summary>
-public sealed record MissingCardBody : CardBody;
+/// <summary>A note whose latest content (<paramref name="Version"/>) is not on this device yet: not synced, or being downloaded.</summary>
+public sealed record MissingCardBody(Guid Version) : CardBody;
 
 /// <summary>A dataset's latest file: its kind ("PNG file") and size; an image's thumbnail is in the card's <see cref="NodeVisual"/>.</summary>
 public sealed record FileCardBody(string Kind, long Size) : CardBody;
@@ -47,6 +47,6 @@ public sealed record NodeCard(Node Node, NodeVisual Visual, CardBody? Body)
             return new NoteCardBody(NotePreview.Of(string.Empty));
         }
 
-        return readNote(versions[^1].Id) is { } text ? new NoteCardBody(NotePreview.Of(text)) : new MissingCardBody();
+        return readNote(versions[^1].Id) is { } text ? new NoteCardBody(NotePreview.Of(text)) : new MissingCardBody(versions[^1].Id);
     }
 }

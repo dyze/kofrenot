@@ -19,12 +19,14 @@ public sealed partial class Vault
     private readonly ChangeCodec _codec;
     private readonly SnapshotStore? _snapshot;
     private readonly ILog _log;
+    private readonly IContentFetcher? _fetcher;
     private readonly Dictionary<Guid, Change> _read = [];
     private readonly HashSet<Guid> _reportedUnreadable = [];
 
-    private Vault(string folder, VaultHeader header, KeyRing keys, string? cacheFolder, ILog? log)
+    private Vault(string folder, VaultHeader header, KeyRing keys, string? cacheFolder, ILog? log, IContentFetcher? fetcher)
     {
         _folder = folder;
+        _fetcher = fetcher;
         Id = header.Id;
         Format = header.Format;
         _log = log ?? NullLog.Instance;
@@ -57,10 +59,11 @@ public sealed partial class Vault
 
     /// <summary>Opens a vault with its keys: the snapshot, then the change files it lacks.</summary>
     /// <param name="cacheFolder">Where the local snapshot is kept; null for none.</param>
+    /// <param name="fetcher">Downloads content when it is needed (a server vault); null when the folder has it all.</param>
     /// <exception cref="NewerVaultFormatException">A change file was written by a newer kofrenot.</exception>
-    public static Vault Open(string folder, VaultHeader header, KeyRing keys, string? cacheFolder = null, ILog? log = null)
+    public static Vault Open(string folder, VaultHeader header, KeyRing keys, string? cacheFolder = null, ILog? log = null, IContentFetcher? fetcher = null)
     {
-        var vault = new Vault(folder, header, keys, cacheFolder, log);
+        var vault = new Vault(folder, header, keys, cacheFolder, log, fetcher);
         var fromSnapshot = vault.LoadSnapshot();
         var read = vault.Refresh();
         vault._log.Info(Category, $"Vault {vault.Id} opened: {vault.Graph.Nodes.Count} nodes, "

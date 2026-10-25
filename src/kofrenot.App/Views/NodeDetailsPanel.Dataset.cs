@@ -11,8 +11,8 @@ namespace Kofrenot.UI.Views;
 /// <summary>The file of a dataset, next to its properties: Import, Export, drop in, drag out.</summary>
 public partial class NodeDetailsPanel
 {
-    /// <summary>The files of the open vault's datasets; null when no vault is open.</summary>
-    public Func<DatasetFiles?>? DatasetFiles { get; set; }
+    /// <summary>The open vault, whose datasets' files are read (and downloaded when needed); null when none is open.</summary>
+    public Func<Vault?>? OpenVault { get; set; }
 
     /// <summary>Saves a dataset version, its file read from the stream opened (the progress told the bytes sealed); false when it could not.</summary>
     public Func<DatasetEdited, Func<Stream>, IProgress<long>?, Task<bool>>? SaveDataset
@@ -40,10 +40,10 @@ public partial class NodeDetailsPanel
 
     private void ShowDataset(NodeDetails details)
     {
-        var files = details.Node.Type == TypeCatalog.Dataset.Id ? DatasetFiles?.Invoke() : null;
-        DatasetBox.Visibility = files is null ? Visibility.Collapsed : Visibility.Visible;
-        ContentColumn.Width = files is null ? new GridLength(0) : new GridLength(1, GridUnitType.Star);
-        if (files is null)
+        var vault = details.Node.Type == TypeCatalog.Dataset.Id ? OpenVault?.Invoke() : null;
+        DatasetBox.Visibility = vault is null ? Visibility.Collapsed : Visibility.Visible;
+        ContentColumn.Width = vault is null ? new GridLength(0) : new GridLength(1, GridUnitType.Star);
+        if (vault is null)
         {
             DatasetBox.Close();
         }
@@ -54,7 +54,7 @@ public partial class NodeDetailsPanel
         else
         {
             DatasetBox.Log = Log;
-            DatasetBox.Open(Browser.Graph!, details.Node, files);
+            DatasetBox.Open(Browser.Graph!, details.Node, vault);
             Log.Info("Action", "Dataset opened");
         }
 

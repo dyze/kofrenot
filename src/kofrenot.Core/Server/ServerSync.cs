@@ -10,9 +10,10 @@ public sealed record SyncResult(int Downloaded, int Uploaded, int Fenced = 0);
 /// <summary>
 /// Keeps a server vault's mirror (a local folder with the vault layout) and its store alike.
 /// Files are only ever added on both sides, so a sync is two copies: the store's files added
-/// since the last sync (its feed) are downloaded into the mirror, then the mirror's files the
+/// since the last sync (its feed) are downloaded into the mirror, but for notes' and datasets'
+/// files, downloaded when needed (<see cref="StorePaths.IsOnDemand"/>); then the mirror's files the
 /// store lacks are uploaded: those written while offline wait in the mirror until then. Its
-/// state (the feed position, the files both sides have) is kept in <paramref name="stateFile"/>.
+/// state (the feed position, the files the store has) is kept in <paramref name="stateFile"/>.
 /// One sync at a time per mirror.
 /// </summary>
 public sealed class ServerSync(string mirror, string stateFile, Guid store, IStoreFiles files, ILog? log = null)
@@ -75,7 +76,7 @@ public sealed class ServerSync(string mirror, string stateFile, Guid store, ISto
                     {
                         _log.Warn(Category, $"Store {store}: file {entry.Seq} skipped, its path is not one of a vault");
                     }
-                    else if (!File.Exists(StorePaths.LocalOf(mirror, entry.Path)))
+                    else if (!StorePaths.IsOnDemand(entry.Path) && !File.Exists(StorePaths.LocalOf(mirror, entry.Path)))
                     {
                         await DownloadFileAsync(entry.Path, cancel);
                         downloaded++;
@@ -94,26 +95,9 @@ public sealed class ServerSync(string mirror, string stateFile, Guid store, ISto
         return downloaded;
     }
 
-    /// <summary>Downloads under a temporary name, then renames: the vault sees the whole file or nothing.</summary>
     private async Task DownloadFileAsync(string path, CancellationToken cancel)
     {
-        var local = StorePaths.LocalOf(mirror, path);
-        Directory.CreateDirectory(Path.GetDirectoryName(local)!);
-        var temporary = local + AtomicFile.TemporaryExtension;
-        try
-        {
-            await using (var output = new FileStream(temporary, FileMode.Create, FileAccess.Write, FileShare.None))
-            {
-                await files.DownloadAsync(store, path, output, cancel);
-            }
-
-            File.Move(temporary, local);
-        }
-        finally
-        {
-            File.Delete(temporary);
-        }
-
+        await StorePaths.DownloadAsync(files, store, mirror, path, cancel);
         _log.Debug(Category, $"Store {store}: {path} downloaded");
     }
 

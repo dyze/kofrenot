@@ -3,6 +3,7 @@ using System.Windows.Input;
 using Kofrenot.Core.Browse;
 using Kofrenot.Core.Graph;
 using Kofrenot.Core.Logging;
+using Kofrenot.Core.Storage;
 
 namespace Kofrenot.UI.Views;
 
@@ -11,6 +12,12 @@ public partial class NodeDetailsPanel
 {
     /// <summary>Reads a note version's content; null when its file is not there.</summary>
     public Func<Guid, string?>? ReadNote { get; set; }
+
+    /// <summary>Where a note version's content stands while it is not here.</summary>
+    public Func<Guid, ContentState> ContentStateOf
+    {
+        set => NoteBox.StateOf = value;
+    }
 
     /// <summary>Writes a note version with its content; false when it could not.</summary>
     public Func<NoteEdited, string, bool>? SaveNote

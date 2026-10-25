@@ -31,7 +31,7 @@ public partial class DatasetPanel : UserControl
 {
     private KnowledgeGraph? _graph;
     private Node? _node;
-    private DatasetFiles? _files;
+    private Vault? _vault;
     private DatasetState? _state;
     private string? _work;
     private Point? _pressedAt;
@@ -94,12 +94,15 @@ public partial class DatasetPanel : UserControl
     public static string DateOf(DatasetEdited version) =>
         version.At.ToLocalTime().ToString("yyyy-MM-dd HH:mm", CultureInfo.CurrentCulture);
 
-    /// <summary>Shows a dataset: its versions, not its file.</summary>
-    public void Open(KnowledgeGraph graph, Node node, DatasetFiles files)
+    /// <summary>Shows a dataset of <paramref name="vault"/>: its versions, not its file.</summary>
+    public void Open(KnowledgeGraph graph, Node node, Vault vault)
     {
-        (_graph, _node, _files) = (graph, node, files);
+        (_graph, _node, _vault) = (graph, node, vault);
         Load();
     }
+
+    /// <summary>A version's file can be read: it is here, or a server vault downloads it when needed (a folder vault waits for its sync).</summary>
+    private static Func<Guid, bool> IsAvailableIn(Vault vault) => version => vault.Datasets.Exists(version) || vault.FetchesContent;
 
     /// <summary>The graph changed (an import, or changes from elsewhere): reads the versions again.</summary>
     public void Refresh()
@@ -113,7 +116,7 @@ public partial class DatasetPanel : UserControl
     /// <summary>Forgets the dataset (another node shown, or the vault closed). An import under way still ends.</summary>
     public void Close()
     {
-        (_graph, _node, _files, _state) = (null, null, null, null);
+        (_graph, _node, _vault, _state) = (null, null, null, null);
         View.Clear();
     }
 
@@ -149,9 +152,9 @@ public partial class DatasetPanel : UserControl
 
     private void Load()
     {
-        _state = new DatasetPlanner(_graph!).Load(_node!, _files!.Exists);
+        _state = new DatasetPlanner(_graph!).Load(_node!, IsAvailableIn(_vault!));
         ShowState();
-        View.Show(_files, _state.Latest, !_state.IsMissing);
+        View.Show(_vault!, _state.Latest, !_state.IsMissing);
     }
 
     private void ShowState()
@@ -179,14 +182,14 @@ public partial class DatasetPanel : UserControl
     /// <summary>Describes the file off the UI thread, then saves it as a new version unless it is the latest already.</summary>
     private async Task ImportFrom(string path)
     {
-        var (graph, node, files) = (_graph!, _node!, _files!);
+        var (graph, node, vault) = (_graph!, _node!, _vault!);
         const string Reading = "Reading the file…";
         const string Importing = "Importing…";
         await Run(Reading, async () =>
         {
             var size = new FileInfo(path).Length;
             var file = await Task.Run(() => DatasetFiles.Describe(path, ProgressOf(Reading, size)));
-            var state = new DatasetPlanner(graph).Load(node, files.Exists);
+            var state = new DatasetPlanner(graph).Load(node, IsAvailableIn(vault));
             if (new DatasetPlanner(graph).Import(node, file, state) is not { } version)
             {
                 Log.Info("Action", "Dataset import: the same file, nothing imported");
@@ -217,10 +220,18 @@ public partial class DatasetPanel : UserControl
 
     private async Task Keep(DatasetEdited kept)
     {
-        var (graph, node, files, state) = (_graph!, _node!, _files!, _state!);
+        var (graph, node, vault, state) = (_graph!, _node!, _vault!, _state!);
         var version = new DatasetPlanner(graph).Keep(node, kept, state);
         const string Keeping = "Keeping this version…";
-        await Run(Keeping, async () => await Save!(version, () => files.OpenRead(kept.Id), ProgressOf(Keeping, kept.File.Size)) ? null : "The version was not kept.");
+        await Run(Keeping, async () =>
+        {
+            if (!await vault.FetchAsync(kept, retry: true))
+            {
+                return vault.StateOf(kept.Id).Describe("this version");
+            }
+
+            return await Save!(version, () => vault.Datasets.OpenRead(kept.Id), ProgressOf(Keeping, kept.File.Size)) ? null : "The version was not kept.";
+        });
     }
 
     /// <summary>Runs some work, the panel busy meanwhile; the work returns a message to leave in the status, or null.</summary>
@@ -322,7 +333,16 @@ public partial class DatasetPanel : UserControl
 
     private void DragOut(DatasetEdited latest)
     {
-        var files = _files!;
+        var (vault, files) = (_vault!, _vault!.Datasets);
+        if (!files.Exists(latest.Id))
+        {
+            // Windows needs the file before the drag starts: it is downloaded first, then dragged again.
+            _ = Run("Downloading the file…", async () => await vault.FetchAsync(latest, retry: true)
+                ? "Downloaded: drag the file out again, or Export."
+                : vault.StateOf(latest.Id).Describe("this file"));
+            return;
+        }
+
         _draggingOut = true;
         try
         {

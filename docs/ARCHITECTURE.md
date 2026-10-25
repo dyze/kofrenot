@@ -192,6 +192,16 @@ A vault kept on a Kofre server ([kofreserver](https://github.com/dyze/kofreserve
 ```
 
 - **Sync** (`SyncService`, App): every 30 s, 2 s after a change or when the window is shown, one sync at a time, for every server vault of the list, in the background. A download is written as `.tmp` then renamed, so `VaultWatcher` sees it and the vault refreshes. Offline, writes stay in the mirror until the next sync: nothing is queued elsewhere. Files are only added on both sides, so a sync is two copies, never a merge.
+- **Content on demand** (since 0.8): a sync leaves notes' and datasets' files (`content/*.kfn`, `*.kfd`: `StorePaths.IsOnDemand`) on the store, marked as known there so they are never uploaded back; thumbnails (`.kft`) come at once, being small and shown in lists. Content already in a mirror stays.
+
+  ```
+  note shown, card in view ──Vault.ReadNote──► here? read : FetchAsync (no retry)  ──┐
+  text or image viewed, export, copy, keep ──Vault.FetchAsync(retry: true) ─────────┤
+                                     ContentFetcher (IContentFetcher, the account's client) ──► .tmp, then renamed
+  Vault.ContentFetched ─► VaultSession: Changed once no download runs ─► what shows it reads it again
+  ```
+
+  One download per version at a time. A failure (`ContentState`: offline, sign in, refused) is kept, shown in place of the content, and not tried again automatically until a sync goes through (`Vault.RetryFailed`, in `VaultSession.AfterSync`); an action of the user tries again at once. A folder vault has no fetcher: missing content waits for the sync tool, as before.
 - **Status**: `SyncStatus` (Core): a `Level` (synced, waiting, offline, problem), `Summary` for the main window's header (a dot coloured by the level, a click syncs now or opens Settings > Server), `Details` for its tooltip, `Describe` within a sentence (Settings > Vault, messages). A server stopped behind its proxy (502, 503, 504) counts as offline. A failure is logged once, not at every try, and the sync that goes through again.
 - **Account** (`ServerConnection`): one per kofrenot, in `settings.json`. Only its session is kept, in `server-session.json` (DPAPI, through `ProtectedStore`); the password never is. `KofreClient` renews the access token before it expires and when refused; a refused refresh signs out.
 - **Create on the server**: the pass phrase asked first; once given, the store is made (in the dialog, which shows a server failure and stays open), the vault created in its mirror, listed and opened with the key just made. Cancelled, nothing is made, on the server or here. An empty store chosen in *Vault from the server* goes the same way.
@@ -479,7 +489,7 @@ v1 ◄─ v3 (device B, before syncing) ⇒ conflict: v2, v3 offered; the next s
 ```
 
 - Only metadata (the versions) is in the graph and the snapshot; content is read when the note is shown, so a vault opens as fast with long notes.
-- A version whose file is not synced yet (the sync tool copied the change first) shows as such; the note cannot be edited until it arrives, so no version is replaced unseen.
+- A version whose file is not here yet (the sync tool copied the change first, or a server vault downloads it: [Content on demand](#server-vaults)) shows as such; the note cannot be edited until it arrives, so no version is replaced unseen.
 - A save replaces the versions *loaded*: a version saved meanwhile on another device stays current, as a new conflict.
 - `NoteEditor` (in `NodeDetailsPanel`) saves on Ctrl+S, the save button, and when the note is left (another node, back, window hidden). While it has the focus, the details leave the keys to it, except Esc (leaves the note, saving it).
 - `MarkdownBox` (text and toolbar) is shared by `NoteEditor` and the creation steps. The toolbar inserts Markdown (`MarkdownFormat`): bold, italic, heading, list, link. The text is not rendered, except as a task list.
@@ -508,7 +518,7 @@ keep   ──DatasetPlanner.Keep──► a conflict's chosen version again, as 
 - The metadata is in the graph and the snapshot, so a dataset's file name and size are shown offline, before its content is synced. The content is never kept in memory.
 - An import reads the file twice: once for its hash, once to seal it. A file changed in between is refused, and nothing is written.
 - Importing the same file again (name, size and hash), with no conflict, writes nothing.
-- A version whose content file is not synced yet is shown as such and cannot be exported. Importing over it is allowed: its name and size are seen.
+- In a folder vault, a version whose content file is not synced yet is shown as such and cannot be exported. A server vault downloads it first ([Content on demand](#server-vaults)): viewed, exported, kept from a conflict, or copied; a drag out downloads it, then asks to drag again (Windows needs the file before the drag starts; a tree offers it only once here). Importing over it is allowed: its name and size are seen.
 - Hashing, sealing and exporting run off the UI thread (`Task.Run`, in `VaultSession.SaveDataset` and `ExportDataset`); the change is then appended on it. Meanwhile `DatasetPanel` says what it does and takes no other import (`VaultSession.IsImporting`, also for a file chosen on the creation screen, imported once its node is added). An import shows its progress in percent (`IProgress<long>`, told the bytes read by `HashingStream` once per MB and at the end, through `DatasetFiles.Describe`, then `Vault.WriteDataset`; `ByteSize.Percent`): reading, then importing (the thumbnail, made first, is not counted). An import started from the creation screen only says "Importing…".
 - Drag out (`DragExport`): Windows only takes a file on disk, so the file is first exported, holding the UI thread (the cursor waits, and "Preparing the file to drag…" is drawn before) into a folder of its own in the temporary folder (`%TEMP%\kofrenot\<random>\<name>`), given to Windows as a file drop, and deleted when the drag ends; folders left by a drag that did not end are deleted at the next one. Its name is made safe for Windows first (`DatasetFile.SafeName`). From a tree view, the same drag moves nodes, so the file is offered lazily (`LazyFileDrop`): exported only when another program asks for it, never for a move inside kofrenot. One file dropped on a tree node opens the creation screen with it (`CreationDialog.Ask(…, file)`), under that node.
 - File names, paths and content are never logged (an exception's message names the file: it is shown, and only its type is logged); ids and sizes are.

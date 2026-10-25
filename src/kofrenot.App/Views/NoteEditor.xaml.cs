@@ -4,6 +4,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using Kofrenot.Core.Graph;
 using Kofrenot.Core.Notes;
+using Kofrenot.Core.Storage;
 
 namespace Kofrenot.UI.Views;
 
@@ -27,6 +28,9 @@ public partial class NoteEditor : UserControl
     private Node? _node;
     private NoteState? _state;
     private Func<Guid, string?> _read = _ => null;
+
+    /// <summary>Where a version's content stands, while it is not here: not synced, being downloaded, or not downloaded.</summary>
+    public Func<Guid, ContentState> StateOf { get; set; } = _ => ContentState.NotHere;
 
     public NoteEditor()
     {
@@ -110,7 +114,7 @@ public partial class NoteEditor : UserControl
     {
         var status = _state switch
         {
-            { IsMissing: true } => "The content of this note is not synced to this computer yet.",
+            { IsMissing: true } missing => StateOf(missing.Versions[^1].Id).Describe("this note"),
             _ when IsDirty => "Not saved: Ctrl+S saves, and so does leaving the note.",
             { Versions.Count: 0 } => "Empty note. Markdown: **bold**, *italic*, # heading, - list, [link](url).",
             _ => "Saved.",

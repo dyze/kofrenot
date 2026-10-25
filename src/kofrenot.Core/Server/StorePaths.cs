@@ -1,3 +1,5 @@
+using Kofrenot.Core.Storage;
+
 namespace Kofrenot.Core.Server;
 
 /// <summary>
@@ -12,6 +14,36 @@ internal static class StorePaths
     {
         var segments = path.Split('/');
         return segments.Length <= MaxSegments && segments.All(IsValidSegment);
+    }
+
+    /// <summary>
+    /// A note's or dataset's file: left on the store by a sync, downloaded when needed
+    /// (<see cref="ContentFetcher"/>). Thumbnails come with the sync: small, and shown in lists.
+    /// </summary>
+    public static bool IsOnDemand(string path) =>
+        path.StartsWith(VaultFolder.ContentFolder + "/", StringComparison.Ordinal)
+        && (path.EndsWith(VaultFolder.ContentExtension, StringComparison.Ordinal) || path.EndsWith(VaultFolder.DatasetExtension, StringComparison.Ordinal));
+
+    /// <summary>Downloads a file of the store under a temporary name, then renames it: the vault sees the whole file or nothing.</summary>
+    /// <exception cref="ServerException">The server failed or cannot be reached; no file is left.</exception>
+    public static async Task DownloadAsync(IStoreFiles files, Guid store, string mirror, string path, CancellationToken cancel)
+    {
+        var local = LocalOf(mirror, path);
+        Directory.CreateDirectory(Path.GetDirectoryName(local)!);
+        var temporary = local + AtomicFile.TemporaryExtension;
+        try
+        {
+            await using (var output = new FileStream(temporary, FileMode.Create, FileAccess.Write, FileShare.None))
+            {
+                await files.DownloadAsync(store, path, output, cancel);
+            }
+
+            File.Move(temporary, local);
+        }
+        finally
+        {
+            File.Delete(temporary);
+        }
     }
 
     public static string LocalOf(string mirror, string path) => Path.Combine([mirror, .. path.Split('/')]);
