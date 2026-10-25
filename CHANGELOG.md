@@ -6,26 +6,37 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.8] - 2026-10-25
+
 ### Added
-- **Task lists** in notes, as in Google Keep: **Checkboxes** on a note's toolbar shows its lines as items with a checkbox, checked items crossed out and listed below the others; Enter adds an item, Backspace in an empty one removes it, a grip or Alt+Up/Down moves it. Clicked again, the items become lines of text. A note whose lines are all items opens as a list, and its status says how many are done. Stored as Markdown task lines (`- [ ] text`), so the vault format does not change.
-- **Colours**: any node can be given a colour with the palette button of its details (yellow, green, blue, pink, purple, teal, grey, or none), shown as a dot on its icon in every list and as the background of a note's text. Synced with the vault; chosen differently on two devices before they synced, both are shown, to keep one.
-- **Cards**: **Cards** on a list view's bar shows its nodes as cards, as in Google Keep, each in its colour with a preview: a note's first lines or unchecked items, an image's thumbnail, a file's kind and size, what a view shows. A note is read only when its card comes into view. Kept per view on this computer.
-- **Content on demand** for server vaults: a sync downloads the nodes, links and thumbnails, and a note's text or a dataset's file only the first time it is shown, exported or copied, then keeps it. A thumbnail missing on this computer is downloaded when shown. *Downloading…* shows meanwhile; offline or signed out, content not downloaded yet says so, and is asked for again after the next sync. Content already on this computer stays. The vault format does not change.
-- **WebP images**: shown in the image window and given a thumbnail when imported, as png and jpg are, through the codec Windows 11 comes with. A webp imported before keeps its icon.
-- **Rename a view** in its edit dialog (**⚙** on its tab, or *Edit…* in its details): a *Name* box above what it shows, checked as a rename.
+- **Notes and views**
+  - **Task lists** in notes, as in Google Keep: **Checkboxes** on a note's toolbar shows its lines as items with a checkbox, checked items crossed out and listed below the others; Enter adds an item, Backspace in an empty one removes it, a grip or Alt+Up/Down moves it. Clicked again, the items become lines of text. A note whose lines are all items opens as a list, and its status says how many are done. Stored as Markdown task lines (`- [ ] text`), so the vault format does not change.
+  - **Colours**: any node can be given a colour with the palette button of its details (yellow, green, blue, pink, purple, teal, grey, or none), shown as a dot on its icon in every list and as the background of a note's text. Synced with the vault; chosen differently on two devices before they synced, both are shown, to keep one.
+  - **Cards**: **Cards** on a list view's bar shows its nodes as cards, as in Google Keep, each in its colour with a preview: a note's first lines or unchecked items, an image's thumbnail, a file's kind and size, what a view shows. A note is read only when its card comes into view. Kept per view on this computer.
+  - **Rename a view** in its edit dialog (**⚙** on its tab, or *Edit…* in its details): a *Name* box above what it shows, checked as a rename.
+- **Server vaults**
+  - **Content on demand** for server vaults: a sync downloads the nodes, links and thumbnails, and a note's text or a dataset's file only the first time it is shown, exported or copied, then keeps it. A thumbnail missing on this computer is downloaded when shown. *Downloading…* shows meanwhile; offline or signed out, content not downloaded yet says so, and is asked for again after the next sync. Content already on this computer stays. The vault format does not change.
+- **Datasets**
+  - **WebP images**: shown in the image window and given a thumbnail when imported, as png and jpg are, through the codec Windows 11 comes with. A webp imported before keeps its icon.
 
 ### Changed
-- **Any type for any node**: the type combo of a node's details offers every type, not only for a generic node. A confirmation says what the change hides (a note's text, a dataset's file, what a view shows): nothing is deleted, and giving the type back shows it again.
-- **New link type at the top** of Settings > Link types, above the list of link types, which scrolls on its own: it stays in view however many link types there are.
-- **Settings opens on the tab shown last**, also after a restart, instead of General; a click on the sync status still opens Server.
-- **Vault in the title bar**: the vault box (or the vault's name), the lock, *Read only*, the sync status and Settings are in the main window's title bar, beside its minimize, maximize and close buttons; the tabs have the row below to themselves, so they no longer move when another vault is chosen.
-- **Sharper thumbnails**: an image imported from now on gets a thumbnail at least 256 px on its shorter side (512 at most on the longer), saved as JPEG (PNG when it has transparency), instead of 128 px on its longer side; a card shows it filling its frame, cropped around its centre instead of its top. Thumbnails made before stay as they are.
-- **The session is in kofrenot.Core**: signing in, syncing, opening, unlocking and sharing vaults no longer depend on Windows, so the coming Android client shares them ([ANDROID-CONCEPT.md](docs/ANDROID-CONCEPT.md#architecture)). Nothing changes for the user.
-- **Vault format 7**, for colours: kofrenot asks before upgrading a vault when it opens it; kofrenot 0.7 then asks to be updated to open it.
+- **Nodes and datasets**
+  - **Any type for any node**: the type combo of a node's details offers every type, not only for a generic node. A confirmation says what the change hides (a note's text, a dataset's file, what a view shows): nothing is deleted, and giving the type back shows it again.
+  - **Sharper thumbnails**: an image imported from now on gets a thumbnail at least 256 px on its shorter side (512 at most on the longer), saved as JPEG (PNG when it has transparency), instead of 128 px on its longer side; a card shows it filling its frame, cropped around its centre instead of its top. Thumbnails made before stay as they are.
+- **Main window and Settings**
+  - **Vault in the title bar**: the vault box (or the vault's name), the lock, *Read only*, the sync status and Settings are in the main window's title bar, beside its minimize, maximize and close buttons; the tabs have the row below to themselves, so they no longer move when another vault is chosen.
+  - **Settings opens on the tab shown last**, also after a restart, instead of General; a click on the sync status still opens Server.
+  - **New link type at the top** of Settings > Link types, above the list of link types, which scrolls on its own: it stays in view however many link types there are.
+- **Vault**
+  - **Vault format 7**, for colours: kofrenot asks before upgrading a vault when it opens it; kofrenot 0.7 then asks to be updated to open it.
+- **App**
+  - **The session is in kofrenot.Core**: signing in, syncing, opening, unlocking and sharing vaults no longer depend on Windows, so the coming Android client shares them ([ANDROID-CONCEPT.md](docs/ANDROID-CONCEPT.md#architecture)). Nothing changes for the user.
 
 ### Fixed
-- **Importing a file into a dataset no longer crashes kofrenot** now and then, as it could since 0.3 when a small file was dropped or chosen: its progress was shown from a background thread.
-- **The main window no longer moves when a tab is selected**: kofrenot pulled it back inside one monitor at each tab, as if the screen scaling had changed.
+- **Datasets**
+  - **Importing a file into a dataset no longer crashes kofrenot** now and then, as it could since 0.3 when a small file was dropped or chosen: its progress was shown from a background thread.
+- **Main window**
+  - **The main window no longer moves when a tab is selected**: kofrenot pulled it back inside one monitor at each tab, as if the screen scaling had changed.
 
 ## [0.7] - 2026-10-24
 
@@ -177,7 +188,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **Update check** once a day against GitHub releases, switchable in About.
 - **Installer and portable zip** (`build\installer.cmd`), self-contained.
 
-[Unreleased]: https://github.com/dyze/kofrenot/compare/0.7...HEAD
+[Unreleased]: https://github.com/dyze/kofrenot/compare/0.8...HEAD
+[0.8]: https://github.com/dyze/kofrenot/compare/0.7...0.8
 [0.7]: https://github.com/dyze/kofrenot/compare/0.6...0.7
 [0.6]: https://github.com/dyze/kofrenot/compare/0.5...0.6
 [0.5]: https://github.com/dyze/kofrenot/compare/0.4...0.5

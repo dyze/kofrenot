@@ -11,12 +11,9 @@ Scope of each planned version. Implemented features move to [CHANGELOG.md](CHANG
 | 0.5     | Released  | Vaults: several vaults, a hot key per vault; change types, link nodes              |
 | 0.6     | Released  | Server: own vaults stored on a web server, synced across devices                   |
 | 0.7     | Released  | Sharing: identities, recovery key, vaults shared with other users                  |
-| 0.8     | To define | Notes as in Keep; content on demand; session in Core for Android                   |
+| 0.8     | Released  | Notes as in Keep; content on demand; session in Core for Android                   |
 | 0.9     | To define | Large vaults: offline pins, faster transfers; editing                              |
 | 0.10    | To define | Android: server vaults read and searched offline on the phone                      |
-
-## 0.8 (to define)
-Everything planned for it is in [CHANGELOG.md](CHANGELOG.md#unreleased).
 
 ## 0.9 (to define)
 1. **Pinned for offline.** When a node is pinned for offline access, its content is downloaded ahead, so it is always readable without access to the vault storage.

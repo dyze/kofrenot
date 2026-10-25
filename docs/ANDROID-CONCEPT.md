@@ -24,7 +24,7 @@ The first version **reads**: it browses and searches, and never writes to a vaul
 | **Sync** | Downloads only: when the app opens or comes back, then every 30 s while it is shown; status dot as in the main window (synced, offline, problem) | Downloads ✔, uploads ✘ |
 | **Search** | The input box's search: nodes whose name has a word starting with the text, case and accents ignored, exact match first | ✔ (no adding) |
 | **Node details** | Type, name, colour, links read from the node's side (*contained by Kitchen*), tap a link to open its node; trail of open nodes, back button | ✔ |
-| **Notes** | Content shown as Markdown, task lists as (read-only) checkboxes, colours; fetched on demand ([0.8](../ROADMAP.md#08-to-define)) | ✔ |
+| **Notes** | Content shown as Markdown, task lists as (read-only) checkboxes, colours; fetched on demand ([0.8](../CHANGELOG.md#08---2026-10-25)) | ✔ |
 | **Views** | Flat and tree views, as tabs; expand and collapse | ✔ |
 | **Pinned and recent** | Pinned nodes (from the vault), recent nodes (on this phone) | ✔ |
 | **Datasets** | Shown with name, type, size and icon; content not opened | Partly |
