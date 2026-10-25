@@ -14,6 +14,9 @@ namespace Kofrenot.UI.Views;
 /// </summary>
 public partial class LinkTypesSection : UserControl
 {
+    // A short window still shows a few lines of the list.
+    private const double MinListHeight = 120;
+
     private readonly TypeEditor _newType;
     private VaultSession? _session;
     private AliasEditor? _aliasEditor;
@@ -265,6 +268,21 @@ public partial class LinkTypesSection : UserControl
     }
 
     // The line just opened takes the caret; the others, built again by Show, leave it where it is.
+    /// <summary>
+    /// Gives the list the height left in <paramref name="scroller"/> (the Settings page) under what
+    /// is above it, so it scrolls on its own and the new link type stays in view.
+    /// </summary>
+    public void FitListTo(ScrollViewer scroller)
+    {
+        if (!LineScroller.IsVisible)
+        {
+            return;
+        }
+
+        var top = LineScroller.TranslatePoint(new Point(0, 0), scroller).Y + scroller.VerticalOffset;
+        LineScroller.MaxHeight = Math.Max(MinListHeight, scroller.ViewportHeight - top - 8);
+    }
+
     private void EditorBox_Loaded(object sender, RoutedEventArgs e)
     {
         if (sender is TextBox { DataContext: LineEditor editor } box && editor == _toFocus)
@@ -272,6 +290,7 @@ public partial class LinkTypesSection : UserControl
             _toFocus = null;
             box.Focus();
             box.SelectAll();
+            box.BringIntoView();
         }
     }
 }

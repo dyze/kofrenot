@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Threading;
 using Kofrenot.Core;
 using Kofrenot.Core.Logging;
 using Kofrenot.Core.Session;
@@ -100,6 +101,10 @@ public partial class SettingsWindow : Window
         TabList.SelectedItem = _settings.SettingsTab;
 
         Loaded += (_, _) => FindBox.Focus();
+
+        // The link types' list scrolls on its own, in the room the page leaves it.
+        SectionsScroller.SizeChanged += (_, _) => FitLinkTypes();
+        LinkTypes.IsVisibleChanged += (_, _) => FitLinkTypes();
     }
 
     /// <summary>The About tab: version, links, changelog, and a row per file with its path and a Show in folder button.</summary>
@@ -309,6 +314,10 @@ public partial class SettingsWindow : Window
     /// <summary>A dialog needs no minimize or maximize button; it can still be resized.</summary>
     private void Window_SourceInitialized(object? sender, EventArgs e) =>
         NativeWindows.RemoveMinimizeMaximizeButtons(new System.Windows.Interop.WindowInteropHelper(this).Handle);
+
+    // Once laid out: the list's place on the page is known then.
+    private void FitLinkTypes() =>
+        Dispatcher.BeginInvoke(() => LinkTypes.FitListTo(SectionsScroller), DispatcherPriority.Loaded);
 
     /// <summary>Shows one tab (<see cref="SettingsCatalog.Tabs"/>): the one asked, when Settings opens for it.</summary>
     public void SelectTab(string tab) => TabList.SelectedItem = tab;
