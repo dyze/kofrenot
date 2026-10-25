@@ -24,7 +24,7 @@ The first version **reads**: it browses and searches, and never writes to a vaul
 | **Sync** | Downloads only: when the app opens or comes back, then every 30 s while it is shown; status dot as in the main window (synced, offline, problem) | Downloads ✔, uploads ✘ |
 | **Search** | The input box's search: nodes whose name has a word starting with the text, case and accents ignored, exact match first | ✔ (no adding) |
 | **Node details** | Type, name, colour, links read from the node's side (*contained by Kitchen*), tap a link to open its node; trail of open nodes, back button | ✔ |
-| **Notes** | Content shown as Markdown, task lists as (read-only) checkboxes, colours; fetched on demand ([0.9](../ROADMAP.md#09-to-define)) | ✔ |
+| **Notes** | Content shown as Markdown, task lists as (read-only) checkboxes, colours; fetched on demand ([0.8](../ROADMAP.md#08-to-define)) | ✔ |
 | **Views** | Flat and tree views, as tabs; expand and collapse | ✔ |
 | **Pinned and recent** | Pinned nodes (from the vault), recent nodes (on this phone) | ✔ |
 | **Datasets** | Shown with name, type, size and icon; content not opened | Partly |
@@ -91,9 +91,9 @@ kofrenot.App      (WPF, net10.0-windows)          kofrenot.Android   (Avalonia, 
 | Vault refresh after a download | `VaultWatcher` (`FileSystemWatcher`) | Sync tells the vault directly: no watcher |
 | Thumbnails | `IThumbnailMaker` | Not in 0.10: icons only |
 
-**Step 1 is a refactor on Windows**: the session, account and sync logic (about 2 000 lines in App) moves into Core, behind small interfaces for the timer and the questions asked to the user, with tests. It makes 0.10 possible without copying code, and is worth it for the WPF app alone.
+**Step 1 is a refactor on Windows, in 0.8**: the session, account and sync logic (about 2 000 lines in App) moves into Core, behind small interfaces for the timer and the questions asked to the user, with tests. It makes 0.10 possible without copying code, and is worth it for the WPF app alone.
 
-**Depends on 0.9**: content on demand keeps the phone's mirror small, the change files only; a note's content is downloaded when it is shown.
+**Depends on 0.8**: content on demand keeps the phone's mirror small, the change files only; a note's content is downloaded when it is shown.
 
 ### Dependencies
 To add when 0.10 starts ([CLAUDE.md](../CLAUDE.md#dependencies)): `Avalonia`, `Avalonia.Android` (Android project only). Build: the .NET Android workload. Core stays without packages.
