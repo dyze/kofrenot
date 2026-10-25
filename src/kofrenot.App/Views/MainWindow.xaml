@@ -11,101 +11,143 @@
         PreviewKeyDown="Window_PreviewKeyDown">
   <!-- The main window: one input box to find and add nodes and links. Closing it (or Esc) hides it:
        kofrenot stays in the notification area until Quit. -->
+  <WindowChrome.WindowChrome>
+    <WindowChrome CaptionHeight="{x:Static local:MainWindow.CaptionHeight}" GlassFrameThickness="-1" ResizeBorderThickness="6" UseAeroCaptionButtons="True" />
+  </WindowChrome.WindowChrome>
   <Window.Resources>
     <ResourceDictionary Source="SharedStyles.xaml" />
   </Window.Resources>
 
-  <Grid Margin="16">
+  <Grid x:Name="Root">
     <Grid.RowDefinitions>
-      <RowDefinition Height="Auto" />
-      <RowDefinition Height="Auto" />
-      <RowDefinition Height="Auto" />
+      <RowDefinition Height="{x:Static local:MainWindow.CaptionHeightLength}" />
       <RowDefinition Height="*" />
-      <RowDefinition Height="Auto" />
     </Grid.RowDefinitions>
 
-    <Grid>
+    <!-- The title bar, drawn by kofrenot (WindowChrome): the vault and its state on the left, then
+         room to drag the window, Settings, and Windows' own buttons. -->
+    <Grid x:Name="CaptionBar">
       <Grid.ColumnDefinitions>
         <ColumnDefinition Width="Auto" />
         <ColumnDefinition Width="*" />
+        <ColumnDefinition Width="Auto" />
+        <ColumnDefinition Width="{x:Static local:MainWindow.CaptionButtonsWidth}" />
       </Grid.ColumnDefinitions>
 
       <!-- The registered vaults, shown when there are several: choosing one closes the open vault
            and opens it. A vault whose folder cannot be reached is marked, and cannot be chosen. -->
-      <StackPanel Margin="0,0,12,0" Orientation="Horizontal">
-      <ComboBox x:Name="VaultBox"
-                MinWidth="140"
-                MaxWidth="240"
+      <StackPanel Margin="12,0,0,0" VerticalAlignment="Center" Orientation="Horizontal" WindowChrome.IsHitTestVisibleInChrome="True">
+        <Image Width="16" Height="16" Margin="0,0,10,0" VerticalAlignment="Center" Source="/Assets/kofrenot.ico" />
+        <ComboBox x:Name="VaultBox"
+                  MinWidth="140"
+                  MaxWidth="240"
+                  VerticalAlignment="Center"
+                  ToolTip="Vault (Ctrl+1 to Ctrl+9: the vault at that place)"
+                  Visibility="Collapsed"
+                  DropDownOpened="VaultBox_DropDownOpened"
+                  SelectionChanged="VaultBox_SelectionChanged">
+          <ComboBox.ItemContainerStyle>
+            <Style TargetType="ComboBoxItem" BasedOn="{StaticResource {x:Type ComboBoxItem}}">
+              <Setter Property="IsEnabled" Value="{Binding IsAvailable}" />
+            </Style>
+          </ComboBox.ItemContainerStyle>
+          <ComboBox.ItemTemplate>
+            <DataTemplate>
+              <TextBlock Text="{Binding Text}" TextTrimming="CharacterEllipsis" ToolTip="{Binding Folder}" />
+            </DataTemplate>
+          </ComboBox.ItemTemplate>
+        </ComboBox>
+
+        <!-- With one vault, or none open: its name, or kofrenot (the window's title, not drawn by Windows). -->
+        <TextBlock x:Name="TitleText" Margin="0,0,4,0" VerticalAlignment="Center" FontWeight="SemiBold" Text="kofrenot" />
+
+        <!-- Locks the open vault (Ctrl+L): closed, still in the list; Unlock opens it again. -->
+        <Button x:Name="LockButton"
+                Margin="4,0,0,0"
+                Padding="8,4"
                 VerticalAlignment="Center"
-                ToolTip="Vault (Ctrl+1 to Ctrl+9: the vault at that place)"
+                Style="{StaticResource FlatButton}"
+                FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
+                FontSize="14"
+                Content="&#xE72E;"
+                ToolTip="Lock the vault (Ctrl+L): it stays locked, also after a restart, until Unlock, which asks its pass phrase"
                 Visibility="Collapsed"
-                DropDownOpened="VaultBox_DropDownOpened"
-                SelectionChanged="VaultBox_SelectionChanged">
-        <ComboBox.ItemContainerStyle>
-          <Style TargetType="ComboBoxItem" BasedOn="{StaticResource {x:Type ComboBoxItem}}">
-            <Setter Property="IsEnabled" Value="{Binding IsAvailable}" />
-          </Style>
-        </ComboBox.ItemContainerStyle>
-        <ComboBox.ItemTemplate>
-          <DataTemplate>
-            <TextBlock Text="{Binding Text}" TextTrimming="CharacterEllipsis" ToolTip="{Binding Folder}" />
-          </DataTemplate>
-        </ComboBox.ItemTemplate>
-      </ComboBox>
+                Click="LockButton_Click" />
 
-      <!-- Locks the open vault (Ctrl+L): closed, still in the list; Unlock opens it again. -->
-      <Button x:Name="LockButton"
-              Margin="4,0,0,0"
-              Padding="8,4"
-              VerticalAlignment="Center"
-              Style="{StaticResource FlatButton}"
-              FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
-              FontSize="14"
-              Content="&#xE72E;"
-              ToolTip="Lock the vault (Ctrl+L): it stays locked, also after a restart, until Unlock, which asks its pass phrase"
-              Visibility="Collapsed"
-              Click="LockButton_Click" />
+        <!-- A vault shared with this account to read only: said here and in the window's title. -->
+        <Border x:Name="ReadOnlyTag"
+                Margin="8,0,0,0"
+                Padding="6,1"
+                VerticalAlignment="Center"
+                CornerRadius="4"
+                Background="{DynamicResource SubtleFillColorSecondaryBrush}"
+                ToolTip="Shared with you to read only: you can see and search it, not change it"
+                Visibility="Collapsed">
+          <StackPanel Orientation="Horizontal">
+            <TextBlock Margin="0,0,4,0"
+                       VerticalAlignment="Center"
+                       FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
+                       FontSize="11"
+                       Text="&#xE890;" />
+            <TextBlock VerticalAlignment="Center" FontSize="{StaticResource CaptionFontSize}" Text="Read only" />
+          </StackPanel>
+        </Border>
 
-      <!-- A vault shared with this account to read only: said here and in the window's title. -->
-      <Border x:Name="ReadOnlyTag"
-              Margin="8,0,0,0"
-              Padding="6,1"
-              VerticalAlignment="Center"
-              CornerRadius="4"
-              Background="{DynamicResource SubtleFillColorSecondaryBrush}"
-              ToolTip="Shared with you to read only: you can see and search it, not change it"
-              Visibility="Collapsed">
-        <StackPanel Orientation="Horizontal">
-          <TextBlock Margin="0,0,4,0"
-                     VerticalAlignment="Center"
-                     FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
-                     FontSize="11"
-                     Text="&#xE890;" />
-          <TextBlock VerticalAlignment="Center" FontSize="{StaticResource CaptionFontSize}" Text="Read only" />
-        </StackPanel>
-      </Border>
-
-      <!-- A server vault's sync: a dot coloured by how it stands, a few words; the tooltip says
-           more. Click: sync now, or Settings when signed out. -->
-      <Button x:Name="SyncButton"
-              Margin="8,0,0,0"
-              Padding="6,1"
-              VerticalAlignment="Center"
-              Style="{StaticResource FlatButton}"
-              Visibility="Collapsed"
-              Click="SyncButton_Click">
-        <StackPanel Orientation="Horizontal">
-          <Ellipse x:Name="SyncDot" Width="8" Height="8" Margin="0,0,6,0" VerticalAlignment="Center" />
-          <TextBlock x:Name="SyncText" VerticalAlignment="Center" FontSize="{StaticResource CaptionFontSize}" />
-        </StackPanel>
-      </Button>
+        <!-- A server vault's sync: a dot coloured by how it stands, a few words; the tooltip says
+             more. Click: sync now, or Settings when signed out. -->
+        <Button x:Name="SyncButton"
+                Margin="8,0,0,0"
+                Padding="6,1"
+                VerticalAlignment="Center"
+                Style="{StaticResource FlatButton}"
+                Visibility="Collapsed"
+                Click="SyncButton_Click">
+          <StackPanel Orientation="Horizontal">
+            <Ellipse x:Name="SyncDot" Width="8" Height="8" Margin="0,0,6,0" VerticalAlignment="Center" />
+            <TextBlock x:Name="SyncText" VerticalAlignment="Center" FontSize="{StaticResource CaptionFontSize}" />
+          </StackPanel>
+        </Button>
       </StackPanel>
 
-      <TextBlock x:Name="TitleText" Grid.Column="1" VerticalAlignment="Center" Style="{StaticResource HeadingText}" Text="kofrenot" />
+      <!-- Settings, before Windows' own buttons (minimize, maximize, close), whose room is kept. -->
+      <Grid Grid.Column="2" Margin="0,0,8,0" VerticalAlignment="Center" WindowChrome.IsHitTestVisibleInChrome="True">
+        <Button x:Name="SettingsButton"
+                Width="40"
+                Height="36"
+                Padding="0"
+                HorizontalAlignment="Right"
+                Style="{StaticResource FlatButton}"
+                Content="&#xE713;"
+                FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
+                FontSize="16"
+                ToolTip="Settings"
+                Click="SettingsButton_Click" />
+
+        <!-- A newer release is available (see Settings > About). Over the button's corner; clicks go through. -->
+        <Ellipse x:Name="UpdateMark"
+                 Width="9"
+                 Height="9"
+                 Margin="0,4,4,0"
+                 HorizontalAlignment="Right"
+                 VerticalAlignment="Top"
+                 Fill="{DynamicResource SystemFillColorCautionBrush}"
+                 IsHitTestVisible="False"
+                 Visibility="Collapsed" />
+      </Grid>
+    </Grid>
+
+    <Grid Grid.Row="1" Margin="16,4,16,16">
+      <Grid.RowDefinitions>
+        <RowDefinition Height="Auto" />
+        <RowDefinition Height="Auto" />
+        <RowDefinition Height="Auto" />
+        <RowDefinition Height="*" />
+        <RowDefinition Height="Auto" />
+      </Grid.RowDefinitions>
 
       <!-- The tabs: the search, then the views open on this device. A click selects one, ⚙ edits
            the selected view, × closes a view's tab, + opens a view in a new tab. -->
-      <StackPanel x:Name="TabStrip" Grid.Column="1" Margin="0,0,56,0" VerticalAlignment="Center" Orientation="Horizontal" Visibility="Collapsed">
+      <StackPanel x:Name="TabStrip" VerticalAlignment="Center" Orientation="Horizontal" Visibility="Collapsed">
         <ItemsControl x:Name="TabsList" Focusable="False">
           <ItemsControl.ItemsPanel>
             <ItemsPanelTemplate>
@@ -171,224 +213,201 @@
                 Click="AddTab_Click" />
       </StackPanel>
 
-      <Button x:Name="SettingsButton"
-              Grid.Column="1"
-              Width="40"
-              Height="36"
-              Padding="0"
-              HorizontalAlignment="Right"
-              Content="&#xE713;"
-              FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
-              FontSize="16"
-              ToolTip="Settings"
-              Click="SettingsButton_Click" />
 
-      <!-- A newer release is available (see Settings > About). Over the button's corner; clicks go through. -->
-      <Ellipse x:Name="UpdateMark"
-               Grid.Column="1"
-               Width="9"
-               Height="9"
-               Margin="0,4,4,0"
-               HorizontalAlignment="Right"
-               VerticalAlignment="Top"
-               Fill="{DynamicResource SystemFillColorCautionBrush}"
-               IsHitTestVisible="False"
-               Visibility="Collapsed" />
-    </Grid>
-
-    <!-- Enter adds (or opens the selected node), Up/Down select a node or choose among homonyms,
-         Tab or Right accept the proposal in grey (else Tab switches the side of a link), Backspace
-         turns the last label back into text, Esc hides the proposal, clears, then hides.
-         The labels (ChipInput) sit over the start of the box, whose text starts after them. -->
-    <Grid x:Name="InputArea" Grid.Row="1" Margin="0,14,0,0">
-      <TextBox x:Name="InputBox"
-               Padding="8,6"
-               FontSize="{StaticResource BodyFontSize}"
-               TextChanged="InputBox_TextChanged"
-               SelectionChanged="InputBox_SelectionChanged"
-               PreviewKeyDown="InputBox_PreviewKeyDown" />
-      <ItemsControl x:Name="InputChips"
-                    Margin="8,0,0,0"
-                    HorizontalAlignment="Left"
-                    VerticalAlignment="Center"
-                    Focusable="False"
-                    IsHitTestVisible="False"
-                    SizeChanged="InputChips_SizeChanged">
-        <ItemsControl.ItemsPanel>
-          <ItemsPanelTemplate>
-            <StackPanel Orientation="Horizontal" />
-          </ItemsPanelTemplate>
-        </ItemsControl.ItemsPanel>
-        <ItemsControl.ItemTemplate>
-          <DataTemplate>
-            <Grid Margin="0,0,4,0">
-              <Rectangle x:Name="NewOutline"
-                         RadiusX="4"
-                         RadiusY="4"
-                         Fill="{DynamicResource SystemFillColorSuccessBackgroundBrush}"
-                         Stroke="{DynamicResource SystemFillColorSuccessBrush}"
-                         StrokeThickness="1"
-                         StrokeDashArray="3 2"
-                         Visibility="Collapsed" />
-              <Border x:Name="Chip"
-                      Padding="5,1,7,1"
-                      CornerRadius="4"
-                      BorderThickness="1"
-                      BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
-                      Background="{DynamicResource SubtleFillColorSecondaryBrush}">
-                <StackPanel Orientation="Horizontal">
-                  <local:NodeVisualView x:Name="ChipVisual" Width="16" Height="16" Margin="0,0,4,0" Visual="{Binding Visual}" />
-                  <TextBlock x:Name="NewMark"
-                             Margin="0,0,4,0"
-                             VerticalAlignment="Center"
-                             FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
-                             FontSize="{StaticResource CaptionFontSize}"
-                             Foreground="{DynamicResource SystemFillColorSuccessBrush}"
-                             Text="&#xE710;"
-                             ToolTip="New node: added with Enter"
-                             Visibility="Collapsed" />
-                  <TextBlock x:Name="ChipText" VerticalAlignment="Center" Text="{Binding Text}" />
-                  <TextBlock x:Name="HomonymMark"
-                             Margin="4,0,0,0"
-                             VerticalAlignment="Center"
-                             FontSize="{StaticResource CaptionFontSize}"
-                             Opacity="0.7"
-                             Text="{Binding HomonymMark}" />
-                </StackPanel>
-              </Border>
-            </Grid>
-            <DataTemplate.Triggers>
-              <DataTrigger Binding="{Binding IsNew}" Value="True">
-                <Setter TargetName="NewOutline" Property="Visibility" Value="Visible" />
-                <Setter TargetName="NewMark" Property="Visibility" Value="Visible" />
-                <Setter TargetName="ChipVisual" Property="Visibility" Value="Collapsed" />
-                <Setter TargetName="Chip" Property="BorderBrush" Value="Transparent" />
-                <Setter TargetName="Chip" Property="Background" Value="Transparent" />
-              </DataTrigger>
-              <DataTrigger Binding="{Binding IsLinkType}" Value="True">
-                <Setter TargetName="ChipVisual" Property="Visibility" Value="Collapsed" />
-                <Setter TargetName="Chip" Property="Padding" Value="7,1" />
-                <Setter TargetName="Chip" Property="BorderBrush" Value="Transparent" />
-                <Setter TargetName="Chip" Property="Background" Value="{DynamicResource AccentFillColorDefaultBrush}" />
-                <Setter TargetName="ChipText" Property="Foreground" Value="{DynamicResource TextOnAccentFillColorPrimaryBrush}" />
-              </DataTrigger>
-              <DataTrigger Binding="{Binding HomonymMark}" Value="">
-                <Setter TargetName="HomonymMark" Property="Visibility" Value="Collapsed" />
-              </DataTrigger>
-            </DataTemplate.Triggers>
-          </DataTemplate>
-        </ItemsControl.ItemTemplate>
-      </ItemsControl>
-      <TextBlock x:Name="InputProposal"
-                 HorizontalAlignment="Left"
-                 VerticalAlignment="Center"
+      <!-- Enter adds (or opens the selected node), Up/Down select a node or choose among homonyms,
+           Tab or Right accept the proposal in grey (else Tab switches the side of a link), Backspace
+           turns the last label back into text, Esc hides the proposal, clears, then hides.
+           The labels (ChipInput) sit over the start of the box, whose text starts after them. -->
+      <Grid x:Name="InputArea" Grid.Row="1" Margin="0,14,0,0">
+        <TextBox x:Name="InputBox"
+                 Padding="8,6"
                  FontSize="{StaticResource BodyFontSize}"
-                 IsHitTestVisible="False"
-                 Opacity="0.45" />
-      <TextBlock x:Name="InputPlaceholder"
-                 Margin="12,0,0,0"
-                 VerticalAlignment="Center"
-                 FontSize="{StaticResource BodyFontSize}"
-                 IsHitTestVisible="False"
-                 Opacity="0.5"
-                 Text="Dune relates to Frank Herbert" />
-    </Grid>
-
-    <TextBlock x:Name="PreviewText"
-               Grid.Row="2"
-               Margin="2,8,0,0"
-               Opacity="0.8"
-               TextWrapping="Wrap" />
-
-    <!-- The nodes found, and the links of the exact matches; while the box is empty, the pinned
-         nodes under a header. Each node has its picture (NodeVisualView). A row is highlighted
-         when hovered; a click selects it (as Up/Down), a double-click or › opens its node's
-         details. Nothing is focusable: typing stays in the input box. -->
-    <ScrollViewer x:Name="ResultsArea" Grid.Row="3" Margin="0,10,0,0" VerticalScrollBarVisibility="Auto" Focusable="False">
-      <ItemsControl x:Name="ResultsList" FontSize="{StaticResource BodyFontSize}">
-        <ItemsControl.ItemTemplate>
-          <DataTemplate>
-            <Border x:Name="Frame" Margin="0,1" Style="{StaticResource RowFrame}" MouseLeftButtonDown="Result_MouseLeftButtonDown">
-              <Grid>
-                <Border x:Name="SelectionBar" Style="{StaticResource RowSelectionBar}" />
-                <Grid Margin="6,1">
-                  <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="Auto" />
-                  </Grid.ColumnDefinitions>
-                  <local:NodeVisualView x:Name="RowVisual" Margin="0,1,10,1" Visual="{Binding Visual}" />
-                  <TextBlock x:Name="RowText" Grid.Column="1" VerticalAlignment="Center" Text="{Binding Text}" />
-                  <Button x:Name="OpenButton" Grid.Column="2" Style="{StaticResource OpenRowButton}" Click="OpenResult_Click" />
-                </Grid>
+                 TextChanged="InputBox_TextChanged"
+                 SelectionChanged="InputBox_SelectionChanged"
+                 PreviewKeyDown="InputBox_PreviewKeyDown" />
+        <ItemsControl x:Name="InputChips"
+                      Margin="8,0,0,0"
+                      HorizontalAlignment="Left"
+                      VerticalAlignment="Center"
+                      Focusable="False"
+                      IsHitTestVisible="False"
+                      SizeChanged="InputChips_SizeChanged">
+          <ItemsControl.ItemsPanel>
+            <ItemsPanelTemplate>
+              <StackPanel Orientation="Horizontal" />
+            </ItemsPanelTemplate>
+          </ItemsControl.ItemsPanel>
+          <ItemsControl.ItemTemplate>
+            <DataTemplate>
+              <Grid Margin="0,0,4,0">
+                <Rectangle x:Name="NewOutline"
+                           RadiusX="4"
+                           RadiusY="4"
+                           Fill="{DynamicResource SystemFillColorSuccessBackgroundBrush}"
+                           Stroke="{DynamicResource SystemFillColorSuccessBrush}"
+                           StrokeThickness="1"
+                           StrokeDashArray="3 2"
+                           Visibility="Collapsed" />
+                <Border x:Name="Chip"
+                        Padding="5,1,7,1"
+                        CornerRadius="4"
+                        BorderThickness="1"
+                        BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
+                        Background="{DynamicResource SubtleFillColorSecondaryBrush}">
+                  <StackPanel Orientation="Horizontal">
+                    <local:NodeVisualView x:Name="ChipVisual" Width="16" Height="16" Margin="0,0,4,0" Visual="{Binding Visual}" />
+                    <TextBlock x:Name="NewMark"
+                               Margin="0,0,4,0"
+                               VerticalAlignment="Center"
+                               FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
+                               FontSize="{StaticResource CaptionFontSize}"
+                               Foreground="{DynamicResource SystemFillColorSuccessBrush}"
+                               Text="&#xE710;"
+                               ToolTip="New node: added with Enter"
+                               Visibility="Collapsed" />
+                    <TextBlock x:Name="ChipText" VerticalAlignment="Center" Text="{Binding Text}" />
+                    <TextBlock x:Name="HomonymMark"
+                               Margin="4,0,0,0"
+                               VerticalAlignment="Center"
+                               FontSize="{StaticResource CaptionFontSize}"
+                               Opacity="0.7"
+                               Text="{Binding HomonymMark}" />
+                  </StackPanel>
+                </Border>
               </Grid>
-            </Border>
-            <DataTemplate.Triggers>
-              <DataTrigger Binding="{Binding Node}" Value="{x:Null}">
-                <Setter TargetName="OpenButton" Property="Visibility" Value="Collapsed" />
-                <Setter TargetName="Frame" Property="Background" Value="Transparent" />
-              </DataTrigger>
-              <DataTrigger Binding="{Binding IsLink}" Value="True">
-                <Setter TargetName="RowText" Property="Margin" Value="24,0,0,0" />
-                <Setter TargetName="RowText" Property="Opacity" Value="0.75" />
-              </DataTrigger>
-              <DataTrigger Binding="{Binding IsHeader}" Value="True">
-                <Setter TargetName="RowText" Property="Margin" Value="0,8,0,2" />
-                <Setter TargetName="RowVisual" Property="Visibility" Value="Collapsed" />
-                <Setter TargetName="RowText" Property="FontSize" Value="{StaticResource CaptionFontSize}" />
-                <Setter TargetName="RowText" Property="FontWeight" Value="SemiBold" />
-                <Setter TargetName="RowText" Property="Opacity" Value="0.6" />
-              </DataTrigger>
-              <DataTrigger Binding="{Binding IsChosen}" Value="True">
-                <Setter TargetName="Frame" Property="Background" Value="{DynamicResource SubtleFillColorSecondaryBrush}" />
-                <Setter TargetName="SelectionBar" Property="Visibility" Value="Visible" />
-                <Setter TargetName="RowText" Property="FontWeight" Value="SemiBold" />
-                <Setter TargetName="RowText" Property="Opacity" Value="1" />
-              </DataTrigger>
-            </DataTemplate.Triggers>
-          </DataTemplate>
-        </ItemsControl.ItemTemplate>
-      </ItemsControl>
-    </ScrollViewer>
+              <DataTemplate.Triggers>
+                <DataTrigger Binding="{Binding IsNew}" Value="True">
+                  <Setter TargetName="NewOutline" Property="Visibility" Value="Visible" />
+                  <Setter TargetName="NewMark" Property="Visibility" Value="Visible" />
+                  <Setter TargetName="ChipVisual" Property="Visibility" Value="Collapsed" />
+                  <Setter TargetName="Chip" Property="BorderBrush" Value="Transparent" />
+                  <Setter TargetName="Chip" Property="Background" Value="Transparent" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding IsLinkType}" Value="True">
+                  <Setter TargetName="ChipVisual" Property="Visibility" Value="Collapsed" />
+                  <Setter TargetName="Chip" Property="Padding" Value="7,1" />
+                  <Setter TargetName="Chip" Property="BorderBrush" Value="Transparent" />
+                  <Setter TargetName="Chip" Property="Background" Value="{DynamicResource AccentFillColorDefaultBrush}" />
+                  <Setter TargetName="ChipText" Property="Foreground" Value="{DynamicResource TextOnAccentFillColorPrimaryBrush}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding HomonymMark}" Value="">
+                  <Setter TargetName="HomonymMark" Property="Visibility" Value="Collapsed" />
+                </DataTrigger>
+              </DataTemplate.Triggers>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+        <TextBlock x:Name="InputProposal"
+                   HorizontalAlignment="Left"
+                   VerticalAlignment="Center"
+                   FontSize="{StaticResource BodyFontSize}"
+                   IsHitTestVisible="False"
+                   Opacity="0.45" />
+        <TextBlock x:Name="InputPlaceholder"
+                   Margin="12,0,0,0"
+                   VerticalAlignment="Center"
+                   FontSize="{StaticResource BodyFontSize}"
+                   IsHitTestVisible="False"
+                   Opacity="0.5"
+                   Text="Dune relates to Frank Herbert" />
+      </Grid>
 
-    <!-- Instead of the search: the view of the selected tab. -->
-    <local:ViewPanel x:Name="ViewContent"
-                     Grid.Row="1"
-                     Grid.RowSpan="3"
-                     Margin="0,10,0,0"
-                     Visibility="Collapsed"
-                     OpenNode="ViewContent_OpenNode" />
-
-    <!-- Instead of the search or a view: the details of a node, and the nodes linked to it. -->
-    <local:NodeDetailsPanel x:Name="DetailsPanel"
-                            Grid.Row="1"
-                            Grid.RowSpan="3"
-                            Margin="0,10,0,0"
-                            Visibility="Collapsed"
-                            BackToSearch="DetailsPanel_BackToSearch" />
-
-    <!-- Instead of the input: no vault chosen yet, or it is locked. -->
-    <StackPanel x:Name="StatePanel"
-                Grid.Row="1"
-                Grid.RowSpan="3"
-                HorizontalAlignment="Center"
-                VerticalAlignment="Center"
-                Visibility="Collapsed">
-      <TextBlock x:Name="StateText"
-                 MaxWidth="460"
+      <TextBlock x:Name="PreviewText"
+                 Grid.Row="2"
+                 Margin="2,8,0,0"
                  Opacity="0.8"
-                 TextAlignment="Center"
                  TextWrapping="Wrap" />
-      <Button x:Name="StateButton"
-              Margin="0,14,0,0"
-              Padding="14,5"
-              HorizontalAlignment="Center"
-              Click="StateButton_Click" />
-    </StackPanel>
 
-    <Grid Grid.Row="4">
-      <TextBlock x:Name="VaultText" Style="{StaticResource FooterText}" Margin="0,0,160,0" />
-      <TextBlock x:Name="VersionText" HorizontalAlignment="Right" Style="{StaticResource FooterText}" />
+      <!-- The nodes found, and the links of the exact matches; while the box is empty, the pinned
+           nodes under a header. Each node has its picture (NodeVisualView). A row is highlighted
+           when hovered; a click selects it (as Up/Down), a double-click or › opens its node's
+           details. Nothing is focusable: typing stays in the input box. -->
+      <ScrollViewer x:Name="ResultsArea" Grid.Row="3" Margin="0,10,0,0" VerticalScrollBarVisibility="Auto" Focusable="False">
+        <ItemsControl x:Name="ResultsList" FontSize="{StaticResource BodyFontSize}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate>
+              <Border x:Name="Frame" Margin="0,1" Style="{StaticResource RowFrame}" MouseLeftButtonDown="Result_MouseLeftButtonDown">
+                <Grid>
+                  <Border x:Name="SelectionBar" Style="{StaticResource RowSelectionBar}" />
+                  <Grid Margin="6,1">
+                    <Grid.ColumnDefinitions>
+                      <ColumnDefinition Width="Auto" />
+                      <ColumnDefinition Width="*" />
+                      <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <local:NodeVisualView x:Name="RowVisual" Margin="0,1,10,1" Visual="{Binding Visual}" />
+                    <TextBlock x:Name="RowText" Grid.Column="1" VerticalAlignment="Center" Text="{Binding Text}" />
+                    <Button x:Name="OpenButton" Grid.Column="2" Style="{StaticResource OpenRowButton}" Click="OpenResult_Click" />
+                  </Grid>
+                </Grid>
+              </Border>
+              <DataTemplate.Triggers>
+                <DataTrigger Binding="{Binding Node}" Value="{x:Null}">
+                  <Setter TargetName="OpenButton" Property="Visibility" Value="Collapsed" />
+                  <Setter TargetName="Frame" Property="Background" Value="Transparent" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding IsLink}" Value="True">
+                  <Setter TargetName="RowText" Property="Margin" Value="24,0,0,0" />
+                  <Setter TargetName="RowText" Property="Opacity" Value="0.75" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding IsHeader}" Value="True">
+                  <Setter TargetName="RowText" Property="Margin" Value="0,8,0,2" />
+                  <Setter TargetName="RowVisual" Property="Visibility" Value="Collapsed" />
+                  <Setter TargetName="RowText" Property="FontSize" Value="{StaticResource CaptionFontSize}" />
+                  <Setter TargetName="RowText" Property="FontWeight" Value="SemiBold" />
+                  <Setter TargetName="RowText" Property="Opacity" Value="0.6" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding IsChosen}" Value="True">
+                  <Setter TargetName="Frame" Property="Background" Value="{DynamicResource SubtleFillColorSecondaryBrush}" />
+                  <Setter TargetName="SelectionBar" Property="Visibility" Value="Visible" />
+                  <Setter TargetName="RowText" Property="FontWeight" Value="SemiBold" />
+                  <Setter TargetName="RowText" Property="Opacity" Value="1" />
+                </DataTrigger>
+              </DataTemplate.Triggers>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </ScrollViewer>
+
+      <!-- Instead of the search: the view of the selected tab. -->
+      <local:ViewPanel x:Name="ViewContent"
+                       Grid.Row="1"
+                       Grid.RowSpan="3"
+                       Margin="0,10,0,0"
+                       Visibility="Collapsed"
+                       OpenNode="ViewContent_OpenNode" />
+
+      <!-- Instead of the search or a view: the details of a node, and the nodes linked to it. -->
+      <local:NodeDetailsPanel x:Name="DetailsPanel"
+                              Grid.Row="1"
+                              Grid.RowSpan="3"
+                              Margin="0,10,0,0"
+                              Visibility="Collapsed"
+                              BackToSearch="DetailsPanel_BackToSearch" />
+
+      <!-- Instead of the input: no vault chosen yet, or it is locked. -->
+      <StackPanel x:Name="StatePanel"
+                  Grid.Row="1"
+                  Grid.RowSpan="3"
+                  HorizontalAlignment="Center"
+                  VerticalAlignment="Center"
+                  Visibility="Collapsed">
+        <TextBlock x:Name="StateText"
+                   MaxWidth="460"
+                   Opacity="0.8"
+                   TextAlignment="Center"
+                   TextWrapping="Wrap" />
+        <Button x:Name="StateButton"
+                Margin="0,14,0,0"
+                Padding="14,5"
+                HorizontalAlignment="Center"
+                Click="StateButton_Click" />
+      </StackPanel>
+
+      <Grid Grid.Row="4">
+        <TextBlock x:Name="VaultText" Style="{StaticResource FooterText}" Margin="0,0,160,0" />
+        <TextBlock x:Name="VersionText" HorizontalAlignment="Right" Style="{StaticResource FooterText}" />
+      </Grid>
     </Grid>
   </Grid>
 </Window>

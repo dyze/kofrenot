@@ -22,6 +22,7 @@ public partial class MainWindow
     {
         var vaults = _session.Vaults;
         VaultBox.Visibility = vaults.Count > 1 ? Visibility.Visible : Visibility.Collapsed;
+        ShowTitle();
         if (vaults.Count <= 1 || VaultBox.IsDropDownOpen)
         {
             return;
