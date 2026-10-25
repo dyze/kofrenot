@@ -188,7 +188,8 @@ public partial class DatasetPanel : UserControl
         await Run(Reading, async () =>
         {
             var size = new FileInfo(path).Length;
-            var file = await Task.Run(() => DatasetFiles.Describe(path, ProgressOf(Reading, size)));
+            var reading = ProgressOf(Reading, size);
+            var file = await Task.Run(() => DatasetFiles.Describe(path, reading));
             var state = new DatasetPlanner(graph).Load(node, IsAvailableIn(vault));
             if (new DatasetPlanner(graph).Import(node, file, state) is not { } version)
             {
@@ -204,7 +205,8 @@ public partial class DatasetPanel : UserControl
 
     /// <summary>
     /// Shows how far a step of the work is, in percent of <paramref name="total"/> bytes. Reports
-    /// arrive later on the UI thread: one arriving after its step is dropped.
+    /// arrive later on the thread that made it, so it is made on the UI thread, never inside
+    /// <c>Task.Run</c>: one arriving after its step is dropped.
     /// </summary>
     private Progress<long> ProgressOf(string working, long total) => new(done =>
     {

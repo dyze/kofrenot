@@ -18,6 +18,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **Vault format 7**, for colours: kofrenot asks before upgrading a vault when it opens it; kofrenot 0.7 then asks to be updated to open it.
 
 ### Fixed
+- **Importing a file into a dataset no longer crashes kofrenot** now and then, as it could since 0.3 when a small file was dropped or chosen: its progress was shown from a background thread.
 - **The main window no longer moves when a tab is selected**: kofrenot pulled it back inside one monitor at each tab, as if the screen scaling had changed.
 
 ## [0.7] - 2026-10-24
