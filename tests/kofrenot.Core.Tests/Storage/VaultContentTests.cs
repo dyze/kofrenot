@@ -35,6 +35,17 @@ public sealed class VaultContentTests : IDisposable
     }
 
     [Fact]
+    public void AFolderVault_DoesNotSayItsContentIsHere()
+    {
+        var vault = Open(fetcher: null);
+        var note = new NoteEdited(Guid.NewGuid(), Start, Guid.NewGuid(), []);
+        vault.Save(note, "# Here");
+
+        Assert.Equal("# Here", vault.ReadNote(note.Id));
+        Assert.DoesNotContain(_log.Entries, entry => entry.Message.Contains("already here"));
+    }
+
+    [Fact]
     public async Task AFolderVault_FetchesNothing() =>
         Assert.False(await Open(fetcher: null).FetchAsync(SaveNoteOnTheStore("# Ideas")));
 
@@ -65,6 +76,7 @@ public sealed class VaultContentTests : IDisposable
         Assert.True(await vault.FetchAsync(note));
         Assert.Equal("# Here", vault.ReadNote(note.Id));
         Assert.Empty(_fetcher.Paths);
+        Assert.Equal(2, _log.Entries.Count(entry => entry.Level == LogLevel.Debug && entry.Message == $"Content {note.Id} already here"));
     }
 
     [Fact]

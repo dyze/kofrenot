@@ -54,6 +54,7 @@ public sealed partial class Vault
     {
         if (Notes.Read(version) is { } content)
         {
+            AlreadyHere(version);
             return content;
         }
 
@@ -81,10 +82,20 @@ public sealed partial class Vault
         }
     }
 
+    // Only a server vault says so: a folder vault always has its content, once synced.
+    private void AlreadyHere(Guid version)
+    {
+        if (_fetcher is not null)
+        {
+            _log.Debug(Category, $"Content {version} already here");
+        }
+    }
+
     private Task<bool> Fetch(Guid version, string file, bool retry, CancellationToken cancel)
     {
         if (File.Exists(file))
         {
+            AlreadyHere(version);
             return Task.FromResult(true);
         }
 
