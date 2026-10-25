@@ -68,7 +68,7 @@ Only those listed in `docs/ARCHITECTURE.md#stack`. Ask before adding one.
 * Avoid long modules. Move large, monolithic classes or methods into separate `.cs` files or helper classes to keep individual files concise and maintainable.
 * Avoid redundant code.
 * Validate with a build and test run (see Build honesty).
-* Maintain Core library sub-systems code coverage target of **>=95%** (line coverage, enforced by `build.cmd`).
+* Maintain Core library sub-systems code coverage target of **>=95%** (line coverage, enforced by `build\windows.cmd`).
 * Reduce build warnings.
 
 ## Git
@@ -78,4 +78,4 @@ Only those listed in `docs/ARCHITECTURE.md#stack`. Ask before adding one.
 - No AI attribution in commit messages or PR descriptions (no `Co-Authored-By: Claude …`, no "Generated with Claude Code").
 
 ## Definition of done
-Code is written, tests cover the new `Core` behavior, docs are updated, and the build and tests pass (`build.cmd`).
+Code is written, tests cover the new `Core` behavior, docs are updated, and the build and tests pass (`build\windows.cmd`).

@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <!-- kofrenot for Android: reads server vaults (docs/ANDROID-CONCEPT.md). Not in kofrenot.sln, so
-       build.cmd needs no Android workload: built by build\android.cmd. -->
+       build\windows.cmd needs no Android workload: built by build\android.cmd. -->
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net10.0-android</TargetFramework>

@@ -135,9 +135,9 @@ Gear button in the title bar, or tray menu > Settings. Changes are saved at once
 | [CHANGELOG.md](CHANGELOG.md) | What each version changed |
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Projects, stack, storage, sync, encryption |
 
-**Build** (the .NET 10 SDK): `build.cmd` on Windows, `./build.sh` on Linux or macOS (build and tests only: the app runs on Windows). Both build in Release and run the tests; output goes to `artifacts/`. The build fails below **95 %** line coverage of `Core`; `build.cmd open` opens the coverage report. The version is set in `Directory.Build.props` only.
+**Build** (the .NET 10 SDK): `build\windows.cmd` on Windows, `build/build.sh` on Linux or macOS (build and tests only: the app runs on Windows). Both build `kofrenot.sln` in Release and run the tests; output goes to `artifacts/`. The build fails below **95 %** line coverage of `Core`; `build\windows.cmd open` opens the coverage report. The version is set in `Directory.Build.props` only.
 
-**Android**: `build\android.cmd` makes `artifacts\publish\kofrenot.Android\release\eu.dlabs.kofrenot-Signed.apk` (needs the .NET Android workload, `dotnet workload install android`, the Android SDK and a JDK). It is signed with the release keystore named by `KOFRENOT_KEYSTORE` (alias `kofrenot`, password in `KOFRENOT_KEYSTORE_PASS`), else with Android's debug key, to try it. The app is not in `kofrenot.sln`, so `build.cmd` does not need the workload. On an emulator, `adb reverse tcp:5080 tcp:5080` lets it sign in to a Kofre server on this PC at `http://localhost:5080/`: plain HTTP is accepted only to the phone itself.
+**Android**: `build\android.cmd` makes `artifacts\publish\kofrenot.Android\release\eu.dlabs.kofrenot-Signed.apk` (needs the .NET Android workload, `dotnet workload install android`, the Android SDK and a JDK). It is signed with the release keystore named by `KOFRENOT_KEYSTORE` (alias `kofrenot`, password in `KOFRENOT_KEYSTORE_PASS`), else with Android's debug key, to try it. The app is not in `kofrenot.sln`, so `build\windows.cmd` does not need the workload. On an emulator, `adb reverse tcp:5080 tcp:5080` lets it sign in to a Kofre server on this PC at `http://localhost:5080/`: plain HTTP is accepted only to the phone itself.
 
 **Release signing** (Android): every update of the app must be signed with the same key, or phones cannot install it over the previous one.
 
@@ -165,7 +165,7 @@ Gear button in the title bar, or tray menu > Settings. Changes are saved at once
 | `src/` | `kofrenot.App` (WPF), `kofrenot.Android` (Avalonia) and `kofrenot.Core` |
 | `tests/` | Unit tests for `Core` |
 | `docs/` | Documentation and its images |
-| `build/` | Installer and Android scripts, icon generator |
+| `build/` | Build scripts (`windows.cmd`, `build.sh`), installer and Android scripts, icon generator |
 | `samples/` | `DemoVault`: the demo data generator |
 | `lib/`, `packages/` | Third-party binaries and local NuGet packages, if any |
 | `.config/` | Local dotnet tools (ReportGenerator) |

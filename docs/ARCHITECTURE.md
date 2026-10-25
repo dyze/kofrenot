@@ -81,7 +81,7 @@ One namespace per folder (`Kofrenot.Core.Settings`, `Kofrenot.UI.Views`, ...). T
 | `Serilog`, `Serilog.Sinks.File` | App, Android | Log file |
 | `Avalonia.Android`, `Avalonia.Themes.Fluent` | Android | UI on Android, its Fluent theme for light and dark |
 | `coverlet.msbuild` | Tests | Coverage of `Core`, build fails below 95 % lines |
-| `dotnet-reportgenerator-globaltool` | Local tool (`.config/dotnet-tools.json`) | HTML coverage report (`build.cmd`) |
+| `dotnet-reportgenerator-globaltool` | Local tool (`.config/dotnet-tools.json`) | HTML coverage report (`build\windows.cmd`) |
 
 The update check (`GitHubReleaseFeed` in App) and the server (`KofreClient` in Core) use .NET's own `HttpClient`: kofrenot's only network access. Encryption uses .NET's own `AesGcm` and `Rfc2898DeriveBytes` (Core), and `ProtectedData` (DPAPI, part of the Windows desktop framework, App): no package.
 
