@@ -1,6 +1,6 @@
 # kofrenot: Android concept
 
-An Android client for **server vaults**: the same vaults as on Windows, read on the phone, offline. Planned for 0.10 ([ROADMAP.md](../ROADMAP.md#010-to-define)); nothing here is implemented yet.
+An Android client for **server vaults**: the same vaults as on Windows, read on the phone, offline. Planned for 0.9 ([ROADMAP.md](../ROADMAP.md#09-to-define)); nothing here is implemented yet.
 
 ```
  Windows (kofrenot.App)          Kofre server            Android (kofrenot.Android)
@@ -12,7 +12,7 @@ An Android client for **server vaults**: the same vaults as on Windows, read on 
 
 ## Scope
 
-### Supported in 0.10
+### Supported in 0.9
 The first version **reads**: it browses and searches, and never writes to a vault.
 
 | Feature | On Android | As on Windows |
@@ -20,11 +20,11 @@ The first version **reads**: it browses and searches, and never writes to a vaul
 | **Sign in** | Server address, email, password; the session kept, renewed as on Windows | ✔ |
 | **Account pass phrase** | Unlocks every server vault of the account; optionally remembered (Android Keystore) | ✔ (DPAPI there) |
 | **Vault list** | The account's server vaults, own and shared, with their role; add one from the server, remove it from the phone | ✔ |
-| **Offline** | Metadata kept whole on the phone: browsing and searching need no network | ✔ |
+| **Offline** | Metadata kept whole on the phone: browsing and searching need no network; the content of pinned nodes kept too | ✔ |
 | **Sync** | Downloads only: when the app opens or comes back, then every 30 s while it is shown; status dot as in the main window (synced, offline, problem) | Downloads ✔, uploads ✘ |
 | **Search** | The input box's search: nodes whose name has a word starting with the text, case and accents ignored, exact match first | ✔ (no adding) |
 | **Node details** | Type, name, colour, links read from the node's side (*contained by Kitchen*), tap a link to open its node; trail of open nodes, back button | ✔ |
-| **Notes** | Content shown as Markdown, task lists as (read-only) checkboxes, colours; fetched on demand ([0.8](../CHANGELOG.md#08---2026-10-25)) | ✔ |
+| **Notes** | Content shown as Markdown, task lists as (read-only) checkboxes, colours; fetched on demand ([0.8](../CHANGELOG.md#08---2026-10-25)), pinned notes readable offline | ✔ |
 | **Views** | Flat and tree views, as tabs; expand and collapse | ✔ |
 | **Pinned and recent** | Pinned nodes (from the vault), recent nodes (on this phone) | ✔ |
 | **Datasets** | Shown with name, type, size and icon; content not opened | Partly |
@@ -89,14 +89,14 @@ kofrenot.App      (WPF, net10.0-windows)          kofrenot.Android   (Avalonia, 
 | Logs | `ILog`, Serilog in App | Same rules, a file in the app's folder |
 | Sync timing, sign-in, opening a vault | `SyncService`, `ServerConnection`, `VaultSession` in Core (`Session/`: `TimeProvider` timers, `IUiThread`, `ISessionQuestions`) | An `IUiThread` on Avalonia's dispatcher, and its own `ISessionQuestions` (dialogs) |
 | Vault refresh after a download | `VaultWatcher` (`FileSystemWatcher`) | Sync tells the vault directly: no watcher |
-| Thumbnails | `IThumbnailMaker` | Not in 0.10: icons only |
+| Thumbnails | `IThumbnailMaker` | Not in 0.9: icons only |
 
-**Step 1, a refactor on Windows, is done (0.8)**: the session, account and sync logic is in Core, behind small interfaces for the timers, the UI thread and the questions asked to the user, with tests. 0.10 reuses it without copying code.
+**Step 1, a refactor on Windows, is done (0.8)**: the session, account and sync logic is in Core, behind small interfaces for the timers, the UI thread and the questions asked to the user, with tests. 0.9 reuses it without copying code.
 
 **Depends on 0.8**: content on demand keeps the phone's mirror small, the change files only; a note's content is downloaded when it is shown.
 
 ### Dependencies
-To add when 0.10 starts ([CLAUDE.md](../CLAUDE.md#dependencies)): `Avalonia`, `Avalonia.Android` (Android project only). Build: the .NET Android workload. Core stays without packages.
+To add when 0.9 starts ([CLAUDE.md](../CLAUDE.md#dependencies)): `Avalonia`, `Avalonia.Android` (Android project only). Build: the .NET Android workload. Core stays without packages.
 
 ## Security
 Same vaults, same files, same encryption ([Encryption](ARCHITECTURE.md#encryption)): the phone holds nothing a Windows device does not.
@@ -104,7 +104,7 @@ Same vaults, same files, same encryption ([Encryption](ARCHITECTURE.md#encryptio
 | Risk on a phone | Addressed by |
 | --- | --- |
 | Phone lost or stolen | Mirror and snapshot encrypted as on Windows; key remembered only in the Keystore, or not at all |
-| Other apps reading the files | App-private storage; no file given to other apps in 0.10 |
+| Other apps reading the files | App-private storage; no file given to other apps in 0.9 |
 | Content visible in the recent apps list | [Open question](#open-questions) |
 | Cleartext traffic | HTTPS only (Android's network security config) |
 
@@ -115,4 +115,4 @@ Same vaults, same files, same encryption ([Encryption](ARCHITECTURE.md#encryptio
 | Minimum Android version | Which, for the Keystore and Avalonia? |
 | Lock | Lock the vault after some time in the background? Fingerprint unlock of the remembered key? |
 | Privacy | Hide the app's content in the recent apps list and from screenshots (`FLAG_SECURE`)? |
-| Background sync | Sync only while the app is shown (0.10), or also in the background (WorkManager) later? |
+| Background sync | Sync only while the app is shown (0.9), or also in the background (WorkManager) later? |

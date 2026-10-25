@@ -11,7 +11,8 @@ Decisions: [GOAL.md](GOAL.md#decisions). Built in steps ([ROADMAP.md](../ROADMAP
 | 0.7 | [Sharing](#sharing) | Implemented ([ARCHITECTURE.md](ARCHITECTURE.md#sharing)) |
 | 0.7 | Members removed or leaving, [Rotation](#rotation) with the [fence](#fence) | Implemented ([ARCHITECTURE.md](ARCHITECTURE.md#members-leaving)) |
 | 0.8 | Content on demand ([Client sync](#client-sync)); thumbnails downloaded at once | Implemented ([ARCHITECTURE.md](ARCHITECTURE.md#server-vaults)) |
-| 0.9 | Pinned nodes ([Client sync](#client-sync)), batch download, uploads in parts | Planned |
+| 0.9 | Pinned nodes ([Client sync](#client-sync)) | Planned |
+| 0.10 | Batch download, uploads in parts | Planned |
 
 ## Principles
 - **Generic and blind.** The server stores *stores*: sets of files addressed by path, with their members. It never sees a key, a name or a content, and knows nothing of kofrenot: other apps can use it.

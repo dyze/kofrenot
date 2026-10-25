@@ -55,7 +55,7 @@ What could go wrong, and how it is addressed today:
 | --- | --- | --- |
 | Half-written file (crash, sync tool reading early) | Written as `*.tmp`, then renamed; `.tmp` files ignored ([Folder](ARCHITECTURE.md#folder)) | Implemented |
 | Two writers on one file | Each change is a new file named by a random id, never overwritten | Implemented |
-| File locked or still being copied | Skipped, logged once, read again at the next refresh ([Folder](ARCHITECTURE.md#folder)) | Implemented; retry on a timer: [ROADMAP.md](../ROADMAP.md#09-to-define) |
+| File locked or still being copied | Skipped, logged once, read again at the next refresh ([Folder](ARCHITECTURE.md#folder)) | Implemented; retry on a timer: [ROADMAP.md](../ROADMAP.md#010-to-define) |
 | Files arriving in any order (a link before its node, a change before its content) | Kept until what they refer to arrives; the result does not depend on the order, and a removal wins ([Local snapshot](ARCHITECTURE.md#local-snapshot)) | Implemented |
 | Concurrent edits on two devices | Shown as conflicts, never merged silently ([Renames](ARCHITECTURE.md#renames), [Notes](ARCHITECTURE.md#notes)) | Implemented |
 | A vault written by a newer kofrenot | Not misread: the vault closes and asks for an upgrade ([Format](ARCHITECTURE.md#format)) | Implemented |
@@ -100,7 +100,7 @@ What each version contains: [ROADMAP.md](../ROADMAP.md).
 | Server | A generic, blind, write-once store of files with accounts and members, on Linux, knowing nothing of kofrenot so other apps can use it, in its own repository ([kofreserver](https://github.com/dyze/kofreserver)); no email, the admin approves accounts in a JSON file (since 0.6) |
 | Sharing | Complete server vaults, with roles reader, writer and one owner; removing a member rotates the vault key (since 0.7) |
 | Keys | Vault keys wrapped for an identity (key pair) unlocked by a pass phrase or a recovery key; same model for folder and server vaults, format 6; a server vault's identity is its account's, one for all its server vaults (since 0.7) |
-| Clients | Windows (WPF); Android for server vaults only, read only first, with Avalonia (planned for 0.10: [ANDROID-CONCEPT.md](ANDROID-CONCEPT.md)) |
+| Clients | Windows (WPF); Android for server vaults only, read only first, with Avalonia (planned for 0.9: [ANDROID-CONCEPT.md](ANDROID-CONCEPT.md)) |
 | Views | A node type holding a definition (a tree from a root node through a link type, or a list of the nodes of a type), in versions kept in its changes: views work offline (since 0.4) |
 
 ## Open questions
