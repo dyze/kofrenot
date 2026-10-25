@@ -1,0 +1,38 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:views="using:Kofrenot.Phone.Views"
+             x:Class="Kofrenot.Phone.Views.NodePage">
+  <DockPanel>
+    <Border DockPanel.Dock="Top" Classes="bar">
+      <Grid ColumnDefinitions="Auto,*">
+        <Button Classes="flat" Content="‹" FontSize="24" Click="Back_Click" />
+        <TextBlock x:Name="Trail" Grid.Column="1" Classes="caption" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+      </Grid>
+    </Border>
+    <ScrollViewer>
+      <StackPanel Margin="16,8,16,24" Spacing="8">
+        <Grid ColumnDefinitions="Auto,*,Auto">
+          <Ellipse x:Name="ColorDot" Width="12" Height="12" Margin="0,0,8,0" VerticalAlignment="Center" />
+          <SelectableTextBlock x:Name="NodeName" Grid.Column="1" Classes="title" TextWrapping="Wrap" />
+          <TextBlock x:Name="Pinned" Grid.Column="2" Classes="caption" Text="Pinned" VerticalAlignment="Center" />
+        </Grid>
+        <TextBlock x:Name="NodeType" Classes="caption" />
+        <TextBlock x:Name="Conflict" Classes="error" IsVisible="False" />
+        <Border x:Name="NoteBox" CornerRadius="8" Padding="12" IsVisible="False">
+          <StackPanel x:Name="Note" Spacing="4" />
+        </Border>
+        <TextBlock x:Name="ContentText" TextWrapping="Wrap" IsVisible="False" />
+        <Button x:Name="OpenViewButton" Content="Open as a tab" IsVisible="False" Click="OpenView_Click" />
+        <TextBlock x:Name="LinksHeader" Classes="caption" Text="Links" Margin="0,12,0,0" />
+        <ItemsControl x:Name="Links">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate DataType="views:NodeRow">
+              <Button Classes="flat" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch"
+                      Padding="0" Content="{Binding}" Tag="{Binding}" Click="Link_Click" />
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </StackPanel>
+    </ScrollViewer>
+  </DockPanel>
+</UserControl>

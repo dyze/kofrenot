@@ -1,0 +1,40 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:views="using:Kofrenot.Phone.Views"
+             x:Class="Kofrenot.Phone.Views.HomePage">
+  <DockPanel>
+    <Border DockPanel.Dock="Top" Classes="bar">
+      <Grid ColumnDefinitions="*,Auto,Auto">
+        <Button Classes="flat" Click="Vaults_Click" HorizontalAlignment="Left">
+          <TextBlock x:Name="VaultName" Classes="title" TextTrimming="CharacterEllipsis" />
+        </Button>
+        <Button Grid.Column="1" Classes="flat" Click="Sync_Click">
+          <StackPanel Orientation="Horizontal" Spacing="6">
+            <Ellipse x:Name="SyncDot" Width="10" Height="10" VerticalAlignment="Center" />
+            <TextBlock x:Name="SyncText" Classes="caption" VerticalAlignment="Center" />
+          </StackPanel>
+        </Button>
+        <Button Grid.Column="2" Classes="flat" Content="⚙" FontSize="20" Click="Settings_Click" />
+      </Grid>
+    </Border>
+    <Border DockPanel.Dock="Top" Background="{StaticResource Banner}" Padding="16,6">
+      <TextBlock Classes="caption" TextWrapping="Wrap" Text="Read only: change this vault in kofrenot on Windows." />
+    </Border>
+    <ScrollViewer DockPanel.Dock="Top" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
+      <StackPanel x:Name="Tabs" Orientation="Horizontal" Margin="8,4" Spacing="4" />
+    </ScrollViewer>
+    <TextBox x:Name="SearchBox" DockPanel.Dock="Top" Margin="12,4" PlaceholderText="Search names" TextChanged="Search_TextChanged" />
+    <TextBlock x:Name="Message" DockPanel.Dock="Top" Classes="caption" Margin="16,8" TextWrapping="Wrap" IsVisible="False" />
+    <ListBox x:Name="List" SelectionChanged="List_SelectionChanged">
+      <ListBox.DataTemplates>
+        <DataTemplate DataType="views:TreeRow">
+          <Grid ColumnDefinitions="Auto,*" Margin="{Binding Indent}" MinHeight="48">
+            <Button Classes="flat toggle" Content="{Binding Toggle}" IsVisible="{Binding Item.CanExpand}" Tag="{Binding}"
+                    Click="Toggle_Click" Width="40" />
+            <ContentControl Grid.Column="1" Content="{Binding Row}" Margin="{Binding Shift}" />
+          </Grid>
+        </DataTemplate>
+      </ListBox.DataTemplates>
+    </ListBox>
+  </DockPanel>
+</UserControl>

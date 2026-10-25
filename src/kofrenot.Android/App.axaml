@@ -1,0 +1,74 @@
+<Application xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:views="using:Kofrenot.Phone.Views"
+             x:Class="Kofrenot.Phone.App"
+             RequestedThemeVariant="Default">
+  <!-- Default: light or dark, as the phone. -->
+
+  <Application.Resources>
+    <SolidColorBrush x:Key="Accent" Color="#11968A" />
+    <SolidColorBrush x:Key="Secondary" Color="#888888" />
+    <SolidColorBrush x:Key="Banner" Color="#3311968A" />
+    <SolidColorBrush x:Key="Scrim" Color="#99000000" />
+  </Application.Resources>
+
+  <Application.DataTemplates>
+    <DataTemplate DataType="views:HeaderRow">
+      <TextBlock Classes="caption" Text="{Binding Text}" Margin="16,16,16,4" />
+    </DataTemplate>
+    <DataTemplate DataType="views:NodeRow">
+      <Grid ColumnDefinitions="Auto,*" Margin="{Binding Indent}" MinHeight="48">
+        <Grid Width="32" Height="32" VerticalAlignment="Center">
+          <TextBlock Text="{Binding Glyph}" FontSize="20" HorizontalAlignment="Center" VerticalAlignment="Center" />
+          <Ellipse Width="10" Height="10" Fill="{Binding Color}" IsVisible="{Binding HasColor}"
+                   HorizontalAlignment="Right" VerticalAlignment="Bottom" />
+        </Grid>
+        <StackPanel Grid.Column="1" Margin="12,0,0,0" VerticalAlignment="Center">
+          <TextBlock Text="{Binding Name}" FontSize="16" TextTrimming="CharacterEllipsis" />
+          <TextBlock Classes="caption" Text="{Binding Detail}" IsVisible="{Binding HasDetail}" TextTrimming="CharacterEllipsis" />
+        </StackPanel>
+      </Grid>
+    </DataTemplate>
+  </Application.DataTemplates>
+
+  <Application.Styles>
+    <FluentTheme>
+      <FluentTheme.Palettes>
+        <ColorPaletteResources x:Key="Light" Accent="#11968A" />
+        <ColorPaletteResources x:Key="Dark" Accent="#2BB59A" />
+      </FluentTheme.Palettes>
+    </FluentTheme>
+    <Style Selector=":is(TextBlock).title">
+      <Setter Property="FontSize" Value="22" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
+    <Style Selector=":is(TextBlock).caption">
+      <Setter Property="FontSize" Value="13" />
+      <Setter Property="Foreground" Value="{StaticResource Secondary}" />
+    </Style>
+    <Style Selector=":is(TextBlock).error">
+      <Setter Property="Foreground" Value="#D9534F" />
+      <Setter Property="TextWrapping" Value="Wrap" />
+    </Style>
+    <Style Selector="Button.flat">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="MinHeight" Value="44" />
+      <Setter Property="MinWidth" Value="44" />
+    </Style>
+    <Style Selector="ListBox">
+      <Setter Property="Background" Value="Transparent" />
+    </Style>
+    <Style Selector="Button.tab">
+      <Setter Property="Height" Value="40" />
+      <Setter Property="MinHeight" Value="0" />
+      <Setter Property="VerticalContentAlignment" Value="Center" />
+    </Style>
+    <Style Selector="Button.toggle">
+      <Setter Property="FontSize" Value="18" />
+    </Style>
+    <Style Selector="Border.bar">
+      <Setter Property="Padding" Value="8,4" />
+      <Setter Property="MinHeight" Value="56" />
+    </Style>
+  </Application.Styles>
+</Application>

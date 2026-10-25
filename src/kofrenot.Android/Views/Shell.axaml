@@ -1,0 +1,19 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="Kofrenot.Phone.Views.Shell">
+  <Grid>
+    <ContentControl x:Name="PageHost" />
+    <Border x:Name="Overlay" IsVisible="False" Background="{StaticResource Scrim}">
+      <Border Background="{DynamicResource SystemControlBackgroundAltHighBrush}" CornerRadius="12" Padding="20"
+              Margin="24" VerticalAlignment="Center">
+        <StackPanel Spacing="16">
+          <TextBlock x:Name="OverlayText" TextWrapping="Wrap" />
+          <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
+            <Button x:Name="OverlayNo" Content="Cancel" Classes="flat" Click="OverlayNo_Click" />
+            <Button x:Name="OverlayYes" Content="OK" Classes="accent" Click="OverlayYes_Click" />
+          </StackPanel>
+        </StackPanel>
+      </Border>
+    </Border>
+  </Grid>
+</UserControl>

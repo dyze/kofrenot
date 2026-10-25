@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" android:installLocation="auto">
+	<uses-permission android:name="android.permission.INTERNET" />
+	<!-- HTTPS only (network_security_config); no backup of the app's files (its mirrors, keys and session) to the cloud. -->
+	<application android:label="kofrenot" android:icon="@drawable/icon" android:networkSecurityConfig="@xml/network_security_config" android:allowBackup="false" />
+</manifest>

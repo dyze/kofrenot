@@ -1,0 +1,30 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="Kofrenot.Phone.Views.SettingsPage">
+  <DockPanel>
+    <Border DockPanel.Dock="Top" Classes="bar">
+      <Grid ColumnDefinitions="Auto,*">
+        <Button Classes="flat" Content="‹" FontSize="24" Click="Back_Click" />
+        <TextBlock Grid.Column="1" Classes="title" Text="Settings" VerticalAlignment="Center" />
+      </Grid>
+    </Border>
+    <ScrollViewer>
+      <StackPanel Margin="16" Spacing="8">
+        <TextBlock Classes="caption" Text="Server account" />
+        <TextBlock x:Name="Account" TextWrapping="Wrap" />
+        <Button Content="Sign out" Click="SignOut_Click" />
+
+        <TextBlock Classes="caption" Text="Vault" Margin="0,16,0,0" />
+        <TextBlock x:Name="Vault" TextWrapping="Wrap" />
+        <Button x:Name="ForgetButton" Content="Forget its remembered pass phrase" Click="Forget_Click" />
+
+        <TextBlock Classes="caption" Text="Logging" Margin="0,16,0,0" />
+        <CheckBox x:Name="DebugBox" Content="Debug details in the log" IsCheckedChanged="Debug_Changed" />
+        <TextBlock x:Name="LogFolder" Classes="caption" TextWrapping="Wrap" />
+
+        <TextBlock Classes="caption" Text="About" Margin="0,16,0,0" />
+        <TextBlock x:Name="About" TextWrapping="Wrap" />
+      </StackPanel>
+    </ScrollViewer>
+  </DockPanel>
+</UserControl>

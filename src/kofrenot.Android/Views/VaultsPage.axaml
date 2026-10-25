@@ -1,0 +1,39 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:views="using:Kofrenot.Phone.Views"
+             x:Class="Kofrenot.Phone.Views.VaultsPage">
+  <DockPanel>
+    <Border DockPanel.Dock="Top" Classes="bar">
+      <Grid ColumnDefinitions="*,Auto">
+        <TextBlock x:Name="Title" Classes="title" Text="Vaults" VerticalAlignment="Center" Margin="8,0" />
+        <Button x:Name="SettingsButton" Grid.Column="1" Classes="flat" Content="⚙" FontSize="20" Click="Settings_Click" />
+      </Grid>
+    </Border>
+    <StackPanel DockPanel.Dock="Bottom" Margin="16" Spacing="8">
+      <TextBlock x:Name="Empty" Classes="caption" TextWrapping="Wrap" IsVisible="False" />
+      <Button x:Name="AddButton" Classes="accent" Content="Add from the server" HorizontalAlignment="Stretch"
+              HorizontalContentAlignment="Center" Click="Add_Click" />
+      <ProgressBar x:Name="Busy" IsIndeterminate="True" IsVisible="False" />
+    </StackPanel>
+    <ListBox x:Name="List" SelectionChanged="List_SelectionChanged">
+      <ListBox.DataTemplates>
+        <DataTemplate DataType="views:VaultRow">
+          <Grid ColumnDefinitions="Auto,*,Auto" MinHeight="56">
+            <Ellipse Width="10" Height="10" Fill="{Binding Dot}" VerticalAlignment="Center" Margin="8,0" />
+            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+              <TextBlock Text="{Binding Name}" FontSize="16" TextTrimming="CharacterEllipsis" />
+              <TextBlock Classes="caption" Text="{Binding Detail}" TextTrimming="CharacterEllipsis" />
+            </StackPanel>
+            <Button Grid.Column="2" Classes="flat" Content="✕" Tag="{Binding}" Click="Remove_Click" />
+          </Grid>
+        </DataTemplate>
+        <DataTemplate DataType="views:StoreRow">
+          <StackPanel MinHeight="56" VerticalAlignment="Center" Margin="8,0">
+            <TextBlock Text="{Binding Name}" FontSize="16" />
+            <TextBlock Classes="caption" Text="{Binding Detail}" />
+          </StackPanel>
+        </DataTemplate>
+      </ListBox.DataTemplates>
+    </ListBox>
+  </DockPanel>
+</UserControl>

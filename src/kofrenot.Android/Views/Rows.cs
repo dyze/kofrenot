@@ -1,0 +1,61 @@
+using Avalonia;
+using Avalonia.Media;
+using Kofrenot.Core.Browse;
+using Kofrenot.Core.Graph;
+
+namespace Kofrenot.Phone.Views;
+
+/// <summary>A header between the rows of a list (Pinned, Recent).</summary>
+public sealed record HeaderRow(string Text);
+
+/// <summary>A node in a list: its picture, name and a detail (its type, how a link reads).</summary>
+public sealed record NodeRow(Node Node, string Name, string Detail, string Glyph, IBrush? Color, int Depth = 0)
+{
+    private const double IndentStep = 20;
+
+    public bool HasColor => Color is not null;
+
+    public bool HasDetail => Detail.Length > 0;
+
+    public Thickness Indent => new(8 + Depth * IndentStep, 0, 8, 0);
+
+    /// <summary>A node's row, its type as the detail unless <paramref name="detail"/> is given.</summary>
+    public static NodeRow Of(KnowledgeGraph graph, Node node, string? detail = null, string? mark = null, int depth = 0)
+    {
+        var visual = NodeVisual.Of(graph, node);
+        return new NodeRow(node, node.Name + mark, detail ?? graph.Types.NodeTypeName(node.Type), NodeLook.Glyph(visual.Icon), NodeLook.Brush(visual.Color), depth);
+    }
+}
+
+/// <summary>How a node is pictured on the phone: a glyph for its icon (no thumbnails), a dot of its colour.</summary>
+public static class NodeLook
+{
+    private static readonly Dictionary<NodeColor, IBrush> Shades = new()
+    {
+        [NodeColor.Yellow] = new SolidColorBrush(Color.FromRgb(0xF2, 0xC1, 0x3A)),
+        [NodeColor.Green] = new SolidColorBrush(Color.FromRgb(0x6F, 0xBF, 0x4A)),
+        [NodeColor.Blue] = new SolidColorBrush(Color.FromRgb(0x4A, 0x90, 0xE2)),
+        [NodeColor.Pink] = new SolidColorBrush(Color.FromRgb(0xE2, 0x6A, 0x9A)),
+        [NodeColor.Purple] = new SolidColorBrush(Color.FromRgb(0x8E, 0x7C, 0xE0)),
+        [NodeColor.Teal] = new SolidColorBrush(Color.FromRgb(0x2B, 0xB5, 0x9A)),
+        [NodeColor.Grey] = new SolidColorBrush(Color.FromRgb(0x9A, 0x9A, 0x9A)),
+    };
+
+    /// <summary>The colour's brush, as on Windows; null for none.</summary>
+    public static IBrush? Brush(NodeColor color) => Shades.GetValueOrDefault(color);
+
+    public static string Glyph(NodeIcon icon) => icon switch
+    {
+        NodeIcon.Note => "≡",
+        NodeIcon.File => "▭",
+        NodeIcon.Image => "▨",
+        NodeIcon.Text => "¶",
+        NodeIcon.Code => "{}",
+        NodeIcon.Audio => "♪",
+        NodeIcon.Video => "▶",
+        NodeIcon.Archive => "▤",
+        NodeIcon.Pdf => "▯",
+        NodeIcon.View => "⊞",
+        _ => "●",
+    };
+}

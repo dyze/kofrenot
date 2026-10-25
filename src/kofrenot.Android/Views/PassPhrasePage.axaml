@@ -1,0 +1,18 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="Kofrenot.Phone.Views.PassPhrasePage">
+  <ScrollViewer>
+    <StackPanel Margin="24" Spacing="12">
+      <TextBlock Classes="title" Text="Pass phrase" />
+      <TextBlock x:Name="Place" Classes="caption" TextWrapping="Wrap" />
+      <TextBlock x:Name="Hint" TextWrapping="Wrap" IsVisible="False" />
+      <TextBox x:Name="PassPhraseBox" PlaceholderText="Pass phrase" PasswordChar="•" TextInputOptions.ContentType="Password" />
+      <CheckBox x:Name="RememberBox" Content="Remember it on this phone" />
+      <TextBlock x:Name="Error" Classes="error" IsVisible="False" />
+      <Button x:Name="UnlockButton" Classes="accent" Content="Unlock" HorizontalAlignment="Stretch"
+              HorizontalContentAlignment="Center" Click="Unlock_Click" />
+      <ProgressBar x:Name="Busy" IsIndeterminate="True" IsVisible="False" />
+      <Button Classes="flat" Content="Vaults" HorizontalAlignment="Center" Click="Vaults_Click" />
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>
