@@ -77,7 +77,8 @@ public static class TaskList
 
     private static IEnumerable<string> FilledLines(string text) => Lines(text).Where(line => !string.IsNullOrWhiteSpace(line));
 
-    private static TaskItem? ItemOf(string line)
+    /// <summary>The item a line is, or null when it is not one.</summary>
+    public static TaskItem? ItemOf(string line)
     {
         var isDone = line.StartsWith(DoneMark, StringComparison.OrdinalIgnoreCase);
         if (!isDone && !line.StartsWith(OpenMark, StringComparison.Ordinal))
