@@ -50,3 +50,7 @@ An Android client that reads server vaults: [ANDROID-CONCEPT.md](docs/ANDROID-CO
 12. **Android: datasets.** Open a file on demand, share it to another app, add a file from the phone.
 13. **Android: sharing.** Members, roles, share, leave.
 14. Stores **statistics** about data exchanges with server. It could be useful for analysing performance problems.
+15. **Events and Qualifiers.** :
+	* Qualifiers enrich existing relationships (`node → link → node`) with contextual information such as dates, locations, sources, quantities, or confidence levels. Example: Dune → written by → Frank Herbert (date: 1965).
+	* Events represent occurrences involving multiple entities, each with a specific role, and their own qualifiers. Example: Publication of Dune (work: Dune, publisher: Chilton Books, date: 1965, country: USA).
+	* Together, these features transform Kofrenot from a simple knowledge graph into a richer, contextual knowledge system, enabling more precise searches, historical tracking, and complex relationships while preserving the existing simple model.
