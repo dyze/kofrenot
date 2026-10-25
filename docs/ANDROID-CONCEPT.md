@@ -20,11 +20,11 @@ The first version **reads**: it browses and searches, and never writes to a vaul
 | **Sign in** | Server address, email, password; the session kept, renewed as on Windows | ✔ |
 | **Account pass phrase** | Unlocks every server vault of the account; optionally remembered (Android Keystore) | ✔ (DPAPI there) |
 | **Vault list** | The account's server vaults, own and shared, with their role; add one from the server, remove it from the phone | ✔ |
-| **Offline** | Metadata kept whole on the phone: browsing and searching need no network; the content of pinned nodes kept too | ✔ |
+| **Offline** | Metadata kept whole on the phone: browsing and searching need no network; a note once shown stays readable (pinned nodes kept offline: [0.10](../ROADMAP.md#010-to-define)) | ✔ |
 | **Sync** | Downloads only: when the app opens or comes back, then every 30 s while it is shown; status dot as in the main window (synced, offline, problem) | Downloads ✔, uploads ✘ |
 | **Search** | The input box's search: nodes whose name has a word starting with the text, case and accents ignored, exact match first | ✔ (no adding) |
 | **Node details** | Type, name, colour, links read from the node's side (*contained by Kitchen*), tap a link to open its node; trail of open nodes, back button | ✔ |
-| **Notes** | Content shown as Markdown, task lists as (read-only) checkboxes, colours; fetched on demand ([0.8](../CHANGELOG.md#08---2026-10-25)), pinned notes readable offline | ✔ |
+| **Notes** | Content shown as Markdown, task lists as (read-only) checkboxes, colours; fetched on demand ([0.8](../CHANGELOG.md#08---2026-10-25)) | ✔ |
 | **Views** | Flat and tree views, as tabs; expand and collapse | ✔ |
 | **Pinned and recent** | Pinned nodes (from the vault), recent nodes (on this phone) | ✔ |
 | **Datasets** | Shown with name, type, size and icon; content not opened | Partly |
