@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Builds a demo vault of made-up data, for screenshots: "dotnet run" in samples/DemoVault.
+       Not part of kofrenot.sln, so build.cmd leaves it out. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <!-- WPF draws the covers and makes their thumbnails, as kofrenot does. -->
+    <UseWPF>true</UseWPF>
+    <RootNamespace>Kofrenot.Samples</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Using Include="System.IO" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\kofrenot.Core\kofrenot.Core.csproj" />
+    <!-- Its thumbnail maker and Windows' key protection, so the demo vault opens as kofrenot made it. -->
+    <ProjectReference Include="..\..\src\kofrenot.App\kofrenot.App.csproj" />
+  </ItemGroup>
+
+</Project>

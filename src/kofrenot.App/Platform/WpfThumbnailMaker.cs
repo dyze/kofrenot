@@ -10,7 +10,7 @@ namespace Kofrenot.UI.Platform;
 /// large photo is never decoded whole), saved as JPEG, or as PNG when it has transparency.
 /// Thread-safe: it uses frozen bitmaps only.
 /// </summary>
-internal sealed class WpfThumbnailMaker : IThumbnailMaker
+public sealed class WpfThumbnailMaker : IThumbnailMaker
 {
     private const int JpegQuality = 85;
 

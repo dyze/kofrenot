@@ -30,6 +30,7 @@ kofrenot.Core  (no Windows dependency, fully unit-tested on any OS)
 - All domain logic goes in `Core`. When it needs Windows, it takes an interface defined in `Core`, and `App` supplies the implementation.
 - `App.xaml.cs` wires everything together at startup.
 - Tests: `tests/kofrenot.Core.Tests` (xUnit), `Core` only.
+- `samples/DemoVault` (not in `kofrenot.sln`): builds a demo vault of made-up data in `artifacts/demo` through `Core`, with `App`'s `WpfThumbnailMaker` and `DpapiProtector`, for screenshots (README, *Development*).
 - The server, Kofre, is generic (accounts, stores, files: no kofrenot term) and lives in its own repository; kofrenot only talks to it over HTTP: [kofreserver](https://github.com/dyze/kofreserver), [SERVER-CONCEPT.md](SERVER-CONCEPT.md#generic-by-design).
 
 ### Folders
