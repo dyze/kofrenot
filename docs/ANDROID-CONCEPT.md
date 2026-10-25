@@ -87,7 +87,8 @@ kofrenot.App      (WPF, net10.0-windows)          kofrenot.Android   (Avalonia, 
 | Remembered keys, session | `ISecretProtector` | `KeystoreProtector` (Android Keystore, AES key never leaving it) |
 | Data folder | `AppFiles` (`%LocalAppData%`, portable) | The app's private files folder |
 | Logs | `ILog`, Serilog in App | Same rules, a file in the app's folder |
-| Sync timing, sign-in, opening a vault | `SyncService`, `ServerConnection`, `VaultSession` **in App** (WPF timers and dialogs mixed in) | Their logic moved to Core first, timers and dialogs left to each client |
+| Sync timing, sign-in | `SyncService`, `ServerConnection` in Core (`Session/`: `TimeProvider` timers, `IUiThread`) | An `IUiThread` on Avalonia's dispatcher |
+| Opening a vault | `VaultSession` **in App** (WPF dialogs mixed in) | Its logic moved to Core first, dialogs left to each client |
 | Vault refresh after a download | `VaultWatcher` (`FileSystemWatcher`) | Sync tells the vault directly: no watcher |
 | Thumbnails | `IThumbnailMaker` | Not in 0.10: icons only |
 

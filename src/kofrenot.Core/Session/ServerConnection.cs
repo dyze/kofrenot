@@ -1,15 +1,13 @@
-using System.Net.Http;
-using System.Windows.Threading;
 using Kofrenot.Core.Logging;
 using Kofrenot.Core.Server;
 using Kofrenot.Core.Settings;
 using Kofrenot.Core.Sharing;
 
-namespace Kofrenot.UI.Sync;
+namespace Kofrenot.Core.Session;
 
 /// <summary>
 /// The server account of this kofrenot (one for all its server vaults): its client, its session
-/// kept across restarts (protected by Windows), never its password, and its identity, copied on
+/// kept across restarts (protected by the device), never its password, and its identity, copied on
 /// this computer so server vaults unlock offline.
 /// </summary>
 public sealed class ServerConnection : IDisposable
@@ -19,12 +17,16 @@ public sealed class ServerConnection : IDisposable
 
     private readonly SettingsStore _settings;
     private readonly ServerSessionMemory _sessions;
+    private readonly IUiThread _ui;
     private readonly ILog _log;
-    private readonly Dispatcher _dispatcher = Dispatcher.CurrentDispatcher;
+    private readonly HttpMessageHandler? _handler;
     private HttpClient? _http;
 
-    public ServerConnection(SettingsStore settings, ServerSessionMemory sessions, AccountIdentities identities, VaultOwners owners, ILog log)
+    /// <param name="handler">Sends the requests; null for the network.</param>
+    public ServerConnection(SettingsStore settings, ServerSessionMemory sessions, AccountIdentities identities, VaultOwners owners, IUiThread ui, ILog log, HttpMessageHandler? handler = null)
     {
+        _ui = ui;
+        _handler = handler;
         _settings = settings;
         _sessions = sessions;
         Identities = identities;
@@ -93,7 +95,7 @@ public sealed class ServerConnection : IDisposable
             {
                 TooOld = tooOld;
                 _log.Info("Server", tooOld is null ? $"Server version {version}" : $"Server too old: {version ?? "0.1"}");
-                _ = _dispatcher.BeginInvoke(() => Changed?.Invoke());
+                _ui.Post(() => Changed?.Invoke());
             }
 
             if (tooOld is null)
@@ -101,7 +103,7 @@ public sealed class ServerConnection : IDisposable
                 var before = Identity?.Version;
                 if ((await Identities.RefreshAsync(client, account.Server, account.Email))?.Version != before)
                 {
-                    _ = _dispatcher.BeginInvoke(() => Changed?.Invoke());
+                    _ui.Post(() => Changed?.Invoke());
                 }
             }
         }
@@ -131,13 +133,13 @@ public sealed class ServerConnection : IDisposable
     private void Connect(Uri server, ServerSession? session)
     {
         _http?.Dispose();
-        _http = new HttpClient { BaseAddress = server, Timeout = Timeout };
+        _http = new HttpClient(_handler ?? new HttpClientHandler(), disposeHandler: _handler is null) { BaseAddress = server, Timeout = Timeout };
         Client = new KofreClient(_http, session, log: _log);
         Client.SessionChanged += changed =>
         {
             // Raised on the thread of the call that renewed it: a sync runs in the background.
             _sessions.Remember(server, changed);
-            _dispatcher.BeginInvoke(() => Changed?.Invoke());
+            _ui.Post(() => Changed?.Invoke());
         };
     }
 }

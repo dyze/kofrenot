@@ -39,6 +39,7 @@
     <Using Include="Kofrenot.Core.Notes" />
     <Using Include="Kofrenot.Core.Placement" />
     <Using Include="Kofrenot.Core.Server" />
+    <Using Include="Kofrenot.Core.Session" />
     <Using Include="Kofrenot.Core.Settings" />
     <Using Include="Kofrenot.Core.Storage" />
     <Using Include="Kofrenot.Core.Updates" />

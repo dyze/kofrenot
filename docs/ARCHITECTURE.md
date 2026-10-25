@@ -6,16 +6,16 @@
 kofrenot.App   (WPF, Windows only)
 │  main window (input box, node details, note editor, dataset panel), creation dialog, settings window, pass phrase dialog, log window, changelog window, tray icon
 │  VaultSession (the registered vaults; opens one, watches it and adds to it through the creation dialog)
-│  ServerConnection + SyncService (the server account; syncs the server vaults in the background)
 │  adapters: SerilogFileLog, SingleInstance, NativeWindows + WindowPlacer (window positions), GitHubReleaseFeed, Browser,
-│            DpapiProtector, GlobalHotkey, VaultWatcher
+│            DpapiProtector, GlobalHotkey, VaultWatcher, DispatcherUiThread
 │
-│  implements ▼  IReleaseFeed · ILog · ISecretProtector
+│  implements ▼  IReleaseFeed · ILog · ISecretProtector · IUiThread
 │
 kofrenot.Core  (no Windows dependency, fully unit-tested on any OS)
    Graph: KnowledgeGraph · Node · Link · TypeCatalog · CustomLinkTypes · LinkAliases · Change
    Storage: Vault · VaultFolder · VaultFormat · SecretBox · ChunkedBox · KeyWrap · SnapshotStore · NoteFiles · DatasetFiles · ThumbnailFiles · KeyMemory · VaultNameMemory
    Server: KofreClient · ServerSync · VaultMove · ServerSessionMemory   ── HTTPS ──►  Kofre server (own repository: kofreserver)
+   Session: ServerConnection · SyncService   (the server account; syncs the server vaults in the background)
    Input: InputParser · GraphSearch · AddPlanner · InputPresenter · CreationForm
    Browse: NodeBrowser · NodeDetails · NodeVisual · NodeFacts · PinPlanner · RecentNodes · ViewTabs · ViewStates
    Notes: NotePlanner · MarkdownFormat
@@ -46,6 +46,7 @@ One namespace per folder (`Kofrenot.Core.Settings`, `Kofrenot.UI.Views`, ...). T
 | `Notes/` | `NotePlanner` (`NoteState`, `ConflictVersion`: load a note, plan its next version), `MarkdownFormat` (`TextEdit`: the toolbar's Markdown) |
 | `Datasets/` | `DatasetPlanner` (`DatasetState`, `DatasetChoice`: load a dataset, plan an import or the version kept from a conflict), `ByteSize` (sizes as shown: 1.2 MB), `DatasetType` (`DatasetCategory`, `DatasetViewer`: the inner type, from the extension, its category and viewer), `IThumbnailMaker` (implemented by App), `TextPreview` (the beginning of a text, for the viewer), `ImageZoom` (the image window's zoom: fit, steps, percent) |
 | `Server/` | Server vaults, see [Server vaults](#server-vaults): `KofreClient` (the server's REST API, renews its token; `IStoreFiles`, `ServerException` + `ServerFailure`), `SyncStatus` (where a server vault's sync stands, and how it is told), `ServerSync` (mirror ⇄ store), `StorePaths`, `VaultMove` (a folder vault into a mirror), `ServerSessionMemory` (`server-session.json`, through `ProtectedStore`) |
+| `Session/` | What a client holds while it runs, shared by every client ([Android](ANDROID-CONCEPT.md#architecture)): `ServerConnection` (the server account: sign up, in, out; its session kept through `ISecretProtector`), `SyncService` (syncs every server vault in the background, see [Server vaults](#server-vaults); its timers through `TimeProvider`), `IUiThread` (the thread their events are raised on) |
 | `Logging/` | `ILog` (with `NullLog`), `LogEntry`, `RingLog`, `CompositeLog`, `FilteredLog` |
 | `Placement/` | Window positions: `WindowPlacement`, `PlacementRules`, `PlacementStore` (see [Window positions](#window-positions)) |
 | `Updates/` | The daily update check, see [Updates](#updates): `UpdateChecker`, `Release`, `IReleaseFeed`, `UpdateStore` |
@@ -53,10 +54,9 @@ One namespace per folder (`Kofrenot.Core.Settings`, `Kofrenot.UI.Views`, ...). T
 | `kofrenot.App` | Content |
 | --- | --- |
 | *(root)* | `App.xaml`: startup and wiring; `App.Hotkeys` (the hotkey that shows kofrenot, and the vaults'); `VaultSession` (the open vault: create, unlock, watch, `Create` (creation dialog, then add); `VaultSession.Vaults`: switch, register, unregister, move, name, forget a remembered key; `VaultSession.Server`: create on, add from, move to and delete from the server) |
-| `Sync/` | `ServerConnection` (the server account: sign up, in, out; its session kept with DPAPI), `SyncService` (syncs every server vault in the background, see [Server vaults](#server-vaults)) |
 | `Views/` | Windows: `MainWindow` (input box, shows `InputPresenter`; `MainWindow.Vaults`: the vault box, `VaultChoice`, and a vault's hotkey), `NodeDetailsPanel` (in the main window, shows a `NodeBrowser`; `NoteEditor` for a note, `DatasetPanel` for a dataset: import, export, drag in and out, and `DatasetView`, its viewer), `NodeVisualView` + `ThumbnailCache` (a node's picture in rows), `CreationDialog` (shows a `CreationForm`, one step at a time; the node types in a list with their icons (`TypeChoice`), the focus starting on the chosen one; the link type in a combo, as it has six entries), `MarkdownBox` (note text and toolbar), `SharedStyles` (the type scale: title, heading, body, secondary, caption, footer; shared buttons), `SettingsWindow` (tabs General, Key bindings (`KeyBindingsSection`), Vault (`VaultsSection`; `StoreChoiceDialog`, `DeleteServerVaultDialog`), Server (`ServerSection`), Link types (`LinkTypesSection`), Appearance, Logging, About; `HotkeyCapture`: the shortcut pressed in a hotkey box), `PassphraseDialog`, `ImageWindow` (a dataset's image), `LogWindow`, `ChangelogWindow` (Settings > About > *Show changelog*); `MessageDialog` (messages and questions in the app's theme, instead of the Windows `MessageBox`); `AppTheme` |
 | `Tray/` | `TrayIcon` |
-| `Platform/` | Implementations of the `Core` interfaces (`GitHubReleaseFeed`, `DpapiProtector`), `WpfThumbnailMaker` (`IThumbnailMaker`), `DragExport` + `LazyFileDrop` (a file given only when asked for), `Browser` (opens web pages), `SingleInstance`, `GlobalHotkey` (`RegisterHotKey`, several by id), `VaultWatcher` (`FileSystemWatcher`), and window placement (`NativeWindows`, `WindowPlacer`) |
+| `Platform/` | Implementations of the `Core` interfaces (`GitHubReleaseFeed`, `DpapiProtector`, `DispatcherUiThread`), `WpfThumbnailMaker` (`IThumbnailMaker`), `DragExport` + `LazyFileDrop` (a file given only when asked for), `Browser` (opens web pages), `SingleInstance`, `GlobalHotkey` (`RegisterHotKey`, several by id), `VaultWatcher` (`FileSystemWatcher`), and window placement (`NativeWindows`, `WindowPlacer`) |
 | `Logging/` | `LogHub`, `SerilogFileLog` |
 | `Assets/` | `kofrenot.ico` (drawn by `build/make_icon.py`) |
 
@@ -191,7 +191,7 @@ A vault kept on a Kofre server ([kofreserver](https://github.com/dyze/kofreserve
                               ServerSync ◄──► KofreClient ── HTTPS, JWT ──► Kofre server
 ```
 
-- **Sync** (`SyncService`, App): every 30 s, 2 s after a change or when the window is shown, one sync at a time, for every server vault of the list, in the background. A download is written as `.tmp` then renamed, so `VaultWatcher` sees it and the vault refreshes. Offline, writes stay in the mirror until the next sync: nothing is queued elsewhere. Files are only added on both sides, so a sync is two copies, never a merge.
+- **Sync** (`SyncService`, Core `Session/`, started on the UI thread through `IUiThread`): every 30 s, 2 s after a change or when the window is shown, one sync at a time, for every server vault of the list, in the background. A download is written as `.tmp` then renamed, so `VaultWatcher` sees it and the vault refreshes. Offline, writes stay in the mirror until the next sync: nothing is queued elsewhere. Files are only added on both sides, so a sync is two copies, never a merge.
 - **Content on demand** (since 0.8): a sync leaves notes' and datasets' files (`content/*.kfn`, `*.kfd`: `StorePaths.IsOnDemand`) on the store, marked as known there so they are never uploaded back; thumbnails (`.kft`) come at once, being small and shown in lists. Content already in a mirror stays.
 
   ```

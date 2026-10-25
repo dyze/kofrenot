@@ -5,11 +5,11 @@ using Kofrenot.Core.Graph;
 using Kofrenot.Core.Input;
 using Kofrenot.Core.Logging;
 using Kofrenot.Core.Server;
+using Kofrenot.Core.Session;
 using Kofrenot.Core.Settings;
 using Kofrenot.Core.Storage;
 using Kofrenot.Core.Views;
 using Kofrenot.UI.Platform;
-using Kofrenot.UI.Sync;
 using Kofrenot.UI.Views;
 
 namespace Kofrenot.UI;

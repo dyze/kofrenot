@@ -3,8 +3,8 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using Kofrenot.Core.Logging;
 using Kofrenot.Core.Server;
+using Kofrenot.Core.Session;
 using Kofrenot.Core.Storage;
-using Kofrenot.UI.Sync;
 
 namespace Kofrenot.UI.Views;
 

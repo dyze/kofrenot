@@ -1,15 +1,13 @@
-using System.IO;
-using System.Windows.Threading;
-using Kofrenot.Core;
 using Kofrenot.Core.Logging;
 using Kofrenot.Core.Server;
 using Kofrenot.Core.Settings;
 
-namespace Kofrenot.UI.Sync;
+namespace Kofrenot.Core.Session;
 
 /// <summary>
 /// Syncs the server vaults with their stores, in the background, one sync at a time: every
 /// <see cref="SyncStatus.Every"/>, soon after a change (<see cref="Soon"/>), and when asked.
+/// Each sync starts on the UI thread (<see cref="IUiThread"/>); its files are copied off it.
 /// </summary>
 public sealed class SyncService : IDisposable
 {
@@ -20,26 +18,24 @@ public sealed class SyncService : IDisposable
     private readonly AppFiles _files;
     private readonly ServerConnection _server;
     private readonly ILog _log;
-    private readonly DispatcherTimer _every = new() { Interval = SyncStatus.Every };
-    private readonly DispatcherTimer _soon = new() { Interval = Settle };
+    private readonly ITimer _every;
+    private readonly ITimer _soon;
     private readonly Dictionary<Guid, SyncStatus> _statuses = [];
     private Task? _running;
     private bool _again;
 
-    public SyncService(SettingsStore settings, AppFiles files, ServerConnection server, ILog log)
+    /// <param name="time">Runs the timers; null for the system's.</param>
+    public SyncService(SettingsStore settings, AppFiles files, ServerConnection server, IUiThread ui, ILog log, TimeProvider? time = null)
     {
         _settings = settings;
         _files = files;
         _server = server;
         _log = log;
-        _every.Tick += (_, _) => _ = SyncNowAsync();
-        _soon.Tick += (_, _) =>
-        {
-            _soon.Stop();
-            _ = SyncNowAsync();
-        };
+        var clock = time ?? TimeProvider.System;
+        TimerCallback sync = _ => ui.Post(() => _ = SyncNowAsync());
+        _every = clock.CreateTimer(sync, null, SyncStatus.Every, SyncStatus.Every);
+        _soon = clock.CreateTimer(sync, null, Timeout.InfiniteTimeSpan, Timeout.InfiniteTimeSpan);
         server.Changed += Soon;
-        _every.Start();
     }
 
     /// <summary>Raised on the UI thread when a sync ends.</summary>
@@ -49,11 +45,7 @@ public sealed class SyncService : IDisposable
         _statuses.TryGetValue(store.Id, out var status) ? status : new SyncStatus(null, null, 0);
 
     /// <summary>Syncs in a moment: changes come in bursts (a note and its content, a sync's own downloads).</summary>
-    public void Soon()
-    {
-        _soon.Stop();
-        _soon.Start();
-    }
+    public void Soon() => _soon.Change(Settle, Timeout.InfiniteTimeSpan);
 
     /// <summary>Syncs every server vault now, or once more after the sync running ends.</summary>
     public Task SyncNowAsync()
@@ -77,8 +69,8 @@ public sealed class SyncService : IDisposable
 
     public void Dispose()
     {
-        _every.Stop();
-        _soon.Stop();
+        _every.Dispose();
+        _soon.Dispose();
     }
 
     private async Task RunAsync()

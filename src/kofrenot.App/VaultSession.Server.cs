@@ -1,9 +1,9 @@
 using System.Windows;
 using Kofrenot.Core.Logging;
 using Kofrenot.Core.Server;
+using Kofrenot.Core.Session;
 using Kofrenot.Core.Settings;
 using Kofrenot.Core.Storage;
-using Kofrenot.UI.Sync;
 using Kofrenot.UI.Views;
 
 namespace Kofrenot.UI;
