@@ -16,16 +16,8 @@ Scope of each planned version. Implemented features move to [CHANGELOG.md](CHANG
 | 0.10    | To define | Large vaults: offline pins, faster transfers; editing                              |
 
 ## 0.9 (to define)
-An Android client that reads server vaults: [ANDROID-CONCEPT.md](docs/ANDROID-CONCEPT.md). Builds on 0.8's content on demand and session in Core. No folder vaults.
-1. **Sign in and unlock.** Server account and its pass phrase; the key optionally remembered in the Android Keystore.
-2. **Vault list.** The account's server vaults, own and shared, with their role; add from the server, remove from the phone.
-3. **Sync, downloads only.** On opening and resuming, then every 30 s while shown; status dot. The phone never uploads ([Read only](docs/ANDROID-CONCEPT.md#read-only-safely)).
-4. **Search.** The input box's search, offline.
-5. **Node details.** Type, name, colour, links; a tap opens the linked node; back through the trail.
-6. **Notes.** Markdown and task lists shown, content fetched on demand.
-7. **Views.** Flat and tree views as tabs.
-8. **Pinned and recent nodes.**
-9. **Datasets listed.** Name, type, size, icon; content not opened.
+An Android client that reads server vaults: [ANDROID-CONCEPT.md](docs/ANDROID-CONCEPT.md). What is done is in [CHANGELOG.md](CHANGELOG.md#unreleased); left:
+1. **Role of a shared vault** in the vault list and the read-only banner (shown only when adding it so far).
 
 ## 0.10 (to define)
 1. **Pinned for offline.** When a node is pinned for offline access, its content is downloaded ahead, so it is always readable without access to the vault storage: on Windows, and on the phone with the pins set on Windows.

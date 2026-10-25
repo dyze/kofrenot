@@ -6,6 +6,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+- **kofrenot for Android**, read only ([README](README.md#on-android)): sign in to your server account, add your server vaults and those shared with you, and open them with the account's pass phrase, remembered in the phone's Keystore if you want. Search names, pinned and recent nodes, a node's details and links with a trail back, notes in Markdown with their task lists and colours, views as tabs (trees expand and collapse), datasets by name and size. Everything but a note's text is on the phone, so it reads offline; a note once shown stays. It syncs downloads only, when the app opens or comes back and every 30 seconds while shown, and never uploads: a vault that needs an upgrade or a hand-over to the account is opened on Windows first. Its screens stay out of the recent apps list and of screenshots. Android 8.0 or later, an APK on the releases. Nothing changes for kofrenot on Windows.
+
 ## [0.8] - 2026-10-25
 
 ### Added
