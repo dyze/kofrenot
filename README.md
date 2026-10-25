@@ -139,6 +139,21 @@ Gear button in the title bar, or tray menu > Settings. Changes are saved at once
 
 **Android**: `build\android.cmd` makes `artifacts\publish\kofrenot.Android\release\eu.dlabs.kofrenot-Signed.apk` (needs the .NET Android workload, `dotnet workload install android`, the Android SDK and a JDK). It is signed with the release keystore named by `KOFRENOT_KEYSTORE` (alias `kofrenot`, password in `KOFRENOT_KEYSTORE_PASS`), else with Android's debug key, to try it. The app is not in `kofrenot.sln`, so `build.cmd` does not need the workload. On an emulator, `adb reverse tcp:5080 tcp:5080` lets it sign in to a Kofre server on this PC at `http://localhost:5080/`: plain HTTP is accepted only to the phone itself.
 
+**Release signing** (Android): every update of the app must be signed with the same key, or phones cannot install it over the previous one.
+
+1. Create the keystore once, outside the repository, with the JDK's `keytool` (it asks a password, then the certificate's name and organisation):
+   ```
+   keytool -genkeypair -v -keystore D:\keys\kofrenot-release.keystore -alias kofrenot -keyalg RSA -keysize 4096 -validity 10000
+   ```
+2. Back up the keystore and its password (a password manager, a second copy): lost, the app cannot be updated, only uninstalled and installed again. Never add it to the repository.
+3. Build, the password typed rather than written in a file or the command history (PowerShell):
+   ```
+   $env:KOFRENOT_KEYSTORE = "D:\keys\kofrenot-release.keystore"
+   $env:KOFRENOT_KEYSTORE_PASS = Read-Host "Keystore password"
+   .\build\android.cmd
+   ```
+4. Check: `apksigner verify --print-certs <apk>` (Android SDK, `build-tools`) names your certificate, not *Android Debug*. A release APK does not install over one signed with the debug key: uninstall that one first.
+
 **Installer**: `build\installer.cmd` makes `artifacts\installer\kofrenot-setup-<version>.exe` and the portable zip (needs [Inno Setup](https://jrsoftware.org/isinfo.php) 6.3+).
 
 **Another set of data**: `kofrenot.exe --data D:\kofre-test` keeps settings, vaults list, remembered pass phrases and server account in that folder: to test, or to try sharing with a second account. One kofrenot runs at a time: quit the other first (tray icon > *Quit*).
