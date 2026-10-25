@@ -527,8 +527,8 @@ keep   ──DatasetPlanner.Keep──► a conflict's chosen version again, as 
 
 | Category | Extensions | Viewer |
 | --- | --- | --- |
-| Image | png, jpg, jpeg, gif, bmp, tif, tiff, ico | Image: in its own window (`ImageWindow`), decoded by WPF (`BitmapImage`), up to `DatasetType.MaxImageSize` (64 MB) |
-| Image | webp, svg, heic, raw | None |
+| Image | png, jpg, jpeg, gif, bmp, tif, tiff, ico, webp | Image: in its own window (`ImageWindow`), decoded by WPF (`BitmapImage`), up to `DatasetType.MaxImageSize` (64 MB); webp through Windows' codec (Webp Image Extensions, in Windows 11), else said not shown |
+| Image | svg, heic, raw | None |
 | Text | txt, md, csv, tsv, log, rtf | Text: its first `TextPreview.MaxChars` (256 K) characters, UTF-8 unless a byte order mark says otherwise |
 | Code | json, xml, html, htm, yaml, yml, ini, toml, cs, py, js, ts, css, sql, sh, cmd, ps1, java, c, cpp, h, go, rs | Text (HTML as text, not rendered) |
 | Audio, Video, Archive, Pdf | wav, mp3, flac, ogg, m4a, aac, wma; mp4, mkv, avi, mov, webm, wmv; zip, 7z, rar, tar, gz, bz2, xz; pdf | None: "export it to open it" |

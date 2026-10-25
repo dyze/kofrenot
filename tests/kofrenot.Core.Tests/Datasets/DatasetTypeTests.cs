@@ -5,6 +5,7 @@ public sealed class DatasetTypeTests
     [Theory]
     [InlineData("photo.PNG", "png", DatasetCategory.Image, DatasetViewer.Image)]
     [InlineData("scan.jpeg", "jpeg", DatasetCategory.Image, DatasetViewer.Image)]
+    [InlineData("cover.webp", "webp", DatasetCategory.Image, DatasetViewer.Image)]
     [InlineData("drawing.svg", "svg", DatasetCategory.Image, DatasetViewer.None)]
     [InlineData("notes.md", "md", DatasetCategory.Text, DatasetViewer.Text)]
     [InlineData("data.json", "json", DatasetCategory.Code, DatasetViewer.Text)]
@@ -40,6 +41,7 @@ public sealed class DatasetTypeTests
 
     [Theory]
     [InlineData("photo.png", 10, true)]
+    [InlineData("cover.webp", 10, true)]
     [InlineData("photo.png", DatasetType.MaxImageSize + 1, false)]
     [InlineData("drawing.svg", 10, false)]
     [InlineData("data.json", 10, false)]

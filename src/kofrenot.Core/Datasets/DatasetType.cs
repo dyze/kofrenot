@@ -32,11 +32,12 @@ public sealed record DatasetType(string Extension, DatasetCategory Category, Dat
     /// <summary>The largest image shown, or given a thumbnail: it is decoded in memory.</summary>
     public const long MaxImageSize = 64L * 1024 * 1024;
 
-    // The images WPF decodes: shown by the viewer, and given a thumbnail.
-    private static readonly HashSet<string> DecodedImages = ["png", "jpg", "jpeg", "gif", "bmp", "tif", "tiff", "ico"];
+    // The images WPF decodes: shown by the viewer, and given a thumbnail. WebP through the codec
+    // Windows comes with (Webp Image Extensions): without it, the image is told it cannot be shown.
+    private static readonly HashSet<string> DecodedImages = ["png", "jpg", "jpeg", "gif", "bmp", "tif", "tiff", "ico", "webp"];
 
     private static readonly Dictionary<string, DatasetCategory> Categories = CategoriesOf(
-        (DatasetCategory.Image, [.. DecodedImages, "webp", "svg", "heic", "raw"]),
+        (DatasetCategory.Image, [.. DecodedImages, "svg", "heic", "raw"]),
         (DatasetCategory.Text, ["txt", "md", "csv", "tsv", "log", "rtf"]),
         (DatasetCategory.Code,
         [
