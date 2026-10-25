@@ -7,7 +7,8 @@ namespace Kofrenot.UI.Views;
 /// <summary>
 /// The thumbnails shown in the rows, decrypted and decoded off the UI thread, kept in memory only
 /// (the latest <see cref="Capacity"/>), so typing in the input box does not read them again. A
-/// thumbnail not synced yet is not remembered: it is looked for again by the next row.
+/// thumbnail not here yet is not remembered: a server vault downloads it (<see cref="Vault.ReadThumbnail"/>),
+/// and the rows drawn again once it is here look for it again.
 /// </summary>
 public sealed class ThumbnailCache
 {
@@ -16,20 +17,20 @@ public sealed class ThumbnailCache
     private readonly Dictionary<Guid, BitmapSource> _images = [];
     private readonly LinkedList<Guid> _order = [];
     private readonly Dictionary<Guid, Task<BitmapSource?>> _loading = [];
-    private ThumbnailFiles? _files;
+    private Vault? _vault;
 
     /// <summary>The one cache of the app: rows are built by templates, so they find it here.</summary>
     public static ThumbnailCache Shared { get; } = new();
 
-    /// <summary>The open vault's thumbnails; another vault (or none) empties the cache.</summary>
-    public void Use(ThumbnailFiles? files)
+    /// <summary>The open vault, whose thumbnails are shown; another vault (or none) empties the cache.</summary>
+    public void Use(Vault? vault)
     {
-        if (files == _files)
+        if (vault == _vault)
         {
             return;
         }
 
-        _files = files;
+        _vault = vault;
         _images.Clear();
         _order.Clear();
         _loading.Clear();
@@ -43,19 +44,19 @@ public sealed class ThumbnailCache
             return image;
         }
 
-        if (_files is not { } files)
+        if (_vault is not { } vault)
         {
             return null;
         }
 
         if (!_loading.TryGetValue(version, out var loading))
         {
-            _loading[version] = loading = Task.Run(() => Decode(files.Read(version)));
+            _loading[version] = loading = Task.Run(() => Decode(vault.ReadThumbnail(version)));
         }
 
         image = await loading;
         _loading.Remove(version);
-        if (image is not null && files == _files)
+        if (image is not null && vault == _vault)
         {
             Remember(version, image);
         }

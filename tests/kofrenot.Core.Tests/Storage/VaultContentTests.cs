@@ -177,6 +177,103 @@ public sealed class VaultContentTests : IDisposable
     private Vault Open(IContentFetcher? fetcher) => Vault.Open(Folder, _header, _keys, log: _log, fetcher: fetcher);
 
     /// <summary>A note saved, then its content moved to the store: its change only stays here.</summary>
+    [Fact]
+    public async Task AMissingThumbnail_IsDownloadedWhenShown_ApartFromItsFile()
+    {
+        var version = Guid.NewGuid();
+        var writer = Open(fetcher: null);
+        writer.Thumbnails.Write(version, [1, 2, 3]);
+        MoveContentToTheStore();
+        var vault = Open();
+        var fetched = new TaskCompletionSource();
+        vault.ContentFetched += fetched.SetResult;
+
+        Assert.Null(vault.ReadThumbnail(version));
+        Assert.Equal(ContentState.NotHere, vault.StateOf(version));
+        await fetched.Task;
+
+        Assert.Equal([1, 2, 3], vault.ReadThumbnail(version));
+        Assert.Single(_fetcher.Paths, path => path.EndsWith(VaultFolder.ThumbnailExtension, StringComparison.Ordinal));
+        Assert.Contains(_log.Entries, entry => entry.Message == $"Thumbnail {version} downloaded");
+    }
+
+    [Fact]
+    public void AFolderVault_DownloadsNoThumbnail()
+    {
+        var vault = Open(fetcher: null);
+        var version = Guid.NewGuid();
+
+        Assert.Null(vault.ReadThumbnail(version));
+        vault.Thumbnails.Write(version, [4]);
+        Assert.Equal([4], vault.ReadThumbnail(version));
+        Assert.Empty(_fetcher.Paths);
+    }
+
+    [Fact]
+    public async Task AThumbnailTheServerDoesNotHave_IsNotAskedForAgain_EvenAfterASync()
+    {
+        var vault = Open();
+        var version = Guid.NewGuid();
+        var fetched = new TaskCompletionSource();
+        vault.ContentFetched += fetched.SetResult;
+
+        Assert.Null(vault.ReadThumbnail(version));
+        await fetched.Task;
+        Assert.False(vault.RetryFailed());
+        Assert.Null(vault.ReadThumbnail(version));
+
+        Assert.Single(_fetcher.Paths);
+        Assert.DoesNotContain(_log.Entries, entry => entry.Level == LogLevel.Warning);
+    }
+
+    [Fact]
+    public async Task AThumbnailNotDownloadedOffline_IsAskedForAgainAfterASync()
+    {
+        var vault = Open();
+        var version = Guid.NewGuid();
+        _fetcher.Failure = ServerFailure.Offline;
+        var fetched = new TaskCompletionSource();
+        vault.ContentFetched += fetched.SetResult;
+        vault.ReadThumbnail(version);
+        await fetched.Task;
+
+        Assert.True(vault.RetryFailed());
+        Assert.Null(vault.ReadThumbnail(version));
+        while (vault.IsFetching)
+        {
+            await Task.Delay(10);
+        }
+
+        Assert.Equal(2, _fetcher.Paths.Count);
+    }
+
+    [Fact]
+    public async Task ADatasetsFileAndThumbnail_AreDownloadedApart()
+    {
+        var source = _temp.Sub("cover.png");
+        File.WriteAllBytes(source, [9, 9]);
+        var dataset = new DatasetEdited(Guid.NewGuid(), Start, Guid.NewGuid(), DatasetFiles.Describe(source), []);
+        var writer = Open(fetcher: null);
+        writer.Thumbnails.Write(dataset.Id, [1]);
+        writer.Save(dataset, () => File.OpenRead(source));
+        MoveContentToTheStore();
+        var vault = Open();
+        _fetcher.Gate = new TaskCompletionSource();
+
+        var file = vault.FetchAsync(dataset);
+        Assert.Null(vault.ReadThumbnail(dataset.Id));
+        Assert.Equal(ContentState.Downloading, vault.StateOf(dataset.Id));
+        _fetcher.Gate.SetResult();
+        Assert.True(await file);
+        while (vault.IsFetching)
+        {
+            await Task.Delay(10);
+        }
+
+        Assert.Equal(2, _fetcher.Paths.Count);
+        Assert.Equal([1], vault.ReadThumbnail(dataset.Id));
+    }
+
     private NoteEdited SaveNoteOnTheStore(string content)
     {
         var note = new NoteEdited(Guid.NewGuid(), Start, Guid.NewGuid(), []);
@@ -222,7 +319,13 @@ public sealed class VaultContentTests : IDisposable
 
             var target = Path.Combine([mirror, .. path.Split('/')]);
             Directory.CreateDirectory(Path.GetDirectoryName(target)!);
-            File.Copy(Path.Combine([remote, .. path.Split('/')]), target);
+            var source = Path.Combine([remote, .. path.Split('/')]);
+            if (!File.Exists(source))
+            {
+                throw new ServerException(ServerFailure.NotFound);
+            }
+
+            File.Copy(source, target);
         }
     }
 }

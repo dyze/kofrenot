@@ -192,7 +192,7 @@ A vault kept on a Kofre server ([kofreserver](https://github.com/dyze/kofreserve
 ```
 
 - **Sync** (`SyncService`, Core `Session/`, started on the UI thread through `IUiThread`): every 30 s, 2 s after a change or when the window is shown, one sync at a time, for every server vault of the list, in the background. A download is written as `.tmp` then renamed, so `VaultWatcher` sees it and the vault refreshes. Offline, writes stay in the mirror until the next sync: nothing is queued elsewhere. Files are only added on both sides, so a sync is two copies, never a merge.
-- **Content on demand** (since 0.8): a sync leaves notes' and datasets' files (`content/*.kfn`, `*.kfd`: `StorePaths.IsOnDemand`) on the store, marked as known there so they are never uploaded back; thumbnails (`.kft`) come at once, being small and shown in lists. Content already in a mirror stays.
+- **Content on demand** (since 0.8): a sync leaves notes' and datasets' files (`content/*.kfn`, `*.kfd`: `StorePaths.IsOnDemand`) on the store, marked as known there so they are never uploaded back; thumbnails (`.kft`) come at once, being small and shown in lists; one missing in the mirror (deleted, or not arrived) is downloaded when shown (`Vault.ReadThumbnail`), and one the store does not have (`404`) is not asked for again. Downloads are tracked by the file's path, as a dataset version's file and thumbnail share its id. Content already in a mirror stays.
 
   ```
   note shown, card in view ──Vault.ReadNote──► here? read : FetchAsync (no retry)  ──┐
@@ -546,9 +546,9 @@ row    ──NodeVisual.Of(graph, node)──► Icon (type, or the file's categ
 ```
 
 - `WpfThumbnailMaker` decodes the image straight to 128 px on its longest side (`DecodePixelWidth` or `DecodePixelHeight`, the size read from the header first), never enlarging a small one, and saves a PNG. An image it cannot decode gets no thumbnail; the dataset keeps its icon.
-- The thumbnail is written before the content file and the change (`Vault.WriteDataset`, off the UI thread), so a device seeing the change normally finds it. A missing one (not synced yet, or a version imported before thumbnails) shows the icon. Keeping a version from a conflict makes its thumbnail again from its content.
+- The thumbnail is written before the content file and the change (`Vault.WriteDataset`, off the UI thread), so a device seeing the change normally finds it. A missing one shows the icon: not synced yet, or a version without thumbnail; a server vault downloads it when shown ([Content on demand](#server-vaults)). Keeping a version from a conflict makes its thumbnail again from its content.
 - `.kft` files are sealed with the master key ("KFT1", bound to the version id), like note content: a thumbnail shows the data, so it is content. Never logged, never in the snapshot.
-- `ThumbnailCache.Shared` keeps the 200 latest decoded thumbnails in memory, for the open vault only (`Use`, at each vault change), so typing in the input box does not read them again.
+- `ThumbnailCache.Shared` keeps the 200 latest decoded thumbnails in memory, for the open vault only (`Use`, at each vault change), read through `Vault.ReadThumbnail`, so typing in the input box does not read them again.
 - Icons are Segoe Fluent glyphs (`NodeVisualView.GlyphOf`): generic, note, file, image, text, code, audio, video, archive, PDF, view.
 
 ### Views
