@@ -13,6 +13,7 @@ Scope of each planned version. Implemented features move to [CHANGELOG.md](CHANG
 | 0.7     | Released  | Sharing: identities, recovery key, vaults shared with other users                  |
 | 0.8     | To define | Notes as in Keep: task lists, colours, cards                                       |
 | 0.9     | To define | Large vaults: content on demand, offline pins, faster transfers; editing           |
+| 0.10    | To define | Android: server vaults read and searched offline on the phone                      |
 
 ## 0.8 (to define)
 Everything planned for it is in [CHANGELOG.md](CHANGELOG.md#unreleased).
@@ -26,6 +27,19 @@ Everything planned for it is in [CHANGELOG.md](CHANGELOG.md#unreleased).
 6. Tree view accepts several dropped files too, with the same preview (one file: 0.5).
 7. **Retry unreadable change files.** A change file skipped because it was locked or still being copied is read again a few seconds later, not only at the next sync event or when the window is shown ([GOAL.md](docs/GOAL.md#robust-and-secure)).
 
+## 0.10 (to define)
+An Android client that reads server vaults: [ANDROID-CONCEPT.md](docs/ANDROID-CONCEPT.md). Needs 0.9's content on demand. No folder vaults.
+1. **Core holds the session.** Signing in, opening a vault and the sync loop move from App to Core, behind interfaces for timers and questions, so both clients share them ([Architecture](docs/ANDROID-CONCEPT.md#architecture)).
+2. **Sign in and unlock.** Server account and its pass phrase; the key optionally remembered in the Android Keystore.
+3. **Vault list.** The account's server vaults, own and shared, with their role; add from the server, remove from the phone.
+4. **Sync, downloads only.** On opening and resuming, then every 30 s while shown; status dot. The phone never uploads ([Read only](docs/ANDROID-CONCEPT.md#read-only-safely)).
+5. **Search.** The input box's search, offline.
+6. **Node details.** Type, name, colour, links; a tap opens the linked node; back through the trail.
+7. **Notes.** Markdown and task lists shown, content fetched on demand.
+8. **Views.** Flat and tree views as tabs.
+9. **Pinned and recent nodes.**
+10. **Datasets listed.** Name, type, size, icon; content not opened.
+
 ## Later
 1. **Pack vault.** Pack a vault to reduce its size and number of files (needs deletes on the server).
 2. **Re-encrypt on pack.** Packed files are encrypted again with the latest vault key, so old key epochs can be dropped ([Rotation](docs/SERVER-CONCEPT.md#rotation)).
@@ -37,4 +51,6 @@ Everything planned for it is in [CHANGELOG.md](CHANGELOG.md#unreleased).
 8. **Quote a name** containing a link phrase in the input box (`"This is a test"`), so such names can be typed.
 9. **Cycle through proposals.** Several proposals in grey, the next one with a key, instead of typing more to narrow it.
 10. **Propose node types** while typing, in the input box, instead of only on the creation screen.
-
+11. **Android: add and edit.** Input box, creation screen, notes and task lists, renames, colours, pins ([Later](docs/ANDROID-CONCEPT.md#later)).
+12. **Android: datasets.** Open a file on demand, share it to another app, add a file from the phone.
+13. **Android: sharing.** Members, roles, share, leave.
