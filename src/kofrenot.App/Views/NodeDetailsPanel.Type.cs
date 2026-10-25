@@ -7,8 +7,9 @@ using Kofrenot.Core.Input;
 namespace Kofrenot.UI.Views;
 
 /// <summary>
-/// A node's type: a generic node shows it in a combo, to make it a note, a dataset or a view (asked
-/// first, as it cannot be undone); a type conflict is resolved by keeping one.
+/// A node's type, in a combo to give it another: asked first, saying what it would hide (a note's
+/// text, a dataset's file, what a view shows: shown again with the type back). A type conflict is
+/// resolved by keeping one.
 /// </summary>
 public partial class NodeDetailsPanel
 {
@@ -20,8 +21,8 @@ public partial class NodeDetailsPanel
 
     private void ShowType(NodeDetails details)
     {
-        var targets = RetypePlanner.TargetsOf(details.Node);
-        var canChange = Retype is not null && targets.Count > 0;
+        var current = TypeCatalog.BuiltIn.FindNodeType(details.Node.Type);
+        var canChange = Retype is not null && current is not null;
         TypeBox.Visibility = canChange ? Visibility.Visible : Visibility.Collapsed;
         TypeText.Visibility = canChange ? Visibility.Collapsed : Visibility.Visible;
         if (canChange)
@@ -29,8 +30,8 @@ public partial class NodeDetailsPanel
             _showingType = true;
             try
             {
-                TypeBox.ItemsSource = targets.Prepend(TypeCatalog.Generic).ToList();
-                TypeBox.SelectedItem = TypeCatalog.Generic;
+                TypeBox.ItemsSource = TypeCatalog.BuiltIn.NodeTypes;
+                TypeBox.SelectedItem = current;
             }
             finally
             {
@@ -44,14 +45,23 @@ public partial class NodeDetailsPanel
 
     private void TypeBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        if (_showingType || TypeBox.SelectedItem is not NodeType type || type == TypeCatalog.Generic || Browser.Details is not { } details)
+        if (_showingType || TypeBox.SelectedItem is not NodeType type || Browser is not { Graph: { } graph, Details: { } details } || type.Id == details.Node.Type)
         {
             return;
         }
 
+        var owner = Window.GetWindow(this);
+        if (DatasetBox.IsImporting(details.Node.Id))
+        {
+            MessageDialog.Inform(owner, "A file is being imported into this dataset: change its type once it is done.");
+            Show();
+            return;
+        }
+
         var name = type.Name.ToLowerInvariant();
-        var question = $"Make “{details.Name}” a {name}?\n\nThis cannot be undone: a note, a dataset or a view stays one.";
-        if (!MessageDialog.Confirm(Window.GetWindow(this), question, $"Make it a {name}", "Cancel") || !ChangeType(type))
+        var hidden = new RetypePlanner(graph).Plan(details.Node, type).Hidden;
+        var question = $"Make “{details.Name}” a {name}?" + (hidden is null ? string.Empty : $"\n\n{hidden}");
+        if (!MessageDialog.Confirm(owner, question, $"Make it a {name}", "Cancel") || !ChangeType(type))
         {
             Show();
         }

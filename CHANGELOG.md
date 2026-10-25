@@ -15,6 +15,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **Rename a view** in its edit dialog (**⚙** on its tab, or *Edit…* in its details): a *Name* box above what it shows, checked as a rename.
 
 ### Changed
+- **Any type for any node**: the type combo of a node's details offers every type, not only for a generic node. A confirmation says what the change hides (a note's text, a dataset's file, what a view shows): nothing is deleted, and giving the type back shows it again.
 - **New link type at the top** of Settings > Link types, above the list of link types, which scrolls on its own: it stays in view however many link types there are.
 - **Settings opens on the tab shown last**, also after a restart, instead of General; a click on the sync status still opens Server.
 - **Vault in the title bar**: the vault box (or the vault's name), the lock, *Read only*, the sync status and Settings are in the main window's title bar, beside its minimize, maximize and close buttons; the tabs have the row below to themselves, so they no longer move when another vault is chosen.

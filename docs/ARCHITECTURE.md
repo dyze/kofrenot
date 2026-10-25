@@ -426,7 +426,7 @@ r3 "Dune (novel)" replaces r1 + r2 ⇒ one current name again
 ### Type changes
 A type change works as a rename: a `retypeNode` change (`NodeRetyped`) listing the types it **replaces**, the node's id standing for the type it was added with. The node is shown with the latest current type (`NodeTypes`, `KnowledgeGraph.TypesOf`); two current types are a conflict, shown in the details, resolved by keeping one.
 
-- `RetypePlanner` lets a *generic* node become a note, a dataset or a view (`TargetsOf`), so no content is hidden; a node in conflict may keep any of its types. A view asks its definition first (`VaultSession.Retype`): its first `editView` is written with the type.
+- `RetypePlanner` gives a node any built-in type. Leaving one hides its content (a note's, a dataset's or a view's versions, kept by `NodeVersions` whatever the type), never deletes it: given the type back, the node shows it again. The plan says what is hidden (`RetypePlan.Hidden`), for the confirmation; a view no longer one leaves the tabs (`TabList` shows views only) and comes back with its type. A node in conflict may keep any of its types. A view asks its definition first (`VaultSession.Retype`): its first `editView` is written with the type.
 - A **link** keeps no history of its own: `LinkChangePlanner` changes its type or direction with a `remove` of the link and its copies, and a new `addLink`. Changed on two devices before they synced, both new links show, as any two links.
 
 ### Colours
