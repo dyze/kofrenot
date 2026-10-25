@@ -1,15 +1,19 @@
 using System.IO;
+using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using Kofrenot.Core.Datasets;
 
 namespace Kofrenot.UI.Platform;
 
 /// <summary>
-/// Thumbnails by WPF: the image decoded straight to <see cref="IThumbnailMaker.Size"/> on its
-/// longest side (so a large photo is never decoded whole), saved as PNG. Thread-safe: it uses frozen bitmaps only.
+/// Thumbnails by WPF: the image decoded straight to <see cref="ThumbnailSize.Of"/> its size (so a
+/// large photo is never decoded whole), saved as JPEG, or as PNG when it has transparency.
+/// Thread-safe: it uses frozen bitmaps only.
 /// </summary>
 internal sealed class WpfThumbnailMaker : IThumbnailMaker
 {
+    private const int JpegQuality = 85;
+
     public byte[]? Make(Stream image)
     {
         try
@@ -25,23 +29,20 @@ internal sealed class WpfThumbnailMaker : IThumbnailMaker
             thumbnail.StreamSource = bytes;
 
             // One side only, so the other keeps the image's proportions; a small image is not enlarged.
-            if (width >= height && width > IThumbnailMaker.Size)
+            var (thumbnailWidth, _) = ThumbnailSize.Of(width, height);
+            if (thumbnailWidth < width)
             {
-                thumbnail.DecodePixelWidth = IThumbnailMaker.Size;
-            }
-            else if (height > width && height > IThumbnailMaker.Size)
-            {
-                thumbnail.DecodePixelHeight = IThumbnailMaker.Size;
+                thumbnail.DecodePixelWidth = thumbnailWidth;
             }
 
             thumbnail.EndInit();
             thumbnail.Freeze();
 
-            var encoder = new PngBitmapEncoder();
+            BitmapEncoder encoder = HasTransparency(thumbnail) ? new PngBitmapEncoder() : new JpegBitmapEncoder { QualityLevel = JpegQuality };
             encoder.Frames.Add(BitmapFrame.Create(thumbnail));
-            var png = new MemoryStream();
-            encoder.Save(png);
-            return png.ToArray();
+            var encoded = new MemoryStream();
+            encoder.Save(encoded);
+            return encoded.ToArray();
         }
         catch (Exception ex) when (ex is NotSupportedException or IOException or ArgumentException or InvalidOperationException)
         {
@@ -56,4 +57,11 @@ internal sealed class WpfThumbnailMaker : IThumbnailMaker
         var frame = BitmapDecoder.Create(bytes, BitmapCreateOptions.DelayCreation, BitmapCacheOption.None).Frames[0];
         return (frame.PixelWidth, frame.PixelHeight);
     }
+
+    // An alpha channel, or a palette with a see-through colour (a GIF, a PNG of 256 colours): JPEG would lose it.
+    private static bool HasTransparency(BitmapSource image) =>
+        image.Format == PixelFormats.Bgra32 || image.Format == PixelFormats.Pbgra32
+        || image.Format == PixelFormats.Rgba64 || image.Format == PixelFormats.Prgba64
+        || image.Format == PixelFormats.Rgba128Float || image.Format == PixelFormats.Prgba128Float
+        || image.Palette?.Colors.Any(color => color.A < byte.MaxValue) == true;
 }

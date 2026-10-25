@@ -4,7 +4,7 @@ namespace Kofrenot.Core.Storage;
 
 /// <summary>
 /// The thumbnails of dataset versions, one small file each (<c>content/</c>), written once and
-/// never changed: a PNG sealed with the vault's key (<see cref="SealKind.Thumbnail"/>), bound to the version id (the file's name).
+/// never changed: a JPEG or PNG (<see cref="Datasets.IThumbnailMaker"/>) sealed with the vault's key (<see cref="SealKind.Thumbnail"/>), bound to the version id (the file's name).
 /// </summary>
 public sealed class ThumbnailFiles(string vaultFolder, KeyedBox box, ILog? log = null)
 {

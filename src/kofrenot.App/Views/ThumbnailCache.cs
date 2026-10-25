@@ -12,7 +12,7 @@ namespace Kofrenot.UI.Views;
 /// </summary>
 public sealed class ThumbnailCache
 {
-    private const int Capacity = 200;
+    private const int Capacity = 100;
 
     private readonly Dictionary<Guid, BitmapSource> _images = [];
     private readonly LinkedList<Guid> _order = [];

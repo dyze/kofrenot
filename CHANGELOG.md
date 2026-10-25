@@ -15,6 +15,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **Rename a view** in its edit dialog (**⚙** on its tab, or *Edit…* in its details): a *Name* box above what it shows, checked as a rename.
 
 ### Changed
+- **Sharper thumbnails**: an image imported from now on gets a thumbnail at least 256 px on its shorter side (512 at most on the longer), saved as JPEG (PNG when it has transparency), instead of 128 px on its longer side; a card shows it filling its frame, cropped around its centre instead of its top. Thumbnails made before stay as they are.
 - **The session is in kofrenot.Core**: signing in, syncing, opening, unlocking and sharing vaults no longer depend on Windows, so the coming Android client shares them ([ANDROID-CONCEPT.md](docs/ANDROID-CONCEPT.md#architecture)). Nothing changes for the user.
 - **Vault format 7**, for colours: kofrenot asks before upgrading a vault when it opens it; kofrenot 0.7 then asks to be updated to open it.
 
