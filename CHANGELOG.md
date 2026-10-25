@@ -14,6 +14,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **Rename a view** in its edit dialog (**⚙** on its tab, or *Edit…* in its details): a *Name* box above what it shows, checked as a rename.
 
 ### Changed
+- **The session is in kofrenot.Core**: signing in, syncing, opening, unlocking and sharing vaults no longer depend on Windows, so the coming Android client shares them ([ANDROID-CONCEPT.md](docs/ANDROID-CONCEPT.md#architecture)). Nothing changes for the user.
 - **Vault format 7**, for colours: kofrenot asks before upgrading a vault when it opens it; kofrenot 0.7 then asks to be updated to open it.
 
 ### Fixed

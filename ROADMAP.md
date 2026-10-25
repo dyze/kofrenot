@@ -16,8 +16,7 @@ Scope of each planned version. Implemented features move to [CHANGELOG.md](CHANG
 | 0.10    | To define | Android: server vaults read and searched offline on the phone                      |
 
 ## 0.8 (to define)
-What is implemented is in [CHANGELOG.md](CHANGELOG.md#unreleased). Still planned:
-1. **Core holds the session.** Preparation for Android: signing in, opening a vault and the sync loop move from App to Core, behind interfaces for timers and questions, so both clients share them ([Architecture](docs/ANDROID-CONCEPT.md#architecture)).
+Everything planned for it is in [CHANGELOG.md](CHANGELOG.md#unreleased).
 
 ## 0.9 (to define)
 1. **Pinned for offline.** When a node is pinned for offline access, its content is downloaded ahead, so it is always readable without access to the vault storage.

@@ -1,10 +1,8 @@
-using System.Windows;
 using Kofrenot.Core.Logging;
 using Kofrenot.Core.Server;
 using Kofrenot.Core.Storage;
-using Kofrenot.UI.Views;
 
-namespace Kofrenot.UI;
+namespace Kofrenot.Core.Session;
 
 /// <summary>
 /// The server account's identity, which opens all its server vaults: unlocked or, the first time,
@@ -23,16 +21,16 @@ public sealed partial class VaultSession
     /// Chooses the account's pass phrase when it has none (its recovery key then shown); else asks
     /// the current one, and seals its identity again with a new one.
     /// </summary>
-    public void SetAccountPassPhrase(Window owner)
+    public void SetAccountPassPhrase(ISessionQuestions ask)
     {
         if (_server.Identity is null)
         {
             _log.Info("Action", "Choose the server account pass phrase");
-            UnlockAccount(owner, "Others can then share their server vaults with you.");
+            UnlockAccount(ask, "Others can then share their server vaults with you.");
         }
-        else if (UnlockAccount(owner, "Type your server account's current pass phrase.") is { } account)
+        else if (UnlockAccount(ask, "Type your server account's current pass phrase.") is { } account)
         {
-            ChangeAccountPassPhrase(owner, account.Identity, account.Unlocked);
+            ChangeAccountPassPhrase(ask, account.Identity, account.Unlocked);
         }
     }
 
@@ -40,24 +38,24 @@ public sealed partial class VaultSession
     /// The account's identity, unlocked by its pass phrase; chosen, the first time, then its
     /// recovery key shown. Null when cancelled, or not possible now (the user is told).
     /// </summary>
-    private (AccountIdentity Identity, UnlockedIdentity Unlocked)? UnlockAccount(Window owner, string hint)
+    private (AccountIdentity Identity, UnlockedIdentity Unlocked)? UnlockAccount(ISessionQuestions ask, string hint)
     {
         if (_server.Client is not { Session: not null } client || _server.Account is not { } account)
         {
-            MessageDialog.Inform(owner, NotSignedIn);
+            ask.Tell(NotSignedIn);
             return null;
         }
 
         if (_server.TooOld is { } tooOld)
         {
-            MessageDialog.Inform(owner, tooOld);
+            ask.Tell(tooOld);
             return null;
         }
 
         var kept = _server.Identity;
         var place = $"{account.Email} on {account.Server.Host}";
         (AccountIdentity Identity, UnlockedIdentity Unlocked, RecoveryKey? Recovery)? unlocked = null;
-        var done = PassphraseDialog.AskAccount(owner, place, exists: kept is not null, hint, passPhrase =>
+        var done = ask.AskAccount(place, exists: kept is not null, hint, passPhrase =>
         {
             unlocked = kept is null
                 ? CreateAccountIdentity(client, account.Server, account.Email, passPhrase)
@@ -72,7 +70,7 @@ public sealed partial class VaultSession
 
         if (result.Recovery is { } recovery)
         {
-            RecoveryKeyDialog.Show(owner, place, recovery);
+            ask.ShowRecoveryKey(place, recovery);
         }
 
         return (result.Identity, result.Unlocked);
@@ -84,7 +82,7 @@ public sealed partial class VaultSession
     {
         try
         {
-            var (identity, unlocked, recovery) = _server.Identities.CreateAsync(client, server, email, passPhrase).GetAwaiter().GetResult();
+            var (identity, unlocked, recovery) = _server.Identities.CreateAsync(client, server, email, passPhrase, _keyIterations).GetAwaiter().GetResult();
             _log.Info("Action", "Server account pass phrase chosen");
             return (identity, unlocked, recovery);
         }
@@ -101,7 +99,7 @@ public sealed partial class VaultSession
     }
 
     /// <summary>Asks a new pass phrase for the account, and seals its identity with it; null when cancelled.</summary>
-    private AccountIdentity? ChangeAccountPassPhrase(Window owner, AccountIdentity current, UnlockedIdentity unlocked)
+    private AccountIdentity? ChangeAccountPassPhrase(ISessionQuestions ask, AccountIdentity current, UnlockedIdentity unlocked)
     {
         if (_server.Client is not { } client)
         {
@@ -110,11 +108,11 @@ public sealed partial class VaultSession
 
         AccountIdentity? changed = null;
         var place = $"{current.Email} on {current.Server.Host}";
-        if (!PassphraseDialog.AskToChangeAccount(owner, place, passPhrase =>
+        if (!ask.AskToChangeAccount(place, passPhrase =>
         {
             try
             {
-                changed = _server.Identities.ChangePassPhraseAsync(client, current, unlocked, passPhrase).GetAwaiter().GetResult();
+                changed = _server.Identities.ChangePassPhraseAsync(client, current, unlocked, passPhrase, _keyIterations).GetAwaiter().GetResult();
                 return true;
             }
             catch (ServerException ex) when (ex.Failure == ServerFailure.Conflict)
@@ -142,7 +140,7 @@ public sealed partial class VaultSession
     /// phrase asked (chosen the first time). True when done or not needed; false when cancelled or
     /// not possible now.
     /// </summary>
-    private bool AttachToAccount(Window owner, string folder, Vault vault)
+    private bool AttachToAccount(ISessionQuestions ask, string folder, Vault vault)
     {
         if (Selected?.Location.Store is not { } store || _access is not { } access
             || !VaultKeys.NeedsAttach(folder, access.Header.Id, _server.Identity?.Identity, _server.Owners.Kept(store.Id)?.Key.Id))
@@ -150,7 +148,7 @@ public sealed partial class VaultSession
             return true;
         }
 
-        if (UnlockAccount(owner, AttachHint) is not { } account)
+        if (UnlockAccount(ask, AttachHint) is not { } account)
         {
             return false;
         }
@@ -171,7 +169,7 @@ public sealed partial class VaultSession
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidOperationException)
         {
             _log.Error("Action", "Cannot hand the vault to the server account", ex);
-            MessageDialog.Inform(owner, $"The vault cannot be handed to your server account.\n\n{ex.Message}");
+            ask.Tell($"The vault cannot be handed to your server account.\n\n{ex.Message}");
             return false;
         }
     }

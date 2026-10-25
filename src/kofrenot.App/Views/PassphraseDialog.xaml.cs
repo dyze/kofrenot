@@ -1,15 +1,10 @@
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Interop;
+using Kofrenot.Core.Session;
 using Kofrenot.UI.Platform;
 
 namespace Kofrenot.UI.Views;
-
-/// <summary>What the user chose for a new vault: its name, and whether to remember its pass phrase.</summary>
-public sealed record NewVault(string Name, bool Remember);
-
-/// <summary>How the user unlocks a vault: with the pass phrase typed (remembered or not), or with the recovery key.</summary>
-public sealed record UnlockAnswer(bool Remember, bool UseRecoveryKey);
 
 /// <summary>
 /// Asks the pass phrase of a vault: to unlock or upgrade it, or (twice) to create it, with its

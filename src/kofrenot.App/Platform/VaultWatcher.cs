@@ -1,4 +1,5 @@
 using System.Windows.Threading;
+using Kofrenot.Core.Session;
 using Kofrenot.Core.Storage;
 
 namespace Kofrenot.UI.Platform;
@@ -50,4 +51,10 @@ public sealed class VaultWatcher : IDisposable
         _watcher.Dispose();
         _timer.Stop();
     }
+}
+
+/// <summary>Watches vault folders with <see cref="VaultWatcher"/>, for the session.</summary>
+public sealed class VaultWatching : IVaultWatcher
+{
+    public IDisposable Watch(string folder, Action changed) => new VaultWatcher(folder, changed);
 }

@@ -1,12 +1,9 @@
-using System.Windows;
 using Kofrenot.Core.Logging;
 using Kofrenot.Core.Server;
-using Kofrenot.Core.Session;
 using Kofrenot.Core.Settings;
 using Kofrenot.Core.Storage;
-using Kofrenot.UI.Views;
 
-namespace Kofrenot.UI;
+namespace Kofrenot.Core.Session;
 
 /// <summary>
 /// The server vaults: created on the server, added from it, moved to it, deleted from it. Each
@@ -22,11 +19,11 @@ public sealed partial class VaultSession
     public SyncService Sync => _sync;
 
     /// <summary>The stores of the account not registered here yet; null when there is none, when signed out or when the server failed (the user is told why).</summary>
-    public async Task<IReadOnlyList<ServerStore>?> StoresToAdd(Window owner)
+    public async Task<IReadOnlyList<ServerStore>?> StoresToAdd(ISessionQuestions ask)
     {
         if (_server.Client is not { Session: not null } client)
         {
-            MessageDialog.Inform(owner, NotSignedIn);
+            ask.Tell(NotSignedIn);
             return null;
         }
 
@@ -37,7 +34,7 @@ public sealed partial class VaultSession
         }
         catch (ServerException ex)
         {
-            Inform(owner, "The vaults on the server cannot be listed", ex);
+            Inform(ask, "The vaults on the server cannot be listed", ex);
             return null;
         }
 
@@ -48,36 +45,36 @@ public sealed partial class VaultSession
             return toAdd;
         }
 
-        MessageDialog.Inform(owner, stores.Count == 0
+        ask.Tell(stores.Count == 0
             ? "You have no vault on this server yet. Use New vault on the server, or Move to server… on a folder vault."
             : "Your vaults on this server are all in the list already: there is none to add.");
         return null;
     }
 
     /// <summary>Creates a vault on the server, then switches to it. Nothing is made, on the server or here, until its pass phrase is given.</summary>
-    public void CreateOnServer(Window owner)
+    public void CreateOnServer(ISessionQuestions ask)
     {
         if (_server.Client is not { Session: not null, Server: { } server } client)
         {
-            MessageDialog.Inform(owner, NotSignedIn);
+            ask.Tell(NotSignedIn);
             return;
         }
 
-        CreateVault(owner, client, server, store: null);
+        CreateVault(ask, client, server, store: null);
     }
 
     /// <summary>Adds a vault of the server: downloads it, then switches to it. An empty store becomes a new vault.</summary>
-    public async Task AddFromServer(Window owner, ServerStore store)
+    public async Task AddFromServer(ISessionQuestions ask, ServerStore store)
     {
         if (_server.Client is not { Server: { } server } client)
         {
-            MessageDialog.Inform(owner, NotSignedIn);
+            ask.Tell(NotSignedIn);
             return;
         }
 
         if (store.Files == 0)
         {
-            CreateVault(owner, client, server, store.Id);
+            CreateVault(ask, client, server, store.Id);
             return;
         }
 
@@ -85,14 +82,14 @@ public sealed partial class VaultSession
         var status = await _sync.SyncAsync(address);
         if (VaultFolder.Inspect(_files.MirrorOf(store.Id)) != FolderKind.Vault)
         {
-            MessageDialog.Inform(owner, $"The vault cannot be downloaded: {status.Describe()}.");
+            ask.Tell($"The vault cannot be downloaded: {status.Describe()}.");
             return;
         }
 
         var location = new VaultLocation(_files.MirrorOf(store.Id), address);
         _settings.SetVaults(_settings.Vaults.Add(new RegisteredVault(location)));
         _log.Info("Settings", $"Server vault added: store {store.Id}");
-        SwitchTo(owner, location);
+        SwitchTo(ask, location);
         _sync.Soon();
     }
 
@@ -101,11 +98,11 @@ public sealed partial class VaultSession
     /// and uploaded, the vault then listed as a server vault (same id, hotkey and name). Its folder
     /// is left as it was. The open vault is closed first.
     /// </summary>
-    public async Task MoveToServer(Window owner, RegisteredVault vault)
+    public async Task MoveToServer(ISessionQuestions ask, RegisteredVault vault)
     {
         if (_server.Client is not { Session: not null, Server: { } server } client)
         {
-            MessageDialog.Inform(owner, NotSignedIn);
+            ask.Tell(NotSignedIn);
             return;
         }
 
@@ -130,23 +127,23 @@ public sealed partial class VaultSession
 
             _log.Info("Action", $"Vault {vault.Id} moved to the server ({copied} files)");
             await _sync.SyncNowAsync();
-            MessageDialog.Inform(owner, $"The vault is on the server: {_sync.StatusOf(moved.Store!).Describe()}.\n\nIts folder {vault.Location.Folder} is left as it was: delete it once you no longer need it.");
+            ask.Tell($"The vault is on the server: {_sync.StatusOf(moved.Store!).Describe()}.\n\nIts folder {vault.Location.Folder} is left as it was: delete it once you no longer need it.");
         }
         catch (ServerException ex)
         {
-            Inform(owner, "The vault cannot be moved to the server", ex);
+            Inform(ask, "The vault cannot be moved to the server", ex);
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
             _log.Error("Action", "Cannot move the vault to the server", ex);
-            MessageDialog.Inform(owner, $"The vault cannot be moved to the server.\n\n{ex.Message}");
+            ask.Tell($"The vault cannot be moved to the server.\n\n{ex.Message}");
             DeleteMirror(created);
         }
         finally
         {
             if (wasSelected)
             {
-                Open(owner);
+                Open(ask);
             }
 
             Changed?.Invoke();
@@ -157,11 +154,11 @@ public sealed partial class VaultSession
     /// Moves a server vault to the server's trash (the account's <paramref name="password"/> asked
     /// again), then takes it out of the list and deletes its mirror. False when the server refused.
     /// </summary>
-    public async Task<bool> DeleteFromServer(Window owner, RegisteredVault vault, string password)
+    public async Task<bool> DeleteFromServer(ISessionQuestions ask, RegisteredVault vault, string password)
     {
         if (_server.Client is not { Session: not null } client || vault.Location.Store is not { } store)
         {
-            MessageDialog.Inform(owner, NotSignedIn);
+            ask.Tell(NotSignedIn);
             return false;
         }
 
@@ -171,11 +168,11 @@ public sealed partial class VaultSession
         }
         catch (ServerException ex)
         {
-            Inform(owner, ex.Code == "wrong-password" ? "Wrong password" : "The vault cannot be deleted from the server", ex);
+            Inform(ask, ex.Code == "wrong-password" ? "Wrong password" : "The vault cannot be deleted from the server", ex);
             return false;
         }
 
-        Unregister(owner, vault.Location);
+        Unregister(ask, vault.Location);
         DeleteMirror(store.Id);
         return true;
     }
@@ -208,18 +205,18 @@ public sealed partial class VaultSession
     /// then it is listed and opened, and uploaded at the next sync. A server that fails keeps the
     /// dialog open, saying why.
     /// </summary>
-    private void CreateVault(Window owner, KofreClient client, Uri server, Guid? store)
+    private void CreateVault(ISessionQuestions ask, KofreClient client, Uri server, Guid? store)
     {
         if (_server.TooOld is not null || _server.Account is not { } account)
         {
-            MessageDialog.Inform(owner, _server.TooOld ?? NotSignedIn);
+            ask.Tell(_server.TooOld ?? NotSignedIn);
             return;
         }
 
         var kept = _server.Identity;
         var place = $"On the server {server.Host}";
         (Guid Store, VaultAccess Access, RecoveryKey? Recovery)? created = null;
-        var answer = PassphraseDialog.AskNewOnServer(owner, place, accountHasPassPhrase: kept is not null, passPhrase =>
+        var answer = ask.AskNewOnServer(place, accountHasPassPhrase: kept is not null, passPhrase =>
         {
             // In the background: the dialog waits for it, as for the key derivation.
             var (identity, unlocked, recovery) = kept is null
@@ -254,25 +251,25 @@ public sealed partial class VaultSession
         _log.Info("Action", $"Vault {vault.Access.Header.Id} created on the server, store {vault.Store}");
         if (vault.Recovery is { } recovery)
         {
-            RecoveryKeyDialog.Show(owner, place, recovery);
+            ask.ShowRecoveryKey(place, recovery);
         }
 
         Close();
         _settings.SelectVault(location);
-        if (Open(owner, location.Folder, vault.Access, answer.Remember) is { } opened)
+        if (Open(ask, location.Folder, vault.Access, answer.Remember) is { } opened)
         {
-            NameNew(owner, opened, answer.Name);
-            Use(owner, location.Folder, opened);
+            NameNew(ask, opened, answer.Name);
+            Use(ask, location.Folder, opened);
         }
 
         Changed?.Invoke();
         _sync.Soon();
     }
 
-    private void Inform(Window owner, string what, ServerException ex)
+    private void Inform(ISessionQuestions ask, string what, ServerException ex)
     {
         _log.Warn("Action", $"{what}: {ex.Message}");
-        MessageDialog.Inform(owner, $"{what}.\n\n{Explain(ex)}");
+        ask.Tell($"{what}.\n\n{Explain(ex)}");
     }
 
     private static string Explain(ServerException ex) => ex.Failure switch

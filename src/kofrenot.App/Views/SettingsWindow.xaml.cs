@@ -4,6 +4,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using Kofrenot.Core;
 using Kofrenot.Core.Logging;
+using Kofrenot.Core.Session;
 using Kofrenot.Core.Settings;
 using Kofrenot.Core.Storage;
 using Kofrenot.Core.Updates;
@@ -84,7 +85,7 @@ public partial class SettingsWindow : Window
         Vaults.ApplyHotkey = applyVaultHotkey;
         Vaults.Session = session;
         Server.Log = _log;
-        Server.SetPassPhrase = session.SetAccountPassPhrase;
+        Server.SetPassPhrase = owner => session.SetAccountPassPhrase(new WpfQuestions(owner));
         Server.Connection = session.Server;
         LinkTypes.Session = session;
         session.Changed += ShowVault;

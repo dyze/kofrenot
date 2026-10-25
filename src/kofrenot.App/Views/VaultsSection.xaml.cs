@@ -6,6 +6,7 @@ using System.Windows.Input;
 using Kofrenot.Core.Graph;
 using Kofrenot.Core.Input;
 using Kofrenot.Core.Logging;
+using Kofrenot.Core.Session;
 using Kofrenot.Core.Settings;
 using Kofrenot.Core.Storage;
 
@@ -56,6 +57,8 @@ public partial class VaultsSection : UserControl
     }
 
     private Window Owner => Window.GetWindow(this);
+
+    private ISessionQuestions Ask => new WpfQuestions(Owner);
 
     private RegisteredVault? Chosen => (VaultList.SelectedItem as VaultRow)?.Vault;
 
@@ -233,7 +236,7 @@ public partial class VaultsSection : UserControl
     {
         if (_session is { Current.Graph: { } graph } session && new VaultNamePlanner(graph).Plan(NameBox.Text) is { Change: { } change })
         {
-            session.Name(Owner, change);
+            session.Name(Ask, change);
             Show();
         }
     }
@@ -253,7 +256,7 @@ public partial class VaultsSection : UserControl
         }
 
         Log.Info("Action", "New vault on the server");
-        session.CreateOnServer(Owner);
+        session.CreateOnServer(Ask);
         VaultList.SelectedItem = null;
         Show();
     }
@@ -266,7 +269,7 @@ public partial class VaultsSection : UserControl
         }
 
         Log.Info("Action", "Add a vault from the server");
-        if (await session.StoresToAdd(Owner) is not { } stores)
+        if (await session.StoresToAdd(Ask) is not { } stores)
         {
             return;
         }
@@ -277,7 +280,7 @@ public partial class VaultsSection : UserControl
             return;
         }
 
-        await session.AddFromServer(Owner, store);
+        await session.AddFromServer(Ask, store);
         VaultList.SelectedItem = null;
         Show();
     }
@@ -296,7 +299,7 @@ public partial class VaultsSection : UserControl
         }
 
         Log.Info("Action", "Move a vault to the server");
-        await session.MoveToServer(Owner, vault);
+        await session.MoveToServer(Ask, vault);
         Show();
     }
 
@@ -314,7 +317,7 @@ public partial class VaultsSection : UserControl
         }
 
         Log.Info("Action", "Delete a vault from the server");
-        if (await session.DeleteFromServer(Owner, vault, password))
+        if (await session.DeleteFromServer(Ask, vault, password))
         {
             VaultList.SelectedItem = null;
         }
@@ -353,7 +356,7 @@ public partial class VaultsSection : UserControl
             return;
         }
 
-        if (session.Register(Owner, dialog.FolderName) is { } problem)
+        if (session.Register(Ask, dialog.FolderName) is { } problem)
         {
             Log.Info("Settings", "Vault not added: not a vault folder, or listed already");
             MessageDialog.Inform(Owner, problem);
@@ -385,7 +388,7 @@ public partial class VaultsSection : UserControl
             return;
         }
 
-        session.Unregister(Owner, vault.Location);
+        session.Unregister(Ask, vault.Location);
         VaultList.SelectedItem = null;
         Show();
     }
@@ -497,7 +500,7 @@ public partial class VaultsSection : UserControl
     {
         if (_session is { } session)
         {
-            await session.Share(Owner);
+            await session.Share(Ask);
             ShowChosen();
         }
     }
@@ -506,7 +509,7 @@ public partial class VaultsSection : UserControl
     {
         if (_session is { } session && MembersList.SelectedItem is MemberRow row)
         {
-            await session.ChangeRole(Owner, row.Member);
+            await session.ChangeRole(Ask, row.Member);
             ShowChosen();
         }
     }
@@ -515,7 +518,7 @@ public partial class VaultsSection : UserControl
     {
         if (_session is { } session && MembersList.SelectedItem is MemberRow row)
         {
-            await session.RemoveMember(Owner, row.Member);
+            await session.RemoveMember(Ask, row.Member);
             ShowChosen();
         }
     }
@@ -524,7 +527,7 @@ public partial class VaultsSection : UserControl
     {
         if (_session is { } session)
         {
-            await session.Leave(Owner);
+            await session.Leave(Ask);
             ShowChosen();
         }
     }
@@ -534,7 +537,7 @@ public partial class VaultsSection : UserControl
 
     private void ChangePassPhraseButton_Click(object sender, RoutedEventArgs e)
     {
-        _session?.ChangePassPhrase(Owner);
+        _session?.ChangePassPhrase(Ask);
         ShowChosen();
     }
 

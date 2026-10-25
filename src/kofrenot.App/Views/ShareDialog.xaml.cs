@@ -4,13 +4,11 @@ using System.Windows.Input;
 using System.Windows.Interop;
 using Kofrenot.Core.Graph;
 using Kofrenot.Core.Server;
+using Kofrenot.Core.Session;
 using Kofrenot.Core.Sharing;
 using Kofrenot.UI.Platform;
 
 namespace Kofrenot.UI.Views;
-
-/// <summary>Who to share a vault with, and their role, once the fingerprint of their key was compared.</summary>
-public sealed record ShareChoice(ShareCandidate Candidate, MemberRole Role);
 
 /// <summary>
 /// Shares a server vault: finds someone by email (<c>find</c>), shows their key's fingerprint

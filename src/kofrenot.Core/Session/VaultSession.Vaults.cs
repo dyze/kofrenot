@@ -1,10 +1,9 @@
-using System.Windows;
 using Kofrenot.Core.Graph;
 using Kofrenot.Core.Logging;
 using Kofrenot.Core.Settings;
 using Kofrenot.Core.Storage;
 
-namespace Kofrenot.UI;
+namespace Kofrenot.Core.Session;
 
 /// <summary>
 /// The registered vaults: switching from one to another, adding, removing and ordering them, and
@@ -58,12 +57,12 @@ public sealed partial class VaultSession
         }
     }
 
-    /// <summary>The selected vault is locked: not opened, even with a remembered key, until <see cref="Unlock(Window)"/>.</summary>
+    /// <summary>The selected vault is locked: not opened, even with a remembered key, until <see cref="Unlock(ISessionQuestions)"/>.</summary>
     public bool IsLocked => Selected is { IsLocked: true };
 
     /// <summary>
     /// Closes the open vault and keeps it locked, also after a restart and when switching back to it,
-    /// until <see cref="Unlock(Window)"/>.
+    /// until <see cref="Unlock(ISessionQuestions)"/>.
     /// </summary>
     public void Lock()
     {
@@ -81,11 +80,11 @@ public sealed partial class VaultSession
     /// Opens the selected vault. A locked one asks its pass phrase, even when it is remembered, and
     /// stays locked when it is not given.
     /// </summary>
-    public void Unlock(Window owner)
+    public void Unlock(ISessionQuestions ask)
     {
         if (Selected is not { IsLocked: true } selected)
         {
-            Open(owner);
+            Open(ask);
             return;
         }
 
@@ -93,7 +92,7 @@ public sealed partial class VaultSession
         _askPassPhrase = true;
         try
         {
-            Open(owner);
+            Open(ask);
         }
         finally
         {
@@ -112,7 +111,7 @@ public sealed partial class VaultSession
     /// from now on. When it cannot be opened (its pass phrase cancelled, not a vault, an error),
     /// the vault open before is used again.
     /// </summary>
-    public void SwitchTo(Window owner, VaultLocation target)
+    public void SwitchTo(ISessionQuestions ask, VaultLocation target)
     {
         if (target == _settings.SelectedVault && (Current is not null || _notUpgraded is not null))
         {
@@ -123,7 +122,7 @@ public sealed partial class VaultSession
         Close();
         _settings.SelectVault(target);
         _log.Info("Action", $"Switch to vault {Selected?.Id?.ToString() ?? "not opened yet"}");
-        Open(owner);
+        Open(ask);
         if (Current is not null || _notUpgraded is not null || NewerFormat is not null || IsLocked || before is null || beforeVault is null)
         {
             return;
@@ -131,7 +130,7 @@ public sealed partial class VaultSession
 
         _log.Info(Category, $"Vault {beforeVault.Id} used again");
         _settings.SelectVault(before);
-        Use(owner, before.Folder, beforeVault);
+        Use(ask, before.Folder, beforeVault);
         Refresh();
         Changed?.Invoke();
     }
@@ -141,7 +140,7 @@ public sealed partial class VaultSession
     /// new vault. What the user is told when it cannot be added, or null. Not added either when
     /// the new vault's creation is cancelled.
     /// </summary>
-    public string? Register(Window owner, string folder)
+    public string? Register(ISessionQuestions ask, string folder)
     {
         var location = new VaultLocation(folder);
         var kind = VaultFolder.Inspect(folder);
@@ -157,7 +156,7 @@ public sealed partial class VaultSession
 
         _settings.SetVaults(_settings.Vaults.Add(new RegisteredVault(location)));
         _log.Info("Settings", $"Vault added: {folder}");
-        SwitchTo(owner, location);
+        SwitchTo(ask, location);
         if (VaultFolder.Inspect(folder) == FolderKind.Empty)
         {
             _settings.SetVaults(_settings.Vaults.Remove(location));
@@ -172,7 +171,7 @@ public sealed partial class VaultSession
     /// Takes a vault out of the list, forgetting its key and name on this computer; its folder is
     /// not touched. The open vault is closed, and the next one in the list opened.
     /// </summary>
-    public void Unregister(Window owner, VaultLocation location)
+    public void Unregister(ISessionQuestions ask, VaultLocation location)
     {
         if (_settings.Vaults.Find(location) is not { } vault)
         {
@@ -196,7 +195,7 @@ public sealed partial class VaultSession
         _log.Info("Settings", $"Vault removed: {vault.Id?.ToString() ?? location.Folder}");
         if (wasSelected && Vaults.Count > 0)
         {
-            SwitchTo(owner, Vaults[Math.Min(index, Vaults.Count - 1)].Location);
+            SwitchTo(ask, Vaults[Math.Min(index, Vaults.Count - 1)].Location);
         }
 
         Changed?.Invoke();
@@ -211,8 +210,8 @@ public sealed partial class VaultSession
     }
 
     /// <summary>Names the open vault. False when none is open, or it cannot be written (the user is told).</summary>
-    public bool Name(Window owner, VaultNamed name) =>
-        Write(owner, name, name.Replaces.Count > 1 ? $"Vault named (a conflict of {name.Replaces.Count} names resolved)" : "Vault named");
+    public bool Name(ISessionQuestions ask, VaultNamed name) =>
+        Write(ask, name, name.Replaces.Count > 1 ? $"Vault named (a conflict of {name.Replaces.Count} names resolved)" : "Vault named");
 
     /// <summary>The id in the header of the vault in <paramref name="folder"/>; null when it cannot be read (opening it says why).</summary>
     private static Guid? IdIn(string folder)

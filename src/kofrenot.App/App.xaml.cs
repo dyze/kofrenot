@@ -82,7 +82,7 @@ public partial class App : Application
         var ui = new DispatcherUiThread();
         var server = _server = new ServerConnection(settings, new ServerSessionMemory(files.ServerSession, protector, log), new AccountIdentities(files.AccountIdentity, log), new VaultOwners(files.VaultOwners, log), ui, log);
         var sync = _sync = new SyncService(settings, files, server, ui, log);
-        var session = _session = new VaultSession(settings, files, new KeyMemory(files.RememberedKeys, protector, log), new VaultNameMemory(files.VaultNames, protector, log), server, sync, log);
+        var session = _session = new VaultSession(settings, files, new KeyMemory(files.RememberedKeys, protector, log), new VaultNameMemory(files.VaultNames, protector, log), server, sync, ui, new VaultWatching(), new WpfThumbnailMaker(), log);
         session.Changed += sync.Soon;
         _window = new MainWindow(
             settings,
@@ -149,7 +149,7 @@ public partial class App : Application
         window.ShowFromOutside();
 
         // Once the window is on screen, so the pass phrase dialog has an owner to center on.
-        Dispatcher.BeginInvoke(() => session.Open(window), System.Windows.Threading.DispatcherPriority.ApplicationIdle);
+        Dispatcher.BeginInvoke(() => session.Open(new WpfQuestions(window)), System.Windows.Threading.DispatcherPriority.ApplicationIdle);
     }
 
     /// <summary>

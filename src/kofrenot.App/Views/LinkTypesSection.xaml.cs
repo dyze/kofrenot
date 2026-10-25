@@ -3,6 +3,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using Kofrenot.Core.Graph;
 using Kofrenot.Core.Input;
+using Kofrenot.Core.Session;
 
 namespace Kofrenot.UI.Views;
 
@@ -128,7 +129,7 @@ public partial class LinkTypesSection : UserControl
         switch (editor)
         {
             case AliasEditor alias when alias.Plan() is { Change: { } change } plan:
-                if (_session.Write(window, change, $"Alias added to {plan.Verb.Type.Id}{(plan.Verb.IsReverse ? " (reverse)" : string.Empty)}"))
+                if (_session.Write(new WpfQuestions(window), change, $"Alias added to {plan.Verb.Type.Id}{(plan.Verb.IsReverse ? " (reverse)" : string.Empty)}"))
                 {
                     Close(alias);
                 }
@@ -136,7 +137,7 @@ public partial class LinkTypesSection : UserControl
                 break;
             case TypeEditor type when type.Plan() is { Change: { } change }:
                 var action = type.IsRename ? $"Link type {change.LinkType} renamed" : $"Link type {change.LinkType} added";
-                if (_session.Write(window, change, action))
+                if (_session.Write(new WpfQuestions(window), change, action))
                 {
                     Close(type);
                 }
@@ -184,7 +185,7 @@ public partial class LinkTypesSection : UserControl
         var window = Window.GetWindow(this)!;
         if (MessageDialog.Confirm(window, $"Remove the alias “{alias.Phrase}” of “{alias.Verb.Name}”?", "Remove"))
         {
-            _session.Write(window, new AliasPlanner(graph).Remove(alias), $"Alias removed from {alias.Verb.Type.Id}");
+            _session.Write(new WpfQuestions(window), new AliasPlanner(graph).Remove(alias), $"Alias removed from {alias.Verb.Type.Id}");
             Show();
         }
     }
@@ -219,7 +220,7 @@ public partial class LinkTypesSection : UserControl
             }
 
             _removal = null;
-            _session.Write(window, change, $"Link type {custom.Type.Id} removed");
+            _session.Write(new WpfQuestions(window), change, $"Link type {custom.Type.Id} removed");
         }
 
         Show();

@@ -114,7 +114,7 @@ public partial class MainWindow
     {
         if (sender is FrameworkElement { DataContext: TabRow { Tab.View: { } view } })
         {
-            _session.EditView(this, view);
+            _session.EditView(Ask, view);
         }
     }
 
@@ -169,7 +169,7 @@ public partial class MainWindow
     private void CreateView()
     {
         _log.Info("Action", "New view");
-        if (RecordRecent(_session.CreateNode(this, TypeCatalog.View)) is { } added && added.NewNodes.FirstOrDefault() is { } view)
+        if (RecordRecent(_session.CreateNode(Ask, TypeCatalog.View)) is { } added && added.NewNodes.FirstOrDefault() is { } view)
         {
             OpenTab(view);
         }

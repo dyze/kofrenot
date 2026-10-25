@@ -154,7 +154,7 @@ public partial class MainWindow
             return;
         }
 
-        _session.SwitchTo(this, target);
+        _session.SwitchTo(Ask, target);
         ShowVaults();
         FocusTab();
     }

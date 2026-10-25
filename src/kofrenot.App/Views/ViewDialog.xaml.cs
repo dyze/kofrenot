@@ -2,13 +2,11 @@ using System.Windows;
 using System.Windows.Interop;
 using Kofrenot.Core.Graph;
 using Kofrenot.Core.Input;
+using Kofrenot.Core.Session;
 using Kofrenot.Core.Views;
 using Kofrenot.UI.Platform;
 
 namespace Kofrenot.UI.Views;
-
-/// <summary>What the view dialog saves: the definition, and the rename when its name was changed.</summary>
-public sealed record ViewEdit(ViewDefinition Definition, NodeRenamed? Rename);
 
 /// <summary>
 /// Edits a view: its name and what it shows, saved by the caller. Save waits for a complete

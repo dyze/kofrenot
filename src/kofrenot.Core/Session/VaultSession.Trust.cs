@@ -2,7 +2,7 @@ using Kofrenot.Core.Logging;
 using Kofrenot.Core.Server;
 using Kofrenot.Core.Storage;
 
-namespace Kofrenot.UI;
+namespace Kofrenot.Core.Session;
 
 /// <summary>
 /// Whose signatures a server vault's keys and members need: its owner's. This account for its own

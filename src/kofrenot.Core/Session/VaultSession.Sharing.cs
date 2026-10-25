@@ -1,12 +1,10 @@
-using System.Windows;
 using Kofrenot.Core.Graph;
 using Kofrenot.Core.Logging;
 using Kofrenot.Core.Server;
 using Kofrenot.Core.Sharing;
 using Kofrenot.Core.Storage;
-using Kofrenot.UI.Views;
 
-namespace Kofrenot.UI;
+namespace Kofrenot.Core.Session;
 
 /// <summary>
 /// A shared server vault: its members (recorded in the vault), shared by its owner with someone
@@ -17,7 +15,7 @@ public sealed partial class VaultSession
     private const string ReadOnlyMessage = "This vault is shared with you to read only: it cannot be changed.";
 
     /// <summary>The members of the open vault; none before it is shared.</summary>
-    public IReadOnlyList<VaultMember> Members => Current is { } vault && OwnerKey is { } owner ? MemberRecords.Members(vault.Graph, vault.Id, owner) : [];
+    public IReadOnlyList<VaultMember> Members => Current is { } vault && OwnerKey is { } ownerKey ? MemberRecords.Members(vault.Graph, vault.Id, ownerKey) : [];
 
     /// <summary>The open vault is shared with this account to read only.</summary>
     public bool IsReadOnly => Current is { } vault && MyRoleIn(vault) == MemberRole.Reader;
@@ -31,7 +29,7 @@ public sealed partial class VaultSession
         && MyRoleIn(vault) is null or MemberRole.Owner;
 
     /// <summary>Asks who to share the open vault with, and shares it: their keys, their record in the vault, then their access on the server.</summary>
-    public async Task Share(Window owner)
+    public async Task Share(ISessionQuestions ask)
     {
         if (!CanShare || Current is not { } vault || Folder is not { } folder || Selected?.Location.Store is not { } store
             || _server.Client is not { } client || _server.Account is not { } account || _access is not { } access)
@@ -39,7 +37,7 @@ public sealed partial class VaultSession
             return;
         }
 
-        var choice = ShareDialog.Ask(owner, PlaceOf(Selected, folder), email => VaultSharing.FindAsync(client, email));
+        var choice = ask.AskShare(PlaceOf(Selected, folder), email => VaultSharing.FindAsync(client, email));
         if (choice is null)
         {
             _log.Info("Action", "Sharing cancelled");
@@ -56,23 +54,23 @@ public sealed partial class VaultSession
 
             var me = await OwnerRecord(client, account.Email, access);
             var changes = VaultSharing.Share(folder, access, vault.Graph, me, choice.Candidate, choice.Role, DateTimeOffset.UtcNow);
-            if (!Append(owner, vault, changes, $"Vault shared with an account as {choice.Role}"))
+            if (!Append(ask, vault, changes, $"Vault shared with an account as {choice.Role}"))
             {
                 return;
             }
 
             await client.SetMemberAsync(store.Id, choice.Candidate.Account, VaultSharing.ToStoreRole(choice.Role));
             _sync.Soon();
-            MessageDialog.Inform(owner, $"The vault is shared with {choice.Candidate.Email}. It appears in their Settings > Vault > Add... > Vault from the server..., and opens with their own pass phrase.");
+            ask.Tell($"The vault is shared with {choice.Candidate.Email}. It appears in their Settings > Vault > Add... > Vault from the server..., and opens with their own pass phrase.");
         }
         catch (ServerException ex)
         {
-            Inform(owner, "The vault cannot be shared", ex);
+            Inform(ask, "The vault cannot be shared", ex);
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidOperationException)
         {
             _log.Error("Action", "Cannot share the vault", ex);
-            MessageDialog.Inform(owner, $"The vault cannot be shared.\n\n{ex.Message}");
+            ask.Tell($"The vault cannot be shared.\n\n{ex.Message}");
         }
     }
 
@@ -90,7 +88,7 @@ public sealed partial class VaultSession
         _server.Identity is { } account && Current == vault ? VaultSharing.RoleOf(Members, account.Identity.Id) : null;
 
     /// <summary>False, the user told, when the open vault is read only for this account.</summary>
-    private bool CanWrite(Window owner)
+    private bool CanWrite(ISessionQuestions ask)
     {
         if (!IsReadOnly)
         {
@@ -98,7 +96,7 @@ public sealed partial class VaultSession
         }
 
         _log.Info("Action", "Change refused: the vault is read only");
-        MessageDialog.Inform(owner, ReadOnlyMessage);
+        ask.Tell(ReadOnlyMessage);
         return false;
     }
 }

@@ -7,6 +7,7 @@ using Kofrenot.Core.Browse;
 using Kofrenot.Core.Graph;
 using Kofrenot.Core.Input;
 using Kofrenot.Core.Logging;
+using Kofrenot.Core.Session;
 using Kofrenot.Core.Settings;
 using Kofrenot.Core.Storage;
 using Kofrenot.Core.Updates;
@@ -53,28 +54,28 @@ public partial class MainWindow : Window
 
         InitializeComponent();
         DetailsPanel.Log = log;
-        DetailsPanel.Rename = rename => _session.Rename(this, rename);
-        DetailsPanel.Write = (change, action) => _session.Write(this, change, action);
+        DetailsPanel.Rename = rename => _session.Rename(Ask, rename);
+        DetailsPanel.Write = (change, action) => _session.Write(Ask, change, action);
         DetailsPanel.Visited = node => Visited(node);
         DetailsPanel.ReadNote = version => _session.Current?.ReadNote(version);
         DetailsPanel.ContentStateOf = ContentStateOf;
-        DetailsPanel.SaveNote = (version, content) => _session.SaveNote(this, version, content);
+        DetailsPanel.SaveNote = (version, content) => _session.SaveNote(Ask, version, content);
         DetailsPanel.OpenVault = () => _session.Current;
-        DetailsPanel.SaveDataset = (version, open, progress) => _session.SaveDataset(this, version, open, progress);
-        DetailsPanel.ExportDataset = (version, target) => _session.ExportDataset(this, version, target);
+        DetailsPanel.SaveDataset = (version, open, progress) => _session.SaveDataset(Ask, version, open, progress);
+        DetailsPanel.ExportDataset = (version, target) => _session.ExportDataset(Ask, version, target);
         DetailsPanel.IsImporting = _session.IsImporting;
         DetailsPanel.ShowImage = ShowImage;
-        DetailsPanel.EditView = view => _session.EditView(this, view);
-        DetailsPanel.Retype = retype => _session.Retype(this, retype);
-        DetailsPanel.WriteChanges = (changes, action) => _session.Write(this, changes, action);
-        DetailsPanel.AddLink = (request, choices) => RecordRecent(_session.Create(this, request, choices)) is not null;
+        DetailsPanel.EditView = view => _session.EditView(Ask, view);
+        DetailsPanel.Retype = retype => _session.Retype(Ask, retype);
+        DetailsPanel.WriteChanges = (changes, action) => _session.Write(Ask, changes, action);
+        DetailsPanel.AddLink = (request, choices) => RecordRecent(_session.Create(Ask, request, choices)) is not null;
         ViewContent.Log = log;
         ViewContent.States = viewStates;
-        ViewContent.CreateNode = (type, under, file) => RecordRecent(_session.CreateNode(this, type, under, file));
+        ViewContent.CreateNode = (type, under, file) => RecordRecent(_session.CreateNode(Ask, type, under, file));
         ViewContent.DatasetFiles = () => _session.Current?.Datasets;
-        ViewContent.Rename = rename => _session.Rename(this, rename);
-        ViewContent.Write = (changes, action) => _session.Write(this, changes, action);
-        ViewContent.Copy = plan => _session.Copy(this, plan);
+        ViewContent.Rename = rename => _session.Rename(Ask, rename);
+        ViewContent.Write = (changes, action) => _session.Write(Ask, changes, action);
+        ViewContent.Copy = plan => _session.Copy(Ask, plan);
         ViewContent.ContentExists = version => _session.Current is { } vault && (vault.HasContent(version) || vault.FetchesContent);
         ViewContent.ReadNote = version => _session.Current?.ReadNote(version);
         ViewContent.ContentStateOf = ContentStateOf;
@@ -94,6 +95,8 @@ public partial class MainWindow : Window
         ShowVault();
         ShowVaults();
     }
+
+    private ISessionQuestions Ask => new WpfQuestions(this);
 
     private bool DetailsShown => DetailsPanel.Browser.IsOpen;
 
@@ -310,7 +313,7 @@ public partial class MainWindow : Window
         }
 
         if (_input is { Plan.CanAdd: true, Request: { } request }
-            && RecordRecent(_session.Create(this, request, _input.Choices)) is { } added)
+            && RecordRecent(_session.Create(Ask, request, _input.Choices)) is { } added)
         {
             ClearInput();
 
@@ -419,12 +422,12 @@ public partial class MainWindow : Window
         else if (_session.OlderFormat is not null)
         {
             _log.Info("Action", "Upgrade the vault");
-            _session.Upgrade(this);
+            _session.Upgrade(Ask);
         }
         else
         {
             _log.Info("Action", "Unlock");
-            _session.Unlock(this);
+            _session.Unlock(Ask);
         }
     }
 

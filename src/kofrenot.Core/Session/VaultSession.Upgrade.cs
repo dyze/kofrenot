@@ -1,9 +1,7 @@
-using System.Windows;
 using Kofrenot.Core.Logging;
 using Kofrenot.Core.Storage;
-using Kofrenot.UI.Views;
 
-namespace Kofrenot.UI;
+namespace Kofrenot.Core.Session;
 
 /// <summary>
 /// The upgrade of a vault of an older format (<see cref="Vault.NeedsUpgrade"/>): asked once per
@@ -19,7 +17,7 @@ public sealed partial class VaultSession
     public int? OlderFormat => _notUpgraded?.Format;
 
     /// <summary>Asks again to upgrade the vault whose upgrade was declined, then uses it.</summary>
-    public void Upgrade(Window owner)
+    public void Upgrade(ISessionQuestions ask)
     {
         if (_notUpgraded is not { } vault || Folder is not { } folder)
         {
@@ -31,7 +29,7 @@ public sealed partial class VaultSession
         {
             // Another device may have upgraded it meanwhile: then nothing is asked.
             vault.Refresh();
-            Use(owner, folder, vault);
+            Use(ask, folder, vault);
         }
         catch (NewerVaultFormatException ex)
         {
@@ -42,7 +40,7 @@ public sealed partial class VaultSession
     }
 
     /// <summary>True when the vault needs no upgrade, or the user agrees to it (now, or before on this device).</summary>
-    private bool AgreesToUpgrade(Window owner, Vault vault)
+    private bool AgreesToUpgrade(ISessionQuestions ask, Vault vault)
     {
         if (!vault.NeedsUpgrade)
         {
@@ -50,7 +48,7 @@ public sealed partial class VaultSession
         }
 
         var agreed = _upgrades.IsAgreed(vault.Id, VaultFormat.Current);
-        if (!agreed && !MessageDialog.Confirm(owner, VaultFormat.UpgradeQuestion(vault.Format), "Upgrade and open", "Not now"))
+        if (!agreed && !ask.Confirm(VaultFormat.UpgradeQuestion(vault.Format), "Upgrade and open", "Not now"))
         {
             _log.Info("Action", $"Upgrade of vault {vault.Id} from format {vault.Format} declined");
             _notUpgraded = vault;
@@ -58,7 +56,7 @@ public sealed partial class VaultSession
         }
 
         // Format 6 seals the vault's key for an identity: made now, with the pass phrase.
-        if (!UpgradeKeys(owner, vault))
+        if (!UpgradeKeys(ask, vault))
         {
             _notUpgraded = vault;
             return false;

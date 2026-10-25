@@ -87,12 +87,11 @@ kofrenot.App      (WPF, net10.0-windows)          kofrenot.Android   (Avalonia, 
 | Remembered keys, session | `ISecretProtector` | `KeystoreProtector` (Android Keystore, AES key never leaving it) |
 | Data folder | `AppFiles` (`%LocalAppData%`, portable) | The app's private files folder |
 | Logs | `ILog`, Serilog in App | Same rules, a file in the app's folder |
-| Sync timing, sign-in | `SyncService`, `ServerConnection` in Core (`Session/`: `TimeProvider` timers, `IUiThread`) | An `IUiThread` on Avalonia's dispatcher |
-| Opening a vault | `VaultSession` **in App** (WPF dialogs mixed in) | Its logic moved to Core first, dialogs left to each client |
+| Sync timing, sign-in, opening a vault | `SyncService`, `ServerConnection`, `VaultSession` in Core (`Session/`: `TimeProvider` timers, `IUiThread`, `ISessionQuestions`) | An `IUiThread` on Avalonia's dispatcher, and its own `ISessionQuestions` (dialogs) |
 | Vault refresh after a download | `VaultWatcher` (`FileSystemWatcher`) | Sync tells the vault directly: no watcher |
 | Thumbnails | `IThumbnailMaker` | Not in 0.10: icons only |
 
-**Step 1 is a refactor on Windows, in 0.8**: the session, account and sync logic (about 2 000 lines in App) moves into Core, behind small interfaces for the timer and the questions asked to the user, with tests. It makes 0.10 possible without copying code, and is worth it for the WPF app alone.
+**Step 1, a refactor on Windows, is done (0.8)**: the session, account and sync logic is in Core, behind small interfaces for the timers, the UI thread and the questions asked to the user, with tests. 0.10 reuses it without copying code.
 
 **Depends on 0.8**: content on demand keeps the phone's mirror small, the change files only; a note's content is downloaded when it is shown.
 

@@ -1,13 +1,11 @@
-using System.Windows;
 using Kofrenot.Core.Graph;
 using Kofrenot.Core.Logging;
 using Kofrenot.Core.Server;
 using Kofrenot.Core.Settings;
 using Kofrenot.Core.Sharing;
 using Kofrenot.Core.Storage;
-using Kofrenot.UI.Views;
 
-namespace Kofrenot.UI;
+namespace Kofrenot.Core.Session;
 
 /// <summary>
 /// Members leaving a shared server vault: removed by its owner, or leaving on their own. Its key
@@ -24,14 +22,14 @@ public sealed partial class VaultSession
     public bool CanLeave => Current is { } vault && MyRoleIn(vault) is MemberRole.Reader or MemberRole.Writer && _server.IsSignedIn;
 
     /// <summary>Removes a member from the open vault: their server access at once, then a new key they do not have.</summary>
-    public async Task RemoveMember(Window owner, VaultMember member)
+    public async Task RemoveMember(ISessionQuestions ask, VaultMember member)
     {
         if (!CanRemoveMembers || member.Role == MemberRole.Owner || Selected?.Location.Store is not { } store || _server.Client is not { } client)
         {
             return;
         }
 
-        if (!MessageDialog.Confirm(owner, $"Remove {member.Email} from this vault?\n\nThey can no longer reach it on the server, and what is written from now on is sealed with a new key they do not have. What they have read so far stays readable to them.", "Remove"))
+        if (!ask.Confirm($"Remove {member.Email} from this vault?\n\nThey can no longer reach it on the server, and what is written from now on is sealed with a new key they do not have. What they have read so far stays readable to them.", "Remove"))
         {
             _log.Info("Action", "Member removal cancelled");
             return;
@@ -40,16 +38,16 @@ public sealed partial class VaultSession
         try
         {
             await client.RemoveMemberAsync(store.Id, member.Account);
-            await RotateAway(owner, [member]);
+            await RotateAway(ask, [member]);
         }
         catch (ServerException ex)
         {
-            Inform(owner, "The member cannot be removed", ex);
+            Inform(ask, "The member cannot be removed", ex);
         }
     }
 
     /// <summary>Makes a member a reader if a writer, a writer if a reader: their record in the vault, then their role on the server.</summary>
-    public async Task ChangeRole(Window owner, VaultMember member)
+    public async Task ChangeRole(ISessionQuestions ask, VaultMember member)
     {
         if (!CanRemoveMembers || member.Role == MemberRole.Owner || Current is not { } vault || _access is not { } access
             || Selected?.Location.Store is not { } store || _server.Client is not { } client)
@@ -61,7 +59,7 @@ public sealed partial class VaultSession
         var question = role == MemberRole.Reader
             ? $"Make {member.Email} a reader?\n\nThey can still read the vault, no longer change it."
             : $"Make {member.Email} a writer?\n\nThey can then change the vault too.";
-        if (!MessageDialog.Confirm(owner, question, role == MemberRole.Reader ? "Make reader" : "Make writer"))
+        if (!ask.Confirm(question, role == MemberRole.Reader ? "Make reader" : "Make writer"))
         {
             _log.Info("Action", "Role change cancelled");
             return;
@@ -70,7 +68,7 @@ public sealed partial class VaultSession
         try
         {
             if (VaultSharing.ChangeRole(access, vault.Graph, member.Account, role, DateTimeOffset.UtcNow) is { } record
-                && !Append(owner, vault, [record], $"Member role changed to {role}"))
+                && !Append(ask, vault, [record], $"Member role changed to {role}"))
             {
                 return;
             }
@@ -80,24 +78,24 @@ public sealed partial class VaultSession
         }
         catch (ServerException ex)
         {
-            Inform(owner, "The role cannot be changed", ex);
+            Inform(ask, "The role cannot be changed", ex);
         }
         catch (InvalidOperationException ex)
         {
             _log.Error("Action", "Cannot change the role", ex);
-            MessageDialog.Inform(owner, $"The role cannot be changed.\n\n{ex.Message}");
+            ask.Tell($"The role cannot be changed.\n\n{ex.Message}");
         }
     }
 
     /// <summary>Leaves the open vault, shared by someone else: it goes out of the list; its copy here stays until removed.</summary>
-    public async Task Leave(Window owner)
+    public async Task Leave(ISessionQuestions ask)
     {
         if (!CanLeave || Selected is not { Location.Store: { } store } vault || _server.Client is not { } client)
         {
             return;
         }
 
-        if (!MessageDialog.Confirm(owner, "Leave this vault?\n\nIt goes out of your list, and you can no longer reach it on the server. Its owner can share it with you again.", "Leave"))
+        if (!ask.Confirm("Leave this vault?\n\nIt goes out of your list, and you can no longer reach it on the server. Its owner can share it with you again.", "Leave"))
         {
             _log.Info("Action", "Leaving cancelled");
             return;
@@ -107,11 +105,11 @@ public sealed partial class VaultSession
         {
             await client.LeaveAsync(store.Id);
             _log.Info("Action", $"Vault {vault.Id} left");
-            Unregister(owner, vault.Location);
+            Unregister(ask, vault.Location);
         }
         catch (ServerException ex)
         {
-            Inform(owner, "The vault cannot be left", ex);
+            Inform(ask, "The vault cannot be left", ex);
         }
     }
 
@@ -120,7 +118,7 @@ public sealed partial class VaultSession
     /// (they left, or were removed elsewhere), then raises the fence once the new keys are uploaded.
     /// Quiet: runs after opening, and logs what fails, to try again at the next opening.
     /// </summary>
-    private async Task SettleMembers(Window owner)
+    private async Task SettleMembers(ISessionQuestions ask)
     {
         if (!CanRemoveMembers || Selected?.Location.Store is not { } store || _server.Client is not { } client)
         {
@@ -132,7 +130,7 @@ public sealed partial class VaultSession
             var gone = VaultSharing.Gone(Members, await client.MembersAsync(store.Id));
             if (gone.Count > 0)
             {
-                await RotateAway(owner, gone);
+                await RotateAway(ask, gone);
             }
             else
             {
@@ -146,7 +144,7 @@ public sealed partial class VaultSession
     }
 
     // A new key for the members left, the records of the gone removed, uploaded, then the fence raised.
-    private async Task RotateAway(Window owner, IReadOnlyList<VaultMember> gone)
+    private async Task RotateAway(ISessionQuestions ask, IReadOnlyList<VaultMember> gone)
     {
         if (Current is not { } vault || Folder is not { } folder || _access is not { } access || _server.Identity is not { } account
             || Selected?.Location.Store is not { } store || _server.Client is not { } client)
@@ -159,12 +157,12 @@ public sealed partial class VaultSession
             var (rotated, removals) = VaultSharing.Remove(folder, access, vault.Graph, [.. gone.Select(member => member.Account)], new AccountKey(account.Identity.Id, account.Identity.PublicKey), DateTimeOffset.UtcNow);
             vault.UseKeys(rotated.Keys);
             _access = rotated;
-            Append(owner, vault, removals, $"Vault key rotated to epoch {rotated.Keys.CurrentEpoch}: {gone.Count} members out");
+            Append(ask, vault, removals, $"Vault key rotated to epoch {rotated.Keys.CurrentEpoch}: {gone.Count} members out");
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidOperationException)
         {
             _log.Error("Action", "Cannot rotate the vault's key", ex);
-            MessageDialog.Inform(owner, $"The vault's key cannot be changed.\n\n{ex.Message}");
+            ask.Tell($"The vault's key cannot be changed.\n\n{ex.Message}");
             return;
         }
 

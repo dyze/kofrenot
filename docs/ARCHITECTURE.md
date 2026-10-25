@@ -5,17 +5,17 @@
 ```
 kofrenot.App   (WPF, Windows only)
 │  main window (input box, node details, note editor, dataset panel), creation dialog, settings window, pass phrase dialog, log window, changelog window, tray icon
-│  VaultSession (the registered vaults; opens one, watches it and adds to it through the creation dialog)
+│  WpfQuestions (the session's questions as dialogs)
 │  adapters: SerilogFileLog, SingleInstance, NativeWindows + WindowPlacer (window positions), GitHubReleaseFeed, Browser,
 │            DpapiProtector, GlobalHotkey, VaultWatcher, DispatcherUiThread
 │
-│  implements ▼  IReleaseFeed · ILog · ISecretProtector · IUiThread
+│  implements ▼  IReleaseFeed · ILog · ISecretProtector · IUiThread · IVaultWatcher · IThumbnailMaker · ISessionQuestions
 │
 kofrenot.Core  (no Windows dependency, fully unit-tested on any OS)
    Graph: KnowledgeGraph · Node · Link · TypeCatalog · CustomLinkTypes · LinkAliases · Change
    Storage: Vault · VaultFolder · VaultFormat · SecretBox · ChunkedBox · KeyWrap · SnapshotStore · NoteFiles · DatasetFiles · ThumbnailFiles · KeyMemory · VaultNameMemory
    Server: KofreClient · ServerSync · VaultMove · ServerSessionMemory   ── HTTPS ──►  Kofre server (own repository: kofreserver)
-   Session: ServerConnection · SyncService   (the server account; syncs the server vaults in the background)
+   Session: VaultSession · ServerConnection · SyncService   (the open vault and the registered ones; the server account; syncs in the background)
    Input: InputParser · GraphSearch · AddPlanner · InputPresenter · CreationForm
    Browse: NodeBrowser · NodeDetails · NodeVisual · NodeFacts · PinPlanner · RecentNodes · ViewTabs · ViewStates
    Notes: NotePlanner · MarkdownFormat
@@ -46,17 +46,17 @@ One namespace per folder (`Kofrenot.Core.Settings`, `Kofrenot.UI.Views`, ...). T
 | `Notes/` | `NotePlanner` (`NoteState`, `ConflictVersion`: load a note, plan its next version), `MarkdownFormat` (`TextEdit`: the toolbar's Markdown) |
 | `Datasets/` | `DatasetPlanner` (`DatasetState`, `DatasetChoice`: load a dataset, plan an import or the version kept from a conflict), `ByteSize` (sizes as shown: 1.2 MB), `DatasetType` (`DatasetCategory`, `DatasetViewer`: the inner type, from the extension, its category and viewer), `IThumbnailMaker` (implemented by App), `TextPreview` (the beginning of a text, for the viewer), `ImageZoom` (the image window's zoom: fit, steps, percent) |
 | `Server/` | Server vaults, see [Server vaults](#server-vaults): `KofreClient` (the server's REST API, renews its token; `IStoreFiles`, `ServerException` + `ServerFailure`), `SyncStatus` (where a server vault's sync stands, and how it is told), `ServerSync` (mirror ⇄ store), `StorePaths`, `VaultMove` (a folder vault into a mirror), `ServerSessionMemory` (`server-session.json`, through `ProtectedStore`) |
-| `Session/` | What a client holds while it runs, shared by every client ([Android](ANDROID-CONCEPT.md#architecture)): `ServerConnection` (the server account: sign up, in, out; its session kept through `ISecretProtector`), `SyncService` (syncs every server vault in the background, see [Server vaults](#server-vaults); its timers through `TimeProvider`), `IUiThread` (the thread their events are raised on) |
+| `Session/` | What a client holds while it runs, shared by every client ([Android](ANDROID-CONCEPT.md#architecture)): `ServerConnection` (the server account: sign up, in, out; its session kept through `ISecretProtector`), `SyncService` (syncs every server vault in the background, see [Server vaults](#server-vaults); its timers through `TimeProvider`), `IUiThread` (the thread their events are raised on); `VaultSession` (the registered vaults and the open one: create, unlock, lock, switch, register, write, upgrade (`.Upgrade`), keys (`.Keys`, `.Trust`), the account's pass phrase (`.Account`), server vaults (`.Server`), sharing and members (`.Sharing`, `.Members`)), asking the user through `ISessionQuestions` (pass phrases, recovery keys, confirmations, the creation and view screens, and `Tell` for what failed) and watching a folder vault through `IVaultWatcher` |
 | `Logging/` | `ILog` (with `NullLog`), `LogEntry`, `RingLog`, `CompositeLog`, `FilteredLog` |
 | `Placement/` | Window positions: `WindowPlacement`, `PlacementRules`, `PlacementStore` (see [Window positions](#window-positions)) |
 | `Updates/` | The daily update check, see [Updates](#updates): `UpdateChecker`, `Release`, `IReleaseFeed`, `UpdateStore` |
 
 | `kofrenot.App` | Content |
 | --- | --- |
-| *(root)* | `App.xaml`: startup and wiring; `App.Hotkeys` (the hotkey that shows kofrenot, and the vaults'); `VaultSession` (the open vault: create, unlock, watch, `Create` (creation dialog, then add); `VaultSession.Vaults`: switch, register, unregister, move, name, forget a remembered key; `VaultSession.Server`: create on, add from, move to and delete from the server) |
-| `Views/` | Windows: `MainWindow` (input box, shows `InputPresenter`; `MainWindow.Vaults`: the vault box, `VaultChoice`, and a vault's hotkey), `NodeDetailsPanel` (in the main window, shows a `NodeBrowser`; `NoteEditor` for a note, `DatasetPanel` for a dataset: import, export, drag in and out, and `DatasetView`, its viewer), `NodeVisualView` + `ThumbnailCache` (a node's picture in rows), `CreationDialog` (shows a `CreationForm`, one step at a time; the node types in a list with their icons (`TypeChoice`), the focus starting on the chosen one; the link type in a combo, as it has six entries), `MarkdownBox` (note text and toolbar), `SharedStyles` (the type scale: title, heading, body, secondary, caption, footer; shared buttons), `SettingsWindow` (tabs General, Key bindings (`KeyBindingsSection`), Vault (`VaultsSection`; `StoreChoiceDialog`, `DeleteServerVaultDialog`), Server (`ServerSection`), Link types (`LinkTypesSection`), Appearance, Logging, About; `HotkeyCapture`: the shortcut pressed in a hotkey box), `PassphraseDialog`, `ImageWindow` (a dataset's image), `LogWindow`, `ChangelogWindow` (Settings > About > *Show changelog*); `MessageDialog` (messages and questions in the app's theme, instead of the Windows `MessageBox`); `AppTheme` |
+| *(root)* | `App.xaml`: startup and wiring; `App.Hotkeys` (the hotkey that shows kofrenot, and the vaults') |
+| `Views/` | Windows: `WpfQuestions` (the session's `ISessionQuestions`, as the dialogs below); `MainWindow` (input box, shows `InputPresenter`; `MainWindow.Vaults`: the vault box, `VaultChoice`, and a vault's hotkey), `NodeDetailsPanel` (in the main window, shows a `NodeBrowser`; `NoteEditor` for a note, `DatasetPanel` for a dataset: import, export, drag in and out, and `DatasetView`, its viewer), `NodeVisualView` + `ThumbnailCache` (a node's picture in rows), `CreationDialog` (shows a `CreationForm`, one step at a time; the node types in a list with their icons (`TypeChoice`), the focus starting on the chosen one; the link type in a combo, as it has six entries), `MarkdownBox` (note text and toolbar), `SharedStyles` (the type scale: title, heading, body, secondary, caption, footer; shared buttons), `SettingsWindow` (tabs General, Key bindings (`KeyBindingsSection`), Vault (`VaultsSection`; `StoreChoiceDialog`, `DeleteServerVaultDialog`), Server (`ServerSection`), Link types (`LinkTypesSection`), Appearance, Logging, About; `HotkeyCapture`: the shortcut pressed in a hotkey box), `PassphraseDialog`, `ImageWindow` (a dataset's image), `LogWindow`, `ChangelogWindow` (Settings > About > *Show changelog*); `MessageDialog` (messages and questions in the app's theme, instead of the Windows `MessageBox`); `AppTheme` |
 | `Tray/` | `TrayIcon` |
-| `Platform/` | Implementations of the `Core` interfaces (`GitHubReleaseFeed`, `DpapiProtector`, `DispatcherUiThread`), `WpfThumbnailMaker` (`IThumbnailMaker`), `DragExport` + `LazyFileDrop` (a file given only when asked for), `Browser` (opens web pages), `SingleInstance`, `GlobalHotkey` (`RegisterHotKey`, several by id), `VaultWatcher` (`FileSystemWatcher`), and window placement (`NativeWindows`, `WindowPlacer`) |
+| `Platform/` | Implementations of the `Core` interfaces (`GitHubReleaseFeed`, `DpapiProtector`, `DispatcherUiThread`), `WpfThumbnailMaker` (`IThumbnailMaker`), `DragExport` + `LazyFileDrop` (a file given only when asked for), `Browser` (opens web pages), `SingleInstance`, `GlobalHotkey` (`RegisterHotKey`, several by id), `VaultWatcher` (`FileSystemWatcher`) + `VaultWatching` (`IVaultWatcher`), and window placement (`NativeWindows`, `WindowPlacer`) |
 | `Logging/` | `LogHub`, `SerilogFileLog` |
 | `Assets/` | `kofrenot.ico` (drawn by `build/make_icon.py`) |
 
@@ -89,12 +89,12 @@ App.OnStartup
  ├─ AppTheme
  ├─ SingleInstance.TryClaim ── another copy runs? ─► see the list below
  ├─ LogHub
- ├─ VaultSession (KeyMemory + VaultNameMemory + DpapiProtector)
+ ├─ ServerConnection, SyncService, VaultSession (KeyMemory + VaultNameMemory + DpapiProtector, DispatcherUiThread, VaultWatching, WpfThumbnailMaker)
  ├─ MainWindow (+ WindowPlacer "Main") ─► UpdateChecker (background, once a day)
  ├─ GlobalHotkey: Ctrl+Alt+K by default ─► MainWindow shown; each vault's ─► MainWindow.ToggleVault
  ├─ TrayIcon: Show · Settings · Log window · Quit
  ├─ MainWindow shown
- └─ once idle: VaultSession.Open (the selected vault) ─► remembered key, or PassphraseDialog (create / unlock) ─► Vault.Open + VaultWatcher
+ └─ once idle: VaultSession.Open(WpfQuestions) (the selected vault) ─► remembered key, or PassphraseDialog (create / unlock) ─► Vault.Open + VaultWatcher
 ```
 
 - Closing the main window (or Esc with an empty input box) hides it; kofrenot keeps running in the notification area until *Quit* (`ShutdownMode=OnExplicitShutdown`).
@@ -620,7 +620,7 @@ text ──InputParser──► NodeRequest(name) | LinkRequest(left, verb, righ
      VaultSession.Create ──► Vault.Append (changes), then Vault.Save (each note's and dataset's first version)
 ```
 
-- `VaultSession.Create(owner, request, choices)` opens the creation dialog over any window, so later features can reuse it. It returns false when cancelled or not written.
+- `VaultSession.Create(ask, request, choices)` opens the creation dialog (`ISessionQuestions.AskCreation`) over any window, so later features can reuse it. It returns false when cancelled or not written.
 - The dialog only shows a `CreationForm`. Each type change makes a new plan, so a different link type can turn `AlreadyLinked` into a link that can be added. Only a new node gets a step (`CreationForm.Steps`): an existing node keeps its type.
 - A creation without typed text (`CreationForm.NewNode`, from **New view…**) is one node request: `IsNameEditable`, the name typed on the screen (`Name`; `CanAdd` waits for one), and with a type given, `IsTypeFixed`: the type list is hidden, and changing it throws.
 - Nothing is written before the last step. `NotesToSave` gives the first version of each new note with content, for its `NodeAdded`, and `DatasetsToSave` each new dataset's with a file chosen (by a file dialog or a drop on its step); the dialog asks before discarding typed content or a chosen file.
