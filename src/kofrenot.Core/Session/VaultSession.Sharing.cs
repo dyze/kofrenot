@@ -23,12 +23,12 @@ public sealed partial class VaultSession
     /// </summary>
     public MemberRole? MyRole => Current is { } vault && _server.Identity is not null ? SharedRole(MyRoleIn(vault)) : Selected?.Role;
 
-    /// <summary>The open vault is read only: shared with this account to read, or this client only reads (<see cref="ReadsOnly"/>).</summary>
-    public bool IsReadOnly => Current is { } vault && (ReadsOnly || MyRoleIn(vault) == MemberRole.Reader);
+    /// <summary>The open vault is read only: shared with this account to read.</summary>
+    public bool IsReadOnly => Current is { } vault && MyRoleIn(vault) == MemberRole.Reader;
 
     /// <summary>The open vault can be shared from here: a server vault of this account, opened with its pass phrase, the server recent enough.</summary>
     public bool CanShare =>
-        !ReadsOnly
+        !EditsContentOnly
         && Current is { } vault
         && Selected?.Location.IsOnServer == true
         && _server.IsSignedIn && _server.TooOld is null
@@ -114,10 +114,13 @@ public sealed partial class VaultSession
     private MemberRole? MyRoleIn(Vault vault) =>
         _server.Identity is { } account && Current == vault ? VaultSharing.RoleOf(Members, account.Identity.Id) : null;
 
-    /// <summary>False, the user told, when the open vault is read only for this account.</summary>
-    private bool CanWrite(ISessionQuestions ask)
+    /// <summary>
+    /// False, the user told, when the open vault is read only for this account, or when this
+    /// client edits content only and the change is not to <paramref name="content"/>.
+    /// </summary>
+    private bool CanWrite(ISessionQuestions ask, bool content = false)
     {
-        if (RefusesChanges(ask))
+        if (!content && RefusesChanges(ask))
         {
             return false;
         }

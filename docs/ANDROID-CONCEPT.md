@@ -21,7 +21,7 @@ The first version **reads**: it browses and searches, and never writes to a vaul
 | **Account pass phrase** | Unlocks every server vault of the account; optionally remembered (Android Keystore) | ✔ (DPAPI there) |
 | **Vault list** | The account's server vaults, own and shared, with their sync status; add one from the server (its size and role shown), remove it from the phone | ✔ |
 | **Offline** | Metadata kept whole on the phone: browsing and searching need no network; a note once shown stays readable (pinned nodes kept offline: [0.10](../ROADMAP.md#010-to-define)) | ✔ |
-| **Sync** | Downloads only: when the app opens or comes back, then every 30 s while it is shown; status dot as in the main window (synced, offline, problem) | Downloads ✔, uploads ✘ |
+| **Sync** | Both ways (uploads since 0.10): when the app opens or comes back, then every 30 s while it is shown; status dot as in the main window (synced, offline, problem); edits made offline wait on the phone (*· 2 to upload*) | ✔ |
 | **Search** | The input box's search: nodes whose name has a word starting with the text, case and accents ignored, exact match first | ✔ (no adding) |
 | **Node details** | Type, name, colour, links read from the node's side (*contained by Kitchen*), tap a link to open its node; trail of open nodes, back button | ✔ |
 | **Notes** | Content shown as Markdown (`MarkdownBlocks`), task lists as (read-only) checkboxes, colours, links shown but not followed; fetched on demand ([0.8](../CHANGELOG.md#08---2026-10-25)) | ✔ |
@@ -29,7 +29,7 @@ The first version **reads**: it browses and searches, and never writes to a vaul
 | **Pinned and recent** | Pinned nodes (from the vault), recent nodes (on this phone) | ✔ |
 | **Datasets** | Shown with name, type, size and icon; a file opened with another app or saved (*Open with…*, *Save as…*), downloaded first when not here | ✔ |
 | **Conflicts** | Shown as on Windows (two names, two note versions), not resolved | Shown only |
-| **Read only** | A banner says so; a shared vault shows your role (reader or writer) there and in the vault list | ✔ |
+| **Read only** | A vault shared with you to read: a banner says so; your role (reader or writer) is also in the vault list | ✔ |
 
 ### Later
 Listed in [ROADMAP.md](../ROADMAP.md), in that order:
@@ -47,8 +47,8 @@ Listed in [ROADMAP.md](../ROADMAP.md), in that order:
 | Vault upgrade, attach, key rotation, delete from server | They write to the vault or the store |
 | Update check (GitHub releases) | Depends on the distribution ([Open questions](#open-questions)) |
 
-## Read only, safely
-A reading client must not leave a vault in a state Windows cannot fix. Rule: **the phone never uploads, and never writes in its mirror anything the server does not have.**
+## Content only, safely
+The phone must not leave a vault in a state Windows cannot fix. Rule: **the phone writes content only** (a note saved, a file imported as a new dataset: `ClientMode.Content`); everything else (nodes, links, pins, the vault itself, members, keys) is refused in Core, and left to Windows. Its writes go to its mirror, then to the server at the next sync, as on Windows.
 
 | Case | On Android |
 | --- | --- |
@@ -88,7 +88,7 @@ kofrenot.App      (WPF, net10.0-windows)          kofrenot.Android   (Avalonia, 
 | Data folder | `AppFiles` (`%LocalAppData%`, portable) | The app's private files folder |
 | Logs | `ILog`, Serilog in App | Same rules, a file in the app's folder |
 | Sync timing, sign-in, opening a vault | `SyncService`, `ServerConnection`, `VaultSession` in Core (`Session/`: `TimeProvider` timers, `IUiThread`, `ISessionQuestions`) | `AvaloniaUiThread` on Avalonia's dispatcher; `PreparedAnswers`: Android has no dialog that waits, so the pass phrase is asked on its own screen first, then the session called with it |
-| Read only | — | `VaultSession.ReadsOnly`, from a `SyncService` made `downloadsOnly`: writes refused in Core, not only hidden by the screens |
+| Content only | — | `VaultSession` made with `ClientMode.Content`: other writes refused in Core, not only hidden by the screens |
 | Vault refresh after a download | `VaultWatcher` (`FileSystemWatcher`) | Read after each sync (`VaultSession.AfterSync`): no watcher (`NothingToWatch`) |
 | Thumbnails | `IThumbnailMaker` | Not in 0.9: icons only |
 

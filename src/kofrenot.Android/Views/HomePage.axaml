@@ -17,7 +17,7 @@
         <Button Grid.Column="2" Classes="flat" Content="⚙" FontSize="20" Click="Settings_Click" />
       </Grid>
     </Border>
-    <Border DockPanel.Dock="Top" Background="{StaticResource Banner}" Padding="16,6">
+    <Border x:Name="ReadOnlyBanner" DockPanel.Dock="Top" Background="{StaticResource Banner}" Padding="16,6">
       <TextBlock x:Name="ReadOnlyText" Classes="caption" TextWrapping="Wrap" />
     </Border>
     <ScrollViewer DockPanel.Dock="Top" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">

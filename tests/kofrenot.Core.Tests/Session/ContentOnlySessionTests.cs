@@ -1,19 +1,22 @@
 namespace Kofrenot.Core.Tests.Session;
 
-/// <summary>A client that only reads (kofrenot for Android): it opens and syncs server vaults, and never writes.</summary>
-public sealed class ReadsOnlySessionTests : IDisposable
+/// <summary>
+/// A client that edits content only (kofrenot for Android): it opens and syncs server vaults, saves
+/// notes and imports files, which reach the other devices, and makes no other change.
+/// </summary>
+public sealed class ContentOnlySessionTests : IDisposable
 {
-    private const string ReadsOnly = "This kofrenot reads only";
+    private const string ContentOnly = "This kofrenot edits notes and files only";
     private static readonly DateTimeOffset Start = new(2026, 10, 1, 12, 0, 0, TimeSpan.Zero);
 
     private readonly FakeKofre _kofre = new();
     private readonly Device _laptop;
     private readonly Device _phone;
 
-    public ReadsOnlySessionTests()
+    public ContentOnlySessionTests()
     {
         _laptop = new Device(_kofre);
-        _phone = new Device(_kofre, readsOnly: true);
+        _phone = new Device(_kofre, ClientMode.Content);
     }
 
     public void Dispose()
@@ -23,7 +26,7 @@ public sealed class ReadsOnlySessionTests : IDisposable
     }
 
     [Fact]
-    public async Task AServerVault_IsRead_NeverWritten()
+    public async Task OnlyContent_IsWritten_NothingElse()
     {
         await AddLaptopsVaultAsync();
         var files = Assert.Single(_kofre.Stores).Files.Count;
@@ -33,12 +36,13 @@ public sealed class ReadsOnlySessionTests : IDisposable
         await _phone.SyncAsync();
 
         Assert.Equal("Personal", _phone.Vault.Graph.VaultName);
-        Assert.True(session.ReadsOnly);
-        Assert.True(session.IsReadOnly);
+        Assert.True(session.EditsContentOnly);
+        Assert.Equal(ClientMode.Content, session.Mode);
+        Assert.False(session.IsReadOnly);
         Assert.False(session.CanShare);
         Assert.False(session.CanLeave);
         Assert.False(session.CanChangePassPhrase);
-        Assert.Contains(_phone.Ask.Told, told => told.StartsWith(ReadsOnly, StringComparison.Ordinal));
+        Assert.Contains(_phone.Ask.Told, told => told.StartsWith(ContentOnly, StringComparison.Ordinal));
         Assert.Empty(_phone.Vault.Graph.Nodes);
         Assert.Equal(files, Assert.Single(_kofre.Stores).Files.Count);
     }
@@ -54,6 +58,44 @@ public sealed class ReadsOnlySessionTests : IDisposable
         await _phone.SyncAsync();
 
         Assert.NotNull(_phone.Vault.Graph.FindNode(node.Id));
+    }
+
+    [Fact]
+    public async Task ANoteEditedOnThePhone_ReachesTheLaptop()
+    {
+        await AddLaptopsVaultAsync();
+        var node = new Node(Guid.NewGuid(), TypeCatalog.Note.Id, "Ideas", Start);
+        var first = new NoteEdited(Guid.NewGuid(), Start, node.Id, []);
+        _laptop.Session.Write(_laptop.Ask, new NodeAdded(Guid.NewGuid(), Start, node), "Node added");
+        _laptop.Session.SaveNote(_laptop.Ask, first, "- [ ] spice");
+        await _laptop.SyncAsync();
+        await _phone.SyncAsync();
+        var edited = new NoteEdited(Guid.NewGuid(), Start.AddMinutes(1), node.Id, [first.Id]);
+
+        Assert.True(_phone.Session.SaveNote(_phone.Ask, edited, "- [x] spice"));
+        await _phone.SyncAsync();
+        await _laptop.SyncAsync();
+
+        Assert.Equal([edited.Id], _laptop.Vault.Graph.NoteVersionsOf(node.Id).Select(version => version.Id));
+        Assert.True(await _laptop.Vault.FetchAsync(edited));
+        Assert.Equal("- [x] spice", _laptop.Vault.ReadNote(edited.Id));
+    }
+
+    [Fact]
+    public async Task AFileAddedOnThePhone_ReachesTheLaptop()
+    {
+        await AddLaptopsVaultAsync();
+        var bytes = "a,b"u8.ToArray();
+        var preview = new FileImportPlanner(_phone.Vault.Graph).Preview([new ImportFile("survey.csv", bytes.Length, () => new MemoryStream(bytes))]);
+
+        Assert.Equal(1, await _phone.Session.ImportFiles(_phone.Ask, preview));
+        await _phone.SyncAsync();
+        await _laptop.SyncAsync();
+
+        var node = Assert.Single(_laptop.Vault.Graph.Nodes, node => node.Name == "survey");
+        using var target = new MemoryStream();
+        Assert.True(await _laptop.Session.ExportDataset(_laptop.Ask, _laptop.Vault.Graph.DatasetVersionsOf(node.Id).Single(), target));
+        Assert.Equal(bytes, target.ToArray());
     }
 
     [Fact]
@@ -88,7 +130,7 @@ public sealed class ReadsOnlySessionTests : IDisposable
         Assert.False(await session.DeleteFromServer(_phone.Ask, new RegisteredVault(new VaultLocation("x", new StoreAddress(FakeKofre.Address, store))), Device.ServerPassword));
         session.SetAccountPassPhrase(_phone.Ask);
 
-        Assert.Equal(5, _phone.Ask.Told.Count(told => told.StartsWith(ReadsOnly, StringComparison.Ordinal)));
+        Assert.Equal(5, _phone.Ask.Told.Count(told => told.StartsWith(ContentOnly, StringComparison.Ordinal)));
         Assert.Empty(session.Vaults);
         Assert.Empty(_phone.Ask.Asked);
         Assert.Empty(_kofre.StoreOf(store).Files);
@@ -104,7 +146,7 @@ public sealed class ReadsOnlySessionTests : IDisposable
 
         Assert.Null(_phone.Session.Current);
         Assert.Empty(Directory.GetFiles(folder));
-        Assert.Contains(_phone.Ask.Told, told => told.StartsWith(ReadsOnly, StringComparison.Ordinal));
+        Assert.Contains(_phone.Ask.Told, told => told.StartsWith(ContentOnly, StringComparison.Ordinal));
     }
 
     [Fact]

@@ -43,10 +43,12 @@ public sealed partial class VaultSession : IDisposable
     /// <param name="thumbnails">Makes an image's thumbnail when it is imported.</param>
     /// <param name="keyIterations">The key derivation's rounds for a pass phrase set here; fewer only in tests.</param>
     /// <param name="time">Runs the timers; null for the system's.</param>
-    public VaultSession(SettingsStore settings, AppFiles files, KeyMemory keys, VaultNameMemory names, ServerConnection server, SyncService sync, IUiThread ui, IVaultWatcher watching, IThumbnailMaker thumbnails, ILog log, int keyIterations = KeyWrap.DefaultIterations, TimeProvider? time = null)
+    /// <param name="mode">What this client may change: content only for kofrenot for Android.</param>
+    public VaultSession(SettingsStore settings, AppFiles files, KeyMemory keys, VaultNameMemory names, ServerConnection server, SyncService sync, IUiThread ui, IVaultWatcher watching, IThumbnailMaker thumbnails, ILog log, int keyIterations = KeyWrap.DefaultIterations, TimeProvider? time = null, ClientMode mode = ClientMode.Full)
     {
         _keyIterations = keyIterations;
         _time = time ?? TimeProvider.System;
+        Mode = mode;
         _ui = ui;
         _watching = watching;
         _thumbnails = thumbnails;
@@ -109,7 +111,7 @@ public sealed partial class VaultSession : IDisposable
 
         // A server vault still opening with its own pass phrase moves to its account's, when the
         // server can be asked; else at a later opening.
-        if (!ReadsOnly && _server.IsSignedIn && _server.TooOld is null)
+        if (!EditsContentOnly && _server.IsSignedIn && _server.TooOld is null)
         {
             AttachToAccount(ask, folder, vault);
         }
@@ -215,7 +217,7 @@ public sealed partial class VaultSession : IDisposable
     /// </summary>
     public async Task<bool> SaveDataset(ISessionQuestions ask, DatasetEdited version, Func<Stream> open, IProgress<long>? progress = null)
     {
-        if (Current is not { } vault || !CanWrite(ask) || !_importing.Add(version.Node))
+        if (Current is not { } vault || !CanWrite(ask, content: true) || !_importing.Add(version.Node))
         {
             return false;
         }
@@ -239,7 +241,7 @@ public sealed partial class VaultSession : IDisposable
         }
 
         var replaced = version.Replaces.Count > 1 ? $", a conflict of {version.Replaces.Count} versions resolved" : string.Empty;
-        return Current == vault && Append(ask, vault, [version], $"Dataset imported ({version.File.Size} bytes{replaced})");
+        return Current == vault && Append(ask, vault, [version], $"Dataset imported ({version.File.Size} bytes{replaced})", isContent: true);
     }
 
     /// <summary>
@@ -399,12 +401,13 @@ public sealed partial class VaultSession : IDisposable
     /// <summary>Saves a note version with its content. False when no vault is open, or it cannot be written (the user is told).</summary>
     public bool SaveNote(ISessionQuestions ask, NoteEdited version, string content) =>
         Current is { } vault
-        && Append(ask, vault, [], version.Replaces.Count > 1 ? $"Note saved (a conflict of {version.Replaces.Count} versions resolved)" : "Note saved", [new NoteToSave(version, content)]);
+        && Append(ask, vault, [], version.Replaces.Count > 1 ? $"Note saved (a conflict of {version.Replaces.Count} versions resolved)" : "Note saved", [new NoteToSave(version, content)], isContent: true);
 
     /// <summary>Writes the changes, then the note versions (each content file, then its change).</summary>
-    private bool Append(ISessionQuestions ask, Vault vault, IReadOnlyList<Change> changes, string action, IReadOnlyList<NoteToSave>? notes = null)
+    /// <param name="isContent">The changes save content (a note, files imported): a client that edits content only writes them.</param>
+    private bool Append(ISessionQuestions ask, Vault vault, IReadOnlyList<Change> changes, string action, IReadOnlyList<NoteToSave>? notes = null, bool isContent = false)
     {
-        if (!CanWrite(ask))
+        if (!CanWrite(ask, isContent))
         {
             return false;
         }

@@ -77,7 +77,7 @@ public sealed partial class VaultsPage : UserControl, IPage
             .ToList();
         Title.Text = "Vaults";
         List.ItemsSource = rows;
-        Empty.Text = "No vault on this phone yet. Add your server vaults: they are read here, and changed in kofrenot on Windows.";
+        Empty.Text = "No vault on this phone yet. Add your server vaults: their notes and files are read and edited here, the rest is changed in kofrenot on Windows.";
         Empty.IsVisible = rows.Count == 0;
         AddButton.IsVisible = true;
         SettingsButton.IsVisible = true;

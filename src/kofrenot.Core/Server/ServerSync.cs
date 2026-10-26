@@ -14,9 +14,9 @@ public sealed record SyncResult(int Downloaded, int Uploaded, int Fenced = 0);
 /// files, downloaded when needed (<see cref="StorePaths.IsOnDemand"/>); then the mirror's files the
 /// store lacks are uploaded: those written while offline wait in the mirror until then. Its
 /// state (the feed position, the files the store has) is kept in <paramref name="stateFile"/>.
-/// One sync at a time per mirror. A client that only reads (<paramref name="uploads"/> false) never uploads.
+/// One sync at a time per mirror.
 /// </summary>
-public sealed class ServerSync(string mirror, string stateFile, Guid store, IStoreFiles files, ILog? log = null, bool uploads = true)
+public sealed class ServerSync(string mirror, string stateFile, Guid store, IStoreFiles files, ILog? log = null)
 {
     private const string Category = "Sync";
     private const int SaveEvery = 50;
@@ -36,7 +36,7 @@ public sealed class ServerSync(string mirror, string stateFile, Guid store, ISto
         try
         {
             var downloaded = await DownloadAsync(state, cancel);
-            var uploaded = uploads ? await UploadAsync(state, cancel) : 0;
+            var uploaded = await UploadAsync(state, cancel);
             if (downloaded + uploaded > 0)
             {
                 _log.Info(Category, $"Store {store}: {downloaded} files downloaded, {uploaded} uploaded");

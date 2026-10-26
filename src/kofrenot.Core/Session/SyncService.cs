@@ -25,10 +25,8 @@ public sealed class SyncService : IDisposable
     private bool _again;
 
     /// <param name="time">Runs the timers; null for the system's.</param>
-    /// <param name="downloadsOnly">A client that only reads: nothing is uploaded, and its <see cref="VaultSession"/> writes nothing.</param>
-    public SyncService(SettingsStore settings, AppFiles files, ServerConnection server, IUiThread ui, ILog log, TimeProvider? time = null, bool downloadsOnly = false)
+    public SyncService(SettingsStore settings, AppFiles files, ServerConnection server, IUiThread ui, ILog log, TimeProvider? time = null)
     {
-        DownloadsOnly = downloadsOnly;
         _settings = settings;
         _files = files;
         _server = server;
@@ -42,9 +40,6 @@ public sealed class SyncService : IDisposable
 
     /// <summary>Raised on the UI thread when a sync ends.</summary>
     public event Action? Changed;
-
-    /// <summary>The stores' files are downloaded, never uploaded: a client that only reads.</summary>
-    public bool DownloadsOnly { get; }
 
     public SyncStatus StatusOf(StoreAddress store) =>
         _statuses.TryGetValue(store.Id, out var status) ? status : new SyncStatus(null, null, 0);
@@ -119,7 +114,7 @@ public sealed class SyncService : IDisposable
 
         try
         {
-            await Task.Run(() => new ServerSync(mirror, state, store.Id, client, _log, uploads: !DownloadsOnly).RunAsync());
+            await Task.Run(() => new ServerSync(mirror, state, store.Id, client, _log).RunAsync());
 
             // Read once, then kept: the owner whose signatures the vault's keys and members need.
             await _server.Owners.OwnerOfAsync(client, store.Id);

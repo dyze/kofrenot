@@ -100,7 +100,7 @@ What each version contains: [ROADMAP.md](../ROADMAP.md).
 | Server | A generic, blind, write-once store of files with accounts and members, on Linux, knowing nothing of kofrenot so other apps can use it, in its own repository ([kofreserver](https://github.com/dyze/kofreserver)); no email, the admin approves accounts in a JSON file (since 0.6) |
 | Sharing | Complete server vaults, with roles reader, writer and one owner; removing a member rotates the vault key (since 0.7) |
 | Keys | Vault keys wrapped for an identity (key pair) unlocked by a pass phrase or a recovery key; same model for folder and server vaults, format 6; a server vault's identity is its account's, one for all its server vaults (since 0.7) |
-| Clients | Windows (WPF); Android for server vaults only, read only first, with Avalonia (0.9: [ANDROID-CONCEPT.md](ANDROID-CONCEPT.md)) |
+| Clients | Windows (WPF); Android for server vaults only, with Avalonia: read only in 0.9, notes and files edited since 0.10 ([ANDROID-CONCEPT.md](ANDROID-CONCEPT.md)) |
 | Views | A node type holding a definition (a tree from a root node through a link type, or a list of the nodes of a type), in versions kept in its changes: views work offline (since 0.4) |
 
 ## Open questions
