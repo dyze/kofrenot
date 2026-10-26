@@ -2,6 +2,7 @@ using System.Windows;
 using System.Windows.Interop;
 using Kofrenot.Core;
 using Kofrenot.Core.Browse;
+using Kofrenot.Core.Datasets;
 using Kofrenot.Core.Logging;
 using Kofrenot.Core.Placement;
 using Kofrenot.Core.Server;
@@ -85,6 +86,8 @@ public partial class App : Application
         var sync = _sync = new SyncService(settings, files, server, ui, log);
         var session = _session = new VaultSession(settings, files, new KeyMemory(files.RememberedKeys, protector, log), new VaultNameMemory(files.VaultNames, protector, log), server, sync, ui, new VaultWatching(), new WpfThumbnailMaker(), log);
         session.Changed += sync.Soon;
+        var opened = new OpenedFiles(files.Opened, log);
+        opened.Clear();
         _window = new MainWindow(
             settings,
             log,
@@ -93,6 +96,7 @@ public partial class App : Application
             new RecentNodes(files.RecentNodes, log),
             new ViewTabs(files.ViewTabs, log),
             new ViewStates(files.ViewStates, log),
+            opened,
             createSettings: () =>
             {
                 var created = new SettingsWindow(settings, logHub, files, updates, session, () => _window?.WhyNotSwitch(), wanted => ApplyHotkey(wanted, settings.Hotkey), (vault, wanted) => ApplyVaultHotkey(settings, vault, wanted, log), autoStart, openLog: OpenLogWindow);

@@ -21,7 +21,6 @@ Scope of each planned version. Implemented features move to [CHANGELOG.md](CHANG
 3. **Several files dropped on a tree**, with the same preview (one file: 0.5).
 4. **Android: datasets.** Add a file from the phone.
 5. **Android: notes.** Edit a note's content, task lists included.
-6. **Open datasets in their app.** On Windows, a dataset's file is opened with the app Windows associates with it, as *Open with…* does on Android.
 
 ## Later
 1. **Pack vault.** Pack a vault to reduce its size and number of files (needs deletes on the server).

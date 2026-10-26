@@ -54,6 +54,13 @@
                 ToolTip="Show the full image in its own window (or double-click the file)"
                 Visibility="Collapsed"
                 Click="View_Click" />
+        <Button x:Name="OpenButton"
+                Margin="0,0,6,0"
+                Padding="10,3"
+                Focusable="False"
+                Content="Open"
+                ToolTip="Open the file with its app (Ctrl+O, or double-click a file that is not an image)"
+                Click="Open_Click" />
         <Button x:Name="ImportButton"
                 Padding="10,3"
                 Focusable="False"

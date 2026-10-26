@@ -4,6 +4,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using Kofrenot.Core;
 using Kofrenot.Core.Browse;
+using Kofrenot.Core.Datasets;
 using Kofrenot.Core.Graph;
 using Kofrenot.Core.Input;
 using Kofrenot.Core.Logging;
@@ -28,6 +29,7 @@ public partial class MainWindow : Window
     private readonly VaultSession _session;
     private readonly RecentNodes _recent;
     private readonly ViewTabs _tabs;
+    private readonly OpenedFiles _opened;
     private readonly TabList _tabList;
     private readonly Func<SettingsWindow> _createSettings;
     private readonly Func<ImageWindow> _createImageWindow;
@@ -40,9 +42,11 @@ public partial class MainWindow : Window
     /// <param name="recent">The nodes last opened on this device, listed while the input box is empty.</param>
     /// <param name="tabs">The views open as tabs on this device.</param>
     /// <param name="createSettings">Creates the Settings window, shown as a dialog over this one.</param>
-    public MainWindow(SettingsStore settings, ILog log, UpdateChecker updates, VaultSession session, RecentNodes recent, ViewTabs tabs, ViewStates viewStates, Func<SettingsWindow> createSettings, Func<ImageWindow> createImageWindow)
+    /// <param name="opened">Where datasets' files opened in their app are decrypted.</param>
+    public MainWindow(SettingsStore settings, ILog log, UpdateChecker updates, VaultSession session, RecentNodes recent, ViewTabs tabs, ViewStates viewStates, OpenedFiles opened, Func<SettingsWindow> createSettings, Func<ImageWindow> createImageWindow)
     {
         _settings = settings;
+        _opened = opened;
         _log = log;
         _updates = updates;
         _session = session;
@@ -67,6 +71,7 @@ public partial class MainWindow : Window
         DetailsPanel.ExportDataset = (version, target) => _session.ExportDataset(Ask, version, target);
         DetailsPanel.IsImporting = _session.IsImporting;
         DetailsPanel.ShowImage = ShowImage;
+        DetailsPanel.OpenDataset = OpenInApp;
         DetailsPanel.EditView = view => _session.EditView(Ask, view);
         DetailsPanel.Retype = retype => _session.Retype(Ask, retype);
         DetailsPanel.WriteChanges = (changes, action) => _session.Write(Ask, changes, action);
@@ -121,6 +126,25 @@ public partial class MainWindow : Window
         }
 
         _imageWindow.Open(vault, version);
+    }
+
+    /// <summary>Decrypts a dataset's file among the files opened, then hands it to its app; why it could not, or null.</summary>
+    private async Task<string?> OpenInApp(DatasetEdited version)
+    {
+        _log.Info("Action", "Open a dataset's file in its app");
+        var path = _opened.NewPath(version.File.SafeName);
+        if (!await _session.ExportDataset(Ask, version, path))
+        {
+            return "The file was not opened.";
+        }
+
+        if (FileLauncher.Open(path) is { } why)
+        {
+            _log.Warn("Action", "A dataset's file cannot be opened in its app");
+            return $"The file cannot be opened: {why}";
+        }
+
+        return null;
     }
 
     private ContentState ContentStateOf(Guid version) => _session.Current?.StateOf(version) ?? ContentState.NotHere;

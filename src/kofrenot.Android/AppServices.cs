@@ -1,5 +1,6 @@
 using Kofrenot.Core;
 using Kofrenot.Core.Browse;
+using Kofrenot.Core.Datasets;
 using Kofrenot.Core.Logging;
 using Kofrenot.Core.Server;
 using Kofrenot.Core.Session;
@@ -19,7 +20,7 @@ namespace Kofrenot.Phone;
 /// </summary>
 public sealed class AppServices : IDisposable
 {
-    public AppServices(string dataDirectory, OpenedFiles opened)
+    public AppServices(string dataDirectory, AppChooser chooser)
     {
         Files = new AppFiles(dataDirectory, AppContext.BaseDirectory);
         Settings = new SettingsStore(Files.Settings, Files.MirrorOf);
@@ -33,15 +34,9 @@ public sealed class AppServices : IDisposable
         Recent = new RecentNodes(Files.RecentNodes, log);
         ViewTabs = new ViewTabs(Files.ViewTabs, log);
         log.Info("App", $"kofrenot {Version} for Android started");
-        Opened = opened;
-        try
-        {
-            opened.Clear();
-        }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-        {
-            log.Warn("App", $"The files opened before cannot all be deleted ({ex.GetType().Name})");
-        }
+        Chooser = chooser;
+        Opened = new OpenedFiles(chooser.Folder, log);
+        Opened.Clear();
     }
 
     public static string Version => AppVersion.Of(typeof(AppServices).Assembly);
@@ -65,6 +60,8 @@ public sealed class AppServices : IDisposable
     public ViewTabs ViewTabs { get; }
 
     public OpenedFiles Opened { get; }
+
+    public AppChooser Chooser { get; }
 
     public void Dispose()
     {

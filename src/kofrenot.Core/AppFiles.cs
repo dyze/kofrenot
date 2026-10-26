@@ -100,6 +100,9 @@ public sealed class AppFiles
     /// <summary>The local snapshot of each vault opened on this device.</summary>
     public string Cache => Path.Combine(DataDirectory, "cache");
 
+    /// <summary>Datasets' files opened with another app, deleted at the next start (<see cref="Datasets.OpenedFiles"/>).</summary>
+    public string Opened => Path.Combine(DataDirectory, "open");
+
     public string Logs => Path.Combine(DataDirectory, "logs");
 
     /// <summary>The server session (refresh token), protected by Windows (DPAPI).</summary>

@@ -58,6 +58,9 @@ public partial class DatasetPanel : UserControl
     /// <summary>Exports a version's file to a path; false when it could not.</summary>
     public Func<DatasetEdited, string, Task<bool>>? Export { get; set; }
 
+    /// <summary>Opens a version's file with the app Windows associates with it; returns why it could not, or null.</summary>
+    public Func<DatasetEdited, Task<string?>>? OpenInApp { get; set; }
+
     /// <summary>A file is being imported into this dataset (here, or from the creation screen).</summary>
     public Func<Guid, bool> IsImporting { get; set; } = _ => false;
 
@@ -88,6 +91,15 @@ public partial class DatasetPanel : UserControl
         if (Viewable is { } latest)
         {
             ShowImage?.Invoke(latest);
+        }
+    }
+
+    /// <summary>Opens the file in its app (Ctrl+O, or a double-click on a file that is not an image).</summary>
+    public void OpenFile()
+    {
+        if (Exportable is { } latest && OpenInApp is { } open)
+        {
+            _ = Run("Opening…", () => open(latest));
         }
     }
 
@@ -165,6 +177,7 @@ public partial class DatasetPanel : UserControl
         FileInfoText.Text = latest is null ? string.Empty : $"{DatasetType.Of(latest.File).Name} · {ByteSize.Format(latest.File.Size)} · imported {DateOf(latest)}";
         ImportButton.IsEnabled = !IsBusy;
         ExportButton.IsEnabled = Exportable is not null;
+        OpenButton.IsEnabled = Exportable is not null;
         ViewButton.Visibility = latest is not null && DatasetType.Of(latest.File).Viewer == DatasetViewer.Image ? Visibility.Visible : Visibility.Collapsed;
         ViewButton.IsEnabled = Viewable is not null;
         ConflictVersions.ItemsSource = _state?.Conflict.Select(choice => new DatasetConflictChoice(choice)).ToList();
@@ -269,6 +282,8 @@ public partial class DatasetPanel : UserControl
 
     private void Export_Click(object sender, RoutedEventArgs e) => ChooseExport();
 
+    private void Open_Click(object sender, RoutedEventArgs e) => OpenFile();
+
     private void View_Click(object sender, RoutedEventArgs e) => ViewImage();
 
     private void KeepVersion_Click(object sender, RoutedEventArgs e)
@@ -310,7 +325,14 @@ public partial class DatasetPanel : UserControl
         if (e.ClickCount == 2)
         {
             _pressedAt = null;
-            ViewImage();
+            if (Viewable is not null)
+            {
+                ViewImage();
+            }
+            else
+            {
+                OpenFile();
+            }
         }
     }
 

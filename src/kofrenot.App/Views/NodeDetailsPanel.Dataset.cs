@@ -26,6 +26,12 @@ public partial class NodeDetailsPanel
         set => DatasetBox.Export = value;
     }
 
+    /// <summary>Opens a dataset version's file with its app; returns why it could not, or null.</summary>
+    public Func<DatasetEdited, Task<string?>>? OpenDataset
+    {
+        set => DatasetBox.OpenInApp = value;
+    }
+
     /// <summary>Shows a dataset version's image in its own window.</summary>
     public Action<DatasetEdited>? ShowImage
     {
@@ -66,7 +72,7 @@ public partial class NodeDetailsPanel
         TopRow.Height = DatasetBox.IsViewing ? new GridLength(2, GridUnitType.Star) : GridLength.Auto;
 
     /// <summary>
-    /// Ctrl+I imports a file, Ctrl+E exports it, while a dataset is shown. In the text shown, Esc
+    /// Ctrl+I imports a file, Ctrl+E exports it, Ctrl+O opens it in its app, while a dataset is shown. In the text shown, Esc
     /// leaves it and the other keys are its own.
     /// </summary>
     private bool HandleDatasetKey(Key key)
@@ -89,6 +95,9 @@ public partial class NodeDetailsPanel
                 return true;
             case Key.E:
                 DatasetBox.ChooseExport();
+                return true;
+            case Key.O:
+                DatasetBox.OpenFile();
                 return true;
             default:
                 return false;

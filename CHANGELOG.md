@@ -8,6 +8,10 @@ It covers kofrenot on Windows and on Android; versions before 0.9 ran on Windows
 
 ## [Unreleased]
 
+### Added
+- **Windows**
+  - **Open a dataset in its app**: **Open** in a dataset's details (Ctrl+O, or a double-click on a file that is not an image) opens its file with the app Windows associates with it, as *Open with…* does on Android. The file is decrypted into a copy deleted at kofrenot's next start ([README](README.md#datasets)).
+
 ### Changed
 - **Release files named by platform**: `kofrenot-windows-setup-<version>.exe`, `kofrenot-windows-portable-<version>.zip` and `kofrenot-android-<version>.apk` ([README](README.md#install)).
 - **Skipped change files read again sooner**: a change file skipped because it was locked or still being copied is read again 2, 5, 10 and 30 seconds later, not only at the next sync or when the window is shown ([Robust and secure](docs/GOAL.md#robust-and-secure)).

@@ -209,7 +209,7 @@ public sealed partial class NodePage : UserControl, IPage
         var path = _shell.Services.Opened.NewPath(version.File.Name);
         if (await ExportAsync(answers => _shell.Services.Session.ExportDataset(answers, version, path)))
         {
-            _shell.Services.Opened.Open(path);
+            _shell.Services.Chooser.Open(path);
         }
     }
 
