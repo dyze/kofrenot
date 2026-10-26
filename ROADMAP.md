@@ -13,15 +13,16 @@ Scope of each planned version. Implemented features move to [CHANGELOG.md](CHANG
 | 0.7     | Released  | Sharing: identities, recovery key, vaults shared with other users                  |
 | 0.8     | Released  | Notes as in Keep; content on demand; session in Core for Android                   |
 | 0.9     | Released  | Android: server vaults read and searched offline on the phone                      |
-| 0.10    | To define | Large vaults: offline pins, faster transfers; editing                              |
+| 0.10    | To define | Offline pins, file drops; notes and files added on Android                         |
 
 ## 0.10 (to define)
 1. **Pinned for offline.** When a node is pinned for offline access, its content is downloaded ahead, so it is always readable without access to the vault storage: on Windows, and on the phone with the pins set on Windows.
-2. **Faster transfers.** Many small files downloaded in one stream; big files uploaded in parts, resumable.
-3. **Restore previous versions.** A node's versions are listed, so a mistake can be undone by restoring one of them.
-4. **File drop zone.** A small zone in the main window takes one or several dropped files, to secure them quickly. Node names and types are chosen automatically; a preview shows what will be added, and nothing is added before it is accepted.
-5. **Several files dropped on a tree**, with the same preview (one file: 0.5).
-6. **Retry unreadable change files.** A change file skipped because it was locked or still being copied is read again a few seconds later, not only at the next sync event or when the window is shown ([GOAL.md](docs/GOAL.md#robust-and-secure)).
+2. **File drop zone.** A small zone in the main window takes one or several dropped files, to secure them quickly. Node names and types are chosen automatically; a preview shows what will be added, and nothing is added before it is accepted.
+3. **Several files dropped on a tree**, with the same preview (one file: 0.5).
+4. **Retry unreadable change files.** A change file skipped because it was locked or still being copied is read again a few seconds later, not only at the next sync event or when the window is shown ([GOAL.md](docs/GOAL.md#robust-and-secure)).
+5. **Android: datasets.** Add a file from the phone.
+6. **Android: notes.** Edit a note's content, task lists included.
+7. **Open datasets in their app.** On Windows, a dataset's file is opened with the app Windows associates with it, as *Open with…* does on Android.
 
 ## Later
 1. **Pack vault.** Pack a vault to reduce its size and number of files (needs deletes on the server).
@@ -34,11 +35,12 @@ Scope of each planned version. Implemented features move to [CHANGELOG.md](CHANG
 8. **Quote a name** containing a link phrase in the input box (`"This is a test"`), so such names can be typed.
 9. **Cycle through proposals.** Several proposals in grey, the next one with a key, instead of typing more to narrow it.
 10. **Propose node types** while typing, in the input box, instead of only on the creation screen.
-11. **Android: add and edit.** Input box, creation screen, notes and task lists, renames, colours, pins ([Later](docs/ANDROID-CONCEPT.md#later)).
-12. **Android: datasets.** Add a file from the phone.
-13. **Android: sharing.** Members, roles, share, leave.
-14. Stores **statistics** about data exchanges with server. It could be useful for analysing performance problems.
-15. **Events and Qualifiers.** :
+11. **Android: add and edit.** Input box, creation screen, renames, colours, pins ([Later](docs/ANDROID-CONCEPT.md#later)); notes and datasets: 0.10.
+12. **Android: sharing.** Members, roles, share, leave.
+13. Stores **statistics** about data exchanges with server. It could be useful for analysing performance problems.
+14. **Events and Qualifiers.** :
 	* Qualifiers enrich existing relationships (`node → link → node`) with contextual information such as dates, locations, sources, quantities, or confidence levels. Example: Dune → written by → Frank Herbert (date: 1965).
 	* Events represent occurrences involving multiple entities, each with a specific role, and their own qualifiers. Example: Publication of Dune (work: Dune, publisher: Chilton Books, date: 1965, country: USA).
 	* Together, these features transform Kofrenot from a simple knowledge graph into a richer, contextual knowledge system, enabling more precise searches, historical tracking, and complex relationships while preserving the existing simple model.
+15. **Faster transfers.** Many small files downloaded in one stream; big files uploaded in parts, resumable.
+16. **Restore previous versions.** A node's versions are listed, so a mistake can be undone by restoring one of them.

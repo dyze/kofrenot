@@ -32,10 +32,10 @@ The first version **reads**: it browses and searches, and never writes to a vaul
 | **Read only** | A banner says so; a shared vault shows your role (reader or writer) there and in the vault list | ✔ |
 
 ### Later
-Listed in [ROADMAP.md](../ROADMAP.md#later), in that order:
+Listed in [ROADMAP.md](../ROADMAP.md), in that order:
 
-1. Add and edit: input box, creation screen, notes and task lists, renames, colours, pins.
-2. Datasets: add a file from the phone.
+1. Notes edited, task lists included; a file added from the phone ([0.10](../ROADMAP.md#010-to-define)).
+2. Add and edit: input box, creation screen, renames, colours, pins.
 3. Sharing: members, roles, share, leave.
 
 ### Not supported
