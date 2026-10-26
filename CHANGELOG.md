@@ -4,11 +4,15 @@ All notable changes to kofrenot are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versions follow kofrenot's own `MAJOR.MINOR` scheme ([docs/GOAL.md](docs/GOAL.md#versioning)), not Semantic Versioning. Planned versions: [ROADMAP.md](ROADMAP.md).
 
+It covers kofrenot on Windows and on Android; versions before 0.9 ran on Windows only.
+
 ## [Unreleased]
 
 ### Added
-- **kofrenot for Android**, read only ([README](README.md#on-android)): sign in to your server account, add your server vaults and those shared with you (your role, reader or writer, shown in the list and in the read-only banner), and open them with the account's pass phrase, remembered in the phone's Keystore if you want. Search names, pinned and recent nodes, a node's details and links with a trail back, notes in Markdown with their task lists and colours, views as tabs (trees expand and collapse), datasets by name and size, their file opened with another app or saved where you choose (downloaded first when not on the phone). Everything but a note's text is on the phone, so it reads offline; a note once shown stays. It syncs downloads only, when the app opens or comes back and every 30 seconds while shown, and never uploads: a vault that needs an upgrade or a hand-over to the account is opened on Windows first. Its screens stay out of the recent apps list and of screenshots. Android 8.0 or later, an APK on the releases. Nothing changes for kofrenot on Windows.
-- **Start with Windows** ([README](README.md#install)): a setup task, ticked by default, and a box in Settings > General. At sign-in kofrenot starts in the notification area (`kofrenot.exe --hidden`) and opens the vault only when its window is first shown. No administrator rights; uninstalling removes it.
+- **Android**
+  - **kofrenot for Android**, read only: your server vaults, own and shared, read and searched on the phone, also offline; it syncs downloads only and never writes to a vault. What it does: [ANDROID-CONCEPT.md](docs/ANDROID-CONCEPT.md#supported-in-09); how to install and use it: [README](README.md#on-android). Android 8.0 or later, an APK on the releases.
+- **Windows**
+  - **Start with Windows** ([README](README.md#install)): a setup task, ticked by default, and a box in Settings > General. At sign-in kofrenot starts in the notification area (`kofrenot.exe --hidden`) and opens the vault only when its window is first shown. No administrator rights; uninstalling removes it.
 
 ## [0.8] - 2026-10-25
 
