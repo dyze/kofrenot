@@ -18,7 +18,7 @@
       </Grid>
     </Border>
     <Border DockPanel.Dock="Top" Background="{StaticResource Banner}" Padding="16,6">
-      <TextBlock Classes="caption" TextWrapping="Wrap" Text="Read only: change this vault in kofrenot on Windows." />
+      <TextBlock x:Name="ReadOnlyText" Classes="caption" TextWrapping="Wrap" />
     </Border>
     <ScrollViewer DockPanel.Dock="Top" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
       <StackPanel x:Name="Tabs" Orientation="Horizontal" Margin="8,4" Spacing="4" />

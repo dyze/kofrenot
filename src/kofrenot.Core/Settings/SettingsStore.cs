@@ -1,5 +1,6 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Kofrenot.Core.Graph;
 
 namespace Kofrenot.Core.Settings;
 
@@ -179,6 +180,7 @@ public sealed class SettingsStore
             {
                 Server = vault.Location.Store?.Server.ToString(),
                 Store = vault.Location.Store?.Id,
+                Role = vault.Role?.ToString(),
             })],
             SelectedVault = SelectedVault?.Folder,
             Server = Server is { } server ? new ServerData(server.Server.ToString(), server.Email) : null,
@@ -207,7 +209,8 @@ public sealed class SettingsStore
                 LocationOf(vault, mirrorOf),
                 vault.Id is { } id && id != Guid.Empty ? id : null,
                 Hotkey.TryParse(vault.Hotkey, out var hotkey) ? hotkey : null,
-                vault.Locked == true)));
+                vault.Locked == true,
+                Enum.TryParse<MemberRole>(vault.Role, out var role) && Enum.IsDefined(role) ? role : null)));
         var selected = data.SelectedVault is { } chosen && vaults.Find(new VaultLocation(chosen)) is { } found
             ? found.Location
             : vaults.Vaults.FirstOrDefault()?.Location;
@@ -271,6 +274,10 @@ public sealed class SettingsStore
         /// <summary>A server vault's store; written only for one.</summary>
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public Guid? Store { get; init; }
+
+        /// <summary>The role in a vault shared with this account; written only for one.</summary>
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public string? Role { get; init; }
     }
 
     internal sealed record ServerData(string? Url, string? Email);

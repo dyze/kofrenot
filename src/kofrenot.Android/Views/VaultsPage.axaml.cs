@@ -10,7 +10,7 @@ using Kofrenot.Phone.Platform;
 
 namespace Kofrenot.Phone.Views;
 
-/// <summary>A server vault on the phone: its name and where its sync stands, shown again after each sync.</summary>
+/// <summary>A server vault on the phone: its name, where its sync stands (shown again after each sync) and, shared with this account, its role.</summary>
 public sealed class VaultRow(RegisteredVault vault, string name) : INotifyPropertyChanged
 {
     public event PropertyChangedEventHandler? PropertyChanged;
@@ -25,7 +25,7 @@ public sealed class VaultRow(RegisteredVault vault, string name) : INotifyProper
 
     public void Show(SyncStatus status)
     {
-        Detail = status.Summary;
+        Detail = Vault.Role is { } role ? $"{status.Summary} · shared, {role.ToString().ToLowerInvariant()}" : status.Summary;
         Dot = VaultsPage.DotOf(status.Level);
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Detail)));
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Dot)));

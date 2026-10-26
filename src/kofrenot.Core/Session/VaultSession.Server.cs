@@ -96,7 +96,7 @@ public sealed partial class VaultSession
         }
 
         var location = new VaultLocation(_files.MirrorOf(store.Id), address);
-        _settings.SetVaults(_settings.Vaults.Add(new RegisteredVault(location)));
+        _settings.SetVaults(_settings.Vaults.Add(new RegisteredVault(location, Role: SharedRole(store.Role))));
         _log.Info("Settings", $"Server vault added: store {store.Id}");
         SwitchTo(ask, location);
         _sync.Soon();

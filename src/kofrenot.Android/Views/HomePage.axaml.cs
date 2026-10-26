@@ -72,6 +72,12 @@ public sealed partial class HomePage : UserControl, IPage
         }
 
         VaultName.Text = vault.Graph.VaultName ?? "Vault";
+        ReadOnlyText.Text = _shell.Services.Session.MyRole switch
+        {
+            MemberRole.Reader => "Shared with you to read only.",
+            MemberRole.Writer => "Shared with you to write: change it in kofrenot on Windows.",
+            _ => "Read only: change this vault in kofrenot on Windows.",
+        };
         SyncChanged();
         ShowTabs(vault);
         ShowList(vault);

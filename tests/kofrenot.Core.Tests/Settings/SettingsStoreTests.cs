@@ -132,6 +132,29 @@ public sealed class SettingsStoreTests : IDisposable
     }
 
     [Fact]
+    public void ARoleInASharedVault_IsKept_AndAnOwnVaultWritesNone()
+    {
+        var store = new SettingsStore(FilePath);
+        store.SetVaults(new VaultList([new RegisteredVault(new VaultLocation(@"D:\a"), Role: MemberRole.Reader), new RegisteredVault(new VaultLocation(@"D:\b"))]));
+
+        var reloaded = new SettingsStore(FilePath);
+
+        Assert.Equal([MemberRole.Reader, null], reloaded.Vaults.Vaults.Select(vault => vault.Role));
+        Assert.Equal(1, File.ReadAllText(FilePath).Split("\"Role\"").Length - 1);
+    }
+
+    [Theory]
+    [InlineData("Boss")]
+    [InlineData("7")]
+    public void AnUnknownRole_IsNone(string role)
+    {
+        Directory.CreateDirectory(_directory);
+        File.WriteAllText(FilePath, "{\"Vaults\":[{\"Folder\":\"D:\\\\a\",\"Role\":\"" + role + "\"}]}");
+
+        Assert.Null(Assert.Single(new SettingsStore(FilePath).Vaults.Vaults).Role);
+    }
+
+    [Fact]
     public void AVaultOfAnEarlierFile_IsUnlocked()
     {
         Directory.CreateDirectory(_directory);

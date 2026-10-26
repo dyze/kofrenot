@@ -1,11 +1,14 @@
+using Kofrenot.Core.Graph;
+
 namespace Kofrenot.Core.Settings;
 
 /// <summary>
 /// A vault the user registered: its location, its id once its header was read (null for a vault
-/// of an earlier version not opened since), its optional hotkey, and whether it is locked: not
-/// opened, even with a remembered key, until it is unlocked with its pass phrase.
+/// of an earlier version not opened since), its optional hotkey, whether it is locked: not
+/// opened, even with a remembered key, until it is unlocked with its pass phrase; and this
+/// account's role in a server vault shared with it (null for its own), as known when last open.
 /// </summary>
-public sealed record RegisteredVault(VaultLocation Location, Guid? Id = null, Hotkey? Hotkey = null, bool IsLocked = false);
+public sealed record RegisteredVault(VaultLocation Location, Guid? Id = null, Hotkey? Hotkey = null, bool IsLocked = false, MemberRole? Role = null);
 
 /// <summary>
 /// The registered vaults, in the user's order. Each location and each vault id is listed once.

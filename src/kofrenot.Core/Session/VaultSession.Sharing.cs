@@ -17,6 +17,12 @@ public sealed partial class VaultSession
     /// <summary>The members of the open vault; none before it is shared.</summary>
     public IReadOnlyList<VaultMember> Members => Current is { } vault && OwnerKey is { } ownerKey ? MemberRecords.Members(vault.Graph, vault.Id, ownerKey) : [];
 
+    /// <summary>
+    /// This account's role in the open vault when it is shared with it (reader or writer); null
+    /// for its own. Read in its member records, or, signed out, as kept when last known.
+    /// </summary>
+    public MemberRole? MyRole => Current is { } vault && _server.Identity is not null ? SharedRole(MyRoleIn(vault)) : Selected?.Role;
+
     /// <summary>The open vault is read only: shared with this account to read, or this client only reads (<see cref="ReadsOnly"/>).</summary>
     public bool IsReadOnly => Current is { } vault && (ReadsOnly || MyRoleIn(vault) == MemberRole.Reader);
 
@@ -82,6 +88,26 @@ public sealed partial class VaultSession
         return me is { SigningKey: { } signingKey } && me.Identity == access.Identity!.Id && signingKey.AsSpan().SequenceEqual(Signing.PublicKeyOf(access.Identity))
             ? me.As(MemberRole.Owner)
             : throw new InvalidOperationException("Your account's key on the server is not the one on this computer: sign out, then in again.");
+    }
+
+    // A vault's owner keeps no role: it is its own.
+    private static MemberRole? SharedRole(MemberRole? role) => role == MemberRole.Owner ? null : role;
+
+    private static MemberRole? SharedRole(StoreRole role) => role switch
+    {
+        StoreRole.Reader => MemberRole.Reader,
+        StoreRole.Writer => MemberRole.Writer,
+        _ => null,
+    };
+
+    /// <summary>Keeps this account's role in the open vault with it, for the list of vaults (<see cref="RegisteredVault.Role"/>).</summary>
+    private void KeepRole()
+    {
+        if (Selected is { } selected && Current is not null && _server.Identity is not null && MyRole != selected.Role)
+        {
+            _settings.SetVaults(_settings.Vaults.With(selected.Location, vault => vault with { Role = MyRole }));
+            _log.Info(Category, $"Role in vault {selected.Id} now {MyRole?.ToString() ?? "none"}");
+        }
     }
 
     // Null: not shared with this account (its own vault, or not shared yet).

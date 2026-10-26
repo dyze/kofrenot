@@ -113,6 +113,7 @@ public sealed partial class VaultSession : IDisposable
 
         Current = vault;
         KeepName();
+        KeepRole();
         _ = SettleMembers(ask);
         try
         {
@@ -132,6 +133,7 @@ public sealed partial class VaultSession : IDisposable
             if (Current?.Refresh() > 0)
             {
                 KeepName();
+                KeepRole();
                 Changed?.Invoke();
             }
         }

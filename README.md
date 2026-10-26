@@ -61,7 +61,7 @@ A vault holds your nodes, notes and files, encrypted. There are two kinds:
 kofrenot for Android **reads** your server vaults, also offline: they are changed in kofrenot on Windows.
 
 - **Install**: download `kofrenot-<version>.apk` from the [releases](https://github.com/dyze/kofrenot/releases) and open it (Android 8.0 or later; allow installing from your browser or file app when asked).
-- **Sign in** with your server account, then **Add from the server**: your vaults and those shared with you. The account's pass phrase opens them; tick *Remember it on this phone* to keep it in the phone's Keystore.
+- **Sign in** with your server account, then **Add from the server**: your vaults and those shared with you, which show your role (reader or writer) in the list and in their banner. The account's pass phrase opens them; tick *Remember it on this phone* to keep it in the phone's Keystore.
 - **Read**: search names, pinned and recent nodes, a node's details and links (back goes through them), notes with their task lists, views as tabs. A dataset shows its file's name and size; files are opened on Windows.
 - **Offline**: every name and link is on the phone; a note's text once it has been shown. The phone syncs when the app opens or comes back, then every 30 seconds while it is shown; the dot says how it stands, a tap syncs now.
 - **Private**: the app's screens stay out of the recent apps list and of screenshots.

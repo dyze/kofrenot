@@ -189,7 +189,7 @@ Model and principles: [GOAL.md](GOAL.md#data-model).
 The vaults kofrenot knows are in `settings.json`, in the user's order, with the one selected: one vault is open at a time, and vaults never mix.
 
 ```
-settings.json  "vaults": [{ "folder", "id"?, "hotkey"?, "locked"?, "server"?, "store"? }], "selectedVault": "<folder>"
+settings.json  "vaults": [{ "folder", "id"?, "hotkey"?, "locked"?, "server"?, "store"?, "role"? }], "selectedVault": "<folder>"
                "server": { "url", "email" }   the server account, one per kofrenot
                "vaultFolder": the selected one too, for a kofrenot 0.4 started again; read alone (0.4) ─► the only vault
 ```
@@ -198,6 +198,7 @@ settings.json  "vaults": [{ "folder", "id"?, "hotkey"?, "locked"?, "server"?, "s
 - Switching (`VaultSession.SwitchTo`) closes the open vault, then opens the selected one. When it does not open (pass phrase cancelled, not a vault, an error), the vault open before is used again, without asking its pass phrase. The main window refuses to switch while a file is being imported or a note cannot be saved (`QuitRefusal`).
 - `Register` (Settings > Vault > *Add...*) refuses a folder holding other files, and a vault listed already, by folder or by the id in its header; a new vault whose creation is cancelled is not added. `Unregister` forgets the vault's key and name on this device; its folder is not touched.
 - **Lock** (`VaultSession.Lock`, padlock or Ctrl+L): the vault is closed and marked locked in `settings.json` (`"locked": true`). `Open` leaves a locked vault closed (at start, on a switch, on its hotkey), and `SwitchTo` does not go back to the previous vault for it. `Unlock` asks the pass phrase, skipping the remembered key (kept for later), then clears the mark; cancelled, the vault stays locked.
+- **Role** (`RegisteredVault.Role`, `"role": "Reader"` or `"Writer"`): this account's role in a server vault shared with it, none for its own. Set when it is added from the server (the store's role), then read in its member records each time it opens or changes (`VaultSession.MyRole`), so a list of vaults shows it without opening them (kofrenot for Android).
 - **Name**: asked on creation (`PassphraseDialog.AskNew`) and written as the vault's first change, then by Rename: a `nameVault` change, encrypted like the others, replacing the current names (`CurrentVersions`), as renames do: two names made apart are a conflict, shown in Settings > Vault, resolved by naming again (`VaultNamePlanner`). `VaultNameMemory` keeps the last name read on this device (`vault-names.json`, protected by DPAPI like `keys.json`), so a locked vault shows it; otherwise its folder's name (a server vault: its server's). A server knows a vault by its store id only ([Server vaults](#server-vaults)).
 
 ### Server vaults

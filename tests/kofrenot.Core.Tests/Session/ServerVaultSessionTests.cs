@@ -353,6 +353,44 @@ public sealed class ServerVaultSessionTests : IDisposable
         await device.SyncAsync();
     }
 
+    [Theory]
+    [InlineData(MemberRole.Reader)]
+    [InlineData(MemberRole.Writer)]
+    public async Task ASharedVault_KeepsTheRoleOfThisAccount(MemberRole role)
+    {
+        await ShareWithGraceAsync(role);
+
+        Assert.Equal(role, _graces.Session.MyRole);
+        Assert.Equal(role, _graces.Session.Selected!.Role);
+        Assert.Equal(role, Assert.Single(new SettingsStore(_graces.Files.Settings).Vaults.Vaults).Role);
+        Assert.Null(_laptop.Session.MyRole);
+        Assert.Null(_laptop.Session.Selected!.Role);
+    }
+
+    [Fact]
+    public async Task TheRoleReadInTheVault_ReplacesTheOneKept()
+    {
+        await ShareWithGraceAsync(MemberRole.Writer);
+        var location = _graces.Session.Selected!.Location;
+        _graces.Session.Close();
+        _graces.Settings.SetVaults(_graces.Settings.Vaults.With(location, vault => vault with { Role = MemberRole.Reader }));
+
+        _graces.Session.Open(_graces.Ask);
+
+        Assert.Equal(MemberRole.Writer, _graces.Session.Selected!.Role);
+    }
+
+    [Fact]
+    public async Task AVaultNotOpen_HasTheRoleKept()
+    {
+        await CreateServerVaultAsync(_laptop);
+        var location = _laptop.Session.Selected!.Location;
+        _laptop.Settings.SetVaults(_laptop.Settings.Vaults.With(location, vault => vault with { Role = MemberRole.Reader }));
+        _laptop.Session.Close();
+
+        Assert.Equal(MemberRole.Reader, _laptop.Session.MyRole);
+    }
+
     /// <summary>The laptop's server vault, shared with Grace, who adds it and opens it with her own pass phrase.</summary>
     private async Task ShareWithGraceAsync(MemberRole role)
     {

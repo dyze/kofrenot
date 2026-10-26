@@ -29,7 +29,7 @@ The first version **reads**: it browses and searches, and never writes to a vaul
 | **Pinned and recent** | Pinned nodes (from the vault), recent nodes (on this phone) | ✔ |
 | **Datasets** | Shown with name, type, size and icon; content not opened | Partly |
 | **Conflicts** | Shown as on Windows (two names, two note versions), not resolved | Shown only |
-| **Read only** | A banner says so (the role of a shared vault is not shown yet) | — |
+| **Read only** | A banner says so; a shared vault shows your role (reader or writer) there and in the vault list | ✔ |
 
 ### Later
 Listed in [ROADMAP.md](../ROADMAP.md#later), in that order:
