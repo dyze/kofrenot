@@ -105,28 +105,29 @@ Every shortcut is listed in Settings > **Key bindings**.
 
 Gear button in the title bar, or tray menu > Settings. Changes are saved at once; *Find a setting* (**Ctrl+F**) searches every tab.
 
-| Tab | |
-| --- | --- |
-| General | The hotkey that shows kofrenot; where the main window appears; start with Windows |
-| Key bindings | Every shortcut |
-| Vault | Your vaults: add, remove, order, rename, hotkey, pass phrase, members |
-| Server | Your account on a Kofre server: sign up, sign in, password, the account's pass phrase |
-| Link types | The link types and their aliases; your own link types |
-| Appearance | Light, dark, or as Windows |
-| Logging | Debug logging, the log window |
-| About | Version, update check, changelog, kofrenot's files |
+| Tab          | Description                                                                           |
+| ------------ | ------------------------------------------------------------------------------------- |
+| General      | The hotkey that shows kofrenot; where the main window appears; start with Windows     |
+| Key bindings | Every shortcut                                                                        |
+| Vault        | Your vaults: add, remove, order, rename, hotkey, pass phrase, members                 |
+| Server       | Your account on a Kofre server: sign up, sign in, password, the account's pass phrase |
+| Link types   | The link types and their aliases; your own link types                                 |
+| Appearance   | Light, dark, or as Windows                                                            |
+| Logging      | Debug logging, the log window                                                         |
+| About        | Version, update check, changelog, kofrenot's files                                    |
 
 ## Your data
 
 - **Where**: your vaults are in the folders you chose or on your server. kofrenot's own files (settings, remembered pass phrases protected by Windows, a cache, logs) are in `%LOCALAPPDATA%\kofrenot`, listed in Settings > About. On Android, in the app's private storage, its remembered pass phrases protected by the Keystore.
 - **Private**: kofrenot logs what you do (*Node added*) and errors, never names, file names, content or pass phrases. Its only network use, besides your Kofre server, is a daily check for a newer release, which can be switched off.
-- **Backup**:
 
-  | What | Back up | Restore |
-  | --- | --- | --- |
-  | Server vault | On the server ([backup](https://github.com/dyze/kofreserver#backup-and-restore)) | Sign in, then *Vault from the server…* |
-  | Folder vault | Its folder | Settings > Vault > *Add...* the folder |
-  | Pass phrases, recovery keys | In a password manager, or on paper | Needed to open any restored vault |
+**Backup**:
+
+| What | Back up | Restore |
+| --- | --- | --- |
+| Server vault | On the server ([backup](https://github.com/dyze/kofreserver#backup-and-restore)) | Sign in, then *Vault from the server…* |
+| Folder vault | Its folder | Settings > Vault > *Add...* the folder |
+| Pass phrases, recovery keys | In a password manager, or on paper | Needed to open any restored vault |
 
 ## Development
 
@@ -144,17 +145,17 @@ Gear button in the title bar, or tray menu > Settings. Changes are saved at once
 **Release signing** (Android): every update of the app must be signed with the same key, or phones cannot install it over the previous one.
 
 1. Create the keystore once, outside the repository, with the JDK's `keytool` (it asks a password, then the certificate's name and organisation):
-   ```
-   keytool -genkeypair -v -keystore D:\keys\kofrenot-release.keystore -alias kofrenot -keyalg RSA -keysize 4096 -validity 10000
-   ```
-2. Back up the keystore and its password (a password manager, a second copy): lost, the app cannot be updated, only uninstalled and installed again. Never add it to the repository.
-3. Build, the password typed rather than written in a file or the command history (PowerShell):
+```
+keytool -genkeypair -v -keystore D:\keys\kofrenot-release.keystore -alias kofrenot -keyalg RSA -keysize 4096 -validity 10000
+```
+1. Back up the keystore and its password (a password manager, a second copy): lost, the app cannot be updated, only uninstalled and installed again. Never add it to the repository.
+2. Build, the password typed rather than written in a file or the command history (PowerShell):
    ```
    $env:KOFRENOT_KEYSTORE = "D:\keys\kofrenot-release.keystore"
    $env:KOFRENOT_KEYSTORE_PASS = Read-Host "Keystore password"
    .\build\android.cmd
    ```
-4. Check: `apksigner verify --print-certs <apk>` (Android SDK, `build-tools`) names your certificate, not *Android Debug*. A release APK does not install over one signed with the debug key: uninstall that one first.
+3. Check: `apksigner verify --print-certs <apk>` (Android SDK, `build-tools`) names your certificate, not *Android Debug*. A release APK does not install over one signed with the debug key: uninstall that one first.
 
 **Installer**: `build\installer.cmd` makes `artifacts\installer\kofrenot-windows-setup-<version>.exe` and `kofrenot-windows-portable-<version>.zip` (needs [Inno Setup](https://jrsoftware.org/isinfo.php) 6.3+).
 
@@ -164,14 +165,14 @@ Gear button in the title bar, or tray menu > Settings. Changes are saved at once
 
 | Folder              | Purpose                                                                                  |
 | ------------------- | ---------------------------------------------------------------------------------------- |
+| `artifacts/`        | Build output (git-ignored)                                                               |
+| `build/`            | Build scripts (`windows.cmd`, `build.sh`), installer and Android scripts, icon generator |
+| `.config/`          | Local dotnet tools (ReportGenerator)                                                     |
+| `docs/`             | Documentation and its images                                                             |
+| `lib/`, `packages/` | Third-party binaries and local NuGet packages, if any                                    |
+| `samples/`          | `DemoVault`: the demo data generator                                                     |
 | `src/`              | `kofrenot.App` (WPF), `kofrenot.Android` (Avalonia) and `kofrenot.Core`                  |
 | `tests/`            | Unit tests for `Core`                                                                    |
-| `docs/`             | Documentation and its images                                                             |
-| `build/`            | Build scripts (`windows.cmd`, `build.sh`), installer and Android scripts, icon generator |
-| `samples/`          | `DemoVault`: the demo data generator                                                     |
-| `lib/`, `packages/` | Third-party binaries and local NuGet packages, if any                                    |
-| `.config/`          | Local dotnet tools (ReportGenerator)                                                     |
-| `artifacts/`        | Build output (git-ignored)                                                               |
 
 ## License
 
