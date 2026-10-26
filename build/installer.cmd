@@ -1,6 +1,6 @@
 @echo off
 rem Builds the kofrenot installer and portable zip, in artifacts\installer:
-rem kofrenot-setup-<version>.exe and kofrenot-portable-<version>.zip
+rem kofrenot-windows-setup-<version>.exe and kofrenot-windows-portable-<version>.zip
 rem Needs the .NET 10 SDK and Inno Setup 6.3 or later (https://jrsoftware.org/isinfo.php).
 setlocal
 cd /d "%~dp0.."
@@ -37,7 +37,7 @@ dotnet publish "%PROJECT%" -c Release -r win-x64 --self-contained true -o "%PUBL
 
 rem Portable zip: the same files in a kofrenot folder, with the marker that keeps the data beside kofrenot.exe.
 set "PORTABLE=%CD%\artifacts\installer\portable\kofrenot"
-set "ZIP=%CD%\artifacts\installer\kofrenot-portable-%VERSION%.zip"
+set "ZIP=%CD%\artifacts\installer\kofrenot-windows-portable-%VERSION%.zip"
 if exist "%CD%\artifacts\installer\portable" rmdir /s /q "%CD%\artifacts\installer\portable"
 xcopy "%PUBLISH%" "%PORTABLE%\" /e /i /q >nul || exit /b 1
 echo kofrenot keeps its settings and logs in the data folder next to kofrenot.exe while this file is here.> "%PORTABLE%\portable.txt"
@@ -45,5 +45,5 @@ if exist "%ZIP%" del "%ZIP%"
 powershell -NoProfile -Command "Compress-Archive -Path $env:PORTABLE -DestinationPath $env:ZIP" || exit /b 1
 
 echo.
-echo Installer: artifacts\installer\kofrenot-setup-%VERSION%.exe
-echo Portable:  artifacts\installer\kofrenot-portable-%VERSION%.zip
+echo Installer: artifacts\installer\kofrenot-windows-setup-%VERSION%.exe
+echo Portable:  artifacts\installer\kofrenot-windows-portable-%VERSION%.zip

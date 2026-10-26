@@ -8,6 +8,9 @@ It covers kofrenot on Windows and on Android; versions before 0.9 ran on Windows
 
 ## [Unreleased]
 
+### Changed
+- **Release files named by platform**: `kofrenot-windows-setup-<version>.exe`, `kofrenot-windows-portable-<version>.zip` and `kofrenot-android-<version>.apk` ([README](README.md#install)).
+
 ## [0.9] - 2026-10-26
 
 ### Added

@@ -29,9 +29,9 @@ A private knowledge system for Windows, read on Android too: notes, files and th
 
 ## Install
 
-Download `kofrenot-setup-<version>.exe` from the [releases](https://github.com/dyze/kofrenot/releases) and run it: it installs for your user only, no administrator rights, and needs no .NET runtime. Run a newer setup to upgrade; uninstall from *Settings > Apps* (your data stays).
+Download `kofrenot-windows-setup-<version>.exe` from the [releases](https://github.com/dyze/kofrenot/releases) and run it: it installs for your user only, no administrator rights, and needs no .NET runtime. Run a newer setup to upgrade; uninstall from *Settings > Apps* (your data stays).
 
-**Portable**: unzip `kofrenot-portable-<version>.zip` anywhere (a USB stick) and run `kofrenot\kofrenot.exe`: its data stays in the `data` folder beside it.
+**Portable**: unzip `kofrenot-windows-portable-<version>.zip` anywhere (a USB stick) and run `kofrenot\kofrenot.exe`: its data stays in the `data` folder beside it.
 
 kofrenot runs in the notification area. **Ctrl+Alt+K** shows it from any program; closing the window hides it.
 
@@ -60,7 +60,7 @@ A vault holds your nodes, notes and files, encrypted. There are two kinds:
 
 kofrenot for Android **reads** your server vaults, also offline: they are changed in kofrenot on Windows.
 
-- **Install**: download `kofrenot-<version>.apk` from the [releases](https://github.com/dyze/kofrenot/releases) and open it (Android 8.0 or later; allow installing from your browser or file app when asked).
+- **Install**: download `kofrenot-android-<version>.apk` from the [releases](https://github.com/dyze/kofrenot/releases) and open it (Android 8.0 or later; allow installing from your browser or file app when asked).
 - **Sign in** with your server account, then **Add from the server**: your vaults and those shared with you, which show your role (reader or writer) in the list and in their banner. The account's pass phrase opens them; tick *Remember it on this phone* to keep it in the phone's Keystore.
 - **Read**: search names, pinned and recent nodes, a node's details and links (back goes through them), notes with their task lists, views as tabs. A dataset shows its file's name and size: *Open with…* hands it to another app, *Save as…* saves it where you choose. A copy opened with another app is deleted from kofrenot at its next start.
 - **Offline**: every name and link is on the phone; a note's text once it has been shown. The phone syncs when the app opens or comes back, then every 30 seconds while it is shown; the dot says how it stands, a tap syncs now.
@@ -139,7 +139,7 @@ Gear button in the title bar, or tray menu > Settings. Changes are saved at once
 
 **Build** (the .NET 10 SDK): `build\windows.cmd` on Windows, `build/build.sh` on Linux or macOS (build and tests only: the app runs on Windows). Both build `kofrenot.sln` in Release and run the tests; output goes to `artifacts/`. The build fails below **95 %** line coverage of `Core`; `build\windows.cmd open` opens the coverage report. The version is set in `Directory.Build.props` only.
 
-**Android**: `build\android.cmd` makes `artifacts\publish\kofrenot.Android\release\eu.dlabs.kofrenot-Signed.apk` (needs the .NET Android workload, `dotnet workload install android`, the Android SDK and a JDK). It is signed with the release keystore named by `KOFRENOT_KEYSTORE` (alias `kofrenot`, password in `KOFRENOT_KEYSTORE_PASS`), else with Android's debug key, to try it. The app is not in `kofrenot.sln`, so `build\windows.cmd` does not need the workload. On an emulator, `adb reverse tcp:5080 tcp:5080` lets it sign in to a Kofre server on this PC at `http://localhost:5080/`: plain HTTP is accepted only to the phone itself.
+**Android**: `build\android.cmd` makes `artifacts\android\kofrenot-android-<version>.apk` (needs the .NET Android workload, `dotnet workload install android`, the Android SDK and a JDK). It is signed with the release keystore named by `KOFRENOT_KEYSTORE` (alias `kofrenot`, password in `KOFRENOT_KEYSTORE_PASS`), else with Android's debug key, to try it, as `kofrenot-android-<version>-debug.apk`. The app is not in `kofrenot.sln`, so `build\windows.cmd` does not need the workload. On an emulator, `adb reverse tcp:5080 tcp:5080` lets it sign in to a Kofre server on this PC at `http://localhost:5080/`: plain HTTP is accepted only to the phone itself.
 
 **Release signing** (Android): every update of the app must be signed with the same key, or phones cannot install it over the previous one.
 
@@ -156,22 +156,22 @@ Gear button in the title bar, or tray menu > Settings. Changes are saved at once
    ```
 4. Check: `apksigner verify --print-certs <apk>` (Android SDK, `build-tools`) names your certificate, not *Android Debug*. A release APK does not install over one signed with the debug key: uninstall that one first.
 
-**Installer**: `build\installer.cmd` makes `artifacts\installer\kofrenot-setup-<version>.exe` and the portable zip (needs [Inno Setup](https://jrsoftware.org/isinfo.php) 6.3+).
+**Installer**: `build\installer.cmd` makes `artifacts\installer\kofrenot-windows-setup-<version>.exe` and `kofrenot-windows-portable-<version>.zip` (needs [Inno Setup](https://jrsoftware.org/isinfo.php) 6.3+).
 
 **Another set of data**: `kofrenot.exe --data D:\kofre-test` keeps settings, vaults list, remembered pass phrases and server account in that folder: to test, or to try sharing with a second account. One kofrenot runs at a time: quit the other first (tray icon > *Quit*).
 
 **Demo data** (for screenshots): `dotnet run --project samples\DemoVault` writes a vault of made-up books, notes, task lists, pictures and views to `artifacts\demo`; then, from the repository folder, `kofrenot.exe --data artifacts\demo\data` opens it (pass phrase `demo`, remembered on this computer; quit a running kofrenot first).
 
-| Folder | Purpose |
-| --- | --- |
-| `src/` | `kofrenot.App` (WPF), `kofrenot.Android` (Avalonia) and `kofrenot.Core` |
-| `tests/` | Unit tests for `Core` |
-| `docs/` | Documentation and its images |
-| `build/` | Build scripts (`windows.cmd`, `build.sh`), installer and Android scripts, icon generator |
-| `samples/` | `DemoVault`: the demo data generator |
-| `lib/`, `packages/` | Third-party binaries and local NuGet packages, if any |
-| `.config/` | Local dotnet tools (ReportGenerator) |
-| `artifacts/` | Build output (git-ignored) |
+| Folder              | Purpose                                                                                  |
+| ------------------- | ---------------------------------------------------------------------------------------- |
+| `src/`              | `kofrenot.App` (WPF), `kofrenot.Android` (Avalonia) and `kofrenot.Core`                  |
+| `tests/`            | Unit tests for `Core`                                                                    |
+| `docs/`             | Documentation and its images                                                             |
+| `build/`            | Build scripts (`windows.cmd`, `build.sh`), installer and Android scripts, icon generator |
+| `samples/`          | `DemoVault`: the demo data generator                                                     |
+| `lib/`, `packages/` | Third-party binaries and local NuGet packages, if any                                    |
+| `.config/`          | Local dotnet tools (ReportGenerator)                                                     |
+| `artifacts/`        | Build output (git-ignored)                                                               |
 
 ## License
 
