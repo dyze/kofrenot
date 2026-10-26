@@ -500,6 +500,38 @@ public sealed class VaultSessionTests : IDisposable
     }
 
     [Fact]
+    public async Task FilesImported_BecomeDatasets_UnderTheParent_WithTheirFiles()
+    {
+        _device.CreateFolderVault();
+        var folder = AddNode("Folder", TypeCatalog.Generic.Id);
+        File.WriteAllText(_device.Folder("a.csv"), "a");
+        File.WriteAllText(_device.Folder("b.txt"), "bb");
+        var preview = new FileImportPlanner(_device.Vault.Graph).Preview([_device.Folder("a.csv"), _device.Folder("b.txt")], new ParentLink(folder, TypeCatalog.Contains.Id));
+
+        Assert.Equal(2, await Session.ImportFiles(Ask, preview));
+
+        var graph = _device.Vault.Graph;
+        var datasets = graph.LinksOf(folder.Id).Select(link => graph.FindNode(link.To)!).ToList();
+        Assert.Equal(["a", "b"], datasets.Select(node => node.Name).Order());
+        Assert.All(datasets, node => Assert.True(_device.Vault.Datasets.Exists(graph.DatasetVersionsOf(node.Id).Single().Id)));
+        Assert.Contains(_device.Log.Entries, entry => entry.Message == "Files imported as datasets (2 files, 3 bytes, in a tree)");
+    }
+
+    [Fact]
+    public async Task AFileImported_ThatCannotBeRead_LeavesItsDatasetEmpty()
+    {
+        _device.CreateFolderVault();
+        var preview = new FileImportPlanner(_device.Vault.Graph).Preview([new ImportFile("a.csv", 3, () => throw new IOException("Locked"))]);
+
+        Assert.Equal(0, await Session.ImportFiles(Ask, preview));
+
+        var node = Assert.Single(_device.Vault.Graph.Nodes, node => node.Name == "a");
+        Assert.Empty(_device.Vault.Graph.DatasetVersionsOf(node.Id));
+        Assert.Contains(Ask.Told, told => told.StartsWith("Cannot import", StringComparison.Ordinal));
+        Assert.Equal(0, await Session.ImportFiles(Ask, new FileImportPlanner(_device.Vault.Graph).Preview(Array.Empty<ImportFile>())));
+    }
+
+    [Fact]
     public async Task AFileThatCannotBeRead_IsNotImported_NorExported()
     {
         _device.CreateFolderVault();

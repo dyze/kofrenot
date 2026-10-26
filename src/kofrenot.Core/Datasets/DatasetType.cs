@@ -52,9 +52,12 @@ public sealed record DatasetType(string Extension, DatasetCategory Category, Dat
     /// <summary>"PNG file", or "File" without an extension.</summary>
     public string Name => Extension.Length == 0 ? "File" : $"{Extension.ToUpperInvariant()} file";
 
-    public static DatasetType Of(DatasetFile file)
+    public static DatasetType Of(DatasetFile file) => Of(file.Name);
+
+    /// <summary>The type of a file named <paramref name="fileName"/>, read from its extension.</summary>
+    public static DatasetType Of(string fileName)
     {
-        var extension = Path.GetExtension(file.Name).TrimStart('.').ToLowerInvariant();
+        var extension = Path.GetExtension(fileName).TrimStart('.').ToLowerInvariant();
         var category = Categories.GetValueOrDefault(extension, DatasetCategory.Other);
         var viewer = category switch
         {

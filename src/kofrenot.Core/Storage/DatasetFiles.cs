@@ -17,9 +17,16 @@ public sealed class DatasetFiles(string vaultFolder, KeyedBox box)
     public static DatasetFile Describe(string path, IProgress<long>? progress = null)
     {
         using var file = File.OpenRead(path);
-        using var hashing = new HashingStream(file, progress);
+        return Describe(Path.GetFileName(path), file, progress);
+    }
+
+    /// <summary>Describes a file to import named <paramref name="name"/>, read from <paramref name="content"/> to its end, as <see cref="Describe(string, IProgress{long}?)"/>.</summary>
+    /// <exception cref="IOException">The content cannot be read.</exception>
+    public static DatasetFile Describe(string name, Stream content, IProgress<long>? progress = null)
+    {
+        using var hashing = new HashingStream(content, progress);
         hashing.CopyTo(Stream.Null);
-        return new DatasetFile(Path.GetFileName(path), hashing.Count, hashing.Sha256());
+        return new DatasetFile(name, hashing.Count, hashing.Sha256());
     }
 
     /// <summary>The file of this version is in the vault (the sync tool may copy it after its change).</summary>
