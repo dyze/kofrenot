@@ -6,22 +6,24 @@ using Kofrenot.Core.Notes;
 
 namespace Kofrenot.Phone.Views;
 
-/// <summary>A note's Markdown shown, not edited (<see cref="MarkdownBlocks"/>): one line of text, a heading, a list item or a task each.</summary>
+/// <summary>A note's Markdown shown (<see cref="MarkdownBlocks"/>): one line of text, a heading, a list item or a task each.</summary>
 public static class NoteView
 {
     private const double IndentStep = 20;
     private static readonly double[] HeadingSizes = [24, 21, 19, 17, 16, 15];
 
     /// <summary>Adds the lines of <paramref name="text"/> to <paramref name="panel"/>.</summary>
-    public static void Add(Panel panel, string text)
+    /// <param name="toggle">Called with a task's number (from 0) when its checkbox is tapped; null: the checkboxes are only shown.</param>
+    public static void Add(Panel panel, string text, Action<int>? toggle = null)
     {
+        var task = 0;
         foreach (var block in MarkdownBlocks.Parse(text))
         {
-            panel.Children.Add(ControlOf(block));
+            panel.Children.Add(ControlOf(block, block.Kind == BlockKind.Task ? task++ : -1, toggle));
         }
     }
 
-    private static Control ControlOf(MarkdownBlock block)
+    private static Control ControlOf(MarkdownBlock block, int task, Action<int>? toggle)
     {
         var line = TextOf(block.Runs);
         var indent = new Thickness(block.Level * IndentStep, 0, 0, 0);
@@ -41,8 +43,13 @@ public static class NoteView
                     line.Opacity = 0.6;
                 }
 
-                // Read only: checked in kofrenot on Windows.
-                return Marked(new CheckBox { IsChecked = block.IsDone, IsHitTestVisible = false, Focusable = false, MinWidth = 0 }, line, indent);
+                var box = new CheckBox { IsChecked = block.IsDone, IsHitTestVisible = toggle is not null, Focusable = false, MinWidth = 0 };
+                if (toggle is not null)
+                {
+                    box.IsCheckedChanged += (_, _) => toggle(task);
+                }
+
+                return Marked(box, line, indent);
             default:
                 return line;
         }

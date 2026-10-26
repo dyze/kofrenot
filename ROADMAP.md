@@ -17,7 +17,6 @@ Scope of each planned version. Implemented features move to [CHANGELOG.md](CHANG
 
 ## 0.10 (to define)
 1. **Android: datasets.** Add a file from the phone.
-2. **Android: notes.** Edit a note's content, task lists included.
 
 ## Later
 1. **Pack vault.** Pack a vault to reduce its size and number of files (needs deletes on the server).

@@ -24,11 +24,11 @@ The first version **reads**: it browses and searches, and never writes to a vaul
 | **Sync** | Both ways (uploads since 0.10): when the app opens or comes back, then every 30 s while it is shown; status dot as in the main window (synced, offline, problem); edits made offline wait on the phone (*· 2 to upload*) | ✔ |
 | **Search** | The input box's search: nodes whose name has a word starting with the text, case and accents ignored, exact match first | ✔ (no adding) |
 | **Node details** | Type, name, colour, links read from the node's side (*contained by Kitchen*), tap a link to open its node; trail of open nodes, back button | ✔ |
-| **Notes** | Content shown as Markdown (`MarkdownBlocks`), task lists as (read-only) checkboxes, colours, links shown but not followed; fetched on demand ([0.8](../CHANGELOG.md#08---2026-10-25)) | ✔ |
+| **Notes** | Content shown as Markdown (`MarkdownBlocks`), colours, links shown but not followed; fetched on demand ([0.8](../CHANGELOG.md#08---2026-10-25)). Edited since 0.10: a checkbox tapped checks its item (`TaskList.Toggle`), **Edit** changes the Markdown text; each save a new version (`NotePlanner`) | ✔ (Markdown typed, not the Windows editor) |
 | **Views** | Flat and tree views, as tabs; expand and collapse | ✔ |
 | **Pinned and recent** | Pinned nodes (from the vault), recent nodes (on this phone) | ✔ |
 | **Datasets** | Shown with name, type, size and icon; a file opened with another app or saved (*Open with…*, *Save as…*), downloaded first when not here | ✔ |
-| **Conflicts** | Shown as on Windows (two names, two note versions), not resolved | Shown only |
+| **Conflicts** | Shown as on Windows (two names, two note versions); a note's resolved by keeping one version (since 0.10), the others on Windows | Notes ✔, others shown only |
 | **Read only** | A vault shared with you to read: a banner says so; your role (reader or writer) is also in the vault list | ✔ |
 
 ### Later

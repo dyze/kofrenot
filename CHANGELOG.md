@@ -9,6 +9,8 @@ It covers kofrenot on Windows and on Android; versions before 0.9 ran on Windows
 ## [Unreleased]
 
 ### Added
+- **Android**
+  - **Edit notes on the phone**: a tap on a checkbox checks its item; **Edit** changes the note's text (Markdown), **Save** keeps it as a new version. A note edited on two devices before they synced shows both versions, to keep one ([README](README.md#on-android)).
 - **Server vaults**
   - **Pinned for offline**: in a server vault, a pinned node's content (a note's text, a dataset's file) is downloaded ahead and kept, so it opens without the server: on Windows, and on the phone with the pins set on Windows. Its pin says *kept offline* once it is here. The vault format does not change ([README](README.md#input-box)).
 - **Windows**

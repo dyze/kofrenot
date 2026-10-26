@@ -41,6 +41,30 @@ public static class TaskList
         return Format(items.Count > 0 ? items : [new TaskItem(string.Empty, false)], LineBreakOf(text));
     }
 
+    /// <summary>
+    /// The text with its item number <paramref name="task"/> (from 0, in order, indented ones
+    /// included, as <see cref="MarkdownBlocks"/> shows them) checked or unchecked; every other
+    /// character as it was.
+    /// </summary>
+    /// <exception cref="ArgumentOutOfRangeException">The text has no such item.</exception>
+    public static string Toggle(string text, int task)
+    {
+        var lines = Lines(text).ToList();
+        var seen = -1;
+        for (var i = 0; i < lines.Count; i++)
+        {
+            var trimmed = lines[i].TrimStart();
+            if (ItemOf(trimmed) is { } item && ++seen == task)
+            {
+                var indent = lines[i][..(lines[i].Length - trimmed.Length)];
+                lines[i] = indent + (item.IsDone ? OpenMark : DoneMark) + trimmed[OpenMark.Length..];
+                return string.Join(LineBreakOf(text), lines);
+            }
+        }
+
+        throw new ArgumentOutOfRangeException(nameof(task), task, "The text has no such item.");
+    }
+
     /// <summary>Hide checkboxes: each item becomes its text, checked or not; other lines stay.</summary>
     public static string Hide(string text) =>
         string.Join(LineBreakOf(text), Lines(text).Select(line => ItemOf(line)?.Text ?? line));

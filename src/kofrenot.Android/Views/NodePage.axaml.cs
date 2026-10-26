@@ -106,9 +106,9 @@ public sealed partial class NodePage : UserControl, IPage
     {
         NoteBox.IsVisible = ContentText.IsVisible = Files.IsVisible = OpenViewButton.IsVisible = false;
         var graph = vault.Graph;
-        if (graph.NoteVersionsOf(node.Id) is { Count: > 0 } notes)
+        if (graph.NoteVersionsOf(node.Id).Count > 0 || node.Type == TypeCatalog.Note.Id)
         {
-            ShowNote(vault, node, notes, color);
+            ShowNote(vault, node, color);
         }
         else if (graph.DatasetVersionsOf(node.Id) is { Count: > 0 } datasets)
         {
@@ -124,36 +124,6 @@ public sealed partial class NodePage : UserControl, IPage
         {
             OpenViewButton.IsVisible = true;
         }
-    }
-
-    // The latest version, then those in conflict with it; one not here says why.
-    private void ShowNote(Vault vault, Node node, IReadOnlyList<NoteEdited> versions, NodeColor color)
-    {
-        var state = new NotePlanner(vault.Graph).Load(node, vault.ReadNote);
-        if (state.IsMissing)
-        {
-            ShowText(vault.StateOf(versions[^1].Id).Describe("the note"));
-            return;
-        }
-
-        Note.Children.Clear();
-        if (state.Conflict.Count > 1)
-        {
-            foreach (var version in state.Conflict)
-            {
-                Note.Children.Add(new TextBlock { Classes = { "caption" }, Text = $"Version of {version.At.ToLocalTime():g}" });
-                NoteView.Add(Note, version.Text ?? vault.StateOf(version.Id).Describe("this version"));
-            }
-        }
-        else
-        {
-            NoteView.Add(Note, state.Text!);
-        }
-
-        NoteBox.Background = NodeLook.Brush(color) is ISolidColorBrush shade
-            ? new SolidColorBrush(shade.Color, 0.25)
-            : null;
-        NoteBox.IsVisible = true;
     }
 
     private void ShowText(string text)

@@ -91,4 +91,18 @@ public sealed class TaskListTests
     [InlineData("a", "\n")]
     public void LineBreakOf_IsTheOneTheTextUses(string text, string lineBreak) =>
         Assert.Equal(lineBreak, TaskList.LineBreakOf(text));
+
+    [Theory]
+    [InlineData("# Shop\r\n- [ ] milk\r\n  - [x] *eggs*\r\n", 0, "# Shop\r\n- [x] milk\r\n  - [x] *eggs*\r\n")]
+    [InlineData("# Shop\r\n- [ ] milk\r\n  - [x] *eggs*\r\n", 1, "# Shop\r\n- [ ] milk\r\n  - [ ] *eggs*\r\n")]
+    [InlineData("- [X] done", 0, "- [ ] done")]
+    [InlineData("- [ ]", 0, "- [x]")]
+    public void Toggle_ChecksOrUnchecksOneItem_LeavingTheRestAsItWas(string text, int task, string toggled) =>
+        Assert.Equal(toggled, TaskList.Toggle(text, task));
+
+    [Theory]
+    [InlineData("- [ ] one", 1)]
+    [InlineData("text", 0)]
+    public void Toggle_RefusesAnItemNotInTheText(string text, int task) =>
+        Assert.Throws<ArgumentOutOfRangeException>(() => TaskList.Toggle(text, task));
 }
