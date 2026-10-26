@@ -198,9 +198,15 @@ public sealed partial class VaultSession
         }
 
         // Content not downloaded (offline, signed out) is asked for again by what shows it.
-        if (Current is { } open && Selected?.Location.Store is { } synced && _sync.StatusOf(synced).Failure is null && open.RetryFailed())
+        if (Current is { } open && Selected?.Location.Store is { } synced && _sync.StatusOf(synced).Failure is null)
         {
-            Changed?.Invoke();
+            if (open.RetryFailed())
+            {
+                Changed?.Invoke();
+            }
+
+            // Pinned for offline: what the sync brought (a pin, a new version) is downloaded ahead.
+            _ = KeepPinnedAsync();
         }
 
         if (Current is not { } vault || Folder is not { } folder || _access?.Identity is not { } identity || Selected?.Location.Store is not { } store)

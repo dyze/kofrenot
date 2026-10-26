@@ -79,7 +79,9 @@ public partial class NodeDetailsPanel : UserControl
         LinksRow.Height = details.Links.Count == 0 ? GridLength.Auto : new GridLength(1, GridUnitType.Star);
         ConflictNames.ItemsSource = details.NameConflict;
         PinButton.Content = details.IsPinned ? PinnedIcon : PinIcon;
-        PinButton.ToolTip = details.IsPinned ? "Unpin" : "Pin: listed while the input box is empty";
+        PinButton.ToolTip = details.IsPinned
+            ? $"{OpenVault?.Invoke()?.PinnedLabel(details.Node.Id) ?? "Pinned"}: click to unpin"
+            : "Pin: listed while the input box is empty, and its content kept on this computer";
         ConflictPanel.Visibility = details.NameConflict.Count > 0 && !_editing ? Visibility.Visible : Visibility.Collapsed;
         ShowType(details);
         ShowColor(details);

@@ -320,6 +320,66 @@ public sealed class ServerVaultSessionTests : IDisposable
     }
 
     [Fact]
+    public async Task APinnedNode_HasItsContentDownloadedAhead_OnTheOtherDevices()
+    {
+        await CreateServerVaultAsync(_laptop);
+        var pinned = new Node(Guid.NewGuid(), TypeCatalog.Note.Id, "Ideas", Start);
+        var other = new Node(Guid.NewGuid(), TypeCatalog.Note.Id, "Other", Start);
+        var note = new NoteEdited(Guid.NewGuid(), Start, pinned.Id, []);
+        var otherNote = new NoteEdited(Guid.NewGuid(), Start, other.Id, []);
+        _laptop.Session.Write(_laptop.Ask, [new NodeAdded(Guid.NewGuid(), Start, pinned), new NodeAdded(Guid.NewGuid(), Start, other)], "Nodes added");
+        _laptop.Session.SaveNote(_laptop.Ask, note, "# Spice");
+        _laptop.Session.SaveNote(_laptop.Ask, otherNote, "# Sand");
+        await _laptop.SyncAsync();
+        await _desktop.SignInAsync();
+        await _desktop.Session.AddFromServer(_desktop.Ask, (await _desktop.Session.StoresToAdd(_desktop.Ask))!.Single());
+        Assert.Equal("Pinned, kept offline once downloaded", _desktop.Vault.PinnedLabel(pinned.Id));
+
+        _desktop.Session.Write(_desktop.Ask, new PinPlanner(_desktop.Vault.Graph).Toggle(pinned), "Node pinned");
+
+        await Settled(() => _desktop.Vault.HasAllContent(pinned.Id));
+        Assert.Equal("Pinned, kept offline", _desktop.Vault.PinnedLabel(pinned.Id));
+        Assert.False(_desktop.Vault.HasAllContent(other.Id));
+        Assert.Equal([note.Id], _desktop.Vault.PinnedContent.Select(version => version.Id));
+
+        // The pin reaches the laptop with the sync, which has the content already.
+        await _desktop.SyncAsync();
+        await _laptop.SyncAsync();
+        Assert.Equal(0, await _laptop.Vault.KeepPinnedAsync());
+    }
+
+    [Fact]
+    public async Task APinSyncedFromElsewhere_DownloadsTheContentAfterTheSync()
+    {
+        await CreateServerVaultAsync(_laptop);
+        var pinned = new Node(Guid.NewGuid(), TypeCatalog.Note.Id, "Ideas", Start);
+        _laptop.Session.Write(_laptop.Ask, new NodeAdded(Guid.NewGuid(), Start, pinned), "Node added");
+        _laptop.Session.SaveNote(_laptop.Ask, new NoteEdited(Guid.NewGuid(), Start, pinned.Id, []), "# Spice");
+        await _laptop.SyncAsync();
+        await _desktop.SignInAsync();
+        await _desktop.Session.AddFromServer(_desktop.Ask, (await _desktop.Session.StoresToAdd(_desktop.Ask))!.Single());
+
+        _laptop.Session.Write(_laptop.Ask, new PinPlanner(_laptop.Vault.Graph).Toggle(pinned), "Node pinned");
+        await _laptop.SyncAsync();
+        await _desktop.SyncAsync();
+
+        await Settled(() => _desktop.Vault.HasAllContent(pinned.Id));
+    }
+
+    [Fact]
+    public async Task AFolderVault_HasNothingToDownloadForItsPins()
+    {
+        _laptop.CreateFolderVault();
+        var pinned = new Node(Guid.NewGuid(), TypeCatalog.Note.Id, "Ideas", Start);
+        _laptop.Session.Write(_laptop.Ask, [new NodeAdded(Guid.NewGuid(), Start, pinned), new PinPlanner(_laptop.Vault.Graph).Toggle(pinned)], "Pinned");
+
+        await _laptop.Session.KeepPinnedAsync();
+
+        Assert.Equal(0, await _laptop.Vault.KeepPinnedAsync());
+        Assert.Equal("Pinned", _laptop.Vault.PinnedLabel(pinned.Id));
+    }
+
+    [Fact]
     public async Task ExportingANoteNotDownloaded_Offline_IsTold()
     {
         await CreateServerVaultAsync(_laptop);

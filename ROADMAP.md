@@ -16,9 +16,8 @@ Scope of each planned version. Implemented features move to [CHANGELOG.md](CHANG
 | 0.10    | To define | Offline pins, file drops; notes and files added on Android                         |
 
 ## 0.10 (to define)
-1. **Pinned for offline.** When a node is pinned for offline access, its content is downloaded ahead, so it is always readable without access to the vault storage: on Windows, and on the phone with the pins set on Windows.
-2. **Android: datasets.** Add a file from the phone.
-3. **Android: notes.** Edit a note's content, task lists included.
+1. **Android: datasets.** Add a file from the phone.
+2. **Android: notes.** Edit a note's content, task lists included.
 
 ## Later
 1. **Pack vault.** Pack a vault to reduce its size and number of files (needs deletes on the server).

@@ -9,6 +9,8 @@ It covers kofrenot on Windows and on Android; versions before 0.9 ran on Windows
 ## [Unreleased]
 
 ### Added
+- **Server vaults**
+  - **Pinned for offline**: in a server vault, a pinned node's content (a note's text, a dataset's file) is downloaded ahead and kept, so it opens without the server: on Windows, and on the phone with the pins set on Windows. Its pin says *kept offline* once it is here. The vault format does not change ([README](README.md#input-box)).
 - **Windows**
   - **Drop files**: a small zone beside the tabs takes one or several files dropped from elsewhere, each added as a dataset named after its file. A preview first lists them, with their number and total size, the names already taken and what is skipped; nothing is added before **Add** ([README](README.md#datasets)).
   - **Several files dropped on a tree** node: the same preview, then a dataset each under that node; one file still opens the creation screen.

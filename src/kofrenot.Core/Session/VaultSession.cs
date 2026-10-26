@@ -119,6 +119,7 @@ public sealed partial class VaultSession : IDisposable
         KeepRole();
         RetrySkippedChanges();
         _ = SettleMembers(ask);
+        _ = KeepPinnedAsync();
         try
         {
             _watcher = _watching.Watch(folder, Refresh);
@@ -421,6 +422,11 @@ public sealed partial class VaultSession : IDisposable
             }
 
             _log.Info("Action", action);
+            if (changes.Any(change => change is NodePinned))
+            {
+                _ = KeepPinnedAsync();
+            }
+
             return true;
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)

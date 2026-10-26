@@ -81,7 +81,7 @@ Type in the box at the top of the main window; the line under it says what Enter
 
 - Matching nodes are listed as you type; **Tab** accepts the rest of a name proposed in grey.
 - **Enter** shows the creation screen first: the type of each new node (generic, note, dataset or view), a note's text, a dataset's file.
-- With the box empty, your **pinned** and **recent** nodes are listed.
+- With the box empty, your **pinned** and **recent** nodes are listed. In a server vault, a pinned node's content (a note's text, a dataset's file) is also downloaded ahead and kept, so it opens offline, on Windows and on the phone: the pin's tooltip (on the phone, its label) says *kept offline* once it is here.
 
 ### Node details
 **Enter** or a double-click on a node opens its details: its name, type, colour, pin and links. **F2** renames it; **+ Link** (**Ctrl+K**) links it to another; a link opens the node at its other end. **Esc** goes back.
