@@ -72,15 +72,19 @@ public sealed partial class HomePage : UserControl, IPage
         }
 
         VaultName.Text = vault.Graph.VaultName ?? "Vault";
+        SyncChanged();
+        ShowTabs(vault);
+        ShowList(vault);
+    }
+
+    public void SyncChanged()
+    {
         if (_shell.Services.Session.Selected?.Location.Store is { } store)
         {
             var status = _shell.Services.Sync.StatusOf(store);
             SyncDot.Fill = VaultsPage.DotOf(status.Level);
             SyncText.Text = status.Summary;
         }
-
-        ShowTabs(vault);
-        ShowList(vault);
     }
 
     private void ShowTabs(Vault vault)
@@ -279,7 +283,7 @@ public sealed partial class HomePage : UserControl, IPage
 
     private void Vaults_Click(object? sender, RoutedEventArgs e) => _shell.Push(new VaultsPage(_shell));
 
-    private void Sync_Click(object? sender, RoutedEventArgs e) => _ = _shell.Services.Sync.SyncNowAsync();
+    private void Sync_Click(object? sender, RoutedEventArgs e) => _shell.Run(_shell.Services.Sync.SyncNowAsync);
 
     private void Settings_Click(object? sender, RoutedEventArgs e) => _shell.Push(new SettingsPage(_shell));
 }

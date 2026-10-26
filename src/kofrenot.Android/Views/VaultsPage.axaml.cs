@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Media;
@@ -9,8 +10,27 @@ using Kofrenot.Phone.Platform;
 
 namespace Kofrenot.Phone.Views;
 
-/// <summary>A server vault on the phone: its name and where its sync stands.</summary>
-public sealed record VaultRow(RegisteredVault Vault, string Name, string Detail, IBrush Dot);
+/// <summary>A server vault on the phone: its name and where its sync stands, shown again after each sync.</summary>
+public sealed class VaultRow(RegisteredVault vault, string name) : INotifyPropertyChanged
+{
+    public event PropertyChangedEventHandler? PropertyChanged;
+
+    public RegisteredVault Vault { get; } = vault;
+
+    public string Name { get; } = name;
+
+    public string Detail { get; private set; } = string.Empty;
+
+    public IBrush Dot { get; private set; } = Brushes.Gray;
+
+    public void Show(SyncStatus status)
+    {
+        Detail = status.Summary;
+        Dot = VaultsPage.DotOf(status.Level);
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Detail)));
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Dot)));
+    }
+}
 
 /// <summary>A vault of the server not on the phone yet: its name is in the vault, so shown by its id, size and role.</summary>
 public sealed record StoreRow(ServerStore Store, string Name, string Detail);
@@ -53,7 +73,7 @@ public sealed partial class VaultsPage : UserControl, IPage
         var session = _shell.Services.Session;
         var rows = session.Vaults
             .Where(vault => vault.Location.Store is not null)
-            .Select(vault => RowOf(vault, _shell.Services.Sync.StatusOf(vault.Location.Store!)))
+            .Select(vault => new VaultRow(vault, session.NameOf(vault)))
             .ToList();
         Title.Text = "Vaults";
         List.ItemsSource = rows;
@@ -61,10 +81,17 @@ public sealed partial class VaultsPage : UserControl, IPage
         Empty.IsVisible = rows.Count == 0;
         AddButton.IsVisible = true;
         SettingsButton.IsVisible = true;
+        SyncChanged();
     }
 
-    private VaultRow RowOf(RegisteredVault vault, SyncStatus status) =>
-        new(vault, _shell.Services.Session.NameOf(vault), status.Summary, DotOf(status.Level));
+    // The rows kept, so the list keeps its place.
+    public void SyncChanged()
+    {
+        foreach (var row in List.ItemsSource?.OfType<VaultRow>() ?? [])
+        {
+            row.Show(_shell.Services.Sync.StatusOf(row.Vault.Location.Store!));
+        }
+    }
 
     /// <summary>The dot of the main window: green synced, grey waiting or offline, red when the user is needed.</summary>
     public static IBrush DotOf(SyncLevel level) => level switch
@@ -74,12 +101,23 @@ public sealed partial class VaultsPage : UserControl, IPage
         _ => Brushes.Gray,
     };
 
-    private async void Add_Click(object? sender, RoutedEventArgs e)
+    private void Add_Click(object? sender, RoutedEventArgs e) => _shell.Run(ChooseAsync);
+
+    // The account's vaults not on the phone yet, to choose from.
+    private async Task ChooseAsync()
     {
         var answers = new PreparedAnswers();
         SetBusy(true);
-        var stores = await _shell.Services.Session.StoresToAdd(answers);
-        SetBusy(false);
+        IReadOnlyList<ServerStore>? stores;
+        try
+        {
+            stores = await _shell.Services.Session.StoresToAdd(answers);
+        }
+        finally
+        {
+            SetBusy(false);
+        }
+
         _shell.Tell(answers.Told);
         if (stores is null)
         {
@@ -95,7 +133,7 @@ public sealed partial class VaultsPage : UserControl, IPage
         List.ItemsSource = stores.Select(store => new StoreRow(store, $"Vault {store.Id.ToString()[..8]}", $"{ByteSize.Format(store.Bytes)}, {store.Files} files · {store.Role}")).ToList();
     }
 
-    private async void List_SelectionChanged(object? sender, SelectionChangedEventArgs e)
+    private void List_SelectionChanged(object? sender, SelectionChangedEventArgs e)
     {
         var selected = List.SelectedItem;
         List.SelectedItem = null;
@@ -105,7 +143,7 @@ public sealed partial class VaultsPage : UserControl, IPage
                 _shell.Open(row.Vault.Location);
                 break;
             case StoreRow row:
-                await AddAsync(row.Store);
+                _shell.Run(() => AddAsync(row.Store));
                 break;
         }
     }
@@ -115,8 +153,15 @@ public sealed partial class VaultsPage : UserControl, IPage
     {
         var answers = new PreparedAnswers();
         SetBusy(true);
-        await _shell.Services.Session.AddFromServer(answers, store);
-        SetBusy(false);
+        try
+        {
+            await _shell.Services.Session.AddFromServer(answers, store);
+        }
+        finally
+        {
+            SetBusy(false);
+        }
+
         _choosing = false;
         if (_shell.Services.Session.Vaults.FirstOrDefault(vault => vault.Location.Store?.Id == store.Id) is { } added)
         {
@@ -129,10 +174,17 @@ public sealed partial class VaultsPage : UserControl, IPage
         }
     }
 
-    private async void Remove_Click(object? sender, RoutedEventArgs e)
+    private void Remove_Click(object? sender, RoutedEventArgs e)
     {
-        if ((sender as Control)?.Tag is not VaultRow row
-            || !await _shell.Confirm($"Remove {row.Name} from this phone?\n\nThe vault stays on the server. Its copy here is kept: added again, it syncs from where it was.", "Remove"))
+        if ((sender as Control)?.Tag is VaultRow row)
+        {
+            _shell.Run(() => RemoveAsync(row));
+        }
+    }
+
+    private async Task RemoveAsync(VaultRow row)
+    {
+        if (!await _shell.Confirm($"Remove {row.Name} from this phone?\n\nThe vault stays on the server. Its copy here is kept: added again, it syncs from where it was.", "Remove"))
         {
             return;
         }

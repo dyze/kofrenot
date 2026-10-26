@@ -25,7 +25,13 @@ public sealed partial class SignInPage : UserControl, IPage
     {
     }
 
-    private async void SignIn_Click(object? sender, RoutedEventArgs e)
+    public void SyncChanged()
+    {
+    }
+
+    private void SignIn_Click(object? sender, RoutedEventArgs e) => _shell.Run(SignInAsync);
+
+    private async Task SignInAsync()
     {
         // HTTPS, but to the phone itself (a server reached through "adb reverse" while developing).
         if (!Uri.TryCreate(ServerBox.Text?.Trim(), UriKind.Absolute, out var server) || (server.Scheme != Uri.UriSchemeHttps && !(server.Scheme == Uri.UriSchemeHttp && server.IsLoopback)))

@@ -1,18 +1,22 @@
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
+using Kofrenot.Core.Logging;
 using Kofrenot.Core.Settings;
 using Kofrenot.Phone.Platform;
 
 namespace Kofrenot.Phone.Views;
 
-/// <summary>A screen of the app: refreshed when the vault, the sync or the account changes.</summary>
+/// <summary>A screen of the app: refreshed when the vault or the account changes; told when a sync ends.</summary>
 public interface IPage
 {
     /// <summary>Goes back within the screen (a trail of nodes); false when it has nowhere to go.</summary>
     bool GoBack();
 
     void Refresh();
+
+    /// <summary>A sync ended (every 30 s): only where it stands is shown again, what it downloaded comes with <see cref="Refresh"/>.</summary>
+    void SyncChanged();
 }
 
 /// <summary>
@@ -30,7 +34,7 @@ public sealed partial class Shell : UserControl
         Services = services;
         InitializeComponent();
         services.Session.Changed += RefreshPage;
-        services.Sync.Changed += RefreshPage;
+        services.Sync.Changed += () => (PageHost.Content as IPage)?.SyncChanged();
         services.Server.Changed += RefreshPage;
         Start();
     }
@@ -54,10 +58,10 @@ public sealed partial class Shell : UserControl
         }
     }
 
-    /// <summary>Opens a vault, with the pass phrase typed when there is one; asks it when needed.</summary>
-    public void Open(VaultLocation location, string? passPhrase = null, bool remember = false)
+    /// <summary>Opens a vault: with its pass phrase checked ahead (<see cref="PassPhrasePage"/>) or remembered; else asks it.</summary>
+    public void Open(VaultLocation location)
     {
-        var answers = new PreparedAnswers(passPhrase, remember);
+        var answers = new PreparedAnswers();
         Services.Session.SwitchTo(answers, location);
         AfterOpening(answers, location);
     }
@@ -110,6 +114,31 @@ public sealed partial class Shell : UserControl
         var answer = new TaskCompletionSource<bool>();
         Enqueue(question, yes, answer);
         return answer.Task;
+    }
+
+    /// <summary>
+    /// Runs what a tap started, its failures caught: an unexpected one is logged and told, not a
+    /// crash. Failures the session expects it tells itself.
+    /// </summary>
+    public async void Run(Func<Task> action)
+    {
+        try
+        {
+            await action();
+        }
+        catch (Exception ex)
+        {
+            Failed(ex);
+        }
+    }
+
+    /// <summary>An unexpected failure: logged, and told.</summary>
+    public void Failed(Exception ex)
+    {
+        Services.Log.Error("App", $"Unexpected failure ({ex.GetType().Name})", ex);
+        Tell($"Something went wrong.
+
+{ex.Message}");
     }
 
     protected override void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs e)

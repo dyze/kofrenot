@@ -7,16 +7,16 @@ using Kofrenot.Core.Views;
 
 namespace Kofrenot.Phone.Platform;
 
-/// <summary>A pass phrase the session asked for and did not get: where, its hint, and why the one typed was refused.</summary>
-public sealed record PassPhraseNeeded(string Place, string? Hint, string? Refusal);
+/// <summary>A pass phrase the session asked for and did not get: where, and its hint.</summary>
+public sealed record PassPhraseNeeded(string Place, string? Hint);
 
 /// <summary>
 /// The session's questions, answered before it asks them: Android has no dialog that waits for
-/// an answer. A screen asks the user first (the pass phrase), then the session is called with the
-/// answer; one it did not have is in <see cref="Needed"/>. The phone only reads, so every other
-/// question is declined.
+/// an answer. A pass phrase asked is noted in <see cref="Needed"/>: a screen asks it, checks it
+/// (<see cref="VaultSession.UnlockAheadAsync"/>), then opens the vault again. The phone only
+/// reads, so every other question is declined.
 /// </summary>
-public sealed class PreparedAnswers(string? passPhrase = null, bool remember = false) : ISessionQuestions
+public sealed class PreparedAnswers : ISessionQuestions
 {
     public List<string> Told { get; } = [];
 
@@ -28,26 +28,7 @@ public sealed class PreparedAnswers(string? passPhrase = null, bool remember = f
 
     public UnlockAnswer? AskPassPhrase(string place, Func<string, bool> accept, string? hint = null)
     {
-        if (passPhrase is null)
-        {
-            Needed = new PassPhraseNeeded(place, hint, null);
-            return null;
-        }
-
-        try
-        {
-            if (accept(passPhrase))
-            {
-                return new UnlockAnswer(remember, UseRecoveryKey: false);
-            }
-
-            Needed = new PassPhraseNeeded(place, hint, "Wrong pass phrase.");
-        }
-        catch (IOException ex)
-        {
-            Needed = new PassPhraseNeeded(place, hint, ex.Message);
-        }
-
+        Needed = new PassPhraseNeeded(place, hint);
         return null;
     }
 

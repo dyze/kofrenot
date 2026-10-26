@@ -21,6 +21,10 @@ public sealed partial class SettingsPage : UserControl, IPage
 
     public bool GoBack() => false;
 
+    public void SyncChanged()
+    {
+    }
+
     public void Refresh()
     {
         var services = _shell.Services;
@@ -30,7 +34,9 @@ public sealed partial class SettingsPage : UserControl, IPage
         ForgetButton.IsEnabled = selected is not null && services.Session.IsRemembered(selected);
     }
 
-    private async void SignOut_Click(object? sender, RoutedEventArgs e)
+    private void SignOut_Click(object? sender, RoutedEventArgs e) => _shell.Run(SignOutAsync);
+
+    private async Task SignOutAsync()
     {
         if (!await _shell.Confirm("Sign out of the server?\n\nThe vaults stay on this phone, not synced until you sign in again.", "Sign out"))
         {
@@ -41,7 +47,9 @@ public sealed partial class SettingsPage : UserControl, IPage
         _shell.Show(new SignInPage(_shell));
     }
 
-    private async void Forget_Click(object? sender, RoutedEventArgs e)
+    private void Forget_Click(object? sender, RoutedEventArgs e) => _shell.Run(ForgetAsync);
+
+    private async Task ForgetAsync()
     {
         if (_shell.Services.Session.Selected is not { } selected
             || !await _shell.Confirm($"Forget the remembered pass phrase of {_shell.Services.Session.NameOf(selected)}?\n\nIt is asked again the next time the vault opens.", "Forget"))

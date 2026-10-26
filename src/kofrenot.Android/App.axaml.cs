@@ -1,6 +1,8 @@
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
+using Avalonia.Threading;
+using Kofrenot.Core.Logging;
 using Kofrenot.Phone.Views;
 
 namespace Kofrenot.Phone;
@@ -15,6 +17,13 @@ public sealed partial class App : Application
 
     public override void OnFrameworkInitializationCompleted()
     {
+        // The last resort: a failure nothing caught is logged, not a crash.
+        Dispatcher.UIThread.UnhandledException += (_, e) =>
+        {
+            Services.Log.Error("App", $"Unexpected failure ({e.Exception.GetType().Name})", e.Exception);
+            e.Handled = true;
+        };
+
         if (ApplicationLifetime is IActivityApplicationLifetime activity)
         {
             activity.MainViewFactory = () => new Shell(Services);
@@ -28,7 +37,17 @@ public sealed partial class App : Application
     }
 
     /// <summary>The app came back on screen: syncs now, then every 30 s.</summary>
-    public void Resumed() => _ = Services.Sync.ResumeAsync();
+    public async void Resumed()
+    {
+        try
+        {
+            await Services.Sync.ResumeAsync();
+        }
+        catch (Exception ex)
+        {
+            Services.Log.Error("Sync", $"Sync on resume failed ({ex.GetType().Name})", ex);
+        }
+    }
 
     /// <summary>The app went to the background: no sync until it comes back.</summary>
     public void Paused() => Services.Sync.Pause();

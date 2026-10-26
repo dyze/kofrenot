@@ -47,6 +47,10 @@ public sealed partial class NodePage : UserControl, IPage
         return true;
     }
 
+    public void SyncChanged()
+    {
+    }
+
     public void Refresh()
     {
         // The graph read again: a sync may have changed the node.
