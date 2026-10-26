@@ -12,11 +12,8 @@ Scope of each planned version. Implemented features move to [CHANGELOG.md](CHANG
 | 0.6     | Released  | Server: own vaults stored on a web server, synced across devices                   |
 | 0.7     | Released  | Sharing: identities, recovery key, vaults shared with other users                  |
 | 0.8     | Released  | Notes as in Keep; content on demand; session in Core for Android                   |
-| 0.9     | To define | Android: server vaults read and searched offline on the phone                      |
+| 0.9     | Released  | Android: server vaults read and searched offline on the phone                      |
 | 0.10    | To define | Large vaults: offline pins, faster transfers; editing                              |
-
-## 0.9 (to define)
-An Android client that reads server vaults: [ANDROID-CONCEPT.md](docs/ANDROID-CONCEPT.md). What is done is in [CHANGELOG.md](CHANGELOG.md#unreleased); no feature is left.
 
 ## 0.10 (to define)
 1. **Pinned for offline.** When a node is pinned for offline access, its content is downloaded ahead, so it is always readable without access to the vault storage: on Windows, and on the phone with the pins set on Windows.

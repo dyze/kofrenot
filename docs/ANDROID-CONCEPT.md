@@ -1,6 +1,6 @@
 # kofrenot: Android concept
 
-An Android client for **server vaults**: the same vaults as on Windows, read on the phone, offline. Implemented for 0.9, not released yet ([CHANGELOG.md](../CHANGELOG.md#unreleased)); what is later or open is marked so.
+An Android client for **server vaults**: the same vaults as on Windows, read on the phone, offline. Released in 0.9 ([CHANGELOG.md](../CHANGELOG.md#09---2026-10-26)); what is later or open is marked so.
 
 ```
  Windows (kofrenot.App)          Kofre server            Android (kofrenot.Android)

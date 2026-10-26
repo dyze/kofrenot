@@ -8,6 +8,8 @@ It covers kofrenot on Windows and on Android; versions before 0.9 ran on Windows
 
 ## [Unreleased]
 
+## [0.9] - 2026-10-26
+
 ### Added
 - **Android**
   - **kofrenot for Android**, read only: your server vaults, own and shared, read and searched on the phone, also offline; it syncs downloads only and never writes to a vault. What it does: [ANDROID-CONCEPT.md](docs/ANDROID-CONCEPT.md#supported-in-09); how to install and use it: [README](README.md#on-android). Android 8.0 or later, an APK on the releases.
@@ -196,7 +198,8 @@ It covers kofrenot on Windows and on Android; versions before 0.9 ran on Windows
 - **Update check** once a day against GitHub releases, switchable in About.
 - **Installer and portable zip** (`build\installer.cmd`), self-contained.
 
-[Unreleased]: https://github.com/dyze/kofrenot/compare/0.8...HEAD
+[Unreleased]: https://github.com/dyze/kofrenot/compare/0.9...HEAD
+[0.9]: https://github.com/dyze/kofrenot/compare/0.8...0.9
 [0.8]: https://github.com/dyze/kofrenot/compare/0.7...0.8
 [0.7]: https://github.com/dyze/kofrenot/compare/0.6...0.7
 [0.6]: https://github.com/dyze/kofrenot/compare/0.5...0.6
