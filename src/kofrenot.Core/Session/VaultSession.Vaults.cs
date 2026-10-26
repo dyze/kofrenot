@@ -115,6 +115,7 @@ public sealed partial class VaultSession
     {
         if (target == _settings.SelectedVault && (Current is not null || _notUpgraded is not null))
         {
+            _unlockedAhead = null;
             return;
         }
 

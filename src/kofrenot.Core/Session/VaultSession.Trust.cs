@@ -1,5 +1,6 @@
 using Kofrenot.Core.Logging;
 using Kofrenot.Core.Server;
+using Kofrenot.Core.Settings;
 using Kofrenot.Core.Storage;
 
 namespace Kofrenot.Core.Session;
@@ -12,9 +13,12 @@ namespace Kofrenot.Core.Session;
 public sealed partial class VaultSession
 {
     /// <summary>Who must have signed the keys of the server vault in <paramref name="folder"/>; null for a folder vault.</summary>
-    private KeySigner? SignerOf(string folder, Guid vault)
+    private KeySigner? SignerOf(string folder, Guid vault) =>
+        Selected?.Location is { } location && location.Folder == folder ? SignerOf(location, vault) : null;
+
+    private KeySigner? SignerOf(VaultLocation location, Guid vault)
     {
-        if (Selected is not { Location: { IsOnServer: true, Store: { } store } location } || location.Folder != folder)
+        if (location is not { IsOnServer: true, Store: { } store })
         {
             return null;
         }
@@ -25,7 +29,7 @@ public sealed partial class VaultSession
             return new KeySigner(owner.Key.SigningKey);
         }
 
-        return mine?.SigningKey is { } key && VaultKeys.IsAttached(folder, vault, mine.Id, key) ? new KeySigner(key) : KeySigner.Self;
+        return mine?.SigningKey is { } key && VaultKeys.IsAttached(location.Folder, vault, mine.Id, key) ? new KeySigner(key) : KeySigner.Self;
     }
 
     /// <summary>Whether <paramref name="access"/> opens the files written last, as signed by the vault's owner.</summary>

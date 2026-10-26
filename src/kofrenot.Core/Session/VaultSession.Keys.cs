@@ -31,6 +31,12 @@ public sealed partial class VaultSession
     /// </summary>
     private (VaultAccess Access, bool Remember)? UnlockKeys(ISessionQuestions ask, string folder, VaultHeader header)
     {
+        if (TakeUnlockedAhead(folder, header) is { } ahead)
+        {
+            _log.Info("Action", $"Vault {header.Id} unlocked");
+            return (ahead.Access, Remembers(ahead.Access, ahead.Remember));
+        }
+
         if (!_askPassPhrase && Remembered(folder, header) is { } remembered)
         {
             _log.Info(Category, $"Vault {header.Id} unlocked with the remembered pass phrase");
@@ -49,7 +55,7 @@ public sealed partial class VaultSession
             }
             else if (!IsCurrent(folder, access))
             {
-                throw new IOException("This pass phrase opens only the vault's older files: type your server account's pass phrase.");
+                throw new IOException(OlderFilesOnly);
             }
 
             return access is not null;
@@ -66,10 +72,12 @@ public sealed partial class VaultSession
         }
 
         _log.Info("Action", $"Vault {header.Id} unlocked");
-
-        // A master key remembered before format 6 is replaced by the identity it now unlocks.
-        return (access!, answer.Remember || (access!.Identity is not null && _keys.RecallMasterKey(header.Id) is not null));
+        return (access!, Remembers(access!, answer.Remember));
     }
+
+    // Remembered when asked; a master key remembered before format 6 is replaced by the identity it now unlocks.
+    private bool Remembers(VaultAccess access, bool asked) =>
+        asked || (access.Identity is not null && _keys.RecallMasterKey(access.Header.Id) is not null);
 
     // A master key remembered before format 6 opens the vault until it has identities: then the
     // pass phrase is asked, so its identity is remembered instead. Either is used only while it

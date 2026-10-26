@@ -1,5 +1,6 @@
 using Kofrenot.Core.Logging;
 using Kofrenot.Core.Server;
+using Kofrenot.Core.Settings;
 using Kofrenot.Core.Storage;
 
 namespace Kofrenot.Core.Session;
@@ -15,7 +16,9 @@ public sealed partial class VaultSession
 
     /// <summary>The account's identity, to look for among those of a server vault; null for a folder vault.</summary>
     private Identity? AccountIdentityOf(string folder) =>
-        Selected is { Location: { IsOnServer: true } location } && location.Folder == folder ? _server.Identity?.Identity : null;
+        Selected?.Location is { } location && location.Folder == folder ? AccountIdentityOf(location) : null;
+
+    private Identity? AccountIdentityOf(VaultLocation location) => location.IsOnServer ? _server.Identity?.Identity : null;
 
     /// <summary>
     /// Chooses the account's pass phrase when it has none (its recovery key then shown); else asks
