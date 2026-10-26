@@ -30,6 +30,7 @@ public sealed partial class VaultSession : IDisposable
     private readonly IUiThread _ui;
     private readonly IVaultWatcher _watching;
     private readonly IThumbnailMaker _thumbnails;
+    private readonly TimeProvider _time;
     private readonly int _keyIterations;
     private IDisposable? _watcher;
     private string? _keptName;
@@ -41,9 +42,11 @@ public sealed partial class VaultSession : IDisposable
     /// <param name="watching">Watches a folder vault for the changes of other apps.</param>
     /// <param name="thumbnails">Makes an image's thumbnail when it is imported.</param>
     /// <param name="keyIterations">The key derivation's rounds for a pass phrase set here; fewer only in tests.</param>
-    public VaultSession(SettingsStore settings, AppFiles files, KeyMemory keys, VaultNameMemory names, ServerConnection server, SyncService sync, IUiThread ui, IVaultWatcher watching, IThumbnailMaker thumbnails, ILog log, int keyIterations = KeyWrap.DefaultIterations)
+    /// <param name="time">Runs the timers; null for the system's.</param>
+    public VaultSession(SettingsStore settings, AppFiles files, KeyMemory keys, VaultNameMemory names, ServerConnection server, SyncService sync, IUiThread ui, IVaultWatcher watching, IThumbnailMaker thumbnails, ILog log, int keyIterations = KeyWrap.DefaultIterations, TimeProvider? time = null)
     {
         _keyIterations = keyIterations;
+        _time = time ?? TimeProvider.System;
         _ui = ui;
         _watching = watching;
         _thumbnails = thumbnails;
@@ -114,6 +117,7 @@ public sealed partial class VaultSession : IDisposable
         Current = vault;
         KeepName();
         KeepRole();
+        RetrySkippedChanges();
         _ = SettleMembers(ask);
         try
         {
@@ -136,6 +140,8 @@ public sealed partial class VaultSession : IDisposable
                 KeepRole();
                 Changed?.Invoke();
             }
+
+            RetrySkippedChanges();
         }
         catch (NewerVaultFormatException ex)
         {
@@ -451,6 +457,8 @@ public sealed partial class VaultSession : IDisposable
         _watcher = null;
         _keptName = null;
         _access = null;
+        _retries = 0;
+        _retryTimer?.Change(Timeout.InfiniteTimeSpan, Timeout.InfiniteTimeSpan);
         if (Current is not null || _notUpgraded is not null)
         {
             Current = null;
@@ -460,7 +468,11 @@ public sealed partial class VaultSession : IDisposable
         }
     }
 
-    public void Dispose() => _watcher?.Dispose();
+    public void Dispose()
+    {
+        _watcher?.Dispose();
+        _retryTimer?.Dispose();
+    }
 
     private Vault? OpenFolder(ISessionQuestions ask, string folder)
     {

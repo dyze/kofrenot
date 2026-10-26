@@ -10,6 +10,7 @@ It covers kofrenot on Windows and on Android; versions before 0.9 ran on Windows
 
 ### Changed
 - **Release files named by platform**: `kofrenot-windows-setup-<version>.exe`, `kofrenot-windows-portable-<version>.zip` and `kofrenot-android-<version>.apk` ([README](README.md#install)).
+- **Skipped change files read again sooner**: a change file skipped because it was locked or still being copied is read again 2, 5, 10 and 30 seconds later, not only at the next sync or when the window is shown ([Robust and secure](docs/GOAL.md#robust-and-secure)).
 
 ## [0.9] - 2026-10-26
 

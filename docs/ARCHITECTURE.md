@@ -182,7 +182,7 @@ Model and principles: [GOAL.md](GOAL.md#data-model).
 
 - **Only added, never modified.** A change file is written as `*.tmp` then renamed, so a reader or the sync tool never sees half a file. `.tmp` files are ignored.
 - **Folders by the id's first two characters**, so no folder holds too many files.
-- An unreadable file (corrupt, wrong key, still being copied) is skipped and logged once as a warning, then tried again at each refresh; the others still load. Other files (`desktop.ini`, ...) are ignored.
+- An unreadable file (corrupt, wrong key, still being copied) is skipped and logged once as a warning, then tried again 2, 5, 10 and 30 s later (`VaultSession.RetryDelays`) and at each refresh; the others still load. Other files (`desktop.ini`, ...) are ignored.
 - A header or change file in a newer format: see [Format](#format).
 - `VaultFolder.Inspect`: a new vault is only created in an empty (or missing) folder; a folder holding other files is refused, so nothing of the user's is mixed with it. A missing folder of a vault opened before (its id known) is out of reach, never a new vault.
 

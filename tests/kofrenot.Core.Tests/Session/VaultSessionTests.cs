@@ -268,6 +268,56 @@ public sealed class VaultSessionTests : IDisposable
     }
 
     [Fact]
+    public void ASkippedChangeFile_IsReadAgainAFewSecondsLater()
+    {
+        var (file, content) = WriteUnreadableChange("Dune");
+
+        _device.Watching.Changed();
+
+        var retry = _device.Timers.Created[^1];
+        Assert.Equal(TimeSpan.FromSeconds(2), retry.DueTime);
+        File.WriteAllBytes(file, content);
+        retry.Fire();
+        _device.Ui.RunAll();
+        Assert.Contains(_device.Vault.Graph.Nodes, node => node.Name == "Dune");
+        Assert.Equal(Timeout.InfiniteTimeSpan, retry.DueTime);
+    }
+
+    [Fact]
+    public void ASkippedChangeFile_IsTriedAFewTimes_ThenLeftToTheNextRefresh()
+    {
+        WriteUnreadableChange("Dune");
+        _device.Watching.Changed();
+        var retry = _device.Timers.Created[^1];
+
+        var waits = new List<TimeSpan> { retry.DueTime };
+        for (var i = 0; i < VaultSession.RetryDelays.Count; i++)
+        {
+            retry.Fire();
+            _device.Ui.RunAll();
+            waits.Add(retry.DueTime);
+        }
+
+        Assert.Equal([.. VaultSession.RetryDelays, VaultSession.RetryDelays[^1]], waits);
+        Assert.True(_device.Vault.HasSkippedChanges);
+        Session.Close();
+        Assert.Equal(Timeout.InfiniteTimeSpan, retry.DueTime);
+    }
+
+    // A change of another app, its file damaged as when still being copied; its file and content.
+    private (string File, byte[] Content) WriteUnreadableChange(string name)
+    {
+        var folder = _device.CreateFolderVault();
+        var access = VaultKeys.Unlock(folder, VaultHeader.Read(VaultFolder.HeaderOf(folder)), ScriptedQuestions.FirstPassPhrase)!;
+        var before = Directory.GetFiles(Path.Combine(folder, VaultFolder.ChangesFolder), "*", SearchOption.AllDirectories);
+        Vault.Open(folder, access.Header, access.Keys).Append(new NodeAdded(Guid.NewGuid(), Start, new Node(Guid.NewGuid(), TypeCatalog.Generic.Id, name, Start)));
+        var file = Directory.GetFiles(Path.Combine(folder, VaultFolder.ChangesFolder), "*", SearchOption.AllDirectories).Except(before).Single();
+        var content = File.ReadAllBytes(file);
+        File.WriteAllBytes(file, [1, 2, 3]);
+        return (file, content);
+    }
+
+    [Fact]
     public void TheRecoveryKey_OpensTheVault_ThenAsksANewPassPhrase()
     {
         _device.CreateFolderVault();

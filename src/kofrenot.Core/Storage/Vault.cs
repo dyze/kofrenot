@@ -42,6 +42,9 @@ public sealed partial class Vault
 
     public KnowledgeGraph Graph { get; } = new();
 
+    /// <summary>Change files skipped as unreadable (locked, still being copied) and not read since.</summary>
+    public bool HasSkippedChanges => _reportedUnreadable.Any(id => !_read.ContainsKey(id));
+
     /// <summary>The content of note versions, read on demand.</summary>
     public NoteFiles Notes { get; }
 

@@ -39,7 +39,8 @@ internal sealed class Device : IDisposable
             Watching,
             new NoThumbnails(),
             Log,
-            keyIterations: 10);
+            keyIterations: 10,
+            time: Timers);
     }
 
     public AppFiles Files { get; }
