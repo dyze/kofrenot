@@ -1,5 +1,6 @@
 using Avalonia.Controls;
 using Avalonia.Interactivity;
+using Kofrenot.Core.Logging;
 using Kofrenot.Core.Settings;
 using Kofrenot.Phone.Platform;
 

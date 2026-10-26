@@ -136,9 +136,7 @@ public sealed partial class Shell : UserControl
     public void Failed(Exception ex)
     {
         Services.Log.Error("App", $"Unexpected failure ({ex.GetType().Name})", ex);
-        Tell($"Something went wrong.
-
-{ex.Message}");
+        Tell($"Something went wrong.\n\n{ex.Message}");
     }
 
     protected override void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs e)
