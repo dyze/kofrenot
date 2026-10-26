@@ -16,7 +16,8 @@ namespace Kofrenot.UI.Views;
 /// Drag and drop in a tree: a node dropped on another moves there (as Ctrl+X, Ctrl+V), or is copied
 /// there with Ctrl held (as Ctrl+C, Ctrl+V). The node under the pointer is highlighted, and the
 /// cursor says when a move is refused. A dataset dragged out of kofrenot (to a folder) gives its
-/// file, exported only then; a file dropped on a node from elsewhere becomes a new dataset under it.
+/// file, exported only then; a file dropped on a node from elsewhere becomes a new dataset under it
+/// (the creation screen), several files as many datasets (their preview first).
 /// </summary>
 public partial class ViewPanel
 {
@@ -24,6 +25,9 @@ public partial class ViewPanel
 
     /// <summary>The open vault's dataset files, to drag a dataset's file out when it is here; null when none is open.</summary>
     public Func<DatasetFiles?>? DatasetFiles { get; set; }
+
+    /// <summary>Imports several files dropped as datasets under a node, once their preview is accepted.</summary>
+    public Func<IReadOnlyList<string>, ParentLink, Task>? ImportFiles { get; set; }
 
     private Point? _dragStart;
     private TreeItem? _dragged;
@@ -106,32 +110,43 @@ public partial class ViewPanel
         e.Handled = true;
     }
 
-    /// <summary>One file from elsewhere, dropped on a node of a tree: a new dataset under it. None for several files, or a folder.</summary>
+    /// <summary>Files from elsewhere, dropped on a node of a tree: new datasets under it.</summary>
     private DragDropEffects FileEffectOf(DragEventArgs e, TreeViewItem? target) =>
-        DroppedFile(e) is not null && target?.Tag is TreeItem && _definition is not null && CreateNode is not null
+        DroppedFiles(e) is not null && target?.Tag is TreeItem && _definition is not null && CreateNode is not null && ImportFiles is not null
             ? DragDropEffects.Copy
             : DragDropEffects.None;
 
-    private static string? DroppedFile(DragEventArgs e) =>
-        e.Data.GetData(DataFormats.FileDrop) is string[] { Length: 1 } paths && File.Exists(paths[0]) ? paths[0] : null;
+    private static string[]? DroppedFiles(DragEventArgs e) =>
+        e.Data.GetData(DataFormats.FileDrop) is string[] { Length: > 0 } paths ? paths : null;
 
-    /// <summary>Shows the creation screen for a dataset of the file dropped, under <paramref name="onto"/>; after the drop, so the other program is not held.</summary>
-    private void DropFile(TreeItem onto, string path)
+    /// <summary>
+    /// One file: the creation screen for its dataset, under <paramref name="onto"/>; several (or a
+    /// folder): their preview, then a dataset each. After the drop, so the other program is not held.
+    /// </summary>
+    private void DropFiles(TreeItem onto, string[] paths)
     {
-        if (_definition is not { } definition || CreateNode is null)
+        if (_definition is not { } definition || CreateNode is null || ImportFiles is null)
         {
             return;
         }
 
-        Log.Info("Action", "File dropped on a view");
-        Dispatcher.BeginInvoke(() =>
+        var under = new ParentLink(onto.Node, definition.LinkType);
+        Log.Info("Action", $"Files dropped on a view ({paths.Length})");
+        Dispatcher.BeginInvoke(async () =>
         {
-            if (CreateNode(TypeCatalog.Dataset, new ParentLink(onto.Node, definition.LinkType), path)?.NewNodes is [var added, ..])
+            if (paths is [var path] && File.Exists(path))
             {
-                SetExpanded(onto.Key, isExpanded: true);
-                _selectedPath = $"{onto.Key}/{added.Id}";
+                if (CreateNode(TypeCatalog.Dataset, under, path)?.NewNodes is [var added, ..])
+                {
+                    _selectedPath = $"{onto.Key}/{added.Id}";
+                }
+            }
+            else
+            {
+                await ImportFiles(paths, under);
             }
 
+            SetExpanded(onto.Key, isExpanded: true);
             Refresh();
         });
     }
@@ -145,9 +160,9 @@ public partial class ViewPanel
         e.Handled = true;
         if (!e.Data.GetDataPresent(DragFormat))
         {
-            if (FileEffectOf(e, target) != DragDropEffects.None && target?.Tag is TreeItem item && DroppedFile(e) is { } path)
+            if (FileEffectOf(e, target) != DragDropEffects.None && target?.Tag is TreeItem item && DroppedFiles(e) is { } paths)
             {
-                DropFile(item, path);
+                DropFiles(item, paths);
             }
 
             return;

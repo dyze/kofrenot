@@ -213,6 +213,32 @@
                 Click="AddTab_Click" />
       </StackPanel>
 
+      <!-- The drop zone: files dropped here become datasets, once their preview is accepted. -->
+      <Border x:Name="DropZone"
+              HorizontalAlignment="Right"
+              VerticalAlignment="Center"
+              Padding="10,3"
+              AllowDrop="True"
+              Background="Transparent"
+              BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
+              BorderThickness="1"
+              CornerRadius="4"
+              ToolTip="Drop files here to add them as datasets"
+              Visibility="Collapsed"
+              DragEnter="DropZone_DragOver"
+              DragOver="DropZone_DragOver"
+              DragLeave="DropZone_DragLeave"
+              Drop="DropZone_Drop">
+        <StackPanel Orientation="Horizontal">
+          <TextBlock Margin="0,0,6,0"
+                     VerticalAlignment="Center"
+                     FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
+                     FontSize="12"
+                     Text="&#xE896;" />
+          <TextBlock VerticalAlignment="Center" FontSize="{StaticResource CaptionFontSize}" Text="Drop files" />
+        </StackPanel>
+      </Border>
+
 
       <!-- Enter adds (or opens the selected node), Up/Down select a node or choose among homonyms,
            Tab or Right accept the proposal in grey (else Tab switches the side of a link), Backspace

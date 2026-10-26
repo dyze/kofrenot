@@ -17,10 +17,8 @@ Scope of each planned version. Implemented features move to [CHANGELOG.md](CHANG
 
 ## 0.10 (to define)
 1. **Pinned for offline.** When a node is pinned for offline access, its content is downloaded ahead, so it is always readable without access to the vault storage: on Windows, and on the phone with the pins set on Windows.
-2. **File drop zone.** A small zone in the main window takes one or several dropped files, to secure them quickly. Node names and types are chosen automatically; a preview shows what will be added, and nothing is added before it is accepted.
-3. **Several files dropped on a tree**, with the same preview (one file: 0.5).
-4. **Android: datasets.** Add a file from the phone.
-5. **Android: notes.** Edit a note's content, task lists included.
+2. **Android: datasets.** Add a file from the phone.
+3. **Android: notes.** Edit a note's content, task lists included.
 
 ## Later
 1. **Pack vault.** Pack a vault to reduce its size and number of files (needs deletes on the server).

@@ -80,6 +80,7 @@ public partial class MainWindow : Window
         ViewContent.States = viewStates;
         ViewContent.CreateNode = (type, under, file) => RecordRecent(_session.CreateNode(Ask, type, under, file));
         ViewContent.DatasetFiles = () => _session.Current?.Datasets;
+        ViewContent.ImportFiles = ImportFiles;
         ViewContent.Rename = rename => _session.Rename(Ask, rename);
         ViewContent.Write = (changes, action) => _session.Write(Ask, changes, action);
         ViewContent.Copy = plan => _session.Copy(Ask, plan);
@@ -177,6 +178,7 @@ public partial class MainWindow : Window
         LockButton.Visibility = open ? Visibility.Visible : Visibility.Collapsed;
         var readOnly = open && _session.IsReadOnly;
         ReadOnlyTag.Visibility = readOnly ? Visibility.Visible : Visibility.Collapsed;
+        DropZone.Visibility = open && !readOnly ? Visibility.Visible : Visibility.Collapsed;
         ShowTitle();
         ShowSync();
         Title = (SelectedName.Length > 0 ? SelectedName : "kofrenot") + (readOnly ? " (read only)" : string.Empty);

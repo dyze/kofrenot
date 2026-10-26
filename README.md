@@ -92,10 +92,12 @@ A note is Markdown text, saved as a new version each time (**Ctrl+S**, or by lea
 ### Datasets
 A dataset holds one file: drop it on the creation screen or on the dataset. Texts and images are shown in kofrenot (decrypted in memory only), others are exported (**Export…**, or drag the file out). **Open** (Ctrl+O, or a double-click on a file that is not an image) opens the file with the app Windows associates with it: a decrypted copy, deleted at kofrenot's next start. Each import is a new version.
 
+**Drop files** (beside the tabs) secures files quickly: drop one or several there, and each becomes a dataset named after its file. A preview first lists them, with their number and total size, the names already taken (*homonym*) and what is skipped (folders); nothing is added before **Add**.
+
 ### Views
 A view shows your vault another way, in a tab: **a tree** from a node, following a link type (*contains* by default), or **a list** of every node of a type. **+** in the tab bar opens or creates one.
 
-- In a tree: **Ctrl+C**, **Ctrl+X**, **Ctrl+V** and **Del** copy, move and delete, or drag a node onto another. Drop a file on a node to add it under it.
+- In a tree: **Ctrl+C**, **Ctrl+X**, **Ctrl+V** and **Del** copy, move and delete, or drag a node onto another. Drop a file on a node to add it under it (the creation screen); several files are previewed first, as with **Drop files**, then added under it.
 - **Cards** on a list's bar shows its nodes as cards, with a preview. **Details** shows type, size and last change in columns.
 - **Ctrl+F** finds a node in the view.
 

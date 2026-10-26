@@ -10,6 +10,8 @@ It covers kofrenot on Windows and on Android; versions before 0.9 ran on Windows
 
 ### Added
 - **Windows**
+  - **Drop files**: a small zone beside the tabs takes one or several files dropped from elsewhere, each added as a dataset named after its file. A preview first lists them, with their number and total size, the names already taken and what is skipped; nothing is added before **Add** ([README](README.md#datasets)).
+  - **Several files dropped on a tree** node: the same preview, then a dataset each under that node; one file still opens the creation screen.
   - **Open a dataset in its app**: **Open** in a dataset's details (Ctrl+O, or a double-click on a file that is not an image) opens its file with the app Windows associates with it, as *Open with…* does on Android. The file is decrypted into a copy deleted at kofrenot's next start ([README](README.md#datasets)).
 
 ### Changed
