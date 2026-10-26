@@ -79,6 +79,8 @@ public class SettingsCatalogTests
 
     [Theory]
     [InlineData("summon", SettingsCatalog.HotkeyId)]
+    [InlineData("startup", SettingsCatalog.AutoStartId)]
+    [InlineData("with windows", SettingsCatalog.AutoStartId)]
     [InlineData("bindings", SettingsCatalog.KeyBindingsId)]
     [InlineData("dropbox", SettingsCatalog.VaultsId)]
     [InlineData("password", SettingsCatalog.VaultsId)]

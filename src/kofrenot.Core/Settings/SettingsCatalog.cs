@@ -24,6 +24,7 @@ public static class SettingsCatalog
 
     public const string HotkeyId = "Hotkey";
     public const string MainWindowPositionId = "MainWindowPosition";
+    public const string AutoStartId = "AutoStart";
     public const string KeyBindingsId = "KeyBindings";
     public const string VaultsId = "Vaults";
     public const string ServerId = "Server";
@@ -42,6 +43,7 @@ public static class SettingsCatalog
     [
         new(HotkeyId, GeneralTab, "Hotkey that shows kofrenot", ["shortcut", "keyboard", "summon", "ctrl", "alt", "global"]),
         new(MainWindowPositionId, GeneralTab, "Main window position", ["place", "where", "mouse", "center", "centre", "monitor", "screen", "window"]),
+        new(AutoStartId, GeneralTab, "Start kofrenot with Windows", ["auto", "startup", "boot", "launch", "session", "tray"]),
         new(KeyBindingsId, KeyBindingsTab, "Key bindings: every shortcut", ["keys", "keyboard", "hotkey", "ctrl", "alt", "esc", "enter"]),
         new(VaultsId, VaultTab, "Vaults: name, folder, remembered pass phrase", [
             "database", "folder", "sync", "dropbox", "share", "nodes", "open", "create", "add", "remove", "several", "order", "name", "rename",

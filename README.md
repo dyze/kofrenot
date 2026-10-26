@@ -35,6 +35,8 @@ Download `kofrenot-setup-<version>.exe` from the [releases](https://github.com/d
 
 kofrenot runs in the notification area. **Ctrl+Alt+K** shows it from any program; closing the window hides it.
 
+**Start with Windows** (on by default in the setup, then in Settings > General): when you sign in, kofrenot starts in the notification area, and opens your vault (asking for its pass phrase if not remembered) only when you first show it. The box is ticked only when Windows starts *this* copy; if it starts another one (the installed copy, while you run a build), Settings shows its path, and ticking the box switches to this copy.
+
 ## Vaults
 
 A vault holds your nodes, notes and files, encrypted. There are two kinds:
@@ -105,7 +107,7 @@ Gear button in the title bar, or tray menu > Settings. Changes are saved at once
 
 | Tab | |
 | --- | --- |
-| General | The hotkey that shows kofrenot; where the main window appears |
+| General | The hotkey that shows kofrenot; where the main window appears; start with Windows |
 | Key bindings | Every shortcut |
 | Vault | Your vaults: add, remove, order, rename, hotkey, pass phrase, members |
 | Server | Your account on a Kofre server: sign up, sign in, password, the account's pass phrase |

@@ -134,6 +134,19 @@
                       Width="260"
                       SelectionChanged="PositionComboBox_SelectionChanged" />
           </StackPanel>
+
+          <!-- Ticked only when Windows starts this copy; the note names the other one. -->
+          <StackPanel Tag="{x:Static settings:SettingsCatalog.AutoStartId}" Margin="0,10,0,0">
+            <CheckBox x:Name="AutoStartCheckBox"
+                      Content="Start kofrenot with Windows"
+                      ToolTip="When you sign in to Windows, kofrenot starts in the notification area"
+                      Click="AutoStartCheckBox_Click" />
+            <TextBlock x:Name="AutoStartNote"
+                       Margin="0,6,0,0"
+                       Opacity="0.7"
+                       TextWrapping="Wrap"
+                       Visibility="Collapsed" />
+          </StackPanel>
         </StackPanel>
 
         <StackPanel Tag="{x:Static settings:SettingsCatalog.KeyBindingsTab}">

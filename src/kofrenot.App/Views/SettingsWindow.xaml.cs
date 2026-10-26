@@ -51,6 +51,7 @@ public partial class SettingsWindow : Window
     private readonly UpdateChecker _updates;
     private readonly VaultSession _session;
     private readonly Func<Hotkey, bool> _applyHotkey;
+    private readonly IAutoStart _autoStart;
     private string _changelogPath = string.Empty;
     private bool _loading;
 
@@ -58,6 +59,7 @@ public partial class SettingsWindow : Window
     /// <param name="whyNotSwitch">Why the open vault cannot be closed now (a file being imported, a note not saved), or null.</param>
     /// <param name="applyHotkey">Registers a new hotkey; false when another program uses it (the old one then stays).</param>
     /// <param name="applyVaultHotkey">Gives a vault a new hotkey, or none; false when another program uses it (the old one then stays).</param>
+    /// <param name="autoStart">Whether Windows starts this copy at sign-in.</param>
     /// <param name="openLog">Opens the log window in front of this dialog.</param>
     public SettingsWindow(
         SettingsStore settings,
@@ -68,6 +70,7 @@ public partial class SettingsWindow : Window
         Func<string?> whyNotSwitch,
         Func<Hotkey, bool> applyHotkey,
         Func<VaultLocation, Hotkey?, bool> applyVaultHotkey,
+        IAutoStart autoStart,
         Action<Window> openLog)
     {
         _settings = settings;
@@ -77,6 +80,7 @@ public partial class SettingsWindow : Window
         _updates = updates;
         _session = session;
         _applyHotkey = applyHotkey;
+        _autoStart = autoStart;
         InitializeComponent();
         KeyBindingsList.Settings = settings;
         KeyBindingsList.NameOf = session.NameOf;
@@ -259,6 +263,7 @@ public partial class SettingsWindow : Window
         HotkeyBox.Text = _settings.Hotkey.ToString();
         ThemeComboBox.SelectedItem = ThemeOptions.First(option => option.Value == _settings.Theme);
         PositionComboBox.SelectedItem = PositionOptions.First(option => option.Value == _settings.MainWindowPosition);
+        ShowAutoStart();
         _loading = false;
     }
 

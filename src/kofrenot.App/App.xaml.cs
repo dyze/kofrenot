@@ -75,6 +75,7 @@ public partial class App : Application
         AppDomain.CurrentDomain.UnhandledException += (_, args) =>
             log.Error("App", "Fatal error: " + args.ExceptionObject);
 
+        var autoStart = new RegistryAutoStart(Environment.ProcessPath ?? Path.Combine(AppContext.BaseDirectory, "kofrenot.exe"));
         var placer = new WindowPlacer(new PlacementStore(files.WindowPositions), log);
         var updates = new UpdateChecker(new GitHubReleaseFeed(version), new UpdateStore(files.UpdateCheck), version, log: log);
         var logHub = _logHub;
@@ -94,7 +95,7 @@ public partial class App : Application
             new ViewStates(files.ViewStates, log),
             createSettings: () =>
             {
-                var created = new SettingsWindow(settings, logHub, files, updates, session, () => _window?.WhyNotSwitch(), wanted => ApplyHotkey(wanted, settings.Hotkey), (vault, wanted) => ApplyVaultHotkey(settings, vault, wanted, log), openLog: OpenLogWindow);
+                var created = new SettingsWindow(settings, logHub, files, updates, session, () => _window?.WhyNotSwitch(), wanted => ApplyHotkey(wanted, settings.Hotkey), (vault, wanted) => ApplyVaultHotkey(settings, vault, wanted, log), autoStart, openLog: OpenLogWindow);
                 placer.Attach(created, "Settings", RestoreMode.SizeOverOwner);
                 return created;
             },
@@ -146,10 +147,27 @@ public partial class App : Application
             // After the menu has closed: a refusal shows a dialog.
             quit: () => Dispatcher.BeginInvoke(() => TryQuit("Quit from the tray")));
 
-        window.ShowFromOutside();
-
         // Once the window is on screen, so the pass phrase dialog has an owner to center on.
-        Dispatcher.BeginInvoke(() => session.Open(new WpfQuestions(window)), System.Windows.Threading.DispatcherPriority.ApplicationIdle);
+        void OpenVault() => Dispatcher.BeginInvoke(() => session.Open(new WpfQuestions(window)), System.Windows.Threading.DispatcherPriority.ApplicationIdle);
+
+        // Started by the user or by the installer: show the window. At sign-in, stay in the tray,
+        // and open the vault (which may ask for its pass phrase) only when the window is first shown.
+        if (AutoStartCommand.StartsHidden(e.Args))
+        {
+            log.Debug("App", "Started hidden");
+            DependencyPropertyChangedEventHandler? firstShown = null;
+            firstShown = (_, _) =>
+            {
+                window.IsVisibleChanged -= firstShown;
+                OpenVault();
+            };
+            window.IsVisibleChanged += firstShown;
+        }
+        else
+        {
+            window.ShowFromOutside();
+            OpenVault();
+        }
     }
 
     /// <summary>

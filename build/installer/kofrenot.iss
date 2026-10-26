@@ -14,6 +14,8 @@
 
 #define AppName "kofrenot"
 #define AppExe "kofrenot.exe"
+; Must match the value written by the app (RegistryAutoStart) so uninstall can remove it.
+#define RunKey "Software\Microsoft\Windows\CurrentVersion\Run"
 
 [Setup]
 ; Fixed forever: it is how Windows recognizes an upgrade of the same application.
@@ -41,6 +43,7 @@ SolidCompression=yes
 WizardStyle=modern
 
 [Tasks]
+Name: "autostart"; Description: "Start kofrenot when I sign in to Windows"
 Name: "desktopicon"; Description: "Create a desktop shortcut"; Flags: unchecked
 
 [Files]
@@ -50,6 +53,28 @@ Source: "{#PublishDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs
 Name: "{autoprograms}\{#AppName}"; Filename: "{app}\{#AppExe}"
 Name: "{autodesktop}\{#AppName}"; Filename: "{app}\{#AppExe}"; Tasks: desktopicon
 
+[Registry]
+; Same command the app writes from Settings (AutoStartCommand.Build), so its "Start kofrenot with
+; Windows" box shows it as on. --hidden: at sign-in kofrenot stays in the notification area.
+Root: HKCU; Subkey: "{#RunKey}"; ValueType: string; ValueName: "{#AppName}";   ValueData: """{app}\{#AppExe}"" --hidden"; Tasks: autostart
+
 [Run]
 Filename: "{app}\{#AppExe}"; Description: "Start kofrenot now"; Flags: nowait postinstall skipifsilent
 Filename: "{win}\notepad.exe"; Parameters: """{app}\CHANGELOG.md"""; Description: "Open the changelog";   Flags: nowait postinstall skipifsilent unchecked
+
+[Code]
+// Auto start can also be switched on later from kofrenot's Settings, without this installer
+// knowing; remove the value on uninstall in every case, but only if it points at this copy.
+procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);
+var
+  Command: String;
+  Quoted: String;
+begin
+  if CurUninstallStep = usUninstall then
+  begin
+    Quoted := '"' + ExpandConstant('{app}\{#AppExe}') + '"';
+    if RegQueryStringValue(HKEY_CURRENT_USER, '{#RunKey}', '{#AppName}', Command)
+      and (CompareText(Copy(Trim(Command), 1, Length(Quoted)), Quoted) = 0) then
+      RegDeleteValue(HKEY_CURRENT_USER, '{#RunKey}', '{#AppName}');
+  end;
+end;

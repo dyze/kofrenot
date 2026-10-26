@@ -109,8 +109,9 @@ App.OnStartup
  ├─ MainWindow (+ WindowPlacer "Main") ─► UpdateChecker (background, once a day)
  ├─ GlobalHotkey: Ctrl+Alt+K by default ─► MainWindow shown; each vault's ─► MainWindow.ToggleVault
  ├─ TrayIcon: Show · Settings · Log window · Quit
- ├─ MainWindow shown
- └─ once idle: VaultSession.Open(WpfQuestions) (the selected vault) ─► remembered key, or PassphraseDialog (create / unlock) ─► Vault.Open + VaultWatcher
+ ├─ --hidden? ─ no ─► MainWindow shown
+ │            └ yes ─► stays in the tray until the window is first shown
+ └─ once idle after the window is shown: VaultSession.Open(WpfQuestions) (the selected vault) ─► remembered key, or PassphraseDialog (create / unlock) ─► Vault.Open + VaultWatcher
 ```
 
 - **Title bar** of the main window (`MainWindow.Caption`): drawn by kofrenot with WPF's `WindowChrome` (`CaptionHeight` 40, glass frame, `UseAeroCaptionButtons`: Windows still draws minimize, maximize with its Snap Layouts, and close, whose 138 px are kept free). It holds the app icon, the vault box (or the vault's name, or *kofrenot*), the lock, *Read only*, the sync status and Settings, marked `IsHitTestVisibleInChrome`; the rest drags the window. The tabs have the row below to themselves, so they do not move with the vault box. Maximized, the content is moved back in by the window's frame (`FitMaximized`).
@@ -130,6 +131,7 @@ App.OnStartup
   ```
 
   The path counts, not only the build: a portable copy keeps its data in its own folder. The settings are read first, for the theme of these dialogs.
+- **Start with Windows**: the per-user Run key `HKCU\Software\Microsoft\Windows\CurrentVersion\Run`, value `kofrenot` = `"<exe>" --hidden` (`AutoStartCommand`, `IAutoStart` in Core; `RegistryAutoStart` in App). Written by the setup task `autostart` (ticked by default) or by Settings > General, which shows it ticked only when the value starts this exe (`AutoStartStatus`: Off, ThisCopy, OtherCopy). Uninstall removes the value when it points at the installed exe.
 - Settings is a modal dialog over the main window. The log window can be opened in front of it and stays open after it closes.
 
 ## Portable copy
