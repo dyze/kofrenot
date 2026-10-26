@@ -13,10 +13,10 @@ Scope of each planned version. Implemented features move to [CHANGELOG.md](CHANG
 | 0.7     | Released  | Sharing: identities, recovery key, vaults shared with other users                  |
 | 0.8     | Released  | Notes as in Keep; content on demand; session in Core for Android                   |
 | 0.9     | Released  | Android: server vaults read and searched offline on the phone                      |
-| 0.10    | To define | Offline pins, file drops; notes and files added on Android                         |
+| 0.10    | Implemented | Offline pins, file drops; notes and files added on Android                       |
 
-## 0.10 (to define)
-1. **Android: datasets.** Add a file from the phone.
+## 0.10
+Every planned feature is implemented: [CHANGELOG.md](CHANGELOG.md#unreleased), until 0.10 is released.
 
 ## Later
 1. **Pack vault.** Pack a vault to reduce its size and number of files (needs deletes on the server).

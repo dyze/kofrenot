@@ -508,7 +508,7 @@ public sealed class VaultSessionTests : IDisposable
         File.WriteAllText(_device.Folder("b.txt"), "bb");
         var preview = new FileImportPlanner(_device.Vault.Graph).Preview([_device.Folder("a.csv"), _device.Folder("b.txt")], new ParentLink(folder, TypeCatalog.Contains.Id));
 
-        Assert.Equal(2, await Session.ImportFiles(Ask, preview));
+        Assert.Equal(["a", "b"], (await Session.ImportFiles(Ask, preview)).Select(node => node.Name));
 
         var graph = _device.Vault.Graph;
         var datasets = graph.LinksOf(folder.Id).Select(link => graph.FindNode(link.To)!).ToList();
@@ -523,12 +523,12 @@ public sealed class VaultSessionTests : IDisposable
         _device.CreateFolderVault();
         var preview = new FileImportPlanner(_device.Vault.Graph).Preview([new ImportFile("a.csv", 3, () => throw new IOException("Locked"))]);
 
-        Assert.Equal(0, await Session.ImportFiles(Ask, preview));
+        Assert.Empty(await Session.ImportFiles(Ask, preview));
 
         var node = Assert.Single(_device.Vault.Graph.Nodes, node => node.Name == "a");
         Assert.Empty(_device.Vault.Graph.DatasetVersionsOf(node.Id));
         Assert.Contains(Ask.Told, told => told.StartsWith("Cannot import", StringComparison.Ordinal));
-        Assert.Equal(0, await Session.ImportFiles(Ask, new FileImportPlanner(_device.Vault.Graph).Preview(Array.Empty<ImportFile>())));
+        Assert.Empty(await Session.ImportFiles(Ask, new FileImportPlanner(_device.Vault.Graph).Preview(Array.Empty<ImportFile>())));
     }
 
     [Fact]

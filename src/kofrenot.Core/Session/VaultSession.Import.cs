@@ -11,29 +11,29 @@ public sealed partial class VaultSession
     /// <summary>
     /// Adds the datasets of <paramref name="preview"/>: the nodes and their links at once, then
     /// each file in turn, described and sealed off the UI thread. A file that cannot be read leaves
-    /// its dataset empty (the user is told). How many files were imported.
+    /// its dataset empty (the user is told). The datasets whose file was imported.
     /// </summary>
-    public async Task<int> ImportFiles(ISessionQuestions ask, ImportPreview preview)
+    public async Task<IReadOnlyList<Node>> ImportFiles(ISessionQuestions ask, ImportPreview preview)
     {
         if (Current is not { } vault || preview.Count == 0)
         {
-            return 0;
+            return [];
         }
 
         var plan = new FileImportPlanner(vault.Graph, _time).Plan(preview);
         var under = preview.Under is null ? string.Empty : ", in a tree";
         if (!Append(ask, vault, plan.Changes, $"Files imported as datasets ({preview.Count} files, {preview.TotalSize} bytes{under})", isContent: true))
         {
-            return 0;
+            return [];
         }
 
-        var imported = 0;
+        var imported = new List<Node>();
         foreach (var file in plan.Files)
         {
             if (await Describe(ask, file.File) is { } described
                 && await SaveDataset(ask, DatasetPlanner.First(file.Node.Id, described, _time.GetUtcNow()), file.File.Open))
             {
-                imported++;
+                imported.Add(file.Node);
             }
         }
 

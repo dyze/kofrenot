@@ -24,8 +24,7 @@ public partial class ImportPreviewDialog : Window
     {
         InitializeComponent();
         Owner = owner;
-        var files = preview.Count == 1 ? "1 file" : $"{preview.Count} files";
-        HeadingText.Text = preview.Count == 0 ? "Nothing to add" : $"Add {files} · {ByteSize.Format(preview.TotalSize)}";
+        HeadingText.Text = preview.Heading;
         RowsList.ItemsSource = preview.Rows.Select(row => new ImportRowView(row)).ToList();
         if (preview.Under is { } under)
         {

@@ -56,5 +56,5 @@ public sealed partial class App : Application
     private AppServices Services => _services ??= ServicesOf(global::Android.App.Application.Context);
 
     private static AppServices ServicesOf(global::Android.Content.Context context) =>
-        new(context.FilesDir!.AbsolutePath, new AppChooser(context));
+        new(context.FilesDir!.AbsolutePath, new AppChooser(context), new PickedFiles(context));
 }

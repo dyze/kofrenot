@@ -29,6 +29,14 @@ public sealed class FileImportPlannerTests : IDisposable
     }
 
     [Fact]
+    public void TheHeading_SaysHowManyFilesAndTheirSize()
+    {
+        Assert.Equal("Nothing to add", _planner.Preview(Array.Empty<ImportFile>()).Heading);
+        Assert.Equal("Add 1 file · 100 bytes", _planner.Preview([File("a.txt", 100)]).Heading);
+        Assert.Equal("Add 2 files · 300 bytes", _planner.Preview([File("a.txt", 100), File("b.txt", 200)]).Heading);
+    }
+
+    [Fact]
     public void FoldersAndMissingFiles_AreSkipped()
     {
         var folder = _temp.Sub("Photos");

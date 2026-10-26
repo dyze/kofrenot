@@ -1,42 +1,41 @@
 # kofrenot: Android concept
 
-An Android client for **server vaults**: the same vaults as on Windows, read on the phone, offline. Released in 0.9 ([CHANGELOG.md](../CHANGELOG.md#09---2026-10-26)); what is later or open is marked so.
+An Android client for **server vaults**: the same vaults as on Windows, read on the phone, offline, their notes edited and files added there since 0.10. Released in 0.9 ([CHANGELOG.md](../CHANGELOG.md#09---2026-10-26)); what is later or open is marked so.
 
 ```
  Windows (kofrenot.App)          Kofre server            Android (kofrenot.Android)
 ┌──────────────────────┐       ┌──────────────┐        ┌──────────────────────┐
-│ read, add, edit,     │◄─────►│ stores       │───────►│ read, search,        │
-│ share, folder vaults │ sync  │ (encrypted)  │  sync  │ offline              │
-└──────────────────────┘       └──────────────┘ (down) └──────────────────────┘
+│ read, add, edit,     │◄─────►│ stores       │◄──────►│ read, search, edit   │
+│ share, folder vaults │ sync  │ (encrypted)  │  sync  │ notes, add files     │
+└──────────────────────┘       └──────────────┘        └──────────────────────┘
 ```
 
 ## Scope
 
 ### Supported in 0.9
-The first version **reads**: it browses and searches, and never writes to a vault.
+The first version **reads**: it browses and searches, and never writes to a vault. Since 0.10 it also edits notes and adds files, marked so below, and nothing else ([Content only, safely](#content-only-safely)).
 
 | Feature | On Android | As on Windows |
 | --- | --- | --- |
 | **Sign in** | Server address, email, password; the session kept, renewed as on Windows | ✔ |
 | **Account pass phrase** | Unlocks every server vault of the account; optionally remembered (Android Keystore) | ✔ (DPAPI there) |
 | **Vault list** | The account's server vaults, own and shared, with their sync status; add one from the server (its size and role shown), remove it from the phone | ✔ |
-| **Offline** | Metadata kept whole on the phone: browsing and searching need no network; a note once shown stays readable (pinned nodes kept offline: [0.10](../ROADMAP.md#010-to-define)) | ✔ |
+| **Offline** | Metadata kept whole on the phone: browsing and searching need no network; a note once shown stays readable, a pinned node's content downloaded ahead (since 0.10) | ✔ |
 | **Sync** | Both ways (uploads since 0.10): when the app opens or comes back, then every 30 s while it is shown; status dot as in the main window (synced, offline, problem); edits made offline wait on the phone (*· 2 to upload*) | ✔ |
 | **Search** | The input box's search: nodes whose name has a word starting with the text, case and accents ignored, exact match first | ✔ (no adding) |
 | **Node details** | Type, name, colour, links read from the node's side (*contained by Kitchen*), tap a link to open its node; trail of open nodes, back button | ✔ |
 | **Notes** | Content shown as Markdown (`MarkdownBlocks`), colours, links shown but not followed; fetched on demand ([0.8](../CHANGELOG.md#08---2026-10-25)). Edited since 0.10: a checkbox tapped checks its item (`TaskList.Toggle`), **Edit** changes the Markdown text; each save a new version (`NotePlanner`) | ✔ (Markdown typed, not the Windows editor) |
 | **Views** | Flat and tree views, as tabs; expand and collapse | ✔ |
 | **Pinned and recent** | Pinned nodes (from the vault), recent nodes (on this phone) | ✔ |
-| **Datasets** | Shown with name, type, size and icon; a file opened with another app or saved (*Open with…*, *Save as…*), downloaded first when not here | ✔ |
+| **Datasets** | Shown with name, type, size and icon; a file opened with another app or saved (*Open with…*, *Save as…*), downloaded first when not here. Since 0.10, **＋** adds files from the phone, each a new dataset named after its file, after a preview (`FileImportPlanner`), images with their thumbnail | ✔ (no new version of a dataset yet) |
 | **Conflicts** | Shown as on Windows (two names, two note versions); a note's resolved by keeping one version (since 0.10), the others on Windows | Notes ✔, others shown only |
 | **Read only** | A vault shared with you to read: a banner says so; your role (reader or writer) is also in the vault list | ✔ |
 
 ### Later
 Listed in [ROADMAP.md](../ROADMAP.md), in that order:
 
-1. Notes edited, task lists included; a file added from the phone ([0.10](../ROADMAP.md#010-to-define)).
-2. Add and edit: input box, creation screen, renames, colours, pins.
-3. Sharing: members, roles, share, leave.
+1. Add and edit: input box, creation screen, renames, colours, pins.
+2. Sharing: members, roles, share, leave.
 
 ### Not supported
 | Feature | Why |
@@ -90,7 +89,7 @@ kofrenot.App      (WPF, net10.0-windows)          kofrenot.Android   (Avalonia, 
 | Sync timing, sign-in, opening a vault | `SyncService`, `ServerConnection`, `VaultSession` in Core (`Session/`: `TimeProvider` timers, `IUiThread`, `ISessionQuestions`) | `AvaloniaUiThread` on Avalonia's dispatcher; `PreparedAnswers`: Android has no dialog that waits, so the pass phrase is asked on its own screen first, then the session called with it |
 | Content only | — | `VaultSession` made with `ClientMode.Content`: other writes refused in Core, not only hidden by the screens |
 | Vault refresh after a download | `VaultWatcher` (`FileSystemWatcher`) | Read after each sync (`VaultSession.AfterSync`): no watcher (`NothingToWatch`) |
-| Thumbnails | `IThumbnailMaker` | Not in 0.9: icons only |
+| Thumbnails | `IThumbnailMaker` | `AndroidThumbnailMaker` (since 0.10, for the images added on the phone) |
 
 **Step 1, a refactor on Windows, is done (0.8)**: the session, account and sync logic is in Core, behind small interfaces for the timers, the UI thread and the questions asked to the user, with tests. 0.9 reuses it without copying code.
 

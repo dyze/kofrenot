@@ -20,7 +20,7 @@ namespace Kofrenot.Phone;
 /// </summary>
 public sealed class AppServices : IDisposable
 {
-    public AppServices(string dataDirectory, AppChooser chooser)
+    public AppServices(string dataDirectory, AppChooser chooser, PickedFiles picked)
     {
         Files = new AppFiles(dataDirectory, AppContext.BaseDirectory);
         Settings = new SettingsStore(Files.Settings, Files.MirrorOf);
@@ -30,11 +30,12 @@ public sealed class AppServices : IDisposable
         var ui = new AvaloniaUiThread();
         Server = new ServerConnection(Settings, new ServerSessionMemory(Files.ServerSession, protector, log), new AccountIdentities(Files.AccountIdentity, log), new VaultOwners(Files.VaultOwners, log), ui, log);
         Sync = new SyncService(Settings, Files, Server, ui, log);
-        Session = new VaultSession(Settings, Files, new KeyMemory(Files.RememberedKeys, protector, log), new VaultNameMemory(Files.VaultNames, protector, log), Server, Sync, ui, new NothingToWatch(), new NoThumbnails(), log, mode: ClientMode.Content);
+        Session = new VaultSession(Settings, Files, new KeyMemory(Files.RememberedKeys, protector, log), new VaultNameMemory(Files.VaultNames, protector, log), Server, Sync, ui, new NothingToWatch(), new AndroidThumbnailMaker(), log, mode: ClientMode.Content);
         Recent = new RecentNodes(Files.RecentNodes, log);
         ViewTabs = new ViewTabs(Files.ViewTabs, log);
         log.Info("App", $"kofrenot {Version} for Android started");
         Chooser = chooser;
+        Picked = picked;
         Opened = new OpenedFiles(chooser.Folder, log);
         Opened.Clear();
     }
@@ -62,6 +63,8 @@ public sealed class AppServices : IDisposable
     public OpenedFiles Opened { get; }
 
     public AppChooser Chooser { get; }
+
+    public PickedFiles Picked { get; }
 
     public void Dispose()
     {

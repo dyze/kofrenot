@@ -1,4 +1,3 @@
-using Kofrenot.Core.Datasets;
 using Kofrenot.Core.Session;
 
 namespace Kofrenot.Phone.Platform;
@@ -17,10 +16,4 @@ public sealed class NothingToWatch : IVaultWatcher
         {
         }
     }
-}
-
-/// <summary>The phone imports no image, so it makes no thumbnail.</summary>
-public sealed class NoThumbnails : IThumbnailMaker
-{
-    public byte[]? Make(Stream image) => null;
 }

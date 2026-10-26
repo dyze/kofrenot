@@ -25,6 +25,14 @@ public sealed record ImportPreview(IReadOnlyList<ImportRow> Rows, IReadOnlyList<
     public int Count => Rows.Count;
 
     public long TotalSize => Rows.Sum(row => row.File.Size);
+
+    /// <summary>"Add 2 files · 3.4 MB", or "Nothing to add".</summary>
+    public string Heading => Count switch
+    {
+        0 => "Nothing to add",
+        1 => $"Add 1 file · {ByteSize.Format(TotalSize)}",
+        _ => $"Add {Count} files · {ByteSize.Format(TotalSize)}",
+    };
 }
 
 /// <summary>A dataset node added by an import, and the file its first version is read from.</summary>

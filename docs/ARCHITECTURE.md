@@ -13,7 +13,7 @@ kofrenot.App   (WPF, Windows only)
 │
 │        kofrenot.Android   (Avalonia, Android; reads server vaults: ANDROID-CONCEPT.md)
 │        │  screens: sign in, pass phrase, vaults, home (search, pinned, recent, view tabs), node details, settings
-│        │  adapters: KeystoreProtector, AvaloniaUiThread, PreparedAnswers (ISessionQuestions), NothingToWatch, NoThumbnails
+│        │  adapters: KeystoreProtector, AvaloniaUiThread, PreparedAnswers (ISessionQuestions), NothingToWatch, AndroidThumbnailMaker, PickedFiles
 │        │  implements ▼  ILog · ISecretProtector · IUiThread · IVaultWatcher · IThumbnailMaker · ISessionQuestions
 ▼        ▼
 kofrenot.Core  (no Windows dependency, fully unit-tested on any OS)
@@ -70,7 +70,7 @@ One namespace per folder (`Kofrenot.Core.Settings`, `Kofrenot.UI.Views`, ...). T
 | --- | --- |
 | *(root)* | `MainApplication`, `MainActivity` (`FLAG_SECURE`; syncs while shown: `App.Resumed`, `Paused`), `App.axaml` (styles, the rows' templates), `AppServices` (wires Core once, in the app's private folder); `LogHub` and `SerilogFileLog` linked from App |
 | `Views/` | `Shell` (the screens, back, messages and confirmations over them; opens a vault, asking its pass phrase first; `Run`: a tap's task, an unexpected failure logged and told, not a crash. A screen is refreshed when the vault or the account changes; after a sync only its status is shown again, `IPage.SyncChanged`, so lists keep their place), `SignInPage`, `PassPhrasePage` (checks the pass phrase off the UI thread, `VaultSession.UnlockAheadAsync`; the opening then uses what it unlocked, once), `VaultsPage`, `HomePage` (search, pinned, recent, view tabs; `TreeRow`), `NodePage` (a `NodeBrowser`), `NoteView` (draws `MarkdownBlocks`), `SettingsPage`, `Rows` (`NodeRow`, `HeaderRow`, `NodeLook`: glyphs and colours) |
-| `Platform/` | `KeystoreProtector` (`ISecretProtector`, an AES key of the Android Keystore), `AvaloniaUiThread`, `PreparedAnswers` (`ISessionQuestions` answered before the session asks: Android has no dialog that waits; a pass phrase asked is noted in `Needed`, for `PassPhrasePage`), `NothingToWatch`, `NoThumbnails`, `AppChooser` (*Open with…*: the file decrypted into `cache/open/` by Core's `OpenedFiles`, shared through `FileProvider`, `Resources/xml/opened_files.xml`, with the app picked in Android's chooser; emptied at each start) |
+| `Platform/` | `KeystoreProtector` (`ISecretProtector`, an AES key of the Android Keystore), `AvaloniaUiThread`, `PreparedAnswers` (`ISessionQuestions` answered before the session asks: Android has no dialog that waits; a pass phrase asked is noted in `Needed`, for `PassPhrasePage`), `NothingToWatch`, `AndroidThumbnailMaker` (`IThumbnailMaker`: `BitmapFactory`, decoded at a fraction of its size), `PickedFiles` (files picked with Android's picker as `ImportFile`s, read through the `ContentResolver`), `AppChooser` (*Open with…*: the file decrypted into `cache/open/` by Core's `OpenedFiles`, shared through `FileProvider`, `Resources/xml/opened_files.xml`, with the app picked in Android's chooser; emptied at each start) |
 | `Resources/` | Icon, theme, `network_security_config.xml` (HTTPS only, but to the phone itself) |
 
 ## Stack

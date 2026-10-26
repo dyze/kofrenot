@@ -74,6 +74,7 @@ public sealed partial class HomePage : UserControl, IPage
         VaultName.Text = vault.Graph.VaultName ?? "Vault";
         // Notes and files are edited here; a reader edits nothing.
         ReadOnlyBanner.IsVisible = _shell.Services.Session.IsReadOnly;
+        AddFilesButton.IsVisible = !_shell.Services.Session.IsReadOnly;
         ReadOnlyText.Text = "Shared with you to read only.";
         SyncChanged();
         ShowTabs(vault);

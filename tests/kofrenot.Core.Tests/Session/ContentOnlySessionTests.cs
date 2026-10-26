@@ -88,7 +88,7 @@ public sealed class ContentOnlySessionTests : IDisposable
         var bytes = "a,b"u8.ToArray();
         var preview = new FileImportPlanner(_phone.Vault.Graph).Preview([new ImportFile("survey.csv", bytes.Length, () => new MemoryStream(bytes))]);
 
-        Assert.Equal(1, await _phone.Session.ImportFiles(_phone.Ask, preview));
+        Assert.Single(await _phone.Session.ImportFiles(_phone.Ask, preview));
         await _phone.SyncAsync();
         await _laptop.SyncAsync();
 
