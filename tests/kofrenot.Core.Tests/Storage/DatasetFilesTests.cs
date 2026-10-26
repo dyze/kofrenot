@@ -46,6 +46,20 @@ public sealed class DatasetFilesTests : IDisposable
     }
 
     [Fact]
+    public void AFile_IsExported_ToAStream_LeftOpen()
+    {
+        var source = Source("survey.csv", "secret,values");
+        var version = Version(source);
+        Write(version, source);
+        using var target = new MemoryStream();
+
+        Files().Export(version.Id, target);
+
+        Assert.Equal("secret,values", Encoding.UTF8.GetString(target.ToArray()));
+        Assert.True(target.CanWrite);
+    }
+
+    [Fact]
     public void AnExport_ReplacesTheTarget()
     {
         var source = Source("a.txt", "new");

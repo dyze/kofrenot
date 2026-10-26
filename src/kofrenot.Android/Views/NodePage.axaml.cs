@@ -1,19 +1,26 @@
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Media;
+using Avalonia.Platform.Storage;
 using Kofrenot.Core.Browse;
 using Kofrenot.Core.Datasets;
 using Kofrenot.Core.Graph;
+using Kofrenot.Core.Logging;
 using Kofrenot.Core.Notes;
 using Kofrenot.Core.Storage;
 using Kofrenot.Core.Views;
+using Kofrenot.Phone.Platform;
 
 namespace Kofrenot.Phone.Views;
+
+/// <summary>A version of a dataset's file: its name and size, to open with another app or save.</summary>
+public sealed record FileRow(DatasetEdited Version, string Name, string Size);
 
 /// <summary>
 /// A node's details, as in the main window: name, type, colour, links read from its side; a tap
 /// on a link opens that node (back goes through the trail). A note's content is shown, fetched
-/// when not here; a dataset is described; a view opens as a tab.
+/// when not here; a dataset's file is opened with another app or saved, downloaded first when not
+/// here; a view opens as a tab.
 /// </summary>
 public sealed partial class NodePage : UserControl, IPage
 {
@@ -96,7 +103,7 @@ public sealed partial class NodePage : UserControl, IPage
 
     private void ShowContent(Vault vault, Node node, NodeColor color)
     {
-        NoteBox.IsVisible = ContentText.IsVisible = OpenViewButton.IsVisible = false;
+        NoteBox.IsVisible = ContentText.IsVisible = Files.IsVisible = OpenViewButton.IsVisible = false;
         var graph = vault.Graph;
         if (graph.NoteVersionsOf(node.Id) is { Count: > 0 } notes)
         {
@@ -104,9 +111,13 @@ public sealed partial class NodePage : UserControl, IPage
         }
         else if (graph.DatasetVersionsOf(node.Id) is { Count: > 0 } datasets)
         {
-            var files = datasets.Select(version => $"{version.File.Name}, {ByteSize.Format(version.File.Size)}");
-            var conflict = datasets.Count > 1 ? $"{datasets.Count} versions, in conflict:\n" : string.Empty;
-            ShowText($"{conflict}{string.Join("\n", files)}\n\nFiles are opened in kofrenot on Windows.");
+            if (datasets.Count > 1)
+            {
+                ShowText($"{datasets.Count} versions, in conflict: resolved in kofrenot on Windows.");
+            }
+
+            Files.ItemsSource = datasets.Select(version => new FileRow(version, version.File.Name, ByteSize.Format(version.File.Size))).ToList();
+            Files.IsVisible = true;
         }
         else if (node.Type == TypeCatalog.View.Id)
         {
@@ -172,6 +183,73 @@ public sealed partial class NodePage : UserControl, IPage
         {
             _shell.Services.ViewTabs.Open(vault.Id, view.Id);
             _shell.Show(new HomePage(_shell, new Tab(view)));
+        }
+    }
+
+    private void OpenWith_Click(object? sender, RoutedEventArgs e)
+    {
+        if ((sender as Control)?.Tag is FileRow row)
+        {
+            _shell.Run(() => OpenWithAsync(row.Version));
+        }
+    }
+
+    private void SaveAs_Click(object? sender, RoutedEventArgs e)
+    {
+        if ((sender as Control)?.Tag is FileRow row)
+        {
+            _shell.Run(() => SaveAsAsync(row.Version));
+        }
+    }
+
+    // Decrypted into the cache, then handed to the app the user picks.
+    private async Task OpenWithAsync(DatasetEdited version)
+    {
+        _shell.Services.Log.Info("Action", "Open a dataset's file with another app");
+        var path = _shell.Services.Opened.NewPath(version.File.Name);
+        if (await ExportAsync(answers => _shell.Services.Session.ExportDataset(answers, version, path)))
+        {
+            _shell.Services.Opened.Open(path);
+        }
+    }
+
+    // Written where the user chooses; the file the picker made is deleted again when it cannot be.
+    private async Task SaveAsAsync(DatasetEdited version)
+    {
+        _shell.Services.Log.Info("Action", "Save a dataset's file");
+        if (TopLevel.GetTopLevel(this)?.StorageProvider is not { } storage
+            || await storage.SaveFilePickerAsync(new FilePickerSaveOptions { Title = "Save as", SuggestedFileName = version.File.Name }) is not { } file)
+        {
+            return;
+        }
+
+        bool saved;
+        await using (var target = await file.OpenWriteAsync())
+        {
+            saved = await ExportAsync(answers => _shell.Services.Session.ExportDataset(answers, version, target));
+        }
+
+        if (!saved)
+        {
+            await file.DeleteAsync();
+        }
+    }
+
+    // The file downloaded first when it is not here, the busy bar shown; what went wrong told.
+    private async Task<bool> ExportAsync(Func<PreparedAnswers, Task<bool>> export)
+    {
+        var answers = new PreparedAnswers();
+        Busy.IsVisible = true;
+        Files.IsEnabled = false;
+        try
+        {
+            return await export(answers);
+        }
+        finally
+        {
+            Busy.IsVisible = false;
+            Files.IsEnabled = true;
+            _shell.Tell(answers.Told);
         }
     }
 

@@ -38,7 +38,7 @@ An Android client that reads server vaults: [ANDROID-CONCEPT.md](docs/ANDROID-CO
 9. **Cycle through proposals.** Several proposals in grey, the next one with a key, instead of typing more to narrow it.
 10. **Propose node types** while typing, in the input box, instead of only on the creation screen.
 11. **Android: add and edit.** Input box, creation screen, notes and task lists, renames, colours, pins ([Later](docs/ANDROID-CONCEPT.md#later)).
-12. **Android: datasets.** Open a file on demand, share it to another app, add a file from the phone.
+12. **Android: datasets.** Add a file from the phone.
 13. **Android: sharing.** Members, roles, share, leave.
 14. Stores **statistics** about data exchanges with server. It could be useful for analysing performance problems.
 15. **Events and Qualifiers.** :

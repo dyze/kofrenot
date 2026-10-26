@@ -22,6 +22,21 @@
           <StackPanel x:Name="Note" Spacing="4" />
         </Border>
         <TextBlock x:Name="ContentText" TextWrapping="Wrap" IsVisible="False" />
+        <ItemsControl x:Name="Files" IsVisible="False">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate DataType="views:FileRow">
+              <StackPanel Spacing="4" Margin="0,4">
+                <TextBlock Text="{Binding Name}" TextWrapping="Wrap" />
+                <TextBlock Classes="caption" Text="{Binding Size}" />
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                  <Button Content="Open with…" Tag="{Binding}" Click="OpenWith_Click" />
+                  <Button Content="Save as…" Tag="{Binding}" Click="SaveAs_Click" />
+                </StackPanel>
+              </StackPanel>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+        <ProgressBar x:Name="Busy" IsIndeterminate="True" IsVisible="False" />
         <Button x:Name="OpenViewButton" Content="Open as a tab" IsVisible="False" Click="OpenView_Click" />
         <TextBlock x:Name="LinksHeader" Classes="caption" Text="Links" Margin="0,12,0,0" />
         <ItemsControl x:Name="Links">

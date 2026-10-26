@@ -14,11 +14,12 @@ namespace Kofrenot.Phone;
 
 /// <summary>
 /// What kofrenot holds on the phone, wired once: its files in the app's private folder, the log,
-/// the server account, the syncs (downloads only) and the session, which only reads.
+/// the server account, the syncs (downloads only), the session, which only reads, and the files
+/// opened with other apps, deleted at each start.
 /// </summary>
 public sealed class AppServices : IDisposable
 {
-    public AppServices(string dataDirectory)
+    public AppServices(string dataDirectory, OpenedFiles opened)
     {
         Files = new AppFiles(dataDirectory, AppContext.BaseDirectory);
         Settings = new SettingsStore(Files.Settings, Files.MirrorOf);
@@ -32,6 +33,15 @@ public sealed class AppServices : IDisposable
         Recent = new RecentNodes(Files.RecentNodes, log);
         ViewTabs = new ViewTabs(Files.ViewTabs, log);
         log.Info("App", $"kofrenot {Version} for Android started");
+        Opened = opened;
+        try
+        {
+            opened.Clear();
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            log.Warn("App", $"The files opened before cannot all be deleted ({ex.GetType().Name})");
+        }
     }
 
     public static string Version => AppVersion.Of(typeof(AppServices).Assembly);
@@ -53,6 +63,8 @@ public sealed class AppServices : IDisposable
     public RecentNodes Recent { get; }
 
     public ViewTabs ViewTabs { get; }
+
+    public OpenedFiles Opened { get; }
 
     public void Dispose()
     {

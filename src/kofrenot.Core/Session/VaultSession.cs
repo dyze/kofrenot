@@ -239,7 +239,14 @@ public sealed partial class VaultSession : IDisposable
     /// Exports a dataset version's file to <paramref name="target"/>, downloaded first when it is not
     /// here, off the UI thread. False when it could not (the user is told).
     /// </summary>
-    public async Task<bool> ExportDataset(ISessionQuestions ask, DatasetEdited version, string target)
+    public Task<bool> ExportDataset(ISessionQuestions ask, DatasetEdited version, string target) =>
+        ExportDataset(ask, version, datasets => datasets.Export(version.Id, target));
+
+    /// <summary>Exports a dataset version's file to <paramref name="target"/>, left open, as <see cref="ExportDataset(ISessionQuestions, DatasetEdited, string)"/> does to a file.</summary>
+    public Task<bool> ExportDataset(ISessionQuestions ask, DatasetEdited version, Stream target) =>
+        ExportDataset(ask, version, datasets => datasets.Export(version.Id, target));
+
+    private async Task<bool> ExportDataset(ISessionQuestions ask, DatasetEdited version, Action<DatasetFiles> export)
     {
         if (Current is not { } vault || !await Fetch(ask, vault, [version], "export"))
         {
@@ -248,7 +255,7 @@ public sealed partial class VaultSession : IDisposable
 
         try
         {
-            await Task.Run(() => vault.Datasets.Export(version.Id, target));
+            await Task.Run(() => export(vault.Datasets));
             _log.Info("Action", $"Dataset exported ({version.File.Size} bytes)");
             return true;
         }

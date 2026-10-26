@@ -458,9 +458,26 @@ public sealed class VaultSessionTests : IDisposable
 
         Assert.False(await Session.SaveDataset(Ask, version, () => throw new IOException("Locked")));
         Assert.False(await Session.ExportDataset(Ask, version, _device.Folder("out.csv")));
+        Assert.False(await Session.ExportDataset(Ask, version, new MemoryStream()));
 
         Assert.Contains(Ask.Told, told => told.StartsWith("Cannot import", StringComparison.Ordinal));
-        Assert.Contains(Ask.Told, told => told.StartsWith("Cannot export", StringComparison.Ordinal));
+        Assert.Equal(2, Ask.Told.Count(told => told.StartsWith("Cannot export", StringComparison.Ordinal)));
+    }
+
+    [Fact]
+    public async Task ADataset_IsExported_ToAStream()
+    {
+        _device.CreateFolderVault();
+        var survey = AddNode("Survey", TypeCatalog.Dataset.Id);
+        var source = _device.Folder("survey.csv");
+        File.WriteAllText(source, "a,b");
+        var version = new DatasetEdited(Guid.NewGuid(), Start, survey.Id, DatasetFiles.Describe(source), []);
+        Assert.True(await Session.SaveDataset(Ask, version, () => File.OpenRead(source)));
+        using var target = new MemoryStream();
+
+        Assert.True(await Session.ExportDataset(Ask, version, target));
+
+        Assert.Equal("a,b", System.Text.Encoding.UTF8.GetString(target.ToArray()));
     }
 
     [Fact]

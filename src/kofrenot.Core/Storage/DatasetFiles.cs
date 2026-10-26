@@ -58,9 +58,14 @@ public sealed class DatasetFiles(string vaultFolder, KeyedBox box)
     /// </summary>
     /// <exception cref="IOException">The target cannot be written, or the version's file is not there.</exception>
     /// <exception cref="InvalidDataException">The version's file is damaged.</exception>
-    public void Export(Guid version, string target)
+    public void Export(Guid version, string target) => AtomicFile.Write(target, output => Export(version, output), overwrite: true);
+
+    /// <summary>Writes the content of a version to <paramref name="target"/>, left open: a file the user chose (Android's picker).</summary>
+    /// <exception cref="IOException">The target cannot be written, or the version's file is not there.</exception>
+    /// <exception cref="InvalidDataException">The version's file is damaged.</exception>
+    public void Export(Guid version, Stream target)
     {
         using var content = OpenRead(version);
-        AtomicFile.Write(target, content.CopyTo, overwrite: true);
+        content.CopyTo(target);
     }
 }

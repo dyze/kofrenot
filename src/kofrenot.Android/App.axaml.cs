@@ -3,6 +3,7 @@ using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using Avalonia.Threading;
 using Kofrenot.Core.Logging;
+using Kofrenot.Phone.Platform;
 using Kofrenot.Phone.Views;
 
 namespace Kofrenot.Phone;
@@ -52,5 +53,8 @@ public sealed partial class App : Application
     /// <summary>The app went to the background: no sync until it comes back.</summary>
     public void Paused() => Services.Sync.Pause();
 
-    private AppServices Services => _services ??= new AppServices(global::Android.App.Application.Context.FilesDir!.AbsolutePath);
+    private AppServices Services => _services ??= ServicesOf(global::Android.App.Application.Context);
+
+    private static AppServices ServicesOf(global::Android.Content.Context context) =>
+        new(context.FilesDir!.AbsolutePath, new OpenedFiles(context));
 }

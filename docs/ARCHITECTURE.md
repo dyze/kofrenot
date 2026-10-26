@@ -70,7 +70,7 @@ One namespace per folder (`Kofrenot.Core.Settings`, `Kofrenot.UI.Views`, ...). T
 | --- | --- |
 | *(root)* | `MainApplication`, `MainActivity` (`FLAG_SECURE`; syncs while shown: `App.Resumed`, `Paused`), `App.axaml` (styles, the rows' templates), `AppServices` (wires Core once, in the app's private folder); `LogHub` and `SerilogFileLog` linked from App |
 | `Views/` | `Shell` (the screens, back, messages and confirmations over them; opens a vault, asking its pass phrase first; `Run`: a tap's task, an unexpected failure logged and told, not a crash. A screen is refreshed when the vault or the account changes; after a sync only its status is shown again, `IPage.SyncChanged`, so lists keep their place), `SignInPage`, `PassPhrasePage` (checks the pass phrase off the UI thread, `VaultSession.UnlockAheadAsync`; the opening then uses what it unlocked, once), `VaultsPage`, `HomePage` (search, pinned, recent, view tabs; `TreeRow`), `NodePage` (a `NodeBrowser`), `NoteView` (draws `MarkdownBlocks`), `SettingsPage`, `Rows` (`NodeRow`, `HeaderRow`, `NodeLook`: glyphs and colours) |
-| `Platform/` | `KeystoreProtector` (`ISecretProtector`, an AES key of the Android Keystore), `AvaloniaUiThread`, `PreparedAnswers` (`ISessionQuestions` answered before the session asks: Android has no dialog that waits; a pass phrase asked is noted in `Needed`, for `PassPhrasePage`), `NothingToWatch`, `NoThumbnails` |
+| `Platform/` | `KeystoreProtector` (`ISecretProtector`, an AES key of the Android Keystore), `AvaloniaUiThread`, `PreparedAnswers` (`ISessionQuestions` answered before the session asks: Android has no dialog that waits; a pass phrase asked is noted in `Needed`, for `PassPhrasePage`), `NothingToWatch`, `NoThumbnails`, `OpenedFiles` (*Open with…*: the file decrypted into `cache/open/`, shared through `FileProvider`, `Resources/xml/opened_files.xml`, with the app picked in Android's chooser; emptied at each start) |
 | `Resources/` | Icon, theme, `network_security_config.xml` (HTTPS only, but to the phone itself) |
 
 ## Stack
@@ -80,6 +80,7 @@ One namespace per folder (`Kofrenot.Core.Settings`, `Kofrenot.UI.Views`, ...). T
 | --- | --- | --- |
 | `Serilog`, `Serilog.Sinks.File` | App, Android | Log file |
 | `Avalonia.Android`, `Avalonia.Themes.Fluent` | Android | UI on Android, its Fluent theme for light and dark |
+| `Xamarin.AndroidX.Core` (from `Avalonia.Android`) | Android | `FileProvider`: a dataset's file handed read only to another app (*Open with…*) |
 | `coverlet.msbuild` | Tests | Coverage of `Core`, build fails below 95 % lines |
 | `dotnet-reportgenerator-globaltool` | Local tool (`.config/dotnet-tools.json`) | HTML coverage report (`build\windows.cmd`) |
 

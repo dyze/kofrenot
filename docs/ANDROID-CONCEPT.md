@@ -27,7 +27,7 @@ The first version **reads**: it browses and searches, and never writes to a vaul
 | **Notes** | Content shown as Markdown (`MarkdownBlocks`), task lists as (read-only) checkboxes, colours, links shown but not followed; fetched on demand ([0.8](../CHANGELOG.md#08---2026-10-25)) | ✔ |
 | **Views** | Flat and tree views, as tabs; expand and collapse | ✔ |
 | **Pinned and recent** | Pinned nodes (from the vault), recent nodes (on this phone) | ✔ |
-| **Datasets** | Shown with name, type, size and icon; content not opened | Partly |
+| **Datasets** | Shown with name, type, size and icon; a file opened with another app or saved (*Open with…*, *Save as…*), downloaded first when not here | ✔ |
 | **Conflicts** | Shown as on Windows (two names, two note versions), not resolved | Shown only |
 | **Read only** | A banner says so; a shared vault shows your role (reader or writer) there and in the vault list | ✔ |
 
@@ -35,7 +35,7 @@ The first version **reads**: it browses and searches, and never writes to a vaul
 Listed in [ROADMAP.md](../ROADMAP.md#later), in that order:
 
 1. Add and edit: input box, creation screen, notes and task lists, renames, colours, pins.
-2. Datasets: open a file on demand, share it to another app, add a file from the phone.
+2. Datasets: add a file from the phone.
 3. Sharing: members, roles, share, leave.
 
 ### Not supported
@@ -105,7 +105,7 @@ Same vaults, same files, same encryption ([Encryption](ARCHITECTURE.md#encryptio
 | Risk on a phone | Addressed by |
 | --- | --- |
 | Phone lost or stolen | Mirror and snapshot encrypted as on Windows; key remembered only in the Keystore, or not at all |
-| Other apps reading the files | App-private storage; no file given to other apps in 0.9 |
+| Other apps reading the files | App-private storage; a file leaves only on *Open with…* (a copy in `cache/open/`, given read only to the app picked, deleted at the next start) or *Save as…* (where the user chooses) |
 | Content visible in the recent apps list, screenshots | `FLAG_SECURE`: neither shows it |
 | Cleartext traffic | HTTPS only (Android's network security config), but to the phone itself (a server reached through `adb reverse` while developing) |
 

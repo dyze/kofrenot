@@ -57,6 +57,25 @@ public sealed class ReadsOnlySessionTests : IDisposable
     }
 
     [Fact]
+    public async Task ADatasetOfAnotherDevice_IsExported_OnDemand()
+    {
+        await AddLaptopsVaultAsync();
+        var node = new Node(Guid.NewGuid(), TypeCatalog.Dataset.Id, "Survey", Start);
+        var source = _laptop.Folder("survey.csv");
+        File.WriteAllText(source, "a,b");
+        var version = new DatasetEdited(Guid.NewGuid(), Start, node.Id, DatasetFiles.Describe(source), []);
+        _laptop.Session.Write(_laptop.Ask, new NodeAdded(Guid.NewGuid(), Start, node), "Node added");
+        await _laptop.Session.SaveDataset(_laptop.Ask, version, () => File.OpenRead(source));
+        await _laptop.SyncAsync();
+        await _phone.SyncAsync();
+        using var target = new MemoryStream();
+
+        Assert.True(await _phone.Session.ExportDataset(_phone.Ask, version, target));
+
+        Assert.Equal("a,b", System.Text.Encoding.UTF8.GetString(target.ToArray()));
+    }
+
+    [Fact]
     public async Task NothingIsChanged_OnTheServer()
     {
         await _phone.SignInAsync();
