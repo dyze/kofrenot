@@ -145,7 +145,7 @@ public sealed partial class HomePage : UserControl, IPage
         if (text.Length > 0)
         {
             var hits = GraphSearch.Find(graph, text, limit: 100);
-            List.ItemsSource = hits.Select(hit => NodeRow.Of(graph, hit.Node, mark: hit.Mark)).ToList();
+            List.ItemsSource = hits.Select(hit => NodeRow.Of(graph, hit.Node, mark: hit.Mark, detail: hit.Field)).ToList();
             ShowMessage(hits.Count == 0 ? "No node of that name." : null);
             return;
         }

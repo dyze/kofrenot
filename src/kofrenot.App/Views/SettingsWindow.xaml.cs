@@ -93,6 +93,7 @@ public partial class SettingsWindow : Window
         Server.SetPassPhrase = owner => session.SetAccountPassPhrase(new WpfQuestions(owner));
         Server.Connection = session.Server;
         LinkTypes.Session = session;
+        NodeTypes.Session = session;
         session.Changed += ShowVault;
         Closed += (_, _) => session.Changed -= ShowVault;
 
@@ -554,11 +555,12 @@ public partial class SettingsWindow : Window
         }
     }
 
-    /// <summary>The Vault and Link types tabs, shown again when the vault changes (opened, switched, named).</summary>
+    /// <summary>The Vault, Node types and Link types tabs, shown again when the vault changes (opened, switched, named).</summary>
     private void ShowVault()
     {
         Vaults.Show();
         LinkTypes.Session = _session;
+        NodeTypes.Session = _session;
     }
 
     private void ShowMessage(string message) => MessageDialog.Inform(this, message);

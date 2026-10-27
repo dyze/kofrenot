@@ -79,6 +79,7 @@ public partial class NodeDetailsPanel : UserControl
         ShowPinAndOffline(details);
         ConflictPanel.Visibility = details.NameConflict.Count > 0 && !_editing ? Visibility.Visible : Visibility.Collapsed;
         ShowType(details);
+        ShowFields(details);
         ShowColor(details);
         ShowNote(details);
         ShowDataset(details);
@@ -109,6 +110,11 @@ public partial class NodeDetailsPanel : UserControl
         if (LinkBox.IsKeyboardFocusWithin)
         {
             return HandleLinkKey(key);
+        }
+
+        if (FieldsPanel.IsKeyboardFocusWithin)
+        {
+            return HandleFieldKey(key);
         }
 
         if (HandleDatasetKey(key))

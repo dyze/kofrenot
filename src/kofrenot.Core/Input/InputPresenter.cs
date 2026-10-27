@@ -286,7 +286,7 @@ public sealed class InputPresenter
         var name = plan is LinkPlan typed ? ActiveSide(typed)!.Name : ((NodePlan)plan).Name;
         foreach (var hit in GraphSearch.Find(graph, name))
         {
-            AddNode(graph, text, rows, hit.Node, chosen: new RowKey(null, hit.Node.Id) == _selected, withLinks: hit.IsExact);
+            AddNode(graph, text, rows, hit.Node, chosen: new RowKey(null, hit.Node.Id) == _selected, withLinks: hit.IsExact, hit.Field);
         }
 
         return rows;
@@ -295,9 +295,10 @@ public sealed class InputPresenter
     private static ResultRow NodeRow(KnowledgeGraph graph, PlanText text, Node node, bool chosen) =>
         new(text.NodeLabel(node), IsLink: false, chosen, node, Visual: NodeVisual.Of(graph, node));
 
-    private void AddNode(KnowledgeGraph graph, PlanText text, List<ResultRow> rows, Node node, bool chosen, bool withLinks)
+    // A node found by a field's value has that field as its detail ("Born: 1920-10-08").
+    private void AddNode(KnowledgeGraph graph, PlanText text, List<ResultRow> rows, Node node, bool chosen, bool withLinks, string? field = null)
     {
-        rows.Add(NodeRow(graph, text, node, chosen));
+        rows.Add(NodeRow(graph, text, node, chosen) with { Detail = field });
         if (!withLinks)
         {
             return;

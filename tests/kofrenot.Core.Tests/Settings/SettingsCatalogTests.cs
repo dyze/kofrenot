@@ -20,7 +20,7 @@ public class SettingsCatalogTests
     public void Tabs_AreInTheirDisplayOrder()
     {
         Assert.Equal(
-            new[] { SettingsCatalog.GeneralTab, SettingsCatalog.KeyBindingsTab, SettingsCatalog.VaultTab, SettingsCatalog.ServerTab, SettingsCatalog.LinkTypesTab, SettingsCatalog.AppearanceTab, SettingsCatalog.LoggingTab, SettingsCatalog.AboutTab },
+            new[] { SettingsCatalog.GeneralTab, SettingsCatalog.KeyBindingsTab, SettingsCatalog.VaultTab, SettingsCatalog.ServerTab, SettingsCatalog.NodeTypesTab, SettingsCatalog.LinkTypesTab, SettingsCatalog.AppearanceTab, SettingsCatalog.LoggingTab, SettingsCatalog.AboutTab },
             SettingsCatalog.Tabs);
     }
 
@@ -90,6 +90,7 @@ public class SettingsCatalogTests
     [InlineData("sign in", SettingsCatalog.ServerId)]
     [InlineData("offline", SettingsCatalog.ServerId)]
     [InlineData("custom", SettingsCatalog.LinkAliasesId)]
+    [InlineData("field", SettingsCatalog.NodeTypesId)]
     public void Find_FindsTheVaultHotkeyAndLinkTypeSettings(string query, string id)
     {
         Assert.Equal(id, Assert.Single(SettingsCatalog.Find(query)).Id);

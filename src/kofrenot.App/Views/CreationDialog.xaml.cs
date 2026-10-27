@@ -31,7 +31,9 @@ public partial class CreationDialog : Window
         _form = form;
 
         TitleText.Text = form.Title;
-        _typeChoices = form.Types.NodeTypes.Select(type => new TypeChoice(type, NodeVisual.OfType(type.Id))).ToList();
+        _typeChoices = form.Types.NodeTypes
+            .Select(type => new TypeChoice(type, NodeVisual.OfType(type.Id) with { TypeIcon = TypeIcons.Find(type.Icon), Color = type.Color }))
+            .ToList();
         TypeBox.ItemsSource = _typeChoices;
         LinkTypeBox.ItemsSource = form.Types.Verbs;
         NodeName.Visibility = form.IsNameEditable ? Visibility.Collapsed : Visibility.Visible;

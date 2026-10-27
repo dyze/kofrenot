@@ -34,6 +34,17 @@ public sealed class InputPresenterTests
     }
 
     [Fact]
+    public void ANodeFoundByAValue_ShowsTheField()
+    {
+        var frank = Add("Frank Herbert");
+        _graph.Apply(new FieldSet(Guid.NewGuid(), Start, frank.Id, FieldSet.Own, "place", "Birthplace", FieldKind.Text, "Tacoma", []));
+
+        _input.Update(_graph, "tacoma");
+
+        Assert.Equal([new ResultRow("Frank Herbert", false, false, frank, Visual: Generic, Detail: "Birthplace: Tacoma")], _input.Rows);
+    }
+
+    [Fact]
     public void AnExistingName_IsSaidToExist_AndListedWithItsLinks()
     {
         var dune = Add("Dune");

@@ -270,6 +270,39 @@
             <Button Margin="10,0,0,0" Padding="10,2" Content="Edit…" Click="EditView_Click" />
           </StackPanel>
         </Grid>
+
+        <!-- Its fields (NodeDetailsPanel.Fields): those of its types, then its own, each edited in place; a value
+             set on two devices offers each to keep. Add field… adds one of its own, with its first value. -->
+        <StackPanel x:Name="FieldsPanel" Margin="2,6,0,0">
+          <Grid x:Name="FieldGrid">
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="110" />
+              <ColumnDefinition Width="*" MaxWidth="420" />
+              <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+          </Grid>
+          <TextBlock x:Name="FieldStatus"
+                     Margin="110,2,0,0"
+                     Foreground="{DynamicResource SystemFillColorCautionBrush}"
+                     TextWrapping="Wrap"
+                     Visibility="Collapsed" />
+          <Button x:Name="AddFieldButton"
+                  Margin="-8,2,0,0"
+                  Padding="8,1"
+                  HorizontalAlignment="Left"
+                  Content="Add field…"
+                  Focusable="False"
+                  Style="{StaticResource FlatButton}"
+                  ToolTip="A field of this node's own"
+                  Click="AddField_Click" />
+          <StackPanel x:Name="OwnFieldForm" Margin="0,4,0,0" Orientation="Horizontal" Visibility="Collapsed">
+            <TextBox x:Name="OwnFieldName" Width="104" ToolTip="Its name" />
+            <ComboBox x:Name="OwnFieldKind" Width="100" Margin="6,0,0,0" />
+            <TextBox x:Name="OwnFieldValue" Width="160" Margin="6,0,0,0" ToolTip="Its value" />
+            <Button Margin="6,0,0,0" Padding="10,2" Content="Add" Click="AddOwnField_Click" />
+            <Button Margin="4,0,0,0" Padding="10,2" Content="Cancel" Click="CancelOwnField_Click" />
+          </StackPanel>
+        </StackPanel>
       </StackPanel>
 
       <local:DatasetPanel x:Name="DatasetBox" Grid.Column="1" Margin="16,0,0,0" Visibility="Collapsed" />
