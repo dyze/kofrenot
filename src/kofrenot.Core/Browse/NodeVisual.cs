@@ -22,20 +22,28 @@ public enum NodeIcon
 /// <summary>
 /// How a node is pictured in the rows (search, links) and a dataset's details: its icon, and for
 /// an image dataset the version whose thumbnail replaces it once read (<see cref="Thumbnail"/>;
-/// the icon stays while it is missing), with the node's colour (<see cref="Color"/>).
+/// the icon stays while it is missing), with the node's colour (<see cref="Color"/>). A node of a
+/// type of the user's has that type's icon (<see cref="TypeIcon"/>, one of <see cref="TypeIcons"/>),
+/// and its colour unless the node has one.
 /// </summary>
-public sealed record NodeVisual(NodeIcon Icon, Guid? Thumbnail = null, NodeColor Color = NodeColor.None)
+public sealed record NodeVisual(NodeIcon Icon, Guid? Thumbnail = null, NodeColor Color = NodeColor.None, string? TypeIcon = null)
 {
     public static NodeVisual Of(KnowledgeGraph graph, Node node)
     {
         var versions = node.Type == TypeCatalog.Dataset.Id ? graph.DatasetVersionsOf(node.Id) : [];
+        var color = graph.ColorOf(node.Id);
         if (versions.Count == 0)
         {
-            return OfType(node.Type) with { Color = graph.ColorOf(node.Id) };
+            var type = graph.NodeTypes.Find(node.Type)?.Type;
+            return OfType(node.Type) with
+            {
+                Color = color == NodeColor.None && type is not null ? type.Color : color,
+                TypeIcon = TypeIcons.Find(type?.Icon),
+            };
         }
 
         var file = versions[^1].File;
-        return new NodeVisual(IconOf(DatasetType.Of(file).Category), DatasetType.HasThumbnail(file) ? versions[^1].Id : null, graph.ColorOf(node.Id));
+        return new NodeVisual(IconOf(DatasetType.Of(file).Category), DatasetType.HasThumbnail(file) ? versions[^1].Id : null, color);
     }
 
     /// <summary>The icon of a node type alone (a node without file, or a type on the creation screen).</summary>

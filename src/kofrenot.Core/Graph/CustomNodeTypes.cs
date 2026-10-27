@@ -19,7 +19,7 @@ public sealed class CustomNodeTypes
     private readonly IReadOnlyList<NodeType> _builtIn;
     private readonly ISet<Guid> _removed;
     private readonly Dictionary<Guid, NodeTypeDefined> _definitions = [];
-    private (IReadOnlyList<NodeType> Types, List<CustomNodeType> All)? _built;
+    private Built? _built;
 
     internal CustomNodeTypes(IReadOnlyList<NodeType> builtIn, ISet<Guid> removed)
     {
@@ -36,6 +36,13 @@ public sealed class CustomNodeTypes
     /// <summary>The user's node type with this id, or null.</summary>
     public CustomNodeType? Find(string id) => All.FirstOrDefault(custom => custom.Type.Id == id);
 
+    /// <summary>Whether this is a type of the user's taken out of the vault: all its definitions are removed.</summary>
+    public bool IsRemoved(string id) => Build().Removed.Contains(id);
+
+    /// <summary>The user's node types that some of these ids define.</summary>
+    internal IReadOnlyList<string> DefinedBy(IEnumerable<Guid> ids) =>
+        ids.Select(id => _definitions.GetValueOrDefault(id)?.NodeType).OfType<string>().Distinct().ToList();
+
     internal bool Add(NodeTypeDefined definition)
     {
         var added = _definitions.TryAdd(definition.Id, definition);
@@ -50,15 +57,21 @@ public sealed class CustomNodeTypes
     /// <summary>Called when something was removed: the types are built again.</summary>
     internal void Changed() => _built = null;
 
-    private (IReadOnlyList<NodeType> Types, List<CustomNodeType> All) Build()
+    private Built Build()
     {
         if (_built is { } built)
         {
             return built;
         }
 
-        var all = _definitions.Values
-            .Where(definition => !_removed.Contains(definition.Id) && _builtIn.All(type => type.Id != definition.NodeType))
+        var byType = _definitions.Values
+            .Where(definition => _builtIn.All(type => type.Id != definition.NodeType))
+            .GroupBy(definition => definition.NodeType)
+            .ToList();
+        var removed = byType.Where(definitions => definitions.All(definition => _removed.Contains(definition.Id))).Select(definitions => definitions.Key).ToHashSet();
+        var all = byType
+            .Where(definitions => !removed.Contains(definitions.Key))
+            .SelectMany(definitions => definitions.Where(definition => !_removed.Contains(definition.Id)))
             .GroupBy(definition => definition.NodeType)
             .OrderBy(definitions => definitions.Min(definition => definition.At))
             .ThenBy(definitions => definitions.Key, StringComparer.Ordinal)
@@ -71,7 +84,9 @@ public sealed class CustomNodeTypes
             })
             .ToList();
         IReadOnlyList<NodeType> types = all.Count == 0 ? _builtIn : [.. _builtIn, .. all.Select(custom => custom.Type)];
-        _built = (types, all);
-        return (types, all);
+        _built = new Built(types, all, removed);
+        return _built;
     }
+
+    private sealed record Built(IReadOnlyList<NodeType> Types, List<CustomNodeType> All, HashSet<string> Removed);
 }

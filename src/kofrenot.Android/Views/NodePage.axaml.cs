@@ -104,11 +104,6 @@ public sealed partial class NodePage : UserControl, IPage
             conflicts.Add($"Named in {details.NameConflict.Count} ways: {string.Join(", ", details.NameConflict)}.");
         }
 
-        if (details.TypeConflict.Count > 1)
-        {
-            conflicts.Add($"Of {details.TypeConflict.Count} types: {string.Join(", ", details.TypeConflict.Select(type => type.Name))}.");
-        }
-
         Conflict.Text = string.Join("\n", conflicts.Append("Resolved in kofrenot on Windows."));
         Conflict.IsVisible = conflicts.Count > 0;
     }

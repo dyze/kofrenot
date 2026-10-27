@@ -9,7 +9,12 @@
        across the width. Up/Down or a click select a link, Enter, a double-click or › opens its
        other node, Esc goes back one level. -->
   <UserControl.Resources>
-    <ResourceDictionary Source="SharedStyles.xaml" />
+    <ResourceDictionary>
+      <ResourceDictionary.MergedDictionaries>
+        <ResourceDictionary Source="SharedStyles.xaml" />
+      </ResourceDictionary.MergedDictionaries>
+      <BooleanToVisibilityConverter x:Key="VisibleWhen" />
+    </ResourceDictionary>
   </UserControl.Resources>
 
   <!-- Properties and links in the size of the search rows. -->
@@ -190,23 +195,6 @@
             </ItemsControl>
           </StackPanel>
 
-          <StackPanel x:Name="TypeConflictPanel" Margin="0,6,0,0" Visibility="Collapsed">
-            <TextBlock Foreground="{DynamicResource SystemFillColorCautionBrush}"
-                       TextWrapping="Wrap"
-                       Text="Type changed on two devices before they synced. Keep:" />
-            <ItemsControl x:Name="ConflictTypes">
-              <ItemsControl.ItemsPanel>
-                <ItemsPanelTemplate>
-                  <WrapPanel />
-                </ItemsPanelTemplate>
-              </ItemsControl.ItemsPanel>
-              <ItemsControl.ItemTemplate>
-                <DataTemplate>
-                  <Button Margin="0,4,8,0" Padding="10,2" Focusable="False" Content="{Binding Name}" Click="KeepType_Click" />
-                </DataTemplate>
-              </ItemsControl.ItemTemplate>
-            </ItemsControl>
-          </StackPanel>
         </StackPanel>
 
         <Grid Margin="2,8,0,0">
@@ -221,18 +209,54 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
           </Grid.RowDefinitions>
-          <TextBlock Opacity="0.7" Text="Type" />
-          <!-- A generic node: its type in a combo, to make it a note, a dataset or a view (asked first: it cannot be undone). -->
-          <Grid Grid.Column="1" Grid.ColumnSpan="3">
-            <TextBlock x:Name="TypeText" VerticalAlignment="Center" />
-            <ComboBox x:Name="TypeBox"
-                      MinWidth="120"
-                      HorizontalAlignment="Left"
-                      DisplayMemberPath="Name"
-                      ToolTip="Make this node a note, a dataset or a view"
-                      Visibility="Collapsed"
-                      SelectionChanged="TypeBox_SelectionChanged" />
-          </Grid>
+          <TextBlock x:Name="TypesLabel" VerticalAlignment="Center" Opacity="0.7" Text="Type" />
+          <!-- Its types (NodeDetailsPanel.Type), each with × to take it out, then Add type… to add one: asked
+               first when it hides content (a note's text, a dataset's file, what a view shows). -->
+          <WrapPanel Grid.Column="1" Grid.ColumnSpan="3" VerticalAlignment="Center">
+            <TextBlock x:Name="TypeText" VerticalAlignment="Center" Visibility="Collapsed" />
+            <ItemsControl x:Name="TypeChips" Focusable="False">
+              <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                  <WrapPanel />
+                </ItemsPanelTemplate>
+              </ItemsControl.ItemsPanel>
+              <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                  <Border Margin="0,1,6,1"
+                          Padding="8,1,4,1"
+                          BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
+                          BorderThickness="1"
+                          CornerRadius="10">
+                    <StackPanel Orientation="Horizontal">
+                      <TextBlock Margin="0,0,0,1"
+                                 VerticalAlignment="Center"
+                                 FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
+                                 FontSize="12"
+                                 Text="{Binding Glyph}" />
+                      <TextBlock Margin="5,0,4,1" VerticalAlignment="Center" Text="{Binding Type.Name}" />
+                      <Button Padding="3,0"
+                              VerticalAlignment="Center"
+                              Focusable="False"
+                              Style="{StaticResource FlatButton}"
+                              ToolTip="Take this type out"
+                              Visibility="{Binding CanRemove, Converter={StaticResource VisibleWhen}}"
+                              Click="RemoveType_Click">
+                        <TextBlock FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="9" Text="&#xE711;" />
+                      </Button>
+                    </StackPanel>
+                  </Border>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+            <Button x:Name="AddTypeButton"
+                    Padding="8,1"
+                    VerticalAlignment="Center"
+                    Content="Add type…"
+                    Focusable="False"
+                    Style="{StaticResource FlatButton}"
+                    ToolTip="Give this node another type, with its fields"
+                    Click="AddType_Click" />
+          </WrapPanel>
           <!-- Created and modified on one line, so a note has more room. Modified: the latest of its creation,
                its names, types, colours and content versions (NodeFacts), as a view's Details. -->
           <TextBlock Grid.Row="1" Opacity="0.7" Text="Created" />

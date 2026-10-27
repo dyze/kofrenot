@@ -125,16 +125,19 @@ public sealed class NodeBrowser
         });
         var names = graph.NamesOf(node.Id);
         IReadOnlyList<string> conflict = names.Count > 1 ? names.Select(version => version.Name).ToList() : [];
-        var types = graph.TypesOf(node.Id);
-        IReadOnlyList<NodeType> typeConflict = types.Count > 1
-            ? types.Select(version => graph.Types.FindNodeType(version.Type) ?? new NodeType(version.Type, version.Type)).ToList()
-            : [];
+        var types = NodeTypesOf(graph, node.Id);
         var colors = graph.ColorsOf(node.Id);
         IReadOnlyList<NodeColor> colorConflict = colors.Count > 1 ? colors.Select(version => version.Color).ToList() : [];
         return new NodeDetails(
-            node, text.NodeLabel(node), graph.Types.NodeTypeName(node.Type), rows.ToList(), conflict, IsPinned: graph.PinsOf(node.Id).Count > 0, typeConflict,
-            graph.ColorOf(node.Id), colorConflict);
+            node, text.NodeLabel(node), string.Join(", ", types.Select(type => type.Name)), rows.ToList(), conflict, IsPinned: graph.PinsOf(node.Id).Count > 0, types,
+            graph.ColorOf(node.Id), colorConflict, NodeFields.Of(graph, node.Id));
     }
+
+    /// <summary>The types of a node, oldest first, a type this version does not know named by its id; <see cref="TypeCatalog.Generic"/> when it has none.</summary>
+    public static IReadOnlyList<NodeType> NodeTypesOf(KnowledgeGraph graph, Guid node) =>
+        graph.TypeIdsOf(node) is { Count: > 0 } ids
+            ? ids.Select(id => graph.Types.FindNodeType(id) ?? new NodeType(id, id)).ToList()
+            : [TypeCatalog.Generic];
 
     private sealed class Level(Guid nodeId)
     {

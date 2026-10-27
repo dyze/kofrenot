@@ -341,20 +341,21 @@ public sealed partial class VaultSession : IDisposable
     }
 
     /// <summary>
-    /// Gives a node another type. A view asks first what it shows, and its first version is written
-    /// with the type. False when no vault is open, the user cancels, or it cannot be written (the user is told).
+    /// Adds a type to a node, or takes one out (<see cref="TypeSetPlanner"/>). A view asks first what
+    /// it shows, and its first version is written with the type. False when no vault is open, the
+    /// plan changes nothing, the user cancels, or it cannot be written (the user is told).
     /// </summary>
-    public bool Retype(ISessionQuestions ask, NodeRetyped retype)
+    public bool ChangeTypes(ISessionQuestions ask, TypeSetPlan plan)
     {
-        if (Current is not { } vault || vault.Graph.FindNode(retype.Node) is not { } node)
+        if (Current is not { } vault || vault.Graph.FindNode(plan.Node.Id) is not { } node || plan.Changes.Count == 0)
         {
             return false;
         }
 
-        IReadOnlyList<Change> changes = [retype];
-        if (retype.Type == TypeCatalog.View.Id)
+        var changes = plan.Changes;
+        if (plan.IsAdded && plan.Type == TypeCatalog.View)
         {
-            var view = node with { Type = retype.Type };
+            var view = node with { Type = TypeCatalog.View.Id };
             var planner = new ViewPlanner(vault.Graph);
             var loaded = planner.Load(view);
             if (ask.AskView(vault.Graph, view, loaded) is not { } edit)
@@ -363,12 +364,12 @@ public sealed partial class VaultSession : IDisposable
                 return false;
             }
 
-            Change?[] planned = [retype, planner.Save(view, edit.Definition, loaded), edit.Rename];
+            Change?[] planned = [.. plan.Changes, planner.Save(view, edit.Definition, loaded), edit.Rename];
             changes = planned.OfType<Change>().ToList();
         }
 
-        var resolved = retype.Replaces.Count > 1 ? $", a conflict of {retype.Replaces.Count} types resolved" : string.Empty;
-        return Current == vault && Append(ask, vault, changes, $"Node type changed ({node.Type} → {retype.Type}{resolved})");
+        var action = plan.IsAdded ? $"Node type added ({plan.Type.Id})" : $"Node type removed ({plan.Type.Id})";
+        return Current == vault && Append(ask, vault, changes, action);
     }
 
     /// <summary>Writes changes planned elsewhere (a move, a deletion), in their order, as <see cref="Write(Window, Change, string)"/>.</summary>

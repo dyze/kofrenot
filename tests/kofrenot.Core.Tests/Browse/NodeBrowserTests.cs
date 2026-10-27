@@ -228,16 +228,30 @@ public sealed class NodeBrowserTests
     }
 
     [Fact]
-    public void ATypeConflict_ListsTheTypes_OldestFirst()
+    public void TheDetails_ListTheTypes_OldestFirst()
     {
         var dune = Add("Dune");
-        _graph.Apply(new NodeRetyped(Guid.NewGuid(), Start.AddMinutes(2), dune.Id, "dataset", [dune.Id]));
-        _graph.Apply(new NodeRetyped(Guid.NewGuid(), Start.AddMinutes(1), dune.Id, "note", [dune.Id]));
+        _graph.Apply(new NodeTypeAdded(Guid.NewGuid(), Start.AddMinutes(2), dune.Id, "dataset"));
+        _graph.Apply(new NodeTypeAdded(Guid.NewGuid(), Start.AddMinutes(1), dune.Id, "note"));
+        _graph.Apply(new NodeTypeRemoved(Guid.NewGuid(), Start.AddMinutes(3), dune.Id, [dune.Id]));
 
         _browser.Open(_graph, dune);
 
-        Assert.Equal([TypeCatalog.Note, TypeCatalog.Dataset], _browser.Details!.TypeConflict);
-        Assert.Equal("Dataset", _browser.Details.Type);
+        Assert.Equal([TypeCatalog.Note, TypeCatalog.Dataset], _browser.Details!.Types);
+        Assert.Equal("Note, Dataset", _browser.Details.Type);
+    }
+
+    [Fact]
+    public void ANodeWithNoTypeLeft_IsGeneric()
+    {
+        var dune = Add("Dune");
+        _graph.Apply(new NodeTypeRemoved(Guid.NewGuid(), Start.AddMinutes(1), dune.Id, [dune.Id]));
+
+        _browser.Open(_graph, dune);
+
+        Assert.Equal([TypeCatalog.Generic], _browser.Details!.Types);
+        Assert.Equal("Generic", _browser.Details.Type);
+        Assert.Empty(_browser.Details.Fields);
     }
 
     [Fact]
@@ -257,7 +271,7 @@ public sealed class NodeBrowserTests
     }
 
     [Fact]
-    public void ATypeUnknownToThisVersion_InAConflict_IsShownByItsId()
+    public void ATypeUnknownToThisVersion_IsShownByItsId()
     {
         var dune = Add("Dune");
         _graph.Apply(new NodeRetyped(Guid.NewGuid(), Start.AddMinutes(1), dune.Id, "book", [dune.Id]));
@@ -265,7 +279,7 @@ public sealed class NodeBrowserTests
 
         _browser.Open(_graph, dune);
 
-        Assert.Equal(["book", "Note"], _browser.Details!.TypeConflict.Select(type => type.Name));
+        Assert.Equal(["book", "Note"], _browser.Details!.Types.Select(type => type.Name));
     }
 
     [Fact]

@@ -82,7 +82,7 @@ public sealed class KnowledgeGraph
         NodeRetyped retyped => Retype(retyped),
         NodeTypeAdded added => _types.Add(added) && TypesChanged(added.Node),
         NodeTypeRemoved removed => _types.Add(removed) && TypesChanged(removed.Node),
-        NodeTypeDefined definition => NodeTypes.Add(definition),
+        NodeTypeDefined definition => NodeTypes.Add(definition) && TypeChanged(definition.NodeType),
         FieldSet value => _fields.Add(value),
         AliasAdded alias => Aliases.Add(alias),
         LinkTypeDefined definition => Define(definition),
@@ -180,6 +180,22 @@ public sealed class KnowledgeGraph
     public bool Retype(NodeRetyped retype)
         => _types.Add(retype) && TypesChanged(retype.Node);
 
+    // A type of the user's arrived or was removed: the nodes that have it are shown again with their types.
+    private bool TypeChanged(string type)
+    {
+        foreach (var node in _nodes.Values.Where(node => HasTypeGiven(node.Id, type)).ToList())
+        {
+            TypesChanged(node.Id);
+        }
+
+        return true;
+    }
+
+    // Whether a change gave this type to the node, removed or not: a type arriving may be shown again.
+    private bool HasTypeGiven(Guid node, string type) =>
+        _names[node].Added!.Type == type
+        || _types.Of(node).Any(change => (change is NodeTypeAdded added && added.Type == type) || (change is NodeRetyped retyped && retyped.Type == type));
+
     // A node's types changed: it is shown again with its type (TypeIdsOf).
     private bool TypesChanged(Guid id)
     {
@@ -197,13 +213,14 @@ public sealed class KnowledgeGraph
     /// twice (on two devices before they synced). Empty for an unknown node, or one with no type left.
     /// </summary>
     public IReadOnlyList<TypeVersion> TypesOf(Guid node) =>
-        _names.TryGetValue(node, out var names) && names.Added is { } added ? _types.Current(added) : [];
+        _names.TryGetValue(node, out var names) && names.Added is { } added ? _types.Current(added, NodeTypes.IsRemoved) : [];
 
     /// <summary>The ids of the types of a node, each once, oldest first.</summary>
     public IReadOnlyList<string> TypeIdsOf(Guid node) => TypesOf(node).Select(type => type.Type).Distinct().ToList();
 
-    /// <summary>Whether a node has this type.</summary>
-    public bool HasType(Guid node, string type) => TypesOf(node).Any(version => version.Type == type);
+    /// <summary>Whether a node has this type; <see cref="TypeCatalog.Generic"/> when it has none left.</summary>
+    public bool HasType(Guid node, string type) =>
+        TypesOf(node) is { Count: > 0 } types ? types.Any(version => version.Type == type) : type == TypeCatalog.Generic.Id && FindNode(node) is not null;
 
     /// <summary>The changes of a node's types (retypes, types added and removed), whatever they replace: when it last changed.</summary>
     public IEnumerable<Change> TypeChangesOf(Guid node) => _types.Of(node);
@@ -230,7 +247,7 @@ public sealed class KnowledgeGraph
     /// <summary><paramref name="added"/> as shown: its current name and type.</summary>
     private Node Shown(Node added)
     {
-        var (name, type) = (_names[added.Id].Shown(added), _types.Shown(added, HasContent));
+        var (name, type) = (_names[added.Id].Shown(added), _types.Shown(added, NodeTypes.IsRemoved, HasContent));
         return name == added.Name && type == added.Type ? added : added with { Name = name, Type = type };
     }
 
@@ -263,6 +280,7 @@ public sealed class KnowledgeGraph
         }
 
         var symmetry = SymmetryOf(LinkTypes.NamedBy(removal.Removes));
+        var nodeTypes = NodeTypes.DefinedBy(removal.Removes);
 
         _removed.UnionWith(removal.Removes);
         foreach (var id in removal.Removes)
@@ -275,6 +293,11 @@ public sealed class KnowledgeGraph
 
         _links.Remove(removal.Removes);
         NodeTypes.Changed();
+        foreach (var type in nodeTypes)
+        {
+            TypeChanged(type);
+        }
+
         LinkTypes.Changed();
         LinkTypesChanged(symmetry);
         return true;

@@ -28,8 +28,11 @@ internal sealed class NodeTypeSets
     /// <summary>The changes of a node's types, whatever they replace or remove: when it last changed.</summary>
     public IEnumerable<Change> Of(Guid node) => _byNode.TryGetValue(node, out var changes) ? changes.Values : [];
 
-    /// <summary>The types of <paramref name="added"/>, each with the change that gave it, oldest first; one type may be given twice.</summary>
-    public IReadOnlyList<TypeVersion> Current(Node added)
+    /// <summary>
+    /// The types of <paramref name="added"/>, each with the change that gave it, oldest first; one
+    /// type may be given twice. A type <paramref name="isRemoved"/> (one of the user's taken out of the vault) is left out.
+    /// </summary>
+    public IReadOnlyList<TypeVersion> Current(Node added, Func<string, bool> isRemoved)
     {
         var changes = Of(added.Id).ToList();
         var removed = changes.OfType<NodeTypeRemoved>().SelectMany(removal => removal.Removes).ToHashSet();
@@ -39,7 +42,7 @@ internal sealed class NodeTypeSets
             .Select(typed => new TypeVersion(typed.Id, typed.Type, typed.At));
         return startTypes
             .Concat(changes.OfType<NodeTypeAdded>().Select(type => new TypeVersion(type.Id, type.Type, type.At)))
-            .Where(type => !removed.Contains(type.Id))
+            .Where(type => !removed.Contains(type.Id) && !isRemoved(type.Type))
             .OrderBy(type => type.At)
             .ThenBy(type => type.Id)
             .ToList();
@@ -49,9 +52,9 @@ internal sealed class NodeTypeSets
     /// The type shown: its type with content (a note, a dataset or a view) if it has one, else its
     /// latest; <see cref="TypeCatalog.Generic"/> when it has none left.
     /// </summary>
-    public string Shown(Node added, Func<string, bool> hasContent)
+    public string Shown(Node added, Func<string, bool> isRemoved, Func<string, bool> hasContent)
     {
-        var types = Current(added);
+        var types = Current(added, isRemoved);
         return types.LastOrDefault(type => hasContent(type.Type))?.Type ?? types.LastOrDefault()?.Type ?? TypeCatalog.Generic.Id;
     }
 

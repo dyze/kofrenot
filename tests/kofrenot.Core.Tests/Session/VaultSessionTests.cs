@@ -439,11 +439,11 @@ public sealed class VaultSessionTests : IDisposable
     {
         _device.CreateFolderVault();
         var node = AddNode("Books", TypeCatalog.Generic.Id);
-        var retype = new RetypePlanner(_device.Vault.Graph).Plan(node, TypeCatalog.View).Change!;
+        var plan = new TypeSetPlanner(_device.Vault.Graph).Add(node, TypeCatalog.View);
 
-        Assert.False(Session.Retype(Ask, retype));
+        Assert.False(Session.ChangeTypes(Ask, plan));
         Ask.View = (_, _, _) => new ViewEdit(new FlatDefinition(TypeCatalog.Note.Id), Rename: null);
-        Assert.True(Session.Retype(Ask, retype));
+        Assert.True(Session.ChangeTypes(Ask, plan));
 
         Assert.Equal(TypeCatalog.View.Id, _device.Vault.Graph.FindNode(node.Id)!.Type);
         Assert.Contains(_device.Log.Entries, entry => entry.Message.Contains("Node type change cancelled"));
@@ -455,8 +455,15 @@ public sealed class VaultSessionTests : IDisposable
         _device.CreateFolderVault();
         var node = AddNode("Ideas", TypeCatalog.Generic.Id);
 
-        Assert.True(Session.Retype(Ask, new RetypePlanner(_device.Vault.Graph).Plan(node, TypeCatalog.Note).Change!));
-        Assert.False(Session.Retype(Ask, new NodeRetyped(Guid.NewGuid(), Start, Guid.NewGuid(), TypeCatalog.Note.Id, [])));
+        var planner = new TypeSetPlanner(_device.Vault.Graph);
+        Assert.True(Session.ChangeTypes(Ask, planner.Add(node, TypeCatalog.Note)));
+        Assert.Contains(_device.Log.Entries, entry => entry.Message == "Node type added (note)");
+        Assert.False(Session.ChangeTypes(Ask, planner.Add(_device.Vault.Graph.FindNode(node.Id)!, TypeCatalog.Note)));
+        Assert.False(Session.ChangeTypes(Ask, planner.Add(node with { Id = Guid.NewGuid() }, TypeCatalog.Note)));
+
+        Assert.True(Session.ChangeTypes(Ask, planner.Remove(_device.Vault.Graph.FindNode(node.Id)!, TypeCatalog.Note)));
+        Assert.Equal(TypeCatalog.Generic.Id, _device.Vault.Graph.FindNode(node.Id)!.Type);
+        Assert.Contains(_device.Log.Entries, entry => entry.Message == "Node type removed (note)");
     }
 
     [Fact]

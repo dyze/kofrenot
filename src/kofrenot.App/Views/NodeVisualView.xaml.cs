@@ -48,7 +48,7 @@ public partial class NodeVisualView : UserControl
     private async void Show()
     {
         var visual = Visual;
-        Glyph.Text = visual is null ? string.Empty : GlyphOf(visual.Icon);
+        Glyph.Text = visual is null ? string.Empty : visual.TypeIcon is { } icon ? TypeGlyphs.Of(icon) : GlyphOf(visual.Icon);
         ShowColor(visual?.Color ?? NodeColor.None);
         Glyph.Visibility = Visibility.Visible;
         ThumbnailFrame.Visibility = Visibility.Collapsed;

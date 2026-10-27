@@ -37,6 +37,29 @@ public sealed class NodeVisualTests
     }
 
     [Fact]
+    public void ANodeOfAUsersType_HasItsIcon_AndItsColourUnlessItHasOne()
+    {
+        _graph.Apply(new NodeTypeDefined(Guid.NewGuid(), Start, "person", "Person", "Contact", "blue", [], []));
+        var node = Add("person");
+
+        Assert.Equal(new NodeVisual(NodeIcon.Generic, null, NodeColor.Blue, "Contact"), NodeVisual.Of(_graph, node));
+
+        _graph.Apply(new NodeColored(Guid.NewGuid(), Start, node.Id, "green", []));
+
+        Assert.Equal(NodeColor.Green, NodeVisual.Of(_graph, node).Color);
+    }
+
+    [Fact]
+    public void AnIconThisVersionDoesNotKnow_IsNone()
+    {
+        _graph.Apply(new NodeTypeDefined(Guid.NewGuid(), Start, "person", "Person", "Unicorn", null, [], []));
+
+        Assert.Null(NodeVisual.Of(_graph, Add("person")).TypeIcon);
+        Assert.Equal("Contact", TypeIcons.Find("Contact"));
+        Assert.Null(TypeIcons.Find(null));
+    }
+
+    [Fact]
     public void ATypeAlone_HasItsIcon() =>
         Assert.Equal(
             [NodeIcon.Generic, NodeIcon.Note, NodeIcon.File, NodeIcon.View],

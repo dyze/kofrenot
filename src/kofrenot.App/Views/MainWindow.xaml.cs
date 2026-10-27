@@ -77,7 +77,7 @@ public partial class MainWindow : Window
         DetailsPanel.IsKeptOffline = _session.IsKeptOffline;
         DetailsPanel.KeepOffline = _session.KeepOffline;
         DetailsPanel.EditView = view => _session.EditView(Ask, view);
-        DetailsPanel.Retype = retype => _session.Retype(Ask, retype);
+        DetailsPanel.ChangeTypes = plan => _session.ChangeTypes(Ask, plan);
         DetailsPanel.WriteChanges = (changes, action) => _session.Write(Ask, changes, action);
         DetailsPanel.AddLink = (request, choices) => RecordRecent(_session.Create(Ask, request, choices)) is not null;
         ViewContent.Log = log;
