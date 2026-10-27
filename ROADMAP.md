@@ -23,7 +23,15 @@ Composition, as decided in [GOAL.md](docs/GOAL.md#composition-types-made-of-fiel
 3. Both · **Several types per node.** Each brings its fields; types added on two devices are both kept. A first version may allow at most one of *note*, *dataset* and *view* per node.
 4. Windows · **Fields of a node's own**, added in its details. Fields of the same name are shown apart (*Birth date (Person)*, *Birth date (own)*), merged on demand.
 5. Windows · **Fill fields** in a node's details; Android shows them.
-
+6. Both · **Build date in About.** The version shows its commit's date and time beside its hash (`0.10-dev (a23478d, 2026-10-27 14:05)`), in Settings > About and the log, read from the build like the hash.
+7. Android · **Add and edit.** Input box, creation screen, renames, colours, pins (notes and files: 0.10).
+## 0.12
+1. Both · **Events and Qualifiers.** :
+	* Qualifiers enrich existing relationships (`node → link → node`) with contextual information such as dates, locations, sources, quantities, or confidence levels. Example: Dune → written by → Frank Herbert (date: 1965).
+	* Events represent occurrences involving multiple entities, each with a specific role, and their own qualifiers. Example: Publication of Dune (work: Dune, publisher: Chilton Books, date: 1965, country: USA).
+	* Together, these features transform Kofrenot from a simple knowledge graph into a richer, contextual knowledge system, enabling more precise searches, historical tracking, and complex relationships while preserving the existing simple model.
+2. Both · **Restore previous versions.** A node's versions are listed, so a mistake can be undone by restoring one of them.
+3. Android · **Import from the camera.** A photo or video taken from kofrenot becomes a dataset, after the same preview as **＋**, without passing through the phone's gallery.
 ## Later
 1. Windows · **Pack vault.** Pack a vault to reduce its size and number of files (needs deletes on the server).
 2. Windows · **Re-encrypt on pack.** Packed files are encrypted again with the latest vault key, so old key epochs can be dropped ([Rotation](docs/SERVER-CONCEPT.md#rotation)).
@@ -35,14 +43,8 @@ Composition, as decided in [GOAL.md](docs/GOAL.md#composition-types-made-of-fiel
 8. Windows · **Quote a name** containing a link phrase in the input box (`"This is a test"`), so such names can be typed.
 9. Windows · **Cycle through proposals.** Several proposals in grey, the next one with a key, instead of typing more to narrow it.
 10. Windows · **Propose node types** while typing, in the input box, instead of only on the creation screen.
-11. Android · **Add and edit.** Input box, creation screen, renames, colours, pins (notes and files: 0.10).
-12. Android · **Sharing.** Members, roles, share, leave.
-13. Both · Stores **statistics** about data exchanges with server. It could be useful for analysing performance problems.
-14. Both · **Events and Qualifiers.** :
-	* Qualifiers enrich existing relationships (`node → link → node`) with contextual information such as dates, locations, sources, quantities, or confidence levels. Example: Dune → written by → Frank Herbert (date: 1965).
-	* Events represent occurrences involving multiple entities, each with a specific role, and their own qualifiers. Example: Publication of Dune (work: Dune, publisher: Chilton Books, date: 1965, country: USA).
-	* Together, these features transform Kofrenot from a simple knowledge graph into a richer, contextual knowledge system, enabling more precise searches, historical tracking, and complex relationships while preserving the existing simple model.
-15. Both · **Faster transfers.** Many small files downloaded in one stream; big files uploaded in parts, resumable.
-16. Both · **Restore previous versions.** A node's versions are listed, so a mistake can be undone by restoring one of them.
-17. Android · **Import from the camera.** A photo or video taken from kofrenot becomes a dataset, after the same preview as **＋**, without passing through the phone's gallery.
-18. Both · **Build date in About.** The version shows its commit's date and time beside its hash (`0.10-dev (a23478d, 2026-10-27 14:05)`), in Settings > About and the log, read from the build like the hash.
+11. Android · **Sharing.** Members, roles, share, leave.
+12. Both · Stores **statistics** about data exchanges with server. It could be useful for analysing performance problems.
+13. Both · **Faster transfers.** Many small files downloaded in one stream; big files uploaded in parts, resumable.
+
+
