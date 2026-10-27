@@ -99,6 +99,27 @@ public sealed class ContentOnlySessionTests : IDisposable
     }
 
     [Fact]
+    public async Task TextSharedOnThePhone_BecomesANote_OnTheLaptop()
+    {
+        await AddLaptopsVaultAsync();
+        var note = new SharedNotePlanner(_phone.Vault.Graph).Preview("Buy spice\nand water");
+
+        var node = _phone.Session.AddNote(_phone.Ask, note);
+        await _phone.SyncAsync();
+        await _laptop.SyncAsync();
+
+        Assert.NotNull(node);
+        var version = Assert.Single(_laptop.Vault.Graph.NoteVersionsOf(node.Id));
+        Assert.True(await _laptop.Vault.FetchAsync(version));
+        Assert.Equal("Buy spice\nand water", _laptop.Vault.ReadNote(version.Id));
+        Assert.Equal("Buy spice", _laptop.Vault.Graph.FindNode(node.Id)!.Name);
+    }
+
+    [Fact]
+    public void WithoutAVault_NoNoteIsAdded() =>
+        Assert.Null(_phone.Session.AddNote(_phone.Ask, new SharedNote("a", "a", false)));
+
+    [Fact]
     public async Task ADatasetOfAnotherDevice_IsExported_OnDemand()
     {
         await AddLaptopsVaultAsync();

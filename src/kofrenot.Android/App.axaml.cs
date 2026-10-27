@@ -11,6 +11,7 @@ namespace Kofrenot.Phone;
 public sealed partial class App : Application
 {
     private AppServices? _services;
+    private Shell? _shell;
 
     public static new App? Current => Application.Current as App;
 
@@ -27,11 +28,11 @@ public sealed partial class App : Application
 
         if (ApplicationLifetime is IActivityApplicationLifetime activity)
         {
-            activity.MainViewFactory = () => new Shell(Services);
+            activity.MainViewFactory = () => _shell = new Shell(Services);
         }
         else if (ApplicationLifetime is ISingleViewApplicationLifetime single)
         {
-            single.MainView = new Shell(Services);
+            single.MainView = _shell = new Shell(Services);
         }
 
         base.OnFrameworkInitializationCompleted();
@@ -52,6 +53,25 @@ public sealed partial class App : Application
 
     /// <summary>The app went to the background: no sync until it comes back.</summary>
     public void Paused() => Services.Sync.Pause();
+
+    /// <summary>What another app shared, waiting until a vault is open (<see cref="Shell.AddShared"/>).</summary>
+    public SharedContent? WaitingShare { get; private set; }
+
+    /// <summary>Another app shared files or text: added once a vault is open, after their preview.</summary>
+    public void Shared(SharedContent shared)
+    {
+        Services.Log.Info("Action", shared.Text is null ? $"Files shared from another app ({shared.Files.Count})" : "Text shared from another app");
+        WaitingShare = shared;
+        _shell?.AddShared();
+    }
+
+    /// <summary>The share waiting, taken to be added; null when none.</summary>
+    public SharedContent? TakeShare()
+    {
+        var shared = WaitingShare;
+        WaitingShare = null;
+        return shared;
+    }
 
     private AppServices Services => _services ??= ServicesOf(global::Android.App.Application.Context);
 

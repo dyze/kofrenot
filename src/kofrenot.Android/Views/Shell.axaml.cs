@@ -37,6 +37,7 @@ public sealed partial class Shell : UserControl
         services.Sync.Changed += () => (PageHost.Content as IPage)?.SyncChanged();
         services.Server.Changed += RefreshPage;
         Start();
+        AddShared();
     }
 
     public AppServices Services { get; }
@@ -73,6 +74,7 @@ public sealed partial class Shell : UserControl
         if (Services.Session.Current is not null && Services.Session.Selected?.Location == location)
         {
             Show(new HomePage(this));
+            AddShared();
         }
         else if (answers.Needed is { } needed)
         {

@@ -25,7 +25,7 @@ What the phone does, beside Windows: the [feature matrix](../README.md#windows-a
 | Update check (GitHub releases) | Depends on the distribution ([Open questions](#open-questions)) |
 
 ## Content only, safely
-The phone must not leave a vault in a state Windows cannot fix. Rule: **the phone writes content only** (a note saved, a file imported as a new dataset: `ClientMode.Content`); everything else (nodes, links, pins, the vault itself, members, keys) is refused in Core, and left to Windows. Its writes go to its mirror, then to the server at the next sync, as on Windows.
+The phone must not leave a vault in a state Windows cannot fix. Rule: **the phone writes content only** (a note saved, a file imported as a new dataset, text shared by another app as a new note: `ClientMode.Content`); everything else (nodes, links, pins, the vault itself, members, keys) is refused in Core, and left to Windows. Its writes go to its mirror, then to the server at the next sync, as on Windows.
 
 | Case | On Android |
 | --- | --- |
