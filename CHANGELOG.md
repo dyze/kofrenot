@@ -8,6 +8,10 @@ It covers kofrenot on Windows and on Android; versions before 0.9 ran on Windows
 
 ## [Unreleased]
 
+### Added
+- **Both**
+  - **Build date in About**: Settings > About and the log show the date and time of the build's commit beside its hash, in local time: `0.11-dev (a23478d, 2026-10-27 14:05)`.
+
 ## [0.10] - 2026-10-27
 
 ### Added

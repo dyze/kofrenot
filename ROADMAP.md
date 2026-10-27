@@ -23,7 +23,6 @@ Composition, as decided in [GOAL.md](docs/GOAL.md#composition-types-made-of-fiel
 3. Both · **Several types per node.** Each brings its fields; types added on two devices are both kept. A first version may allow at most one of *note*, *dataset* and *view* per node.
 4. Windows · **Fields of a node's own**, added in its details. Fields of the same name are shown apart (*Birth date (Person)*, *Birth date (own)*), merged on demand.
 5. Windows · **Fill fields** in a node's details; Android shows them.
-6. Both · **Build date in About.** The version shows its commit's date and time beside its hash (`0.11-dev (a23478d, 2026-10-27 14:05)`), in Settings > About and the log, read from the build like the hash.
 
 ## 0.12
 1. Both · **Events and qualifiers.**

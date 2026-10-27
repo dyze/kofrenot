@@ -40,7 +40,8 @@ public sealed class AppServices : IDisposable
         Opened.Clear();
     }
 
-    public static string Version => AppVersion.Of(typeof(AppServices).Assembly);
+    /// <summary>The version with its commit and the commit's date, for Settings > About and the log.</summary>
+    public static string Version => AppVersion.WithCommitOf(typeof(AppServices).Assembly);
 
     public AppFiles Files { get; }
 

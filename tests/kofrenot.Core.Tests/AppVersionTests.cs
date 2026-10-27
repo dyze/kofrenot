@@ -67,6 +67,35 @@ public class AppVersionTests
     }
 
     [Fact]
+    public void FormatWithCommit_ShowsTheCommitDate()
+    {
+        Assert.Equal("0.11-dev (4e9c313, 2023-11-14 22:13)", AppVersion.FormatWithCommit("0.11-dev+4e9c3137c078155d.1700000000", TimeZoneInfo.Utc));
+    }
+
+    [Fact]
+    public void FormatWithCommit_ShowsTheCommitDateInTheZone()
+    {
+        var plusTwo = TimeZoneInfo.CreateCustomTimeZone("plus two", TimeSpan.FromHours(2), "plus two", "plus two");
+
+        Assert.Equal("0.4 (4e9c313, 2023-11-15 00:13)", AppVersion.FormatWithCommit("0.4+4e9c3137c078155d.1700000000", plusTwo));
+    }
+
+    [Fact]
+    public void FormatWithCommit_ShowsTheDateOfADirtyBuild()
+    {
+        Assert.Equal("0.4 (4e9c313-dirty, 2023-11-14 22:13)", AppVersion.FormatWithCommit("0.4+4e9c3137c078155d.1700000000.dirty", TimeZoneInfo.Utc));
+    }
+
+    [Theory]
+    [InlineData("0.4+4e9c3137c078155d.soon")]
+    [InlineData("0.4+4e9c3137c078155d.-5")]
+    [InlineData("0.4+4e9c3137c078155d.99999999999999999")]
+    public void FormatWithCommit_NotADate_IsLeftOut(string raw)
+    {
+        Assert.Equal("0.4 (4e9c313)", AppVersion.FormatWithCommit(raw, TimeZoneInfo.Utc));
+    }
+
+    [Fact]
     public void FormatWithCommit_MissingVersion_IsUnknown()
     {
         Assert.Equal("unknown", AppVersion.FormatWithCommit(null));

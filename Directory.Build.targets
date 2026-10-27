@@ -1,10 +1,35 @@
 <Project>
   <!-- The SDK has added "+<commit>" to InformationalVersion (from git, through Source Link).
-       A build from a working tree with uncommitted changes gets ".dirty" after it, so it is not
-       taken for the commit's own build. Skipped outside git, where there is no commit. -->
-  <Target Name="MarkDirtyBuild"
+       The commit's date follows it, in seconds since 1970 (UTC), so a build tells when its commit
+       was made: "+<commit>.<seconds>". Skipped outside git, where there is no commit. -->
+  <Target Name="AddCommitDate"
           BeforeTargets="GetAssemblyAttributes"
           DependsOnTargets="AddSourceRevisionToInformationalVersion"
+          Condition="'$(SourceRevisionId)' != ''">
+    <!-- The commit's "committer <name> <email> <seconds> <zone>" line: no "%" format, which cmd and sh
+         read differently. Without git on the PATH, the exit code is not 0 and no date is added. -->
+    <Exec Command="git cat-file commit $(SourceRevisionId)"
+          WorkingDirectory="$(MSBuildThisFileDirectory)"
+          ConsoleToMSBuild="true"
+          StandardOutputImportance="low"
+          StandardErrorImportance="low"
+          IgnoreExitCode="true">
+      <Output TaskParameter="ConsoleOutput" PropertyName="_Commit" />
+      <Output TaskParameter="ExitCode" PropertyName="_CommitExitCode" />
+    </Exec>
+    <PropertyGroup Condition="'$(_CommitExitCode)' == '0'">
+      <_CommitSeconds>$([System.Text.RegularExpressions.Regex]::Match($(_Commit), 'committer .*? (\d+) [+-]\d{4}').Groups[1].Value)</_CommitSeconds>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(_CommitSeconds)' != ''">
+      <InformationalVersion>$(InformationalVersion).$(_CommitSeconds)</InformationalVersion>
+    </PropertyGroup>
+  </Target>
+
+  <!-- A build from a working tree with uncommitted changes gets ".dirty" last, so it is not
+       taken for the commit's own build. -->
+  <Target Name="MarkDirtyBuild"
+          BeforeTargets="GetAssemblyAttributes"
+          DependsOnTargets="AddCommitDate"
           Condition="'$(SourceRevisionId)' != ''">
     <!-- Without git on the PATH, the exit code is not 0 and the build is not marked. -->
     <Exec Command="git status --porcelain"

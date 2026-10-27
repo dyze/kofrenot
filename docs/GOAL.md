@@ -109,7 +109,7 @@ What could go wrong, and how it is addressed today:
 
   The release commit drops `-dev`, when I ask for a release. The next version with `-dev` is set once the release is published (tagged, its files built from the release commit, the GitHub release made), when I ask for the bump: builds of the release keep the plain version until then.
 - Defined once, in `Directory.Build.props`, stamped into every produced assembly, and shown at the bottom right of the main window, `-dev` included. Where only numbers fit (Android's version code, the Windows file version), the number without `-dev` is used (`VersionNumber`).
-- Each build is identified by its git commit (no build number), shown in Settings > About and the log: `0.4 (4e9c313)`, `-dirty` for a build with uncommitted changes.
+- Each build is identified by its git commit (no build number), shown with the commit's date in Settings > About and the log: `0.11 (4e9c313, 2026-10-27 14:05)`, `-dirty` for a build with uncommitted changes (the date since 0.11).
 - The vault has its own **format** number, raised only by a breaking change. A kofrenot reads the formats up to its own, and asks to be upgraded for a newer one: [ARCHITECTURE.md](ARCHITECTURE.md#format).
 
 What each version contains: [ROADMAP.md](../ROADMAP.md).
