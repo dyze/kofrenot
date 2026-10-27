@@ -19,6 +19,9 @@ public sealed partial class NodePage
     // The note being edited, and its versions as loaded when editing began; null when not editing.
     private (Node Node, NoteState Loaded)? _editing;
 
+    // Edited as a list of items (TaskListEditor), not as text.
+    private bool _asList;
+
     private bool CanEdit => !_shell.Services.Session.IsReadOnly;
 
     /// <summary>
@@ -32,7 +35,7 @@ public sealed partial class NodePage
             return false;
         }
 
-        if ((NoteEditor.Text ?? string.Empty) == (editing.Loaded.Text ?? string.Empty))
+        if (EditedText(editing.Loaded) == (editing.Loaded.Text ?? string.Empty))
         {
             _editing = null;
             return false;
@@ -99,8 +102,37 @@ public sealed partial class NodePage
     private void ShowEditor(bool editing)
     {
         Note.IsVisible = !editing;
-        NoteEditor.IsVisible = SaveNoteButton.IsVisible = CancelNoteButton.IsVisible = editing;
+        NoteEditor.IsVisible = editing && !_asList;
+        TaskEditor.IsVisible = editing && _asList;
+        SaveNoteButton.IsVisible = CancelNoteButton.IsVisible = CheckboxesButton.IsVisible = editing;
+        CheckboxesButton.Content = _asList ? "Text" : "Checkboxes";
         EditNoteButton.IsVisible = !editing;
+    }
+
+    // What is typed: the items as task lines (in the note's line breaks), or the text.
+    private string EditedText(NoteState loaded) =>
+        _asList ? TaskList.Format(TaskEditor.Items, TaskList.LineBreakOf(loaded.Text ?? string.Empty)) : NoteEditor.Text ?? string.Empty;
+
+    // Checkboxes: each line becomes an item; Text: each item becomes its line (TaskList.Show, Hide), as on Windows.
+    private void Checkboxes_Click(object? sender, RoutedEventArgs e)
+    {
+        if (_editing is not { } editing)
+        {
+            return;
+        }
+
+        var text = EditedText(editing.Loaded);
+        _asList = !_asList;
+        if (_asList)
+        {
+            TaskEditor.Show(TaskList.Parse(TaskList.Show(text)));
+        }
+        else
+        {
+            NoteEditor.Text = TaskList.Hide(text);
+        }
+
+        ShowEditor(true);
     }
 
     private void EditNote_Click(object? sender, RoutedEventArgs e)
@@ -116,10 +148,16 @@ public sealed partial class NodePage
             return;
         }
 
+        // A note whose lines are all items opens as its list, as on Windows.
         _editing = (node, loaded);
+        _asList = TaskList.IsList(loaded.Text!);
         NoteEditor.Text = loaded.Text;
+        TaskEditor.Show(TaskList.Parse(loaded.Text!));
         ShowEditor(true);
-        NoteEditor.Focus();
+        if (!_asList)
+        {
+            NoteEditor.Focus();
+        }
     }
 
     private void SaveNote_Click(object? sender, RoutedEventArgs e)
@@ -129,8 +167,9 @@ public sealed partial class NodePage
             return;
         }
 
+        var text = EditedText(editing.Loaded);
         _editing = null;
-        Save(editing.Node, NoteEditor.Text ?? string.Empty, editing.Loaded);
+        Save(editing.Node, text, editing.Loaded);
         Refresh();
     }
 

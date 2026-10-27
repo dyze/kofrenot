@@ -11,7 +11,7 @@ It covers kofrenot on Windows and on Android; versions before 0.9 ran on Windows
 ### Added
 - **Android**
   - **Add files from the phone**: **＋** picks one or several files; a preview lists them, with their number and total size, then each becomes a dataset named after its file, uploaded at the next sync. Images get their thumbnail on the phone ([README](README.md#on-android)).
-  - **Edit notes on the phone**: a tap on a checkbox checks its item; **Edit** changes the note's text (Markdown), **Save** keeps it as a new version; leaving it with changes not saved asks before discarding them. A note edited on two devices before they synced shows both versions, to keep one ([README](README.md#on-android)).
+  - **Edit notes on the phone**: a tap on a checkbox checks its item; **Edit** changes the note: a task list as its items (checkbox, text, Enter adds one), as on Windows, other notes as Markdown text; **Save** keeps it as a new version; leaving it with changes not saved asks before discarding them. A note edited on two devices before they synced shows both versions, to keep one ([README](README.md#on-android)).
 - **Both**
   - **Keep offline**: in a server vault, a node kept offline has its content (a note's text, a dataset's file) downloaded ahead and kept, so it opens without the server. Each device chooses its own, on Windows (beside the pin) and on the phone (on the node's page); nothing is written to the vault ([README](README.md#input-box)).
 - **Windows**
