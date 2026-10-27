@@ -45,9 +45,9 @@ public sealed class InputPresenter
     public AddPlan? Plan { get; private set; }
 
     /// <summary>The nodes last opened on this device, the latest first (<see cref="Browse.RecentNodes"/>): listed while the text is empty.</summary>
-    public IReadOnlyList<Guid> Recent { get; set; } = [];
+    public IReadOnlyList<OpenedNode> Recent { get; set; } = [];
 
-    /// <summary>The clock "Changed lately" is measured against; the system's, but in tests.</summary>
+    /// <summary>The clock the recent nodes' activity is measured against; the system's, but in tests.</summary>
     public TimeProvider Clock { get; set; } = TimeProvider.System;
 
     public string Preview { get; private set; } = Hint;
@@ -245,20 +245,16 @@ public sealed class InputPresenter
     }
 
     /// <summary>
-    /// While the input box is empty: the pinned nodes, the nodes changed lately (on any device, with
-    /// how long ago), then the recent ones on this device, each under a header and each node once.
+    /// While the input box is empty: the pinned nodes, then the recent ones (opened here or changed on
+    /// any device, with their latest activity), each under a header (<see cref="StartNodes"/>).
     /// </summary>
     private List<ResultRow> StartRows(KnowledgeGraph graph)
     {
         var text = new PlanText(graph);
         var rows = new List<ResultRow>();
-        var now = Clock.GetUtcNow();
-        var pinned = graph.PinnedNodes;
-        var changed = ChangedLately.Of(graph, now).Where(change => !pinned.Contains(change.Node)).ToList();
-        var recent = Recent.Select(graph.FindNode).OfType<Node>().Except(pinned).Except(changed.Select(change => change.Node));
-        AddSection(rows, "Pinned", pinned.Select(node => NodeRow(graph, text, node, chosen: false)));
-        AddSection(rows, "Changed lately", changed.Select(change => NodeRow(graph, text, change.Node, chosen: false) with { Detail = TimeAgo.Of(change.At, now) }));
-        AddSection(rows, "Recent", recent.Select(node => NodeRow(graph, text, node, chosen: false)));
+        var start = StartNodes.Of(graph, Recent, Clock.GetUtcNow());
+        AddSection(rows, "Pinned", start.Pinned.Select(node => NodeRow(graph, text, node, chosen: false)));
+        AddSection(rows, "Recent", start.Recent.Select(recent => NodeRow(graph, text, recent.Node, chosen: false) with { Detail = recent.Detail }));
         return rows;
     }
 

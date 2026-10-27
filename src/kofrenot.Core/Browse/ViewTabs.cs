@@ -4,11 +4,11 @@ namespace Kofrenot.Core.Browse;
 
 /// <summary>
 /// The views open as tabs on this device, per vault, in their order: they open again with the
-/// vault. Kept on this device only (<see cref="NodeListsFile"/>), never in the vault.
+/// vault. Kept on this device only (<see cref="NodeListsFile{T}"/>), never in the vault.
 /// </summary>
 public sealed class ViewTabs(string path, ILog? log = null)
 {
-    private readonly NodeListsFile _file = new(path, "Tabs", "open tabs", log);
+    private readonly NodeListsFile<Guid> _file = new(path, "Tabs", "open tabs", log);
 
     /// <summary>The views open in this vault, in their order. Some may be unknown (removed, or not synced yet).</summary>
     public IReadOnlyList<Guid> Of(Guid vault) => _file.Of(vault);

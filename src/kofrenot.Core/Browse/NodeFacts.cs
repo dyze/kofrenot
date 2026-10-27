@@ -8,13 +8,18 @@ namespace Kofrenot.Core.Browse;
 /// (a dataset's: its file's kind, "PNG file"), a dataset's size, and when it last changed.
 /// </summary>
 /// <param name="Size">The latest file's size in bytes, for a dataset with a file; null otherwise.</param>
-/// <param name="Modified">The latest of its creation, its names, its types, its colours, its content versions and its links added.</param>
+/// <param name="Modified">When it last changed (<see cref="ModifiedOf"/>).</param>
 public sealed record NodeFacts(string Type, long? Size, DateTimeOffset Modified)
 {
     public static NodeFacts Of(KnowledgeGraph graph, Node node)
     {
         var file = graph.DatasetVersionsOf(node.Id) is [.., var latest] ? latest.File : null;
-        var modified = graph.NamesOf(node.Id).Select(name => name.At)
+        return new NodeFacts(file is null ? graph.Types.NodeTypeName(node.Type) : DatasetType.Of(file).Name, file?.Size, ModifiedOf(graph, node));
+    }
+
+    /// <summary>The latest of a node's creation, its names, its types, its colours, its content versions and its links added.</summary>
+    public static DateTimeOffset ModifiedOf(KnowledgeGraph graph, Node node) =>
+        graph.NamesOf(node.Id).Select(name => name.At)
             .Concat(graph.RetypesOf(node.Id).Select(retype => retype.At))
             .Concat(graph.ColoringsOf(node.Id).Select(color => color.At))
             .Concat(graph.NoteVersionsOf(node.Id).Select(version => version.At))
@@ -23,6 +28,4 @@ public sealed record NodeFacts(string Type, long? Size, DateTimeOffset Modified)
             .Concat(graph.LinksOf(node.Id).Select(link => link.Created))
             .Append(node.Created)
             .Max();
-        return new NodeFacts(file is null ? graph.Types.NodeTypeName(node.Type) : DatasetType.Of(file).Name, file?.Size, modified);
-    }
 }

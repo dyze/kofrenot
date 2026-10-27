@@ -4,12 +4,12 @@ namespace Kofrenot.Core.Browse;
 
 /// <summary>
 /// The nodes kept offline on this device, per vault: their content is downloaded ahead
-/// (<see cref="Storage.Vault.KeepOfflineAsync"/>). Kept on this device only (<see cref="NodeListsFile"/>),
+/// (<see cref="Storage.Vault.KeepOfflineAsync"/>). Kept on this device only (<see cref="NodeListsFile{T}"/>),
 /// never in the vault: each device chooses its own.
 /// </summary>
 public sealed class OfflineNodes(string path, ILog? log = null)
 {
-    private readonly NodeListsFile _file = new(path, "Offline", "nodes kept offline", log);
+    private readonly NodeListsFile<Guid> _file = new(path, "Offline", "nodes kept offline", log);
 
     /// <summary>The nodes kept offline in this vault, the first kept first.</summary>
     public IReadOnlyList<Guid> Of(Guid vault) => _file.Of(vault);

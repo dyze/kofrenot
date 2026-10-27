@@ -150,22 +150,18 @@ public sealed partial class HomePage : UserControl, IPage
             return;
         }
 
-        // Pinned, changed lately (on any device), then recent on this phone, as the input box on Windows; each node once.
-        var now = DateTimeOffset.UtcNow;
-        var pinned = graph.PinnedNodes;
-        var changed = ChangedLately.Of(graph, now).Where(change => !pinned.Contains(change.Node)).ToList();
-        var recent = _shell.Services.Recent.Of(vault.Id)
-            .Select(graph.FindNode)
-            .OfType<Node>()
-            .Where(node => !pinned.Contains(node) && changed.All(change => change.Node != node))
-            .ToList();
+        // Pinned, then recent (opened on this phone or changed on any device), as the input box on Windows.
+        var start = StartNodes.Of(graph, _shell.Services.Recent.Of(vault.Id), DateTimeOffset.UtcNow);
         var rows = new List<object>();
-        AddSection(rows, "Pinned", pinned.Select(node => NodeRow.Of(graph, node)));
-        AddSection(rows, "Changed lately", changed.Select(change => NodeRow.Of(graph, change.Node, detail: $"{graph.Types.NodeTypeName(change.Node.Type)} · {TimeAgo.Of(change.At, now)}")));
-        AddSection(rows, "Recent", recent.Select(node => NodeRow.Of(graph, node)));
+        AddSection(rows, "Pinned", start.Pinned.Select(node => NodeRow.Of(graph, node)));
+        AddSection(rows, "Recent", start.Recent.Select(recent => NodeRow.Of(graph, recent.Node, detail: RecentDetail(graph, recent))));
         List.ItemsSource = rows;
-        ShowMessage(rows.Count == 0 ? "Type a name to find a node. Pinned, changed and recent nodes show here." : null);
+        ShowMessage(rows.Count == 0 ? "Type a name to find a node. Pinned and recent nodes show here." : null);
     }
+
+    // Its type, and its latest activity when known: "Note · changed 5 min ago".
+    private static string? RecentDetail(KnowledgeGraph graph, RecentNode recent) =>
+        recent.Detail is { } detail ? $"{graph.Types.NodeTypeName(recent.Node.Type)} · {detail}" : null;
 
     private static void AddSection(List<object> rows, string header, IEnumerable<NodeRow> section)
     {

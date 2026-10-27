@@ -10,7 +10,7 @@ public sealed class InputPresenterTests
     private readonly ManualClock _clock = new() { Now = Start.AddDays(30) };
     private readonly InputPresenter _input;
 
-    // A month after the nodes are added: none is "changed lately", but where a test says so.
+    // A month after the nodes are added: none is recent for a change, but where a test says so.
     public InputPresenterTests() => _input = new InputPresenter { Clock = _clock };
 
     [Fact]
@@ -328,7 +328,7 @@ public sealed class InputPresenterTests
     {
         var (dune, herbert, arrakis) = (Add("Dune"), Add("Frank Herbert"), Add("Arrakis"));
         _graph.Apply(new NodePinned(Guid.NewGuid(), Start, dune.Id));
-        _input.Recent = [arrakis.Id, Guid.NewGuid(), dune.Id, herbert.Id];
+        _input.Recent = [new(arrakis.Id, null), new(Guid.NewGuid(), null), new(dune.Id, null), new(herbert.Id, null)];
 
         _input.Update(_graph, "");
 
@@ -337,25 +337,25 @@ public sealed class InputPresenterTests
     }
 
     [Fact]
-    public void AnEmptyText_ListsTheNodesChangedLately_BetweenPinnedAndRecent_EachOnce()
+    public void AnEmptyText_ListsTheNodesChanged_OnAnyDevice_AmongTheRecentOnes_WithTheirActivity()
     {
         var (dune, herbert, _) = (Add("Dune"), Add("Frank Herbert", minutes: 5), Add("Arrakis", minutes: 10));
         var old = Add("Old", minutes: -20 * 24 * 60);
         _graph.Apply(new NodePinned(Guid.NewGuid(), Start, dune.Id));
-        _input.Recent = [herbert.Id, old.Id];
+        _input.Recent = [new(old.Id, Start.AddMinutes(90)), new(herbert.Id, Start)];
         _clock.Now = Start.AddHours(2);
 
         _input.Update(_graph, "");
 
-        Assert.Equal(["Pinned", "Dune", "Changed lately", "Arrakis", "Frank Herbert", "Recent", "Old"], _input.Rows.Select(row => row.Text));
-        Assert.Equal(["1 h ago", "1 h ago"], _input.Rows.Where(row => row.Detail is not null).Select(row => row.Detail));
+        Assert.Equal(["Pinned", "Dune", "Recent", "Old", "Arrakis", "Frank Herbert"], _input.Rows.Select(row => row.Text));
+        Assert.Equal(["opened 30 min ago", "changed 1 h ago", "changed 1 h ago"], _input.Rows.Where(row => row.Detail is not null).Select(row => row.Detail));
     }
 
     [Fact]
     public void ATypedText_ListsNoRecentNodes()
     {
         var dune = Add("Dune");
-        _input.Recent = [dune.Id];
+        _input.Recent = [new(dune.Id, null)];
 
         _input.Update(_graph, "Frank");
 
