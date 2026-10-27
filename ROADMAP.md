@@ -38,3 +38,5 @@ Every planned feature is implemented: [CHANGELOG.md](CHANGELOG.md#unreleased), u
 	* Together, these features transform Kofrenot from a simple knowledge graph into a richer, contextual knowledge system, enabling more precise searches, historical tracking, and complex relationships while preserving the existing simple model.
 15. Both · **Faster transfers.** Many small files downloaded in one stream; big files uploaded in parts, resumable.
 16. Both · **Restore previous versions.** A node's versions are listed, so a mistake can be undone by restoring one of them.
+17. Android · **Import from the camera.** A photo or video taken from kofrenot becomes a dataset, after the same preview as **＋**, without passing through the phone's gallery.
+18. Both · **Build date in About.** The version shows its commit's date and time beside its hash (`0.10-dev (a23478d, 2026-10-27 14:05)`), in Settings > About and the log, read from the build like the hash.
