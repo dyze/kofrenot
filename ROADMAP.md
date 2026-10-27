@@ -16,19 +16,11 @@ Scope of each planned version. Implemented features move to [CHANGELOG.md](CHANG
 | 0.10    | Released  | Offline pins, file drops; notes and files added on Android                         |
 | 0.11    | Planned   | Composition: node types made of fields, several per node; fields of a node's own   |
 
-## 0.11
-Composition, as decided in [GOAL.md](docs/GOAL.md#composition-types-made-of-fields). Vault format 8: a vault upgraded is closed by kofrenot 0.10, on Windows and Android.
-1. Both · **Fields.** Field kinds Text, Number, Date, Url, Checkbox and Choice; a note's text, a dataset's file and a view's definition become fields of their built-in types. Values shown in a node's details, searched offline.
-2. Windows · **Your node types.** A name, an icon, a colour and fields, in Settings > Node types; a field added shows empty on its nodes, one removed stays, with its value, as their own.
-3. Both · **Several types per node.** Each brings its fields; types added on two devices are both kept. A first version may allow at most one of *note*, *dataset* and *view* per node.
-4. Windows · **Fields of a node's own**, added in its details. Fields of the same name are shown apart (*Birth date (Person)*, *Birth date (own)*), merged on demand.
-5. Windows · **Fill fields** in a node's details; Android shows them.
-
 ## 0.12
 1. Both · **Events and qualifiers.**
 	* **Qualifiers** add context to a link: date, place, source, quantity, confidence. *Dune → written by → Frank Herbert (date: 1965)*.
 	* **Events** link several nodes, each in a role, with qualifiers of their own. *Publication of Dune (work: Dune, publisher: Chilton Books, date: 1965, country: USA)*.
-	* Qualifiers and roles are [fields](#011), so they are searched offline like any other.
+	* Qualifiers and roles are [fields](README.md#node-types-and-fields), so they are searched offline like any other.
 2. Both · **Restore previous versions.** A node's versions are listed, so a mistake can be undone by restoring one of them.
 3. Android · **Add and edit.** Input box, creation screen, renames, colours, pins (notes and files: 0.10).
 4. Android · **Import from the camera.** A photo or video taken from kofrenot becomes a dataset, after the same preview as **＋**, without passing through the phone's gallery.

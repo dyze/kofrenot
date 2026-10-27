@@ -17,6 +17,7 @@ A private knowledge system for Windows, read on Android too: notes, files and th
 - **One box to find and add**: type `Dune`, or `Dune relates to Frank Herbert`, and the nodes and the link are added. Your own link types too.
 - **Notes** in Markdown, with **task lists** and **colours**, as in Google Keep.
 - **Datasets**: files of any kind and size, with thumbnails and a viewer for images and texts.
+- **Your node types**: a *Person* with a birth date and a website, a *Book* with its genre; a node can have several, and fields of its own. Values are searched offline.
 - **Views**: trees and lists over your nodes, in tabs, shown as rows or as **cards**.
 - **Encrypted**: everything in a vault, names included, opened by your pass phrase or your recovery key.
 - **Offline first**: browse, search and add without a network.
@@ -39,14 +40,19 @@ Both apps share the same vaults and the same core; each shows its own set of fea
 | Sync status, sync now | ✔ | ✔ while the app is shown |
 | **Browse** | | |
 | Search names, pinned and recent nodes | ✔ | ✔ |
+| Search field values | ✔ | ✔ |
 | Recent: opened here or changed on any device (last 7 days) | ✔ empty input box | ✔ home |
 | Node details, links | ✔ | ✔ (read only) |
+| Node types and fields shown | ✔ | ✔ (read only) |
 | Views: trees and lists, as tabs | ✔ rows, cards, details | ✔ rows |
 | Pin (synced: listed while the input box is empty) | ✔ | shown, set on Windows |
 | Keep offline (this device only: content downloaded ahead) | ✔ server vaults | ✔ |
 | **Change** | | |
 | Add nodes and links (input box, creation screen) | ✔ | — |
-| Rename, retype, colour, pin, delete; move and copy in a tree | ✔ | — |
+| Rename, colour, pin, delete; move and copy in a tree | ✔ | — |
+| Types: add to a node, take out | ✔ | — |
+| Your node types: create, change, remove (Settings > Node types) | ✔ | — |
+| Fields: fill, add your own, merge, resolve a conflict | ✔ | — |
 | Notes: edit | ✔ editor with a Markdown toolbar and a task list editor | ✔ Markdown text, task list editor (no reordering); tap a checkbox |
 | Notes: resolve a conflict | ✔ keep one, or merge by hand | ✔ keep one |
 | Datasets: add files | ✔ creation screen, drop zone, drop on a tree | ✔ **＋**, with a preview |
@@ -129,7 +135,16 @@ Type in the box at the top of the main window; the line under it says what Enter
 - **Keep offline** (the arrow beside the pin, in a server vault's node details): its content (a note's text, a dataset's file) is downloaded ahead and kept on this computer, so it opens offline. Each device chooses its own: nothing is written to the vault. The tooltip says *kept offline* once it is here.
 
 ### Node details
-**Enter** or a double-click on a node opens its details: its name, type, colour, pin and links. **F2** renames it; **+ Link** (**Ctrl+K**) links it to another; a link opens the node at its other end. **Esc** goes back.
+**Enter** or a double-click on a node opens its details: its name, types, colour, pin, fields and links. **F2** renames it; **+ Link** (**Ctrl+K**) links it to another; a link opens the node at its other end. **Esc** goes back.
+
+### Node types and fields
+A node has one or several **types**, each with its **fields**: *Frank Herbert* can be a *Person* (Born, Website) and an *Author* (Genre). **Add type…** in its details adds one, **×** takes one out (asked first). A note, a dataset and a view are built-in types: a node is one of them at most, and adding another hides its content until it gets that type back.
+
+- **Your node types**, in Settings > **Node types**: a name, an icon, a colour, and fields of a kind: text, number, date, address, checkbox or choice (its options). A field added shows empty on its nodes; one taken out stays on them, with its value, as their own.
+- **Fill a field** in the details: type its value (**Enter** or leaving the box writes it, **Esc** puts it back, empty clears it), tick a checkbox, or choose an option. Dates and numbers are written the same way on every device (`2026-10-27`, `1234.5`).
+- **Add field…** gives a node a field of its own, with its first value; cleared, it goes. Two fields of one name show where they come from (*Born (Person)*, *Born (own)*); the merge button keeps one value.
+- A value set on two devices before they synced shows both, to keep one.
+- The input box also finds a node by its values: *Frank Herbert — Birthplace: Tacoma*, after the nodes found by name.
 
 ### Notes
 A note is Markdown text, saved as a new version each time (**Ctrl+S**, or by leaving it). **Checkboxes** on its toolbar turns its lines into a task list.
@@ -158,6 +173,7 @@ Gear button in the title bar, or tray menu > Settings. Changes are saved at once
 | Key bindings | Every shortcut                                                                        |
 | Vault        | Your vaults: add, remove, order, rename, hotkey, pass phrase, members                 |
 | Server       | Your account on a Kofre server: sign up, sign in, password, the account's pass phrase |
+| Node types   | Your node types: name, icon, colour and fields                                        |
 | Link types   | The link types and their aliases; your own link types                                 |
 | Appearance   | Light, dark, or as Windows                                                            |
 | Logging      | Debug logging, the log window                                                         |

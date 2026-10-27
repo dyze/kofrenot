@@ -8,9 +8,28 @@ It covers kofrenot on Windows and on Android; versions before 0.9 ran on Windows
 
 ## [Unreleased]
 
+Vault format 8: a vault upgraded is closed by kofrenot 0.10 and older, on Windows and Android ([Format](docs/ARCHITECTURE.md#format)).
+
 ### Added
 - **Both**
+  - **Fields**: a node type is a list of fields of a kind (text, number, date, address, checkbox, choice); a node shows the fields of its types in its details, empty until filled. A note's text, a dataset's file and a view's definition are the fields of the built-in types ([README](README.md#node-types-and-fields)).
+  - **Several types per node**: each brings its fields; types added on two devices are both kept. A node is a note, a dataset or a view at most.
+  - **Values searched offline**: the input box (on the phone, the home) also finds a node by its fields' values, after the nodes found by name, with the field that matched.
   - **Build date in About**: Settings > About and the log show the date and time of the build's commit beside its hash, in local time: `0.11-dev (a23478d, 2026-10-27 14:05)`.
+- **Windows**
+  - **Your node types** in Settings > Node types: a name, an icon, a colour and fields. A field added shows empty on its nodes; one taken out, or a type removed, leaves its values on them as their own fields.
+  - **Fill fields** in a node's details; **Add field…** gives it a field of its own; two fields of the same name are shown apart (*Born (Person)*, *Born (own)*) and merged on demand, keeping one value; a value set on two devices offers each to keep.
+  - **Add type…** and **×** in a node's details add a type to a node and take one out.
+- **Android**
+  - A node's page shows its types and fields; your node types' icons show in the lists.
+
+### Changed
+- **Both**
+  - A node's type changed on two devices before they synced is no longer a conflict: it has both types.
+- **Windows**
+  - A node's type is no longer chosen in a list: types are added and taken out (**Add type…**, **×**).
+- **Android**
+  - Settings > About says what the phone changes: notes and files are added there.
 
 ## [0.10] - 2026-10-27
 
