@@ -16,6 +16,9 @@ namespace Kofrenot.Phone.Views;
 /// <summary>A version of a dataset's file: its name and size, to open with another app or save.</summary>
 public sealed record FileRow(DatasetEdited Version, string Name, string Size);
 
+/// <summary>A field shown on a node's page: its label and its value as shown.</summary>
+public sealed record FieldLine(string Label, string Value);
+
 /// <summary>
 /// A node's details, as in the main window: name, type, colour, links read from its side; a tap
 /// on a link opens that node (back goes through the trail). A note's content is shown, fetched
@@ -90,10 +93,18 @@ public sealed partial class NodePage : UserControl, IPage
         ColorDot.IsVisible = details.Color != NodeColor.None;
         Pinned.IsVisible = details.IsPinned;
         ShowOffline(vault, details.Node);
+        ShowFields(details);
         ShowConflicts(details);
         ShowContent(vault, details.Node, details.Color);
         Links.ItemsSource = details.Links.Select(link => NodeRow.Of(vault.Graph, link.OtherNode, link.Type)).ToList();
         LinksHeader.IsVisible = details.Links.Count > 0;
+    }
+
+    // The fields of its types and its own, empty ones of its types included, as on Windows.
+    private void ShowFields(NodeDetails details)
+    {
+        Fields.ItemsSource = details.Fields.Select(field => new FieldLine(field.Label, field.Value is null ? "—" : field.Display)).ToList();
+        Fields.IsVisible = details.Fields.Count > 0;
     }
 
     private void ShowConflicts(NodeDetails details)
@@ -102,6 +113,11 @@ public sealed partial class NodePage : UserControl, IPage
         if (details.NameConflict.Count > 1)
         {
             conflicts.Add($"Named in {details.NameConflict.Count} ways: {string.Join(", ", details.NameConflict)}.");
+        }
+
+        foreach (var field in details.Fields.Where(field => field.Conflict.Count > 1))
+        {
+            conflicts.Add($"{field.Label} set in {field.Conflict.Count} ways: {string.Join(", ", field.Conflict)}.");
         }
 
         Conflict.Text = string.Join("\n", conflicts.Append("Resolved in kofrenot on Windows."));

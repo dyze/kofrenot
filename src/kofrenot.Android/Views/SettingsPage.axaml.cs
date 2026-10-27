@@ -15,7 +15,7 @@ public sealed partial class SettingsPage : UserControl, IPage
         InitializeComponent();
         DebugBox.IsChecked = shell.Services.Settings.DebugLogging;
         LogFolder.Text = $"Kept on this phone only: {shell.Services.Files.Logs}";
-        About.Text = $"kofrenot {AppServices.Version} for Android. It reads your server vaults, also offline; they are changed in kofrenot on Windows.";
+        About.Text = $"kofrenot {AppServices.Version} for Android. It reads your server vaults, also offline, and adds notes and files to them; the rest is changed in kofrenot on Windows.";
         Refresh();
     }
 

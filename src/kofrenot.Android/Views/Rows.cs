@@ -23,7 +23,8 @@ public sealed record NodeRow(Node Node, string Name, string Detail, string Glyph
     public static NodeRow Of(KnowledgeGraph graph, Node node, string? detail = null, string? mark = null, int depth = 0)
     {
         var visual = NodeVisual.Of(graph, node);
-        return new NodeRow(node, node.Name + mark, detail ?? graph.Types.NodeTypeName(node.Type), NodeLook.Glyph(visual.Icon), NodeLook.Brush(visual.Color), depth);
+        var glyph = visual.TypeIcon is { } icon ? NodeLook.TypeGlyph(icon) : NodeLook.Glyph(visual.Icon);
+        return new NodeRow(node, node.Name + mark, detail ?? graph.Types.NodeTypeName(node.Type), glyph, NodeLook.Brush(visual.Color), depth);
     }
 }
 
@@ -43,6 +44,32 @@ public static class NodeLook
 
     /// <summary>The colour's brush, as on Windows; null for none.</summary>
     public static IBrush? Brush(NodeColor color) => Shades.GetValueOrDefault(color);
+
+    private static readonly Dictionary<string, string> TypeGlyphs = new()
+    {
+        ["Contact"] = "☺",
+        ["People"] = "☻",
+        ["Book"] = "▥",
+        ["Home"] = "⌂",
+        ["Place"] = "⌖",
+        ["Calendar"] = "▦",
+        ["Flag"] = "⚑",
+        ["Tag"] = "#",
+        ["Heart"] = "♥",
+        ["Star"] = "★",
+        ["Idea"] = "✦",
+        ["Work"] = "▣",
+        ["Music"] = "♫",
+        ["Movie"] = "▶",
+        ["Shop"] = "¤",
+        ["Globe"] = "◍",
+        ["Airplane"] = "✈",
+        ["Game"] = "♟",
+        ["Code"] = "{}",
+    };
+
+    /// <summary>The glyph of a node type's icon (<see cref="TypeIcons"/>); the generic one for a name this version does not know.</summary>
+    public static string TypeGlyph(string icon) => TypeGlyphs.GetValueOrDefault(icon) ?? Glyph(NodeIcon.Generic);
 
     public static string Glyph(NodeIcon icon) => icon switch
     {
