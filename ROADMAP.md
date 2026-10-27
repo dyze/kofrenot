@@ -40,3 +40,4 @@ Every planned feature is implemented: [CHANGELOG.md](CHANGELOG.md#unreleased), u
 16. Both · **Restore previous versions.** A node's versions are listed, so a mistake can be undone by restoring one of them.
 17. Android · **Import from the camera.** A photo or video taken from kofrenot becomes a dataset, after the same preview as **＋**, without passing through the phone's gallery.
 18. Both · **Build date in About.** The version shows its commit's date and time beside its hash (`0.10-dev (a23478d, 2026-10-27 14:05)`), in Settings > About and the log, read from the build like the hash.
+19. Windows · **Privacy screen.** When the window is hidden or minimized, the vault is covered (an option, on by default); shown again with a hotkey, it opens on a plain screen with a **Show** button, so nothing is disclosed by mistake (screen sharing, someone nearby). Unlike the padlock, the vault stays unlocked: no pass phrase is asked.
