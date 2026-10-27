@@ -2,6 +2,7 @@ using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Media;
 using Kofrenot.Core.Graph;
+using Kofrenot.Core.Logging;
 using Kofrenot.Core.Notes;
 using Kofrenot.Core.Storage;
 using Kofrenot.Phone.Platform;
@@ -19,6 +20,35 @@ public sealed partial class NodePage
     private (Node Node, NoteState Loaded)? _editing;
 
     private bool CanEdit => !_shell.Services.Session.IsReadOnly;
+
+    /// <summary>
+    /// Before leaving the note: when its text was changed and not saved, asks whether to discard
+    /// it, then runs <paramref name="leave"/> on yes. True while it asks: the caller does not leave.
+    /// </summary>
+    private bool AsksBeforeLeaving(Action leave)
+    {
+        if (_editing is not { } editing)
+        {
+            return false;
+        }
+
+        if ((NoteEditor.Text ?? string.Empty) == (editing.Loaded.Text ?? string.Empty))
+        {
+            _editing = null;
+            return false;
+        }
+
+        _shell.Run(async () =>
+        {
+            if (await _shell.Confirm("Discard your changes to this note?", "Discard"))
+            {
+                _shell.Services.Log.Info("Action", "Note changes discarded");
+                _editing = null;
+                leave();
+            }
+        });
+        return true;
+    }
 
     // The latest version, then those in conflict with it; one not here says why.
     private void ShowNote(Vault vault, Node node, NodeColor color)

@@ -44,6 +44,17 @@ public sealed partial class NodePage : UserControl, IPage
 
     public bool GoBack()
     {
+        if (AsksBeforeLeaving(() =>
+            {
+                if (!GoBack())
+                {
+                    _shell.Back();
+                }
+            }))
+        {
+            return true;
+        }
+
         if (_browser.Depth <= 1)
         {
             return false;
@@ -136,7 +147,7 @@ public sealed partial class NodePage : UserControl, IPage
 
     private void Link_Click(object? sender, RoutedEventArgs e)
     {
-        if ((sender as Control)?.Tag is NodeRow row && Vault is { } vault)
+        if ((sender as Control)?.Tag is NodeRow row && Vault is { } vault && !AsksBeforeLeaving(() => Link_Click(sender, e)))
         {
             if (!_browser.OpenLinked(row.Node))
             {
