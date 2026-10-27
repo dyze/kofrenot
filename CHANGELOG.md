@@ -22,6 +22,7 @@ It covers kofrenot on Windows and on Android; versions before 0.9 ran on Windows
 ### Changed
 - **Android**
   - **Syncs both ways**: kofrenot for Android uploads what it saves (notes, files), at the next sync, or once back online; the sync status counts what waits (*· 2 to upload*). It still makes no other change: nodes, links, pins, the vault itself, members and keys stay with kofrenot on Windows ([ANDROID-CONCEPT.md](docs/ANDROID-CONCEPT.md#content-only-safely)). The *Read only* banner shows only for a vault shared with you to read.
+- **Versions under development end in `-dev`** (`0.10-dev`), shown so in the main window, Settings > About and on Android, so a build between releases is not taken for one; the update check offers the release to it ([Versioning](docs/GOAL.md#versioning)).
 - **Release files named by platform**: `kofrenot-windows-setup-<version>.exe`, `kofrenot-windows-portable-<version>.zip` and `kofrenot-android-<version>.apk` ([README](README.md#install)).
 - **Skipped change files read again sooner**: a change file skipped because it was locked or still being copied is read again 2, 5, 10 and 30 seconds later, not only at the next sync or when the window is shown ([Robust and secure](docs/GOAL.md#robust-and-secure)).
 

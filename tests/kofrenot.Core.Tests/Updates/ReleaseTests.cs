@@ -28,6 +28,13 @@ public class ReleaseTests
     [InlineData("0.6", "0.7", false)]
     [InlineData("latest", "0.7", false)]
     [InlineData("0.8", "unknown", false)]
+    [InlineData("0.10", "0.10-dev", true)]
+    [InlineData("0.11", "0.10-dev", true)]
+    [InlineData("0.9", "0.10-dev", false)]
+    [InlineData("0.10-dev", "0.10", false)]
+    [InlineData("0.10-dev", "0.10-dev", false)]
+    [InlineData("0.10-dev", "0.9", true)]
+    [InlineData("x-dev", "0.9", false)]
     public void IsNewer_ComparesMajorThenMinor(string candidate, string current, bool expected)
     {
         Assert.Equal(expected, Release.IsNewer(candidate, current));

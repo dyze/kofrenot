@@ -39,6 +39,13 @@ public class AppVersionTests
     }
 
     [Fact]
+    public void AVersionUnderDevelopment_KeepsItsSuffix()
+    {
+        Assert.Equal("0.10-dev", AppVersion.Format("0.10-dev+4e9c3137c078155d"));
+        Assert.Equal("0.10-dev (4e9c313)", AppVersion.FormatWithCommit("0.10-dev+4e9c3137c078155d"));
+    }
+
+    [Fact]
     public void FormatWithCommit_MarksADirtyBuild()
     {
         Assert.Equal("0.4 (4e9c313-dirty)", AppVersion.FormatWithCommit("0.4+4e9c3137c078155d.dirty"));

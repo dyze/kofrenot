@@ -10,9 +10,10 @@
     <RootNamespace>Kofrenot.Phone</RootNamespace>
     <ApplicationId>eu.dlabs.kofrenot</ApplicationId>
     <ApplicationTitle>kofrenot</ApplicationTitle>
-    <!-- From <Version> (Directory.Build.props): Android's version code must grow, 0.9 is 9, 1.0 is 1000. -->
+    <!-- From <Version> (Directory.Build.props): Android's version code must grow, 0.9 is 9, 1.0 is 1000;
+         a version under development (0.10-dev) has its release's code. -->
     <ApplicationDisplayVersion>$(Version)</ApplicationDisplayVersion>
-    <ApplicationVersion>$([MSBuild]::Add($([MSBuild]::Multiply($([System.Version]::Parse('$(Version)').Major), 1000)), $([System.Version]::Parse('$(Version)').Minor)))</ApplicationVersion>
+    <ApplicationVersion>$([MSBuild]::Add($([MSBuild]::Multiply($([System.Version]::Parse('$(VersionNumber)').Major), 1000)), $([System.Version]::Parse('$(VersionNumber)').Minor)))</ApplicationVersion>
     <AndroidPackageFormat>apk</AndroidPackageFormat>
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
     <!-- The screens are made in code with their shell, never loaded by their URI. -->

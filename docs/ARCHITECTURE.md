@@ -86,9 +86,9 @@ One namespace per folder (`Kofrenot.Core.Settings`, `Kofrenot.UI.Views`, ...). T
 
 The update check (`GitHubReleaseFeed` in App) and the server (`KofreClient` in Core) use .NET's own `HttpClient`: kofrenot's only network access. Encryption uses .NET's own `AesGcm` and `Rfc2898DeriveBytes` (Core), and `ProtectedData` (DPAPI, part of the Windows desktop framework, App): no package.
 
-Shared build settings and the version are in `Directory.Build.props`; output goes to `artifacts/`. Builds are deterministic and `DeterministicSourcePaths` replaces the local repo path with `/_/` in DLLs, their embedded debug info (`DebugType=embedded`: no `.pdb` files) and Source Link data, so no local path (or user name) ships. The installer is built with [Inno Setup](https://jrsoftware.org/isinfo.php) (`build/installer.cmd`, `build/installer/kofrenot.iss`), a tool installed on the PC, not a package.
+Shared build settings and the version are in `Directory.Build.props` (`Version`, `-dev` between releases, and `VersionNumber` derived from it for the places that take numbers only: the APK's version code, the setup's `VersionInfoVersion`); output goes to `artifacts/`. Builds are deterministic and `DeterministicSourcePaths` replaces the local repo path with `/_/` in DLLs, their embedded debug info (`DebugType=embedded`: no `.pdb` files) and Source Link data, so no local path (or user name) ships. The installer is built with [Inno Setup](https://jrsoftware.org/isinfo.php) (`build/installer.cmd`, `build/installer/kofrenot.iss`), a tool installed on the PC, not a package.
 
-Android (`build\android.cmd`): an APK for Android 8.0 (API 26) and later, its version name and code from `<Version>` (0.9 is 9, 1.0 is 1000), profiled AOT for a faster start. Not in `kofrenot.sln`: it needs the .NET Android workload. Android's implicit usings `Android.App` and `Android.Widget` are removed, as they clash with Avalonia's (`Application`, `Button`).
+Android (`build\android.cmd`): an APK for Android 8.0 (API 26) and later, its version name from `<Version>` (`0.10-dev`), its version code from `VersionNumber`, the version without `-dev` (0.9 is 9, 1.0 is 1000), profiled AOT for a faster start. Not in `kofrenot.sln`: it needs the .NET Android workload. Android's implicit usings `Android.App` and `Android.Widget` are removed, as they clash with Avalonia's (`Application`, `Button`).
 
 Publishing is self-contained, so the PC needs no .NET runtime (installing one needs administrator rights, and the portable zip must run on any PC). `PublishSingleFile` packs the runtime and every managed DLL into `kofrenot.exe`; the native DLLs stay next to it, so nothing is unpacked at start. No trimming: WPF and WinForms do not support it. `SatelliteResourceLanguages=en` leaves out the translated framework messages.
 
@@ -144,7 +144,7 @@ App.OnStartup
 [CHANGELOG.md](../CHANGELOG.md), at the repo root, in the [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) format (workflow in `CLAUDE.md`). `kofrenot.App.csproj` copies it next to kofrenot.exe (build and publish), so the setup and the zip ship it; *Show changelog* in Settings > About opens it as text in `ChangelogWindow` (`Changelog.Read`, at each opening), and the setup's last page offers to open it in Notepad.
 
 ## Updates
-- `UpdateChecker` asks `IReleaseFeed` (GitHub's latest release, `ProjectLinks.LatestReleaseApi`) at most once a day, when *Check for updates* is on. Nothing is downloaded: the user is shown the release page.
+- `UpdateChecker` asks `IReleaseFeed` (GitHub's latest release, `ProjectLinks.LatestReleaseApi`) at most once a day, when *Check for updates* is on. Nothing is downloaded: the user is shown the release page. A release is newer when its number is higher, or equal to that of a version under development (`Release.IsNewer`: `0.10` is newer than `0.10-dev`).
 - The Settings button is marked until the newer release is seen: opening Settings > About acknowledges it (`ShouldNotify`, `Acknowledge`); a later release or another installed version marks it again. The About tab is marked while a newer release exists.
 - `UpdateStore` (`updates.json`) is state, not a setting.
 

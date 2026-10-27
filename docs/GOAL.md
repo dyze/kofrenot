@@ -74,7 +74,14 @@ What could go wrong, and how it is addressed today:
 
 ## Versioning
 - Format `MAJOR.MINOR`, starting at **0.1**, then 0.2, and so on. No `v` prefix, and no 1.0 until I decide.
-- Defined once, in `Directory.Build.props`, stamped into every produced assembly, and shown at the bottom right of the main window.
+- **Under development**, the version has a `-dev` suffix: `0.10-dev` is 0.10 being built, not released, older than `0.10` (the update check offers the release to it). Only a release is ever plain `MAJOR.MINOR`:
+
+  ```
+  0.9 released ──► 0.10-dev … ──► 0.10 (release commit) ──► 0.11-dev …
+  ```
+
+  The release commit drops `-dev`; the next commit sets the next version with `-dev`. Both happen when I ask for a release or a bump.
+- Defined once, in `Directory.Build.props`, stamped into every produced assembly, and shown at the bottom right of the main window, `-dev` included. Where only numbers fit (Android's version code, the Windows file version), the number without `-dev` is used (`VersionNumber`).
 - Each build is identified by its git commit (no build number), shown in Settings > About and the log: `0.4 (4e9c313)`, `-dirty` for a build with uncommitted changes.
 - The vault has its own **format** number, raised only by a breaking change. A kofrenot reads the formats up to its own, and asks to be upgraded for a newer one: [ARCHITECTURE.md](ARCHITECTURE.md#format).
 

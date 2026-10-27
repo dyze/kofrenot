@@ -1,12 +1,15 @@
 ; kofrenot installer (Inno Setup 6.3 or later).
 ; Built by build\installer.cmd, which publishes the app and passes the version:
-;   ISCC.exe /DAppVersion=<version> /DPublishDir=<published app folder> build\installer\kofrenot.iss
+;   ISCC.exe /DAppVersion=<version> /DVersionNumber=<version without -dev> /DPublishDir=<published app folder> build\installer\kofrenot.iss
 ;
 ; Per-user install: no administrator rights, installed in %LOCALAPPDATA%\Programs\kofrenot.
 ; User data (%LOCALAPPDATA%\kofrenot: settings, logs) is left in place on uninstall.
 
 #ifndef AppVersion
   #error AppVersion is not defined. Run build\installer.cmd instead of compiling this file directly.
+#endif
+#ifndef VersionNumber
+  #error VersionNumber is not defined. Run build\installer.cmd instead of compiling this file directly.
 #endif
 #ifndef PublishDir
   #error PublishDir is not defined. Run build\installer.cmd instead of compiling this file directly.
@@ -25,7 +28,8 @@ AppVersion={#AppVersion}
 AppVerName={#AppName} {#AppVersion}
 ; Also the setup's CompanyName; matches <Company> in Directory.Build.props.
 AppPublisher=dlabs
-VersionInfoVersion={#AppVersion}
+; Numbers only: the version without "-dev".
+VersionInfoVersion={#VersionNumber}
 PrivilegesRequired=lowest
 DefaultDirName={autopf}\{#AppName}
 DisableProgramGroupPage=yes
