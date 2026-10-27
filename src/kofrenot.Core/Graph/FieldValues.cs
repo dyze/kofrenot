@@ -21,6 +21,9 @@ internal sealed class FieldValues
     /// <summary>False when this value is already there.</summary>
     public bool Add(FieldSet value) => _versions.Add(value);
 
+    /// <summary>The nodes with a value set, removed or not arrived included.</summary>
+    public IEnumerable<Guid> Nodes => _versions.Nodes;
+
     /// <summary>The values of a node, whatever they replace: when it last changed.</summary>
     public IEnumerable<FieldSet> Of(Guid node) => _versions.Of(node);
 

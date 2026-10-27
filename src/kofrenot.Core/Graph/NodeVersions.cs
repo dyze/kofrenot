@@ -26,6 +26,9 @@ internal sealed class NodeVersions<T>
         return versions.TryAdd(version.Id, version);
     }
 
+    /// <summary>The nodes with versions.</summary>
+    public IEnumerable<Guid> Nodes => _byNode.Keys;
+
     /// <summary>The versions of a node, whatever they replace.</summary>
     public IEnumerable<T> Of(Guid node) => _byNode.TryGetValue(node, out var versions) ? versions.Values : [];
 

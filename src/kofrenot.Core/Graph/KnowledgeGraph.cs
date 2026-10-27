@@ -228,6 +228,9 @@ public sealed class KnowledgeGraph
     /// <summary>The fields of a node that were set, each with its current values, in the order they were first set.</summary>
     public IReadOnlyList<FieldVersions> FieldsOf(Guid node) => _fields.Current(node);
 
+    /// <summary>The nodes shown with a field set: what the search goes through for values.</summary>
+    internal IEnumerable<Node> NodesWithFields => _fields.Nodes.Select(FindNode).OfType<Node>();
+
     /// <summary>The values set on a node, whatever they replace: when it last changed.</summary>
     public IEnumerable<FieldSet> FieldSetsOf(Guid node) => _fields.Of(node);
 
