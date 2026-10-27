@@ -16,7 +16,10 @@ public sealed class KnowledgeGraph
 {
     private readonly Dictionary<Guid, Node> _nodes = [];
     private readonly Dictionary<Guid, NodeNames> _names = [];
-    private readonly NodeTypes _types = new();
+    private readonly NodeTypeSets _types = new();
+    private readonly FieldValues _fields = new();
+    private readonly IReadOnlyList<NodeType> _builtInNodeTypes;
+    private (IReadOnlyList<NodeType> NodeTypes, TypeCatalog Links, TypeCatalog Catalog)? _catalog;
     private readonly Dictionary<string, List<Node>> _nodesByName = [];
     private readonly LinkIndex _links;
     private readonly HashSet<Guid> _removed = [];
@@ -31,14 +34,31 @@ public sealed class KnowledgeGraph
 
     public KnowledgeGraph(TypeCatalog? types = null)
     {
+        _builtInNodeTypes = (types ?? TypeCatalog.BuiltIn).NodeTypes;
+        NodeTypes = new CustomNodeTypes(_builtInNodeTypes, _removed);
         LinkTypes = new CustomLinkTypes(types ?? TypeCatalog.BuiltIn, _removed);
         Aliases = new LinkAliases(() => LinkTypes.Catalog, _removed);
         _links = new LinkIndex(() => LinkTypes.Catalog, _removed);
         _pins = new RemovableChanges<NodePinned>(_removed);
     }
 
-    /// <summary>The link types, the user's included, with the user's aliases: what the input box reads.</summary>
-    public TypeCatalog Types => Aliases.Catalog;
+    /// <summary>The node types and the link types, the user's included, with the user's aliases: what the input box reads.</summary>
+    public TypeCatalog Types
+    {
+        get
+        {
+            var (nodeTypes, links) = (NodeTypes.Types, Aliases.Catalog);
+            if (_catalog is not { } built || !ReferenceEquals(built.NodeTypes, nodeTypes) || !ReferenceEquals(built.Links, links))
+            {
+                _catalog = built = (nodeTypes, links, ReferenceEquals(nodeTypes, _builtInNodeTypes) ? links : new TypeCatalog(nodeTypes, links.LinkTypes));
+            }
+
+            return built.Catalog;
+        }
+    }
+
+    /// <summary>The user's node types.</summary>
+    public CustomNodeTypes NodeTypes { get; }
 
     /// <summary>The user's link types.</summary>
     public CustomLinkTypes LinkTypes { get; }
@@ -60,6 +80,10 @@ public sealed class KnowledgeGraph
         LinkAdded added => Add(added.Link),
         NodeRenamed renamed => Rename(renamed),
         NodeRetyped retyped => Retype(retyped),
+        NodeTypeAdded added => _types.Add(added) && TypesChanged(added.Node),
+        NodeTypeRemoved removed => _types.Add(removed) && TypesChanged(removed.Node),
+        NodeTypeDefined definition => NodeTypes.Add(definition),
+        FieldSet value => _fields.Add(value),
         AliasAdded alias => Aliases.Add(alias),
         LinkTypeDefined definition => Define(definition),
         ChangesRemoved removal => Remove(removal),
@@ -154,30 +178,41 @@ public sealed class KnowledgeGraph
 
     /// <summary>Gives a node another type (from a change or a snapshot). False when the retype is already there.</summary>
     public bool Retype(NodeRetyped retype)
-    {
-        if (!_types.Add(retype))
-        {
-            return false;
-        }
+        => _types.Add(retype) && TypesChanged(retype.Node);
 
-        if (_nodes.TryGetValue(retype.Node, out var node))
+    // A node's types changed: it is shown again with its type (TypeIdsOf).
+    private bool TypesChanged(Guid id)
+    {
+        if (_nodes.TryGetValue(id, out var node))
         {
             Hide(node);
-            Show(Shown(_names[retype.Node].Added!));
+            Show(Shown(_names[id].Added!));
         }
 
         return true;
     }
 
     /// <summary>
-    /// The current types of a node, oldest first: one, or several when its type was changed on two
-    /// devices before they synced (a conflict). Empty for an unknown node.
+    /// The types of a node, each with the change that gave it, oldest first: one type may be given
+    /// twice (on two devices before they synced). Empty for an unknown node, or one with no type left.
     /// </summary>
     public IReadOnlyList<TypeVersion> TypesOf(Guid node) =>
         _names.TryGetValue(node, out var names) && names.Added is { } added ? _types.Current(added) : [];
 
-    /// <summary>The retypes of a node, whatever they replace: when it last changed.</summary>
-    public IEnumerable<NodeRetyped> RetypesOf(Guid node) => _types.Of(node);
+    /// <summary>The ids of the types of a node, each once, oldest first.</summary>
+    public IReadOnlyList<string> TypeIdsOf(Guid node) => TypesOf(node).Select(type => type.Type).Distinct().ToList();
+
+    /// <summary>Whether a node has this type.</summary>
+    public bool HasType(Guid node, string type) => TypesOf(node).Any(version => version.Type == type);
+
+    /// <summary>The changes of a node's types (retypes, types added and removed), whatever they replace: when it last changed.</summary>
+    public IEnumerable<Change> TypeChangesOf(Guid node) => _types.Of(node);
+
+    /// <summary>The fields of a node that were set, each with its current values, in the order they were first set.</summary>
+    public IReadOnlyList<FieldVersions> FieldsOf(Guid node) => _fields.Current(node);
+
+    /// <summary>The values set on a node, whatever they replace: when it last changed.</summary>
+    public IEnumerable<FieldSet> FieldSetsOf(Guid node) => _fields.Of(node);
 
     /// <summary>
     /// The current colours of a node, oldest first: none before it is given one, one, or several
@@ -195,9 +230,11 @@ public sealed class KnowledgeGraph
     /// <summary><paramref name="added"/> as shown: its current name and type.</summary>
     private Node Shown(Node added)
     {
-        var (name, type) = (_names[added.Id].Shown(added), _types.Shown(added));
+        var (name, type) = (_names[added.Id].Shown(added), _types.Shown(added, HasContent));
         return name == added.Name && type == added.Type ? added : added with { Name = name, Type = type };
     }
+
+    private bool HasContent(string type) => _builtInNodeTypes.FirstOrDefault(builtIn => builtIn.Id == type)?.HasContent ?? false;
 
     /// <summary>Renames a node (from a change or a snapshot). False when the rename is already there.</summary>
     public bool Rename(NodeRenamed rename)
@@ -237,6 +274,7 @@ public sealed class KnowledgeGraph
         }
 
         _links.Remove(removal.Removes);
+        NodeTypes.Changed();
         LinkTypes.Changed();
         LinkTypesChanged(symmetry);
         return true;

@@ -1,4 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
+using Kofrenot.Core.Fields;
 using Kofrenot.Core.Graph;
 
 namespace Kofrenot.Core.Storage;
@@ -25,7 +26,11 @@ internal sealed record ChangeData(
     ChangeData.MemberData? Member = null,
     ChangeData.MemberRemovalData? MemberRemoval = null,
     ChangeData.LinkTypeData? LinkType = null,
-    ChangeData.ColorData? Color = null)
+    ChangeData.ColorData? Color = null,
+    ChangeData.NodeTypeData? NodeType = null,
+    ChangeData.AddTypeData? AddType = null,
+    ChangeData.RemoveTypeData? RemoveType = null,
+    ChangeData.FieldData? Field = null)
 {
     private const string NodeAddedOp = "addNode";
     private const string LinkAddedOp = "addLink";
@@ -42,6 +47,10 @@ internal sealed record ChangeData(
     private const string MemberRemovedOp = "removeMember";
     private const string LinkTypeDefinedOp = "defineLinkType";
     private const string NodeColoredOp = "colorNode";
+    private const string NodeTypeDefinedOp = "defineNodeType";
+    private const string NodeTypeAddedOp = "addNodeType";
+    private const string NodeTypeRemovedOp = "removeNodeType";
+    private const string FieldSetOp = "setField";
 
     public static ChangeData From(Change change) => change switch
     {
@@ -60,6 +69,10 @@ internal sealed record ChangeData(
         MemberRemoved removed => new(VaultFormat.Current, MemberRemovedOp, removed.At, MemberRemoval: new MemberRemovalData(removed.Account, removed.Signature)),
         LinkTypeDefined defined => new(VaultFormat.Current, LinkTypeDefinedOp, defined.At, LinkType: new LinkTypeData(defined.LinkType, defined.Name, defined.ReverseName, [.. defined.Replaces])),
         NodeColored color => new(VaultFormat.Current, NodeColoredOp, color.At, Color: new ColorData(color.Node, color.Color, [.. color.Replaces])),
+        NodeTypeDefined defined => new(VaultFormat.Current, NodeTypeDefinedOp, defined.At, NodeType: NodeTypeData.From(defined)),
+        NodeTypeAdded added => new(VaultFormat.Current, NodeTypeAddedOp, added.At, AddType: new AddTypeData(added.Node, added.Type)),
+        NodeTypeRemoved removed => new(VaultFormat.Current, NodeTypeRemovedOp, removed.At, RemoveType: new RemoveTypeData(removed.Node, [.. removed.Removes])),
+        FieldSet field => new(VaultFormat.Current, FieldSetOp, field.At, Field: FieldData.From(field)),
         _ => throw new ArgumentOutOfRangeException(nameof(change), change.GetType().Name, "Unknown change"),
     };
 
@@ -99,6 +112,11 @@ internal sealed record ChangeData(
                 => new LinkTypeDefined(id, At, type, name, LinkType.Reverse, replaces),
             NodeColoredOp when Color is { Replaces: { } replaces } && Color.Node != Guid.Empty && Color.Color is null or { Length: > 0 }
                 => new NodeColored(id, At, Color.Node, Color.Color, replaces),
+            NodeTypeDefinedOp when NodeType?.ToChange(id, At) is { } defined => defined,
+            NodeTypeAddedOp when AddType is { Type: { Length: > 0 } type } && AddType.Node != Guid.Empty => new NodeTypeAdded(id, At, AddType.Node, type),
+            NodeTypeRemovedOp when RemoveType is { Removes: { Count: > 0 } removes } && RemoveType.Node != Guid.Empty
+                => new NodeTypeRemoved(id, At, RemoveType.Node, removes),
+            FieldSetOp when Field?.ToChange(id, At) is { } field => field,
             _ => throw new InvalidDataException($"Unknown or incomplete change '{Op}'"),
         };
     }
@@ -173,6 +191,68 @@ internal sealed record ChangeData(
 
     /// <summary><c>"linkType": { "id": "…", "name": "wrote", "reverse": "written by", "replaces": [] }</c>; no reverse when symmetric.</summary>
     internal sealed record LinkTypeData(string? Id, string? Name, string? Reverse, List<Guid>? Replaces);
+
+    /// <summary>
+    /// <c>"nodeType": { "id": "…", "name": "Person", "icon": "Contact", "color": "blue", "fields": [{ "id": "…", "name": "Born", "kind": "date" }],
+    /// "replaces": [] }</c>; a choice's field has its <c>"choices"</c>.
+    /// </summary>
+    internal sealed record NodeTypeData(string? Id, string? Name, string? Icon, string? Color, List<FieldDefinitionData>? Fields, List<Guid>? Replaces)
+    {
+        public static NodeTypeData From(NodeTypeDefined defined) =>
+            new(defined.NodeType, defined.Name, defined.Icon, defined.Color, [.. defined.Fields.Select(FieldDefinitionData.From)], [.. defined.Replaces]);
+
+        /// <summary>The change, or null when incomplete: a field incomplete, or two fields with one id.</summary>
+        public NodeTypeDefined? ToChange(Guid id, DateTimeOffset at)
+        {
+            if (Id is not { Length: > 0 } || string.IsNullOrWhiteSpace(Name) || Fields is null || Replaces is null
+                || Icon is { Length: 0 } || Color is { Length: 0 })
+            {
+                return null;
+            }
+
+            var fields = Fields.Select(field => field?.ToDefinition()).ToList();
+            return fields.Any(field => field is null) || fields.DistinctBy(field => field!.Id).Count() < fields.Count
+                ? null
+                : new NodeTypeDefined(id, at, Id, Name, Icon, Color, fields!, Replaces);
+        }
+    }
+
+    /// <summary><c>{ "id": "…", "name": "Format", "kind": "choice", "choices": ["Novel", "Short story"] }</c></summary>
+    internal sealed record FieldDefinitionData(string? Id, string? Name, string? Kind, List<string>? Choices = null)
+    {
+        public static FieldDefinitionData From(FieldDefinition field) =>
+            new(field.Id, field.Name, FieldKinds.NameOf(field.Kind), field.Kind == FieldKind.Choice ? [.. field.Choices] : null);
+
+        /// <summary>The field, or null when incomplete.</summary>
+        public FieldDefinition? ToDefinition() =>
+            Id is { Length: > 0 } && !string.IsNullOrWhiteSpace(Name) && FieldKinds.Parse(Kind) is { } kind
+            && (kind == FieldKind.Choice ? Choices is not null && Choices.All(choice => !string.IsNullOrWhiteSpace(choice)) : Choices is null)
+                ? new FieldDefinition(Id, Name, kind, Choices ?? [])
+                : null;
+    }
+
+    /// <summary><c>"addType": { "node": "…", "type": "…" }</c></summary>
+    internal sealed record AddTypeData(Guid Node, string? Type);
+
+    /// <summary><c>"removeType": { "node": "…", "removes": ["…"] }</c></summary>
+    internal sealed record RemoveTypeData(Guid Node, List<Guid>? Removes);
+
+    /// <summary>
+    /// <c>"field": { "node": "…", "owner": "&lt;type id&gt;", "id": "…", "name": "Born", "kind": "date", "value": "1920-10-08", "replaces": [] }</c>;
+    /// <c>"owner": "own"</c> for a field of the node's own, no value to clear it.
+    /// </summary>
+    internal sealed record FieldData(Guid Node, string? Owner, string? Id, string? Name, string? Kind, string? Value, List<Guid>? Replaces)
+    {
+        public static FieldData From(FieldSet field) =>
+            new(field.Node, field.Owner, field.Field, field.Name, FieldKinds.NameOf(field.Kind), field.Value, [.. field.Replaces]);
+
+        /// <summary>The change, or null when incomplete, or with a value its kind does not write.</summary>
+        public FieldSet? ToChange(Guid id, DateTimeOffset at) =>
+            Node != Guid.Empty && Owner is { Length: > 0 } && Id is { Length: > 0 } && !string.IsNullOrWhiteSpace(Name)
+            && FieldKinds.Parse(Kind) is { } kind && Replaces is not null && (Value is null || FieldValue.IsValid(kind, Value))
+                ? new FieldSet(id, at, Node, Owner, Id, Name, kind, Value, Replaces)
+                : null;
+    }
 
     /// <summary><c>"vault": { "name": "Personal", "replaces": ["…"] }</c></summary>
     internal sealed record VaultNameData(string? Name, List<Guid>? Replaces);

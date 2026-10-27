@@ -17,10 +17,11 @@ public sealed record NodeFacts(string Type, long? Size, DateTimeOffset Modified)
         return new NodeFacts(file is null ? graph.Types.NodeTypeName(node.Type) : DatasetType.Of(file).Name, file?.Size, ModifiedOf(graph, node));
     }
 
-    /// <summary>The latest of a node's creation, its names, its types, its colours, its content versions and its links added.</summary>
+    /// <summary>The latest of a node's creation, its names, its types, its colours, its field values, its content versions and its links added.</summary>
     public static DateTimeOffset ModifiedOf(KnowledgeGraph graph, Node node) =>
         graph.NamesOf(node.Id).Select(name => name.At)
-            .Concat(graph.RetypesOf(node.Id).Select(retype => retype.At))
+            .Concat(graph.TypeChangesOf(node.Id).Select(change => change.At))
+            .Concat(graph.FieldSetsOf(node.Id).Select(value => value.At))
             .Concat(graph.ColoringsOf(node.Id).Select(color => color.At))
             .Concat(graph.NoteVersionsOf(node.Id).Select(version => version.At))
             .Concat(graph.DatasetVersionsOf(node.Id).Select(version => version.At))

@@ -30,7 +30,7 @@ public sealed class RetypeTests
         Assert.Equal("note", _graph.FindNode(_dune.Id)!.Type);
         Assert.Equal("note", Assert.Single(_graph.NodesNamed("dune")).Type);
         Assert.Equal([new TypeVersion(retype.Id, "note", retype.At)], _graph.TypesOf(_dune.Id));
-        Assert.Equal([retype], _graph.RetypesOf(_dune.Id));
+        Assert.Equal([retype], _graph.TypeChangesOf(_dune.Id));
     }
 
     [Fact]
@@ -47,7 +47,7 @@ public sealed class RetypeTests
     }
 
     [Fact]
-    public void RetypesMadeApart_AreAConflict_ShowingTheLatest()
+    public void RetypesMadeApart_AreBothKept_ShowingTheLatest()
     {
         var mine = RetypeDune("note", 1, _dune.Id);
         var theirs = RetypeDune("dataset", 2, _dune.Id);

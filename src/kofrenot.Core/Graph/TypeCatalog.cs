@@ -1,3 +1,5 @@
+using Kofrenot.Core.Fields;
+
 namespace Kofrenot.Core.Graph;
 
 /// <summary>
@@ -22,13 +24,13 @@ public sealed class TypeCatalog
     public static LinkType IsA { get; } = new("is-a", ["is a", "is an"], ["has instance"]);
 
     /// <summary>A node with content: Markdown text, edited in its details.</summary>
-    public static NodeType Note { get; } = new("note", "Note");
+    public static NodeType Note { get; } = new("note", "Note", [new FieldDefinition("body", "Body", FieldKind.Markdown)]);
 
     /// <summary>A node with a file of any size, imported and exported from its details.</summary>
-    public static NodeType Dataset { get; } = new("dataset", "Dataset");
+    public static NodeType Dataset { get; } = new("dataset", "Dataset", [new FieldDefinition("file", "File", FieldKind.File)]);
 
     /// <summary>A way to look at the graph: a tree or a list (<see cref="ViewDefinition"/>).</summary>
-    public static NodeType View { get; } = new("view", "View");
+    public static NodeType View { get; } = new("view", "View", [new FieldDefinition("definition", "Definition", FieldKind.View)]);
 
     public static TypeCatalog BuiltIn { get; } = new([Generic, Note, Dataset, View], [RelatesTo, Contains, IsA]);
 

@@ -1,3 +1,5 @@
+using Kofrenot.Core.Fields;
+
 namespace Kofrenot.Core.Graph;
 
 /// <summary>
@@ -23,6 +25,59 @@ public sealed record NodeRenamed(Guid Id, DateTimeOffset At, Guid Node, string N
 /// retypes that replace the same type, neither knowing the other, make a type conflict.
 /// </summary>
 public sealed record NodeRetyped(Guid Id, DateTimeOffset At, Guid Node, string Type, IReadOnlyList<Guid> Replaces) : Change(Id, At), IReplacing;
+
+/// <summary>
+/// Adds <see cref="Type"/> (a node type id) to the types of <see cref="Node"/>: added on two devices,
+/// both are kept, with no conflict. Taken out by a <see cref="NodeTypeRemoved"/>.
+/// </summary>
+public sealed record NodeTypeAdded(Guid Id, DateTimeOffset At, Guid Node, string Type) : Change(Id, At);
+
+/// <summary>
+/// Takes types out of the types of <see cref="Node"/>: <see cref="Removes"/> are the changes that
+/// gave them, a <see cref="NodeTypeAdded"/>, a <see cref="NodeRetyped"/>, or the node's id for the
+/// type it was added with. A type added again later has a new id: it stays.
+/// </summary>
+public sealed record NodeTypeRemoved(Guid Id, DateTimeOffset At, Guid Node, IReadOnlyList<Guid> Removes) : Change(Id, At);
+
+/// <summary>
+/// Names a node type of the user's (<see cref="NodeType"/> is its id) with its icon, its colour (a
+/// <see cref="NodeColor"/>'s name, or none) and its fields. The first one (no <see cref="Replaces"/>)
+/// adds the type; later ones change it over the definitions they replace. Two replacing the same
+/// one, neither knowing the other, make a conflict. Removed, with all its definitions, by a
+/// <see cref="ChangesRemoved"/>.
+/// </summary>
+public sealed record NodeTypeDefined(
+    Guid Id,
+    DateTimeOffset At,
+    string NodeType,
+    string Name,
+    string? Icon,
+    string? Color,
+    IReadOnlyList<FieldDefinition> Fields,
+    IReadOnlyList<Guid> Replaces) : Change(Id, At), IReplacing;
+
+/// <summary>
+/// A value of a field of <see cref="Node"/>, or none when <see cref="Value"/> is null. <see cref="Owner"/>
+/// is the node type the field belongs to, or <see cref="Own"/> for a field of the node's own;
+/// <see cref="Field"/> is the field's id. Its <see cref="Name"/> and <see cref="Kind"/> are written
+/// with it, so a value whose field left its type still shows. <see cref="Replaces"/> are the values
+/// of the same field it was written over (none for the first): two replacing the same one, neither
+/// knowing the other, make a conflict.
+/// </summary>
+public sealed record FieldSet(
+    Guid Id,
+    DateTimeOffset At,
+    Guid Node,
+    string Owner,
+    string Field,
+    string Name,
+    FieldKind Kind,
+    string? Value,
+    IReadOnlyList<Guid> Replaces) : Change(Id, At), INodeVersion
+{
+    /// <summary>The <see cref="Owner"/> of a field of the node's own.</summary>
+    public const string Own = "own";
+}
 
 /// <summary>
 /// Names the vault itself, encrypted like any change, so every device shows the same name.
