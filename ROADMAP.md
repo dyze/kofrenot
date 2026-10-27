@@ -13,11 +13,8 @@ Scope of each planned version. Implemented features move to [CHANGELOG.md](CHANG
 | 0.7     | Released  | Sharing: identities, recovery key, vaults shared with other users                  |
 | 0.8     | Released  | Notes as in Keep; content on demand; session in Core for Android                   |
 | 0.9     | Released  | Android: server vaults read and searched offline on the phone                      |
-| 0.10    | Implemented | Offline pins, file drops; notes and files added on Android                       |
+| 0.10    | Released  | Offline pins, file drops; notes and files added on Android                         |
 | 0.11    | Planned   | Composition: node types made of fields, several per node; fields of a node's own   |
-
-## 0.10
-Every planned feature is implemented: [CHANGELOG.md](CHANGELOG.md#unreleased), until 0.10 is released.
 
 ## 0.11
 Composition, as decided in [GOAL.md](docs/GOAL.md#composition-types-made-of-fields). Vault format 8: a vault upgraded is closed by kofrenot 0.10, on Windows and Android.

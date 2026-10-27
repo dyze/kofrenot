@@ -8,6 +8,8 @@ It covers kofrenot on Windows and on Android; versions before 0.9 ran on Windows
 
 ## [Unreleased]
 
+## [0.10] - 2026-10-27
+
 ### Added
 - **Android**
   - **Add files from the phone**: **＋** picks one or several files; a preview lists them, with their number and total size, then each becomes a dataset named after its file, uploaded at the next sync. Images get their thumbnail on the phone ([README](README.md#on-android)).
@@ -220,7 +222,8 @@ It covers kofrenot on Windows and on Android; versions before 0.9 ran on Windows
 - **Update check** once a day against GitHub releases, switchable in About.
 - **Installer and portable zip** (`build\installer.cmd`), self-contained.
 
-[Unreleased]: https://github.com/dyze/kofrenot/compare/0.9...HEAD
+[Unreleased]: https://github.com/dyze/kofrenot/compare/0.10...HEAD
+[0.10]: https://github.com/dyze/kofrenot/compare/0.9...0.10
 [0.9]: https://github.com/dyze/kofrenot/compare/0.8...0.9
 [0.8]: https://github.com/dyze/kofrenot/compare/0.7...0.8
 [0.7]: https://github.com/dyze/kofrenot/compare/0.6...0.7
