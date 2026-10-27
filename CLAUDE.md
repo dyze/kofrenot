@@ -47,8 +47,10 @@ Only those listed in `docs/ARCHITECTURE.md#stack`. Ask before adding one.
   - changes → `CHANGELOG.md`, following [Keep a Changelog](https://keepachangelog.com/en/1.1.0/): when a feature is implemented, it moves from ROADMAP to `[Unreleased]`, under Added, Changed, Deprecated, Removed, Fixed or Security; at release, `[Unreleased]` becomes `[<version>] - <date>`, most recent version first, with its compare link at the bottom
   - design and internals → `docs/ARCHITECTURE.md`
   - goal and principles → `docs/GOAL.md`
+  - what each app (Windows, Android) supports → the feature matrix, `README.md#windows-and-android`; why the apps differ → `docs/ANDROID-CONCEPT.md`
   Prefer diagrams and tables to long descriptions.
   Link between them rather than copying. Update them when behavior changes.
+- **Two apps.** When a feature lands or changes on one app, update its row in the README matrix, put its CHANGELOG entry under **Windows**, **Android** or **Both**, and tag its ROADMAP item the same way (`Windows · **Feature.**`).
 - **Don't touch** `LICENSE`.
 
 ## Design rules

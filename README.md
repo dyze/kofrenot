@@ -23,6 +23,42 @@ A private knowledge system for Windows, read on Android too: notes, files and th
 - **Sync and share** through a Kofre server, as a reader or a writer.
 - **Versioned**: nothing is overwritten; edits made on two devices are shown, never lost.
 
+### Windows and Android
+Both apps share the same vaults and the same core; each shows its own set of features. ✔ supported, — not yet ([ROADMAP](ROADMAP.md)), *never* not planned ([why](docs/ANDROID-CONCEPT.md#not-supported)); a note says how it differs.
+
+| Feature | Windows | Android |
+| --- | --- | --- |
+| **Vaults** | | |
+| Server vaults: add from the server, open, remove from the device | ✔ | ✔ |
+| Lock the open vault (padlock) | ✔ | — |
+| Server vaults: create, move from a folder, delete | ✔ | — |
+| Folder vaults | ✔ | *never* |
+| Account: sign up, sign in | ✔ | sign in only |
+| Account's pass phrase, recovery key | ✔ | used, not set |
+| Sync status, sync now | ✔ | ✔ while the app is shown |
+| **Browse** | | |
+| Search names, pinned and recent nodes | ✔ | ✔ |
+| Node details, links | ✔ | ✔ (read only) |
+| Views: trees and lists, as tabs | ✔ rows, cards, details | ✔ rows |
+| Pinned for offline (content downloaded ahead) | ✔ | ✔ (pins set on Windows) |
+| **Change** | | |
+| Add nodes and links (input box, creation screen) | ✔ | — |
+| Rename, retype, colour, pin, delete; move and copy in a tree | ✔ | — |
+| Notes: edit | ✔ editor with a Markdown toolbar and a task list editor | ✔ Markdown text; tap a checkbox |
+| Notes: resolve a conflict | ✔ keep one, or merge by hand | ✔ keep one |
+| Datasets: add files | ✔ creation screen, drop zone, drop on a tree | ✔ **＋**, with a preview |
+| Datasets: new version of a file, resolve a conflict | ✔ | — |
+| Datasets: view images and texts | ✔ | — |
+| Datasets: open in another app, save as | ✔ **Open**, **Export…**, drag out | ✔ *Open with…*, *Save as…* |
+| Views: create, edit | ✔ | — |
+| **Share** | | |
+| Members, roles, share, leave | ✔ | — (your role shown) |
+| **App** | | |
+| Hotkeys, tray, start with Windows, update check | ✔ | *never* (Windows desktop) / — update check |
+| Settings | ✔ every tab | sign out, forget the pass phrase, logging |
+
+How to use each: [Using kofrenot](#using-kofrenot) (Windows), [On Android](#on-android).
+
 | A note with its task list | Cards | A tree |
 | --- | --- | --- |
 | ![A note](docs/images/note.png) | ![Cards](docs/images/cards.png) | ![A tree](docs/images/tree.png) |

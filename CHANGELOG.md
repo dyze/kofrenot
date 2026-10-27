@@ -4,7 +4,7 @@ All notable changes to kofrenot are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versions follow kofrenot's own `MAJOR.MINOR` scheme ([docs/GOAL.md](docs/GOAL.md#versioning)), not Semantic Versioning. Planned versions: [ROADMAP.md](ROADMAP.md).
 
-It covers kofrenot on Windows and on Android; versions before 0.9 ran on Windows only.
+It covers kofrenot on Windows and on Android; versions before 0.9 ran on Windows only. From 0.10, each entry is under the app it changes: **Windows**, **Android**, or **Both**.
 
 ## [Unreleased]
 
@@ -12,7 +12,7 @@ It covers kofrenot on Windows and on Android; versions before 0.9 ran on Windows
 - **Android**
   - **Add files from the phone**: **＋** picks one or several files; a preview lists them, with their number and total size, then each becomes a dataset named after its file, uploaded at the next sync. Images get their thumbnail on the phone ([README](README.md#on-android)).
   - **Edit notes on the phone**: a tap on a checkbox checks its item; **Edit** changes the note's text (Markdown), **Save** keeps it as a new version; leaving it with changes not saved asks before discarding them. A note edited on two devices before they synced shows both versions, to keep one ([README](README.md#on-android)).
-- **Server vaults**
+- **Both**
   - **Pinned for offline**: in a server vault, a pinned node's content (a note's text, a dataset's file) is downloaded ahead and kept, so it opens without the server: on Windows, and on the phone with the pins set on Windows. Its pin says *kept offline* once it is here. The vault format does not change ([README](README.md#input-box)).
 - **Windows**
   - **Drop files**: a small zone beside the tabs takes one or several files dropped from elsewhere, each added as a dataset named after its file. A preview first lists them, with their number and total size, the names already taken and what is skipped; nothing is added before **Add** ([README](README.md#datasets)).
@@ -22,15 +22,16 @@ It covers kofrenot on Windows and on Android; versions before 0.9 ran on Windows
 ### Changed
 - **Android**
   - **Syncs both ways**: kofrenot for Android uploads what it saves (notes, files), at the next sync, or once back online; the sync status counts what waits (*· 2 to upload*). It still makes no other change: nodes, links, pins, the vault itself, members and keys stay with kofrenot on Windows ([ANDROID-CONCEPT.md](docs/ANDROID-CONCEPT.md#content-only-safely)). The *Read only* banner shows only for a vault shared with you to read.
-- **Versions under development end in `-dev`** (`0.10-dev`), shown so in the main window, Settings > About and on Android, so a build between releases is not taken for one; the update check offers the release to it ([Versioning](docs/GOAL.md#versioning)).
-- **Release files named by platform**: `kofrenot-windows-setup-<version>.exe`, `kofrenot-windows-portable-<version>.zip` and `kofrenot-android-<version>.apk` ([README](README.md#install)).
-- **Skipped change files read again sooner**: a change file skipped because it was locked or still being copied is read again 2, 5, 10 and 30 seconds later, not only at the next sync or when the window is shown ([Robust and secure](docs/GOAL.md#robust-and-secure)).
+- **Both**
+  - **Versions under development end in `-dev`** (`0.10-dev`), shown so in the main window, Settings > About and on Android, so a build between releases is not taken for one; the update check offers the release to it ([Versioning](docs/GOAL.md#versioning)).
+  - **Release files named by platform**: `kofrenot-windows-setup-<version>.exe`, `kofrenot-windows-portable-<version>.zip` and `kofrenot-android-<version>.apk` ([README](README.md#install)).
+  - **Skipped change files read again sooner**: a change file skipped because it was locked or still being copied is read again 2, 5, 10 and 30 seconds later, not only at the next sync or when the window is shown ([Robust and secure](docs/GOAL.md#robust-and-secure)).
 
 ## [0.9] - 2026-10-26
 
 ### Added
 - **Android**
-  - **kofrenot for Android**, read only: your server vaults, own and shared, read and searched on the phone, also offline; it syncs downloads only and never writes to a vault. What it does: [ANDROID-CONCEPT.md](docs/ANDROID-CONCEPT.md#supported-in-09); how to install and use it: [README](README.md#on-android). Android 8.0 or later, an APK on the releases.
+  - **kofrenot for Android**, read only: your server vaults, own and shared, read and searched on the phone, also offline; it syncs downloads only and never writes to a vault. What it does: [features](README.md#windows-and-android); how to install and use it: [README](README.md#on-android). Android 8.0 or later, an APK on the releases.
 - **Windows**
   - **Start with Windows** ([README](README.md#install)): a setup task, ticked by default, and a box in Settings > General. At sign-in kofrenot starts in the notification area (`kofrenot.exe --hidden`) and opens the vault only when its window is first shown. No administrator rights; uninstalling removes it.
 
