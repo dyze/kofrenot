@@ -14,9 +14,18 @@ Scope of each planned version. Implemented features move to [CHANGELOG.md](CHANG
 | 0.8     | Released  | Notes as in Keep; content on demand; session in Core for Android                   |
 | 0.9     | Released  | Android: server vaults read and searched offline on the phone                      |
 | 0.10    | Implemented | Offline pins, file drops; notes and files added on Android                       |
+| 0.11    | Planned   | Composition: node types made of fields, several per node; fields of a node's own   |
 
 ## 0.10
 Every planned feature is implemented: [CHANGELOG.md](CHANGELOG.md#unreleased), until 0.10 is released.
+
+## 0.11
+Composition, as decided in [GOAL.md](docs/GOAL.md#composition-types-made-of-fields). Vault format 8: a vault upgraded is closed by kofrenot 0.10, on Windows and Android.
+1. Both · **Fields.** Field kinds Text, Number, Date, Url, Checkbox and Choice; a note's text, a dataset's file and a view's definition become fields of their built-in types. Values shown in a node's details, searched offline.
+2. Windows · **Your node types.** A name, an icon, a colour and fields, in Settings > Node types; a field added shows empty on its nodes, one removed stays, with its value, as their own.
+3. Both · **Several types per node.** Each brings its fields; types added on two devices are both kept. A first version may allow at most one of *note*, *dataset* and *view* per node.
+4. Windows · **Fields of a node's own**, added in its details. Fields of the same name are shown apart (*Birth date (Person)*, *Birth date (own)*), merged on demand.
+5. Windows · **Fill fields** in a node's details; Android shows them.
 
 ## Later
 1. Windows · **Pack vault.** Pack a vault to reduce its size and number of files (needs deletes on the server).

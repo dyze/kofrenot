@@ -18,7 +18,34 @@ Everything is a **node**, and nodes are joined by **links**.
 
 - A node has a type, a name and a creation date. Later types add their own properties: notes and files will be node types.
 - A link has a type and joins two nodes. A link type has a name and aliases ("relates to", "related to"); it is symmetric, or directed with an inverse name ("written by" / "wrote").
-- Types are extensible: 0.4 has four built-in node types (*generic*, *note*, *dataset*, *view*) and three link types (*relates to*, *contains*, *is a*). Later, the user defines their own types and properties.
+- Types are extensible: 0.4 has four built-in node types (*generic*, *note*, *dataset*, *view*) and three link types (*relates to*, *contains*, *is a*); the user's own link types since 0.7. The user's own node types come with composition (below).
+
+### Composition: types made of fields
+Planned for 0.11, not implemented ([ROADMAP.md](../ROADMAP.md#011)). A node type is a list of fields, each of a kind; built-in and user types are made the same way.
+
+```
+field kind (code)                 field (vault)               type (vault)
+Text · Number · Date · Url    ─►  "Birth date" : Date   ─►    Person  = Birth date + Website
+Checkbox · Choice                 "Website"    : Url          Note    = Body (Markdown)
+Markdown · File · View def.       "Body"       : Markdown     Dataset = File (File)
+
+a node's fields = the fields of each of its types  +  its own fields
+```
+
+| Topic | Decision |
+| --- | --- |
+| Field kinds | The only part in code, each written once: Text, Number, Date, Url, Checkbox, Choice to start; Markdown, File and View definition are today's content |
+| Types | A name, an icon, a colour and a list of fields; *generic*, *note*, *dataset* and *view* are built-in field lists, shipped with kofrenot |
+| Several types | A node has a set of types (Frank Herbert: *Person* and *Author*), each bringing its fields; added on two devices, both are kept, no conflict |
+| A node's own fields | Any node can have fields of its own, beside its types' |
+| Field added to a type | Its nodes show it empty; nothing is written to them |
+| Field removed from a type | Its nodes with a value keep it, as their own field; the same on a retype |
+| Same name | A type's field and an own field (or two types' fields) of the same name are both shown, labelled by where they come from (*Birth date (Person)*, *Birth date (own)*); merged only on demand, keeping one value |
+| Values | Small values (text, number, date, url, checkbox, choice) are metadata, always local and searchable offline; Markdown and File stay content, fetched on demand |
+| Links | A value that names another node is a link, not a field. Qualifiers (fields on links) would later use the same field kinds |
+| Filled in | A node's details; in the input box later |
+
+**Existing vaults: format 8.** New changes (fields, types, values, a set of types) break older kofrenots, so the format goes from 7 to 8. Nothing is rewritten: a node's type is read as a set of one, `editNote`, `editDataset` and `editView` versions as the values of their built-in type's field, `retypeNode` as replacing the set. A vault is upgraded after the usual question; from then on kofrenot 0.10, on Windows and Android, closes it and asks to be updated, for every member of a shared vault too. The server does not read the format.
 
 ## How it works (target)
 
@@ -108,6 +135,7 @@ What each version contains: [ROADMAP.md](../ROADMAP.md).
 | Sharing | Complete server vaults, with roles reader, writer and one owner; removing a member rotates the vault key (since 0.7) |
 | Keys | Vault keys wrapped for an identity (key pair) unlocked by a pass phrase or a recovery key; same model for folder and server vaults, format 6; a server vault's identity is its account's, one for all its server vaults (since 0.7) |
 | Clients | Windows (WPF); Android for server vaults only, with Avalonia: read only in 0.9, notes and files edited since 0.10 ([ANDROID-CONCEPT.md](ANDROID-CONCEPT.md)) |
+| Types and fields | Composition: a type is a list of fields, a node has several types and fields of its own (planned for 0.11, format 8: [Composition](#composition-types-made-of-fields)) |
 | Views | A node type holding a definition (a tree from a root node through a link type, or a list of the nodes of a type), in versions kept in its changes: views work offline (since 0.4) |
 
 ## Open questions
