@@ -104,10 +104,10 @@ What could go wrong, and how it is addressed today:
 - **Under development**, the version has a `-dev` suffix: `0.10-dev` is 0.10 being built, not released, older than `0.10` (the update check offers the release to it). Only a release is ever plain `MAJOR.MINOR`:
 
   ```
-  0.9 released ──► 0.10-dev … ──► 0.10 (release commit) ──► 0.11-dev …
+  0.9 published ──► 0.10-dev … ──► 0.10 (release commit) ──► published ──► 0.11-dev …
   ```
 
-  The release commit drops `-dev`; the next commit sets the next version with `-dev`. Both happen when I ask for a release or a bump.
+  The release commit drops `-dev`, when I ask for a release. The next version with `-dev` is set once the release is published (tagged, its files built from the release commit, the GitHub release made), when I ask for the bump: builds of the release keep the plain version until then.
 - Defined once, in `Directory.Build.props`, stamped into every produced assembly, and shown at the bottom right of the main window, `-dev` included. Where only numbers fit (Android's version code, the Windows file version), the number without `-dev` is used (`VersionNumber`).
 - Each build is identified by its git commit (no build number), shown in Settings > About and the log: `0.4 (4e9c313)`, `-dirty` for a build with uncommitted changes.
 - The vault has its own **format** number, raised only by a breaking change. A kofrenot reads the formats up to its own, and asks to be upgraded for a newer one: [ARCHITECTURE.md](ARCHITECTURE.md#format).
