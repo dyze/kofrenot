@@ -196,13 +196,19 @@ Gear button in the title bar, or tray menu > Settings. Changes are saved at once
 keytool -genkeypair -v -keystore D:\keys\kofrenot-release.keystore -alias kofrenot -keyalg RSA -keysize 4096 -validity 10000
 ```
 1. Back up the keystore and its password (a password manager, a second copy): lost, the app cannot be updated, only uninstalled and installed again. Never add it to the repository.
-2. Build, the password typed rather than written in a file or the command history (PowerShell):
+2. Build from the repository folder, the password typed rather than written in a file or the command history (PowerShell):
    ```
    $env:KOFRENOT_KEYSTORE = "D:\keys\kofrenot-release.keystore"
    $env:KOFRENOT_KEYSTORE_PASS = Read-Host "Keystore password"
    .\build\android.cmd
    ```
 3. Check: `apksigner verify --print-certs <apk>` (Android SDK, `build-tools`) names your certificate, not *Android Debug*. A release APK does not install over one signed with the debug key: uninstall that one first.
+
+**Install on a phone** with `adb` (Android SDK, `platform-tools`): turn on the phone's *Developer options* (tap *Build number* 7 times in *About phone*), then *USB debugging*, plug it in and accept the prompt. `adb devices` lists it as `device`, then:
+```
+adb install -r artifacts\android\kofrenot-android-<version>.apk
+```
+`-r` updates the installed app and keeps its data. `INSTALL_FAILED_UPDATE_INCOMPATIBLE` means the installed copy has another signing key: `adb uninstall eu.dlabs.kofrenot` first, which deletes the app's data on the phone (let it sync first: what is not uploaded yet is lost). Over Wi-Fi (Android 11+): *Wireless debugging*, `adb pair <ip>:<port>` with the code shown, `adb connect <ip>:<port>`, then the same `adb install`.
 
 **Installer**: `build\installer.cmd` makes `artifacts\installer\kofrenot-windows-setup-<version>.exe` and `kofrenot-windows-portable-<version>.zip` (needs [Inno Setup](https://jrsoftware.org/isinfo.php) 6.3+).
 
