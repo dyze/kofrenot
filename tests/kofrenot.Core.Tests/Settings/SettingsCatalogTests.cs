@@ -81,6 +81,7 @@ public class SettingsCatalogTests
     [InlineData("summon", SettingsCatalog.HotkeyId)]
     [InlineData("startup", SettingsCatalog.AutoStartId)]
     [InlineData("with windows", SettingsCatalog.AutoStartId)]
+    [InlineData("privacy", SettingsCatalog.PrivacyScreenId)]
     [InlineData("bindings", SettingsCatalog.KeyBindingsId)]
     [InlineData("dropbox", SettingsCatalog.VaultsId)]
     [InlineData("password", SettingsCatalog.VaultsId)]

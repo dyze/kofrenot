@@ -214,6 +214,23 @@ public partial class SettingsWindow : Window
         ShowUpdateStatus();
     }
 
+    private void PrivacyScreenCheckBox_Click(object sender, RoutedEventArgs e)
+    {
+        var wanted = PrivacyScreenCheckBox.IsChecked == true;
+
+        try
+        {
+            _settings.SetPrivacyScreen(wanted);
+            _log.Info("Settings", $"Privacy screen {(wanted ? "on" : "off")}");
+        }
+        catch (Exception ex) when (ex is UnauthorizedAccessException or IOException)
+        {
+            _log.Error("Settings", "Cannot change the privacy screen", ex);
+            ShowMessage(ex.Message);
+            PrivacyScreenCheckBox.IsChecked = _settings.PrivacyScreen;
+        }
+    }
+
     private void ShowInFolder(AppFile file)
     {
         try
@@ -264,6 +281,7 @@ public partial class SettingsWindow : Window
         ThemeComboBox.SelectedItem = ThemeOptions.First(option => option.Value == _settings.Theme);
         PositionComboBox.SelectedItem = PositionOptions.First(option => option.Value == _settings.MainWindowPosition);
         ShowAutoStart();
+        PrivacyScreenCheckBox.IsChecked = _settings.PrivacyScreen;
         _loading = false;
     }
 

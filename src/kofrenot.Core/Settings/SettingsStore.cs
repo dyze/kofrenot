@@ -27,7 +27,7 @@ public enum MainWindowPosition
 
 /// <summary>
 /// User settings persisted as JSON: the theme, where the main window appears, whether the log
-/// records debug entries, whether to check for updates, the registered vaults and the one selected,
+/// records debug entries, whether to check for updates, whether a hidden window is covered, the registered vaults and the one selected,
 /// the hotkey, and the Settings tab shown last. A missing, corrupt or partial file means defaults for whatever cannot be read.
 /// </summary>
 public sealed class SettingsStore
@@ -45,6 +45,7 @@ public sealed class SettingsStore
             ? theme
             : ThemeChoice.System;
         CheckForUpdates = data?.CheckForUpdates ?? true;
+        PrivacyScreen = data?.PrivacyScreen ?? true;
         MainWindowPosition = Enum.TryParse<MainWindowPosition>(data?.MainWindowPosition, ignoreCase: true, out var position) && Enum.IsDefined(position)
             ? position
             : MainWindowPosition.Centered;
@@ -66,6 +67,9 @@ public sealed class SettingsStore
 
     /// <summary>When on, kofrenot asks GitHub once a day for a newer release. On by default.</summary>
     public bool CheckForUpdates { get; private set; }
+
+    /// <summary>When on, the main window is covered while hidden or minimized, and shown again on a plain screen with a Show button. On by default.</summary>
+    public bool PrivacyScreen { get; private set; }
 
     /// <summary>The registered vaults, in the user's order.</summary>
     public VaultList Vaults { get; private set; }
@@ -109,6 +113,12 @@ public sealed class SettingsStore
     public void SetCheckForUpdates(bool check)
     {
         CheckForUpdates = check;
+        Save();
+    }
+
+    public void SetPrivacyScreen(bool enabled)
+    {
+        PrivacyScreen = enabled;
         Save();
     }
 
@@ -185,6 +195,7 @@ public sealed class SettingsStore
             SelectedVault = SelectedVault?.Folder,
             Server = Server is { } server ? new ServerData(server.Server.ToString(), server.Email) : null,
             SettingsTab = SettingsTab,
+            PrivacyScreen = PrivacyScreen,
         };
         File.WriteAllText(_path, JsonSerializer.Serialize(data));
     }
@@ -257,6 +268,8 @@ public sealed class SettingsStore
         public ServerData? Server { get; init; }
 
         public string? SettingsTab { get; init; }
+
+        public bool? PrivacyScreen { get; init; }
     }
 
     /// <param name="Folder">Missing in a damaged file: the entry is skipped.</param>

@@ -120,7 +120,7 @@ public partial class MainWindow
         if (IsVisible && IsActive && WindowState != WindowState.Minimized && _settingsDialog is null && target == _session.Selected?.Location)
         {
             DetailsPanel.LeaveNote();
-            Hide();
+            HideCovered();
             _log.Debug("Window", "Hidden (vault hotkey)");
             return;
         }

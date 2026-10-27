@@ -147,6 +147,13 @@
                        TextWrapping="Wrap"
                        Visibility="Collapsed" />
           </StackPanel>
+
+          <StackPanel Tag="{x:Static settings:SettingsCatalog.PrivacyScreenId}" Margin="0,10,0,0">
+            <CheckBox x:Name="PrivacyScreenCheckBox"
+                      Content="Cover the vault when the window is hidden"
+                      ToolTip="Hidden or minimized, the window is covered; shown again, it opens on a plain screen with a Show button. The vault stays unlocked"
+                      Click="PrivacyScreenCheckBox_Click" />
+          </StackPanel>
         </StackPanel>
 
         <StackPanel Tag="{x:Static settings:SettingsCatalog.KeyBindingsTab}">

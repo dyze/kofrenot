@@ -31,6 +31,7 @@ Both apps share the same vaults and the same core; each shows its own set of fea
 | **Vaults** | | |
 | Server vaults: add from the server, open, remove from the device | ✔ | ✔ |
 | Lock the open vault (padlock) | ✔ | — |
+| Privacy screen: the vault covered while hidden | ✔ | out of screenshots and recent apps |
 | Server vaults: create, move from a folder, delete | ✔ | — |
 | Folder vaults | ✔ | *never* |
 | Account: sign up, sign in | ✔ | sign in only |
@@ -92,6 +93,7 @@ A vault holds your nodes, notes and files, encrypted. There are two kinds:
 - **Add one** in Settings > Vault: *New vault on the server* (sign in first, in Settings > Server), *Vault from the server…*, or a folder (an empty one becomes a new vault). A folder vault can be moved to the server later (*Move to server…*).
 - **Recovery key**: shown once when the vault (or the account's pass phrase) is created. Keep it with the pass phrase: **if both are lost, the vault cannot be read**.
 - **Several vaults**: one is open at a time, switched in the title bar (or **Ctrl+1** to **Ctrl+9**); each can have its own hotkey. The **padlock** (**Ctrl+L**) locks the open one until its pass phrase is typed again.
+- **Privacy screen** (on by default, Settings > General): when the window is hidden or minimized, the open vault is covered, also in the taskbar preview; shown again, it opens on a plain screen until you click **Show** (or press Enter), so nothing shows by mistake while sharing your screen. Unlike the padlock, no pass phrase is asked.
 - **Share** a server vault: Settings > Vault > *Members* > *Share...*, with the other person's email, once you both read the same key **fingerprint** (by phone or in person). Removing a member changes the vault's key.
 - **Sync status** is in the title bar: a green dot when synced, amber offline, red when you must sign in. A click syncs now.
 
@@ -152,7 +154,7 @@ Gear button in the title bar, or tray menu > Settings. Changes are saved at once
 
 | Tab          | Description                                                                           |
 | ------------ | ------------------------------------------------------------------------------------- |
-| General      | The hotkey that shows kofrenot; where the main window appears; start with Windows     |
+| General      | The hotkey that shows kofrenot; where the main window appears; start with Windows; privacy screen |
 | Key bindings | Every shortcut                                                                        |
 | Vault        | Your vaults: add, remove, order, rename, hotkey, pass phrase, members                 |
 | Server       | Your account on a Kofre server: sign up, sign in, password, the account's pass phrase |

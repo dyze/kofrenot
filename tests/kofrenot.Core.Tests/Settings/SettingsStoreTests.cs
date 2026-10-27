@@ -14,6 +14,7 @@ public sealed class SettingsStoreTests : IDisposable
         Assert.Equal(ThemeChoice.System, store.Theme);
         Assert.False(store.DebugLogging);
         Assert.True(store.CheckForUpdates);
+        Assert.True(store.PrivacyScreen);
         Assert.Empty(store.Vaults.Vaults);
         Assert.Null(store.SelectedVault);
         Assert.Equal(Hotkey.Default, store.Hotkey);
@@ -230,6 +231,16 @@ public sealed class SettingsStoreTests : IDisposable
         Assert.False(new SettingsStore(FilePath).CheckForUpdates);
     }
 
+    [Fact]
+    public void ThePrivacyScreen_CanBeSwitchedOff_AndOnAgain()
+    {
+        new SettingsStore(FilePath).SetPrivacyScreen(false);
+        Assert.False(new SettingsStore(FilePath).PrivacyScreen);
+
+        new SettingsStore(FilePath).SetPrivacyScreen(true);
+        Assert.True(new SettingsStore(FilePath).PrivacyScreen);
+    }
+
     [Theory]
     [InlineData(ThemeChoice.Light)]
     [InlineData(ThemeChoice.Dark)]
@@ -305,12 +316,14 @@ public sealed class SettingsStoreTests : IDisposable
         store.SetTheme(ThemeChoice.Dark);
         store.SetDebugLogging(true);
         store.SetCheckForUpdates(false);
+        store.SetPrivacyScreen(false);
 
         var reloaded = new SettingsStore(FilePath);
 
         Assert.Equal(ThemeChoice.Dark, reloaded.Theme);
         Assert.True(reloaded.DebugLogging);
         Assert.False(reloaded.CheckForUpdates);
+        Assert.False(reloaded.PrivacyScreen);
     }
 
     [Fact]

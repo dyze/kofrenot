@@ -59,6 +59,7 @@ public partial class MainWindow : Window
         InitializeComponent();
         StateChanged += (_, _) => FitMaximized();
         FitMaximized();
+        AttachPrivacyScreen();
         DetailsPanel.Log = log;
         DetailsPanel.Rename = rename => _session.Rename(Ask, rename);
         DetailsPanel.Write = (change, action) => _session.Write(Ask, change, action);
@@ -377,6 +378,19 @@ public partial class MainWindow : Window
     /// <summary>In the details, their keys (Esc goes back). In the search, Esc hides the proposal, clears the input box, then hides the window.</summary>
     private void Window_PreviewKeyDown(object sender, KeyEventArgs e)
     {
+        if (Covered)
+        {
+            // Only Show (Enter, Space) and Esc, which hides the window again.
+            if (e.Key == Key.Escape)
+            {
+                Hide();
+                _log.Debug("Window", "Hidden (Esc)");
+                e.Handled = true;
+            }
+
+            return;
+        }
+
         if (e.Key == Key.Tab && Keyboard.Modifiers.HasFlag(ModifierKeys.Control))
         {
             e.Handled = SwitchTab(Keyboard.Modifiers.HasFlag(ModifierKeys.Shift) ? -1 : 1);
@@ -430,7 +444,7 @@ public partial class MainWindow : Window
         }
         else
         {
-            Hide();
+            HideCovered();
             _log.Debug("Window", "Hidden (Esc)");
         }
 
@@ -520,7 +534,17 @@ public partial class MainWindow : Window
         Activate();
         _session.Refresh();
         _session.Sync.Soon();
-        if (_session.Current is not null && DetailsShown)
+        FocusWork();
+    }
+
+    /// <summary>Puts the focus where the work is: Show while the vault is covered, else the details, the view, or the input box.</summary>
+    private void FocusWork()
+    {
+        if (Covered)
+        {
+            PrivacyShowButton.Focus();
+        }
+        else if (_session.Current is not null && DetailsShown)
         {
             DetailsPanel.Focus();
         }
@@ -592,7 +616,7 @@ public partial class MainWindow : Window
     {
         e.Cancel = true;
         DetailsPanel.LeaveNote();
-        Hide();
+        HideCovered();
         _log.Debug("Window", "Hidden");
     }
 }
