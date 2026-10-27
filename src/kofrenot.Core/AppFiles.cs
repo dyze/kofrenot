@@ -82,6 +82,9 @@ public sealed class AppFiles
     /// <summary>The nodes last opened on this device, by vault (ids only).</summary>
     public string RecentNodes => Path.Combine(DataDirectory, "recent.json");
 
+    /// <summary>The nodes kept offline on this device, by vault (ids only).</summary>
+    public string OfflineNodes => Path.Combine(DataDirectory, "offline.json");
+
     /// <summary>The views open as tabs on this device, by vault (ids only).</summary>
     public string ViewTabs => Path.Combine(DataDirectory, "tabs.json");
 

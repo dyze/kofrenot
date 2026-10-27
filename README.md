@@ -40,7 +40,8 @@ Both apps share the same vaults and the same core; each shows its own set of fea
 | Search names, pinned and recent nodes | ✔ | ✔ |
 | Node details, links | ✔ | ✔ (read only) |
 | Views: trees and lists, as tabs | ✔ rows, cards, details | ✔ rows |
-| Pinned for offline (content downloaded ahead) | ✔ | ✔ (pins set on Windows) |
+| Pin (synced: listed while the input box is empty) | ✔ | shown, set on Windows |
+| Keep offline (this device only: content downloaded ahead) | ✔ server vaults | ✔ |
 | **Change** | | |
 | Add nodes and links (input box, creation screen) | ✔ | — |
 | Rename, retype, colour, pin, delete; move and copy in a tree | ✔ | — |
@@ -101,7 +102,7 @@ kofrenot for Android **reads** your server vaults, also offline, and **edits the
 - **Read**: search names, pinned and recent nodes, a node's details and links (back goes through them), notes with their task lists, views as tabs. A dataset shows its file's name and size: *Open with…* hands it to another app, *Save as…* saves it where you choose. A copy opened with another app is deleted from kofrenot at its next start.
 - **Add files**: **＋** picks one or several files on the phone; a preview lists them (their number and total size, the names already taken), then **Add** makes each a dataset named after its file. One file added opens; several show among the recent nodes.
 - **Edit notes**: tap a checkbox to check its item, or **Edit** to change the note's text (Markdown: `# heading`, `- item`, `- [ ] task`), then **Save**; **Cancel** keeps it as it was, and leaving the note with changes not saved asks before discarding them. A note edited on two devices before they synced shows both versions: **Keep this version** keeps one.
-- **Offline**: every name and link is on the phone; a note's text once it has been shown, a pinned node's content at once. What you save offline waits on the phone (*· 2 to upload*) and is uploaded at the next sync. The phone syncs when the app opens or comes back, then every 30 seconds while it is shown; the dot says how it stands, a tap syncs now.
+- **Offline**: every name and link is on the phone; a note's text once it has been shown, and the content of the nodes you **Keep offline** (on the node's page) at once. What you save offline waits on the phone (*· 2 to upload*) and is uploaded at the next sync. The phone syncs when the app opens or comes back, then every 30 seconds while it is shown; the dot says how it stands, a tap syncs now.
 - **Private**: the app's screens stay out of the recent apps list and of screenshots.
 - A vault that needs an upgrade, or an account without its pass phrase yet, is opened once in kofrenot on Windows first.
 
@@ -119,7 +120,8 @@ Type in the box at the top of the main window; the line under it says what Enter
 
 - Matching nodes are listed as you type; **Tab** accepts the rest of a name proposed in grey.
 - **Enter** shows the creation screen first: the type of each new node (generic, note, dataset or view), a note's text, a dataset's file.
-- With the box empty, your **pinned** and **recent** nodes are listed. In a server vault, a pinned node's content (a note's text, a dataset's file) is also downloaded ahead and kept, so it opens offline, on Windows and on the phone: the pin's tooltip (on the phone, its label) says *kept offline* once it is here.
+- With the box empty, your **pinned** and **recent** nodes are listed. Pins are synced; recent nodes are this computer's.
+- **Keep offline** (the arrow beside the pin, in a server vault's node details): its content (a note's text, a dataset's file) is downloaded ahead and kept on this computer, so it opens offline. Each device chooses its own: nothing is written to the vault. The tooltip says *kept offline* once it is here.
 
 ### Node details
 **Enter** or a double-click on a node opens its details: its name, type, colour, pin and links. **F2** renames it; **+ Link** (**Ctrl+K**) links it to another; a link opens the node at its other end. **Esc** goes back.

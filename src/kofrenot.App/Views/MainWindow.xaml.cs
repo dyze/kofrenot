@@ -72,6 +72,9 @@ public partial class MainWindow : Window
         DetailsPanel.IsImporting = _session.IsImporting;
         DetailsPanel.ShowImage = ShowImage;
         DetailsPanel.OpenDataset = OpenInApp;
+        DetailsPanel.CanKeepOffline = () => _session.CanKeepOffline;
+        DetailsPanel.IsKeptOffline = _session.IsKeptOffline;
+        DetailsPanel.KeepOffline = _session.KeepOffline;
         DetailsPanel.EditView = view => _session.EditView(Ask, view);
         DetailsPanel.Retype = retype => _session.Retype(Ask, retype);
         DetailsPanel.WriteChanges = (changes, action) => _session.Write(Ask, changes, action);

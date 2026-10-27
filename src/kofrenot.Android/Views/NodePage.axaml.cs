@@ -89,7 +89,7 @@ public sealed partial class NodePage : UserControl, IPage
         ColorDot.Fill = NodeLook.Brush(details.Color);
         ColorDot.IsVisible = details.Color != NodeColor.None;
         Pinned.IsVisible = details.IsPinned;
-        Pinned.Text = vault.PinnedLabel(details.Node.Id);
+        ShowOffline(vault, details.Node);
         ShowConflicts(details);
         ShowContent(vault, details.Node, details.Color);
         Links.ItemsSource = details.Links.Select(link => NodeRow.Of(vault.Graph, link.OtherNode, link.Type)).ToList();

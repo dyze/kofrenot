@@ -70,6 +70,7 @@
               <ColumnDefinition Width="*" />
               <ColumnDefinition Width="Auto" />
               <ColumnDefinition Width="Auto" />
+              <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
             <TextBlock x:Name="NameText"
                        VerticalAlignment="Center"
@@ -128,15 +129,46 @@
                 </StackPanel>
               </Border>
             </Popup>
-            <!-- Pinned nodes are listed while the input box is empty, their content kept on this computer. Filled pin: pinned. -->
+            <!-- Pinned nodes are listed while the input box is empty, on every device (NodeDetailsPanel.Offline).
+                 One pin shape: in the accent colour, with a dot, when pinned. -->
             <Button x:Name="PinButton"
                     Grid.Column="2"
                     Margin="2,0,0,0"
                     VerticalAlignment="Center"
                     Style="{StaticResource FlatButton}"
-                    FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
-                    FontSize="14"
-                    Click="PinButton_Click" />
+                    Click="PinButton_Click">
+              <Grid>
+                <TextBlock x:Name="PinGlyph" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="14" Text="&#xE718;" />
+                <Ellipse x:Name="PinDot"
+                         Width="6"
+                         Height="6"
+                         Margin="0,0,-3,-2"
+                         HorizontalAlignment="Right"
+                         VerticalAlignment="Bottom"
+                         Fill="{DynamicResource AccentFillColorDefaultBrush}"
+                         Visibility="Collapsed" />
+              </Grid>
+            </Button>
+            <!-- Kept offline on this computer only (a server vault): its content downloaded ahead. Same look as the pin. -->
+            <Button x:Name="OfflineButton"
+                    Grid.Column="3"
+                    Margin="2,0,0,0"
+                    VerticalAlignment="Center"
+                    Style="{StaticResource FlatButton}"
+                    Visibility="Collapsed"
+                    Click="OfflineButton_Click">
+              <Grid>
+                <TextBlock x:Name="OfflineGlyph" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="14" Text="&#xE896;" />
+                <Ellipse x:Name="OfflineDot"
+                         Width="6"
+                         Height="6"
+                         Margin="0,0,-3,-2"
+                         HorizontalAlignment="Right"
+                         VerticalAlignment="Bottom"
+                         Fill="{DynamicResource AccentFillColorDefaultBrush}"
+                         Visibility="Collapsed" />
+              </Grid>
+            </Button>
           </Grid>
           <TextBlock x:Name="RenameText" Margin="0,4,0,0" Opacity="0.8" TextWrapping="Wrap" Visibility="Collapsed" />
 

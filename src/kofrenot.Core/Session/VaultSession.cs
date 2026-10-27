@@ -1,4 +1,5 @@
 using Kofrenot.Core;
+using Kofrenot.Core.Browse;
 using Kofrenot.Core.Datasets;
 using Kofrenot.Core.Graph;
 using Kofrenot.Core.Input;
@@ -31,6 +32,7 @@ public sealed partial class VaultSession : IDisposable
     private readonly IVaultWatcher _watching;
     private readonly IThumbnailMaker _thumbnails;
     private readonly TimeProvider _time;
+    private readonly OfflineNodes _offline;
     private readonly int _keyIterations;
     private IDisposable? _watcher;
     private string? _keptName;
@@ -60,6 +62,7 @@ public sealed partial class VaultSession : IDisposable
         _sync = sync;
         _log = log;
         _upgrades = new VaultUpgrades(files.VaultUpgrades, log);
+        _offline = new OfflineNodes(files.OfflineNodes, log);
         _sync.Changed += AfterSync;
     }
 
@@ -121,7 +124,7 @@ public sealed partial class VaultSession : IDisposable
         KeepRole();
         RetrySkippedChanges();
         _ = SettleMembers(ask);
-        _ = KeepPinnedAsync();
+        _ = KeepOfflineAsync();
         try
         {
             _watcher = _watching.Watch(folder, Refresh);
@@ -425,11 +428,6 @@ public sealed partial class VaultSession : IDisposable
             }
 
             _log.Info("Action", action);
-            if (changes.Any(change => change is NodePinned))
-            {
-                _ = KeepPinnedAsync();
-            }
-
             return true;
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)

@@ -17,6 +17,7 @@
           <TextBlock x:Name="Pinned" Grid.Column="2" Classes="caption" Text="Pinned" VerticalAlignment="Center" />
         </Grid>
         <TextBlock x:Name="NodeType" Classes="caption" />
+        <Button x:Name="OfflineButton" IsVisible="False" Click="Offline_Click" />
         <TextBlock x:Name="Conflict" Classes="error" IsVisible="False" />
         <Border x:Name="NoteBox" CornerRadius="8" Padding="12" IsVisible="False">
           <StackPanel Spacing="8">

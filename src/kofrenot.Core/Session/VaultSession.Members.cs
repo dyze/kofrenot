@@ -205,8 +205,8 @@ public sealed partial class VaultSession
                 Changed?.Invoke();
             }
 
-            // Pinned for offline: what the sync brought (a pin, a new version) is downloaded ahead.
-            _ = KeepPinnedAsync();
+            // Kept offline: what the sync brought (a new version) is downloaded ahead.
+            _ = KeepOfflineAsync();
         }
 
         if (Current is not { } vault || Folder is not { } folder || _access?.Identity is not { } identity || Selected?.Location.Store is not { } store)

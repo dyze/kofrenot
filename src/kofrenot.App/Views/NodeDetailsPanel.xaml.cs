@@ -19,8 +19,6 @@ public partial class NodeDetailsPanel : UserControl
 {
     /// <summary>The first item of the breadcrumb: where Back returns to (the search, or a view).</summary>
     public string HomeLabel { get; set; } = "⌂ Search";
-    private const string PinIcon = "";
-    private const string PinnedIcon = "";
 
     public NodeDetailsPanel()
     {
@@ -78,10 +76,7 @@ public partial class NodeDetailsPanel : UserControl
         LinksList.ItemsSource = details.Links;
         LinksRow.Height = details.Links.Count == 0 ? GridLength.Auto : new GridLength(1, GridUnitType.Star);
         ConflictNames.ItemsSource = details.NameConflict;
-        PinButton.Content = details.IsPinned ? PinnedIcon : PinIcon;
-        PinButton.ToolTip = details.IsPinned
-            ? $"{OpenVault?.Invoke()?.PinnedLabel(details.Node.Id) ?? "Pinned"}: click to unpin"
-            : "Pin: listed while the input box is empty, and its content kept on this computer";
+        ShowPinAndOffline(details);
         ConflictPanel.Visibility = details.NameConflict.Count > 0 && !_editing ? Visibility.Visible : Visibility.Collapsed;
         ShowType(details);
         ShowColor(details);
@@ -183,15 +178,6 @@ public partial class NodeDetailsPanel : UserControl
         if (sender is FrameworkElement { DataContext: BreadcrumbItem item })
         {
             GoBackTo(item.Depth);
-        }
-    }
-
-    private void PinButton_Click(object sender, RoutedEventArgs e)
-    {
-        if (Browser is { Graph: { } graph, Details: { } details })
-        {
-            Write?.Invoke(new PinPlanner(graph).Toggle(details.Node), details.IsPinned ? "Node unpinned" : "Node pinned");
-            Show();
         }
     }
 
