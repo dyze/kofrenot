@@ -362,7 +362,13 @@
                       <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
                     <local:NodeVisualView x:Name="RowVisual" Margin="0,1,10,1" Visual="{Binding Visual}" />
-                    <TextBlock x:Name="RowText" Grid.Column="1" VerticalAlignment="Center" Text="{Binding Text}" />
+                    <TextBlock x:Name="RowText" Grid.Column="1" VerticalAlignment="Center" TextTrimming="CharacterEllipsis">
+                      <Run Text="{Binding Text, Mode=OneWay}" />
+                      <!-- Changed lately: how long ago, in grey. -->
+                      <Run Text="{Binding Detail, Mode=OneWay, StringFormat={}  · {0}}"
+                           FontSize="{StaticResource CaptionFontSize}"
+                           Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                    </TextBlock>
                     <Button x:Name="OpenButton" Grid.Column="2" Style="{StaticResource OpenRowButton}" Click="OpenResult_Click" />
                   </Grid>
                 </Grid>

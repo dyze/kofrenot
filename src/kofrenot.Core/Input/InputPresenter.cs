@@ -9,7 +9,7 @@ namespace Kofrenot.Core.Input;
 /// <see cref="IsChosen"/>: the homonym chosen, or the row selected. A header (<see cref="IsHeader"/>)
 /// names the rows under it, while the input box is empty. A node row has its <see cref="Visual"/>.
 /// </summary>
-public sealed record ResultRow(string Text, bool IsLink, bool IsChosen, Node? Node = null, Node? From = null, bool IsHeader = false, NodeVisual? Visual = null)
+public sealed record ResultRow(string Text, bool IsLink, bool IsChosen, Node? Node = null, Node? From = null, bool IsHeader = false, NodeVisual? Visual = null, string? Detail = null)
 {
     internal RowKey? Key => Node is null ? null : new RowKey(From?.Id, Node.Id);
 }
@@ -46,6 +46,9 @@ public sealed class InputPresenter
 
     /// <summary>The nodes last opened on this device, the latest first (<see cref="Browse.RecentNodes"/>): listed while the text is empty.</summary>
     public IReadOnlyList<Guid> Recent { get; set; } = [];
+
+    /// <summary>The clock "Changed lately" is measured against; the system's, but in tests.</summary>
+    public TimeProvider Clock { get; set; } = TimeProvider.System;
 
     public string Preview { get; private set; } = Hint;
 
@@ -241,14 +244,20 @@ public sealed class InputPresenter
             : preview;
     }
 
-    /// <summary>While the input box is empty: the pinned nodes, then the recent ones not pinned, each under a header.</summary>
+    /// <summary>
+    /// While the input box is empty: the pinned nodes, the nodes changed lately (on any device, with
+    /// how long ago), then the recent ones on this device, each under a header and each node once.
+    /// </summary>
     private List<ResultRow> StartRows(KnowledgeGraph graph)
     {
         var text = new PlanText(graph);
         var rows = new List<ResultRow>();
+        var now = Clock.GetUtcNow();
         var pinned = graph.PinnedNodes;
-        var recent = Recent.Select(graph.FindNode).OfType<Node>().Except(pinned);
+        var changed = ChangedLately.Of(graph, now).Where(change => !pinned.Contains(change.Node)).ToList();
+        var recent = Recent.Select(graph.FindNode).OfType<Node>().Except(pinned).Except(changed.Select(change => change.Node));
         AddSection(rows, "Pinned", pinned.Select(node => NodeRow(graph, text, node, chosen: false)));
+        AddSection(rows, "Changed lately", changed.Select(change => NodeRow(graph, text, change.Node, chosen: false) with { Detail = TimeAgo.Of(change.At, now) }));
         AddSection(rows, "Recent", recent.Select(node => NodeRow(graph, text, node, chosen: false)));
         return rows;
     }

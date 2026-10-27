@@ -7,7 +7,11 @@ public sealed class InputPresenterTests
     private static readonly DateTimeOffset Start = new(2026, 10, 16, 9, 0, 0, TimeSpan.Zero);
 
     private readonly KnowledgeGraph _graph = new();
-    private readonly InputPresenter _input = new();
+    private readonly ManualClock _clock = new() { Now = Start.AddDays(30) };
+    private readonly InputPresenter _input;
+
+    // A month after the nodes are added: none is "changed lately", but where a test says so.
+    public InputPresenterTests() => _input = new InputPresenter { Clock = _clock };
 
     [Fact]
     public void AnEmptyText_ShowsTheHint()
@@ -330,6 +334,21 @@ public sealed class InputPresenterTests
 
         Assert.Equal(["Pinned", "Dune", "Recent", "Arrakis", "Frank Herbert"], _input.Rows.Select(row => row.Text));
         Assert.Equal([true, false, true, false, false], _input.Rows.Select(row => row.IsHeader));
+    }
+
+    [Fact]
+    public void AnEmptyText_ListsTheNodesChangedLately_BetweenPinnedAndRecent_EachOnce()
+    {
+        var (dune, herbert, _) = (Add("Dune"), Add("Frank Herbert", minutes: 5), Add("Arrakis", minutes: 10));
+        var old = Add("Old", minutes: -20 * 24 * 60);
+        _graph.Apply(new NodePinned(Guid.NewGuid(), Start, dune.Id));
+        _input.Recent = [herbert.Id, old.Id];
+        _clock.Now = Start.AddHours(2);
+
+        _input.Update(_graph, "");
+
+        Assert.Equal(["Pinned", "Dune", "Changed lately", "Arrakis", "Frank Herbert", "Recent", "Old"], _input.Rows.Select(row => row.Text));
+        Assert.Equal(["1 h ago", "1 h ago"], _input.Rows.Where(row => row.Detail is not null).Select(row => row.Detail));
     }
 
     [Fact]

@@ -1,6 +1,7 @@
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
+using Kofrenot.Core.Browse;
 using Kofrenot.Core.Graph;
 using Kofrenot.Core.Input;
 using Kofrenot.Core.Storage;
@@ -149,27 +150,31 @@ public sealed partial class HomePage : UserControl, IPage
             return;
         }
 
+        // Pinned, changed lately (on any device), then recent on this phone, as the input box on Windows; each node once.
+        var now = DateTimeOffset.UtcNow;
         var pinned = graph.PinnedNodes;
+        var changed = ChangedLately.Of(graph, now).Where(change => !pinned.Contains(change.Node)).ToList();
         var recent = _shell.Services.Recent.Of(vault.Id)
             .Select(graph.FindNode)
             .OfType<Node>()
-            .Where(node => !pinned.Contains(node))
+            .Where(node => !pinned.Contains(node) && changed.All(change => change.Node != node))
             .ToList();
         var rows = new List<object>();
-        if (pinned.Count > 0)
-        {
-            rows.Add(new HeaderRow("Pinned"));
-            rows.AddRange(pinned.Select(node => NodeRow.Of(graph, node)));
-        }
-
-        if (recent.Count > 0)
-        {
-            rows.Add(new HeaderRow("Recent"));
-            rows.AddRange(recent.Select(node => NodeRow.Of(graph, node)));
-        }
-
+        AddSection(rows, "Pinned", pinned.Select(node => NodeRow.Of(graph, node)));
+        AddSection(rows, "Changed lately", changed.Select(change => NodeRow.Of(graph, change.Node, detail: $"{graph.Types.NodeTypeName(change.Node.Type)} · {TimeAgo.Of(change.At, now)}")));
+        AddSection(rows, "Recent", recent.Select(node => NodeRow.Of(graph, node)));
         List.ItemsSource = rows;
-        ShowMessage(rows.Count == 0 ? "Type a name to find a node. Pinned and recent nodes show here." : null);
+        ShowMessage(rows.Count == 0 ? "Type a name to find a node. Pinned, changed and recent nodes show here." : null);
+    }
+
+    private static void AddSection(List<object> rows, string header, IEnumerable<NodeRow> section)
+    {
+        var nodes = section.ToList();
+        if (nodes.Count > 0)
+        {
+            rows.Add(new HeaderRow(header));
+            rows.AddRange(nodes);
+        }
     }
 
     // A view's nodes: a flat list, or a tree expanded by hand; searched, the places found.

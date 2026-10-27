@@ -38,6 +38,7 @@ Both apps share the same vaults and the same core; each shows its own set of fea
 | Sync status, sync now | ✔ | ✔ while the app is shown |
 | **Browse** | | |
 | Search names, pinned and recent nodes | ✔ | ✔ |
+| Changed lately (on any device, in the last 7 days) | ✔ empty input box | ✔ home |
 | Node details, links | ✔ | ✔ (read only) |
 | Views: trees and lists, as tabs | ✔ rows, cards, details | ✔ rows |
 | Pin (synced: listed while the input box is empty) | ✔ | shown, set on Windows |
@@ -100,7 +101,7 @@ kofrenot for Android **reads** your server vaults, also offline, and **edits the
 
 - **Install**: download `kofrenot-android-<version>.apk` from the [releases](https://github.com/dyze/kofrenot/releases) and open it (Android 8.0 or later; allow installing from your browser or file app when asked).
 - **Sign in** with your server account, then **Add from the server**: your vaults and those shared with you, which show your role (reader or writer) in the list; a vault shared with you to read says so in a banner. The account's pass phrase opens them; tick *Remember it on this phone* to keep it in the phone's Keystore.
-- **Read**: search names, pinned and recent nodes, a node's details and links (back goes through them), notes with their task lists, views as tabs. A dataset shows its file's name and size: *Open with…* hands it to another app, *Save as…* saves it where you choose. A copy opened with another app is deleted from kofrenot at its next start.
+- **Read**: search names, pinned nodes, nodes changed lately (on any device), recent nodes, a node's details and links (back goes through them), notes with their task lists, views as tabs. A dataset shows its file's name and size: *Open with…* hands it to another app, *Save as…* saves it where you choose. A copy opened with another app is deleted from kofrenot at its next start.
 - **Add files**: **＋** picks one or several files on the phone; a preview lists them (their number and total size, the names already taken), then **Add** makes each a dataset named after its file. One file added opens; several show among the recent nodes.
 - **Share to kofrenot** from another app (its *Share* button): files become datasets, text or a link becomes a new note named after its first line. A preview names the open vault and lists what will be added; nothing is before **Add**. When no vault is open yet, it waits until you open one.
 - **Edit notes**: tap a checkbox to check its item, or **Edit** to change the note, then **Save**. A note whose lines are all items opens as its list, as on Windows: a checkbox and a text per item, **Enter** adds the next, **✕** removes one, checked items below the others; **Checkboxes** turns a text into items, **Text** turns them back into lines. Other notes are edited as Markdown text (`# heading`, `- item`); **Cancel** keeps it as it was, and leaving the note with changes not saved asks before discarding them. A note edited on two devices before they synced shows both versions: **Keep this version** keeps one.
@@ -122,7 +123,7 @@ Type in the box at the top of the main window; the line under it says what Enter
 
 - Matching nodes are listed as you type; **Tab** accepts the rest of a name proposed in grey.
 - **Enter** shows the creation screen first: the type of each new node (generic, note, dataset or view), a note's text, a dataset's file.
-- With the box empty, your **pinned** and **recent** nodes are listed. Pins are synced; recent nodes are this computer's.
+- With the box empty, your **pinned** nodes are listed, then the nodes **changed lately** (in the last 7 days, on any device, the 10 newest, each with how long ago: a change made on your phone is at hand here), then your **recent** ones. Pins are synced; recent nodes are this computer's.
 - **Keep offline** (the arrow beside the pin, in a server vault's node details): its content (a note's text, a dataset's file) is downloaded ahead and kept on this computer, so it opens offline. Each device chooses its own: nothing is written to the vault. The tooltip says *kept offline* once it is here.
 
 ### Node details
