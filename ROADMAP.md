@@ -22,7 +22,8 @@ Scope of each planned version. Implemented features move to [CHANGELOG.md](CHANG
 3. Android · **Import from the camera.** A photo or video taken from kofrenot becomes a dataset, after the same preview as **＋**, without passing through the phone's gallery.
 4. Android · **Sharing.** Members, roles, share, leave.
 5. Both · Stores **statistics** about data exchanges with server. It could be useful for analysing performance problems.
-6. Android · **Compact lists**. Today lists 
+6. Android · **Compact lists**. Today lists use entries that have too much empty space.
+
 ## 0.13
 1. Both · **Events and qualifiers.**
 	* **Qualifiers** add context to a link: date, place, source, quantity, confidence. *Dune → written by → Frank Herbert (date: 1965)*.
