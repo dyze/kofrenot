@@ -19,14 +19,17 @@
           <TextBlock x:Name="Pinned" Grid.Column="2" Classes="caption" Text="Pinned" VerticalAlignment="Center" />
         </Grid>
         <TextBlock x:Name="NodeType" Classes="caption" />
-        <!-- Its fields, read only: they are filled in kofrenot on Windows. -->
+        <!-- Its fields: a tap fills one (NodePage.Fields); an image is set on Windows. -->
         <ItemsControl x:Name="Fields" IsVisible="False">
           <ItemsControl.ItemTemplate>
             <DataTemplate DataType="views:FieldLine">
               <Grid ColumnDefinitions="120,*" Margin="0,2">
                 <TextBlock Classes="caption" Text="{Binding Label}" TextWrapping="Wrap" VerticalAlignment="Top" />
                 <StackPanel Grid.Column="1" Spacing="4">
-                  <SelectableTextBlock Text="{Binding Value}" TextWrapping="Wrap" />
+                  <Button Classes="flat" Padding="0" MinHeight="32" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
+                          Tag="{Binding}" Click="Field_Click">
+                    <TextBlock Text="{Binding Value}" TextWrapping="Wrap" />
+                  </Button>
                   <Image Source="{Binding Thumbnail}" MaxHeight="96" HorizontalAlignment="Left" IsVisible="{Binding HasThumbnail}" />
                   <Button Content="Open with…" Tag="{Binding}" IsVisible="{Binding HasImage}" Click="OpenImage_Click" />
                 </StackPanel>
@@ -35,7 +38,8 @@
           </ItemsControl.ItemTemplate>
         </ItemsControl>
         <Button x:Name="OfflineButton" IsVisible="False" Click="Offline_Click" />
-        <TextBlock x:Name="Conflict" Classes="error" IsVisible="False" />
+        <!-- A name, colour or value set on two devices: each offered to keep (NodePage.Fields). -->
+        <StackPanel x:Name="Conflicts" Spacing="2" IsVisible="False" />
         <Border x:Name="NoteBox" CornerRadius="8" Padding="12" IsVisible="False">
           <StackPanel Spacing="8">
             <StackPanel x:Name="Note" Spacing="4" />

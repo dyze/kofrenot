@@ -10,13 +10,14 @@ using Kofrenot.Phone.Platform;
 namespace Kofrenot.Phone.Views;
 
 /// <summary>
-/// ⋯ on a node's page: rename, colour, pin or unpin, delete (asked first, naming what goes); a long
+/// ⋯ on a node's page: rename, colour, pin or unpin, add a field or a type, take a type out, delete
+/// (asked first, naming what goes); a long
 /// press on a link removes it (asked first). Each is a change written as on Windows, synced at the
 /// next sync. Hidden in a vault shared with you to read.
 /// </summary>
 public sealed partial class NodePage
 {
-    private void ShowActions(NodeDetails details)
+    private void ShowActions(KnowledgeGraph graph, NodeDetails details)
     {
         ActionsButton.IsVisible = !_shell.Services.Session.IsReadOnly;
         var colors = new MenuItem { Header = "Colour" };
@@ -28,6 +29,9 @@ public sealed partial class NodePage
                 Item("Rename…", () => _shell.Run(RenameAsync)),
                 colors,
                 Item(details.IsPinned ? "Unpin" : "Pin", TogglePin),
+                Item("Add field…", () => _shell.Run(AddFieldAsync)),
+                AddTypeItem(graph, details),
+                RemoveTypeItem(graph, details),
                 Item("Delete…", () => _shell.Run(DeleteAsync)),
             },
         };

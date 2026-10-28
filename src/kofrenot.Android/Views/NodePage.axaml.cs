@@ -17,8 +17,8 @@ namespace Kofrenot.Phone.Views;
 /// <summary>A version of a dataset's file: its name and size, to open with another app or save.</summary>
 public sealed record FileRow(DatasetEdited Version, string Name, string Size);
 
-/// <summary>A field shown on a node's page: its label, its value as shown, and an image field's image and thumbnail.</summary>
-public sealed record FieldLine(string Label, string Value, DatasetEdited? Image = null, Bitmap? Thumbnail = null)
+/// <summary>A field shown on a node's page: its label, its value as shown, an image field's image and thumbnail, and the field it shows.</summary>
+public sealed record FieldLine(string Label, string Value, DatasetEdited? Image = null, Bitmap? Thumbnail = null, NodeField? Field = null)
 {
     public bool HasImage => Image is not null;
 
@@ -105,7 +105,7 @@ public sealed partial class NodePage : UserControl, IPage
         Links.ItemsSource = details.Links.Select(link => NodeRow.Of(vault.Graph, link.OtherNode, link.Type, link: link.Link)).ToList();
         LinksHeader.IsVisible = details.Links.Count > 0;
         ShowHistory(vault.Graph, details.Node);
-        ShowActions(details);
+        ShowActions(vault.Graph, details);
     }
 
     // The fields of its types and its own, empty ones of its types included, as on Windows.
@@ -120,12 +120,12 @@ public sealed partial class NodePage : UserControl, IPage
     {
         if (field.Image?.Image is not { } image)
         {
-            return new FieldLine(field.Label, field.HasValue ? field.Display : "—");
+            return new FieldLine(field.Label, field.HasValue ? field.Display : "—", Field: field);
         }
 
         var png = Vault?.ReadThumbnail(image.Id);
         using var thumbnail = png is null ? null : new MemoryStream(png);
-        return new FieldLine(field.Label, field.Display, image, thumbnail is null ? null : new Bitmap(thumbnail));
+        return new FieldLine(field.Label, field.Display, image, thumbnail is null ? null : new Bitmap(thumbnail), field);
     }
 
     private void OpenImage_Click(object? sender, RoutedEventArgs e)
@@ -134,23 +134,6 @@ public sealed partial class NodePage : UserControl, IPage
         {
             _shell.Run(() => OpenWithAsync(image));
         }
-    }
-
-    private void ShowConflicts(NodeDetails details)
-    {
-        var conflicts = new List<string>();
-        if (details.NameConflict.Count > 1)
-        {
-            conflicts.Add($"Named in {details.NameConflict.Count} ways: {string.Join(", ", details.NameConflict)}.");
-        }
-
-        foreach (var field in details.Fields.Where(field => field.Conflict.Count > 1))
-        {
-            conflicts.Add($"{field.Label} set in {field.Conflict.Count} ways: {string.Join(", ", field.Conflict)}.");
-        }
-
-        Conflict.Text = string.Join("\n", conflicts.Append("Resolved in kofrenot on Windows."));
-        Conflict.IsVisible = conflicts.Count > 0;
     }
 
     private void ShowContent(Vault vault, Node node, NodeColor color)
