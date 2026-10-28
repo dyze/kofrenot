@@ -14,7 +14,7 @@ namespace Kofrenot.Phone.Views;
 public sealed record TreeRow(TreeItem Item, NodeRow Row, int Depth, bool Expanded)
 {
     private const double IndentStep = 20;
-    private const double ToggleWidth = 40;
+    private const double ToggleWidth = 32;
 
     public string Toggle => Expanded ? "▾" : "▸";
 

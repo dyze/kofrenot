@@ -14,16 +14,17 @@
 
   <Application.DataTemplates>
     <DataTemplate DataType="views:HeaderRow">
-      <TextBlock Classes="caption" Text="{Binding Text}" Margin="16,16,16,4" />
+      <TextBlock Classes="caption" Text="{Binding Text}" Margin="16,10,16,2" />
     </DataTemplate>
     <DataTemplate DataType="views:NodeRow">
-      <Grid ColumnDefinitions="Auto,*" Margin="{Binding Indent}" MinHeight="48">
-        <Grid Width="32" Height="32" VerticalAlignment="Center">
-          <TextBlock Text="{Binding Glyph}" FontSize="20" HorizontalAlignment="Center" VerticalAlignment="Center" />
-          <Ellipse Width="10" Height="10" Fill="{Binding Color}" IsVisible="{Binding HasColor}"
+      <!-- Two tight lines, at least 40 high: still a comfortable tap. -->
+      <Grid ColumnDefinitions="Auto,*" Margin="{Binding Indent}" MinHeight="40">
+        <Grid Width="24" Height="24" VerticalAlignment="Center">
+          <TextBlock Text="{Binding Glyph}" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center" />
+          <Ellipse Width="8" Height="8" Fill="{Binding Color}" IsVisible="{Binding HasColor}"
                    HorizontalAlignment="Right" VerticalAlignment="Bottom" />
         </Grid>
-        <StackPanel Grid.Column="1" Margin="12,0,0,0" VerticalAlignment="Center">
+        <StackPanel Grid.Column="1" Margin="10,2,0,2" VerticalAlignment="Center">
           <TextBlock Text="{Binding Name}" FontSize="16" TextTrimming="CharacterEllipsis" />
           <TextBlock Classes="caption" Text="{Binding Detail}" IsVisible="{Binding HasDetail}" TextTrimming="CharacterEllipsis" />
         </StackPanel>
@@ -57,6 +58,11 @@
     </Style>
     <Style Selector="ListBox">
       <Setter Property="Background" Value="Transparent" />
+    </Style>
+    <!-- The rows set their own height: no padding of the theme's around them. -->
+    <Style Selector="ListBoxItem">
+      <Setter Property="Padding" Value="0" />
+      <Setter Property="MinHeight" Value="0" />
     </Style>
     <Style Selector="Button.tab">
       <Setter Property="Height" Value="40" />

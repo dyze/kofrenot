@@ -29,9 +29,9 @@
     <ListBox x:Name="List" SelectionChanged="List_SelectionChanged">
       <ListBox.DataTemplates>
         <DataTemplate DataType="views:TreeRow">
-          <Grid ColumnDefinitions="Auto,*" Margin="{Binding Indent}" MinHeight="48">
+          <Grid ColumnDefinitions="Auto,*" Margin="{Binding Indent}">
             <Button Classes="flat toggle" Content="{Binding Toggle}" IsVisible="{Binding Item.CanExpand}" Tag="{Binding}"
-                    Click="Toggle_Click" Width="40" />
+                    Click="Toggle_Click" Width="32" MinWidth="32" MinHeight="40" Padding="0" />
             <ContentControl Grid.Column="1" Content="{Binding Row}" Margin="{Binding Shift}" />
           </Grid>
         </DataTemplate>

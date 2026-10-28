@@ -21,7 +21,6 @@ Scope of each planned version. Implemented features move to [CHANGELOG.md](CHANG
 2. Android · **Import from the camera.** A photo or video taken from kofrenot becomes a dataset, after the same preview as **＋**, without passing through the phone's gallery.
 3. Android · **Sharing.** Members, roles, share, leave.
 4. Both · Stores **statistics** about data exchanges with server. It could be useful for analysing performance problems.
-5. Android · **Compact lists**. Today lists use entries that have too much empty space.
 
 ## 0.13
 1. Both · **Events and qualifiers.**

@@ -70,7 +70,7 @@
           <ItemsControl.ItemTemplate>
             <DataTemplate DataType="views:NodeRow">
               <Button Classes="flat" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch"
-                      Padding="0" Content="{Binding}" Tag="{Binding}" Click="Link_Click" />
+                      Padding="0" MinHeight="0" Content="{Binding}" Tag="{Binding}" Click="Link_Click" />
             </DataTemplate>
           </ItemsControl.ItemTemplate>
         </ItemsControl>
