@@ -33,8 +33,10 @@ public sealed partial class VaultSession
     }
 
     /// <summary>Whether <paramref name="access"/> opens the files written last, as signed by the vault's owner.</summary>
-    private bool IsCurrent(string folder, VaultAccess access) =>
-        VaultKeys.IsCurrent(folder, access, access.Identity is { } identity ? SignerOf(folder, access.Header.Id)?.KeyFor(identity) : null);
+    private bool IsCurrent(string folder, VaultAccess access) => IsCurrent(folder, access, SignerOf(folder, access.Header.Id));
+
+    private static bool IsCurrent(string folder, VaultAccess access, KeySigner? signer) =>
+        VaultKeys.IsCurrent(folder, access, access.Identity is { } identity ? signer?.KeyFor(identity) : null);
 
     /// <summary>The signing key of the open vault's owner: what its member records need; null for a folder vault.</summary>
     private byte[]? OwnerKey =>

@@ -1,4 +1,5 @@
 using Kofrenot.Core.Logging;
+using Kofrenot.Core.Settings;
 using Kofrenot.Core.Storage;
 
 namespace Kofrenot.Core.Session;
@@ -26,34 +27,37 @@ public sealed partial class VaultSession
     }
 
     /// <summary>
-    /// Unlocks a vault with what is remembered, else asks its pass phrase or recovery key. Null when
-    /// cancelled; else what opens it, and whether to remember it.
+    /// Unlocks the vault <paramref name="vault"/> in <paramref name="folder"/> with what is
+    /// remembered, else asks its pass phrase or recovery key. Null when cancelled; else what opens
+    /// it, and whether to remember it.
     /// </summary>
-    private (VaultAccess Access, bool Remember)? UnlockKeys(ISessionQuestions ask, string folder, VaultHeader header)
+    private (VaultAccess Access, bool Remember)? UnlockKeys(ISessionQuestions ask, RegisteredVault? vault, string folder, VaultHeader header)
     {
+        var location = vault?.Location is { } known && known.Folder == folder ? known : null;
         if (TakeUnlockedAhead(folder, header) is { } ahead)
         {
             _log.Info("Action", $"Vault {header.Id} unlocked");
             return (ahead.Access, Remembers(ahead.Access, ahead.Remember));
         }
 
-        if (!_askPassPhrase && Remembered(folder, header) is { } remembered)
+        if (!_askPassPhrase && Remembered(location, folder, header) is { } remembered)
         {
             _log.Info(Category, $"Vault {header.Id} unlocked with the remembered pass phrase");
             return (remembered, false);
         }
 
         VaultAccess? access = null;
-        var account = AccountIdentityOf(folder);
-        var hint = Selected?.Location.IsOnServer == true ? "Type your server account's pass phrase (a vault not handed to it yet: its own)." : null;
-        var answer = ask.AskPassPhrase(PlaceOf(Selected, folder), passPhrase =>
+        var account = location is null ? null : AccountIdentityOf(location);
+        var signer = location is null ? null : SignerOf(location, header.Id);
+        var hint = location?.IsOnServer == true ? "Type your server account's pass phrase (a vault not handed to it yet: its own)." : null;
+        var answer = ask.AskPassPhrase(PlaceOf(vault, folder), passPhrase =>
         {
-            access = VaultKeys.Unlock(folder, header, passPhrase, _log, account, SignerOf(folder, header.Id));
+            access = VaultKeys.Unlock(folder, header, passPhrase, _log, account, signer);
             if (access is null)
             {
                 _log.Warn(Category, $"Wrong pass phrase for vault {header.Id}");
             }
-            else if (!IsCurrent(folder, access))
+            else if (!IsCurrent(folder, access, signer))
             {
                 throw new IOException(OlderFilesOnly);
             }
@@ -68,7 +72,7 @@ public sealed partial class VaultSession
 
         if (answer.UseRecoveryKey)
         {
-            return Recover(ask, folder, header);
+            return Recover(ask, vault, location, folder, header);
         }
 
         _log.Info("Action", $"Vault {header.Id} unlocked");
@@ -82,23 +86,25 @@ public sealed partial class VaultSession
     // A master key remembered before format 6 opens the vault until it has identities: then the
     // pass phrase is asked, so its identity is remembered instead. Either is used only while it
     // opens the latest files (a vault handed to its server account since: no longer).
-    private VaultAccess? Remembered(string folder, VaultHeader header)
+    private VaultAccess? Remembered(VaultLocation? location, string folder, VaultHeader header)
     {
-        var remembered = _keys.RecallIdentity(header.Id) is { } identity ? VaultKeys.Unlock(folder, header, identity, _log, SignerOf(folder, header.Id))
+        var signer = location is null ? null : SignerOf(location, header.Id);
+        var remembered = _keys.RecallIdentity(header.Id) is { } identity ? VaultKeys.Unlock(folder, header, identity, _log, signer)
             : _keys.RecallMasterKey(header.Id) is { } masterKey && !VaultKeys.HasIdentities(folder) ? new VaultAccess(header, KeyRing.Of(masterKey), Identity: null)
             : null;
-        return remembered is not null && IsCurrent(folder, remembered) ? remembered : null;
+        return remembered is not null && IsCurrent(folder, remembered, signer) ? remembered : null;
     }
 
     /// <summary>Unlocks a vault with its recovery key (or its server account's), then asks a new pass phrase.</summary>
-    private (VaultAccess Access, bool Remember)? Recover(ISessionQuestions ask, string folder, VaultHeader header)
+    private (VaultAccess Access, bool Remember)? Recover(ISessionQuestions ask, RegisteredVault? vault, VaultLocation? location, string folder, VaultHeader header)
     {
-        var place = PlaceOf(Selected, folder);
-        var account = AccountIdentityOf(folder);
+        var place = PlaceOf(vault, folder);
+        var account = location is null ? null : AccountIdentityOf(location);
+        var signer = location is null ? null : SignerOf(location, header.Id);
         VaultAccess? access = null;
         var remember = ask.AskRecoveryKey(place, recovery =>
         {
-            access = VaultKeys.Unlock(folder, header, recovery, _log, account, SignerOf(folder, header.Id));
+            access = VaultKeys.Unlock(folder, header, recovery, _log, account, signer);
             if (access is null)
             {
                 _log.Warn(Category, $"Wrong recovery key for vault {header.Id}");
@@ -117,7 +123,7 @@ public sealed partial class VaultSession
         {
             ChangeAccountPassPhrase(ask, kept, access.Identity);
         }
-        else if (Selected?.Location.IsOnServer != true)
+        else if (location?.IsOnServer != true)
         {
             access = ChangePassPhrase(ask, place, folder, access) ?? access;
         }

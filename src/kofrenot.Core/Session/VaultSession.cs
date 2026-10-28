@@ -565,7 +565,7 @@ public sealed partial class VaultSession : IDisposable
             return null;
         }
 
-        return UnlockKeys(ask, folder, header) is { } unlocked ? Open(ask, folder, unlocked.Access, unlocked.Remember) : null;
+        return UnlockKeys(ask, Selected, folder, header) is { } unlocked ? Open(ask, folder, unlocked.Access, unlocked.Remember) : null;
     }
 
     private Vault? Open(ISessionQuestions ask, string folder, VaultAccess access, bool remember)
