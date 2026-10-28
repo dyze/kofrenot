@@ -14,7 +14,7 @@ Scope of each planned version. Implemented features move to [CHANGELOG.md](CHANG
 | 0.8     | Released  | Notes as in Keep; content on demand; session in Core for Android                   |
 | 0.9     | Released  | Android: server vaults read and searched offline on the phone                      |
 | 0.10    | Released  | Offline pins, file drops; notes and files added on Android                         |
-| 0.11    | Planned   | Composition: node types made of fields, several per node; fields of a node's own   |
+| 0.11    | Released  | Composition: node types made of fields, several per node; fields of a node's own   |
 
 ## 0.12
 1. Both · **Restore previous versions.** A node's versions are listed, so a mistake can be undone by restoring one of them.

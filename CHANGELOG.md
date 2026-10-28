@@ -8,6 +8,8 @@ It covers kofrenot on Windows and on Android; versions before 0.9 ran on Windows
 
 ## [Unreleased]
 
+## [0.11] - 2026-10-28
+
 Vault format 8: a vault upgraded is closed by kofrenot 0.10 and older, on Windows and Android ([Format](docs/ARCHITECTURE.md#format)).
 
 ### Added
@@ -247,7 +249,8 @@ Vault format 8: a vault upgraded is closed by kofrenot 0.10 and older, on Window
 - **Update check** once a day against GitHub releases, switchable in About.
 - **Installer and portable zip** (`build\installer.cmd`), self-contained.
 
-[Unreleased]: https://github.com/dyze/kofrenot/compare/0.10...HEAD
+[Unreleased]: https://github.com/dyze/kofrenot/compare/0.11...HEAD
+[0.11]: https://github.com/dyze/kofrenot/compare/0.10...0.11
 [0.10]: https://github.com/dyze/kofrenot/compare/0.9...0.10
 [0.9]: https://github.com/dyze/kofrenot/compare/0.8...0.9
 [0.8]: https://github.com/dyze/kofrenot/compare/0.7...0.8
