@@ -157,6 +157,11 @@ public partial class NodeDetailsPanel
     private FrameworkElement EditorOf(NodeField field, bool canEdit)
     {
         var margin = new Thickness(0, 4, 0, 0);
+        if (field.Kind == FieldKind.Image)
+        {
+            return ImageEditorOf(field, margin, canEdit);
+        }
+
         if (!canEdit)
         {
             return new TextBlock { Margin = margin, Text = field.Display, TextWrapping = TextWrapping.Wrap };

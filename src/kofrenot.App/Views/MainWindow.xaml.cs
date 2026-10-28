@@ -69,6 +69,7 @@ public partial class MainWindow : Window
         DetailsPanel.SaveNote = (version, content) => _session.SaveNote(Ask, version, content);
         DetailsPanel.OpenVault = () => _session.Current;
         DetailsPanel.SaveDataset = (version, open, progress) => _session.SaveDataset(Ask, version, open, progress);
+        DetailsPanel.SaveImage = (value, open) => _session.SaveImage(Ask, value, open);
         DetailsPanel.ExportDataset = (version, target) => _session.ExportDataset(Ask, version, target);
         DetailsPanel.IsImporting = _session.IsImporting;
         DetailsPanel.ShowImage = ShowImage;

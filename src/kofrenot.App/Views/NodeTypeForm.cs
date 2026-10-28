@@ -48,7 +48,7 @@ public sealed class FieldRow : Bindable
         _changed = changed;
     }
 
-    public static IReadOnlyList<FieldKind> Kinds => FieldKinds.Small;
+    public static IReadOnlyList<FieldKind> Kinds => FieldKinds.OfTypes;
 
     /// <summary>The field's id; null for a field added in the form.</summary>
     public string? Id { get; }

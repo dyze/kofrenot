@@ -32,9 +32,10 @@ public partial class NodeDetailsPanel
         set => DatasetBox.OpenInApp = value;
     }
 
-    /// <summary>Shows a dataset version's image in its own window.</summary>
+    /// <summary>Shows a dataset version's image in its own window: a dataset's, or an image field's.</summary>
     public Action<DatasetEdited>? ShowImage
     {
+        get => DatasetBox.ShowImage;
         set => DatasetBox.ShowImage = value;
     }
 
