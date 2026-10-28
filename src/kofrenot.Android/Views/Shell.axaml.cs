@@ -26,8 +26,8 @@ public interface IPage
 public sealed partial class Shell : UserControl
 {
     private readonly Stack<Control> _pages = new();
-    private readonly Queue<(string Text, string? Yes, TaskCompletionSource<bool>? Answer)> _messages = new();
-    private TaskCompletionSource<bool>? _answer;
+    private readonly Queue<Message> _messages = new();
+    private Message? _shown;
 
     public Shell(AppServices services)
     {
@@ -100,7 +100,7 @@ public sealed partial class Shell : UserControl
         PageHost.Content = page;
     }
 
-    public void Tell(string message) => Enqueue(message, yes: null, answer: null);
+    public void Tell(string message) => Enqueue(new Message(message, Yes: null, Answer: null));
 
     public void Tell(IEnumerable<string> messages)
     {
@@ -111,12 +111,15 @@ public sealed partial class Shell : UserControl
     }
 
     /// <summary>Asks to confirm; true for <paramref name="yes"/>.</summary>
-    public Task<bool> Confirm(string question, string yes)
-    {
-        var answer = new TaskCompletionSource<bool>();
-        Enqueue(question, yes, answer);
-        return answer.Task;
-    }
+    public async Task<bool> Confirm(string question, string yes) => await Ask(new Message(question, yes, new())) is not null;
+
+    /// <summary>
+    /// Asks a text, <paramref name="typed"/> to begin with; null when cancelled.
+    /// <paramref name="remark"/> says what is wrong with a text, or worth a warning (null when nothing is);
+    /// <paramref name="isFine"/> tells whether <paramref name="yes"/> takes it.
+    /// </summary>
+    public Task<string?> AskText(string question, string typed, string yes, Func<string, string?> remark, Func<string, bool> isFine) =>
+        Ask(new Message(question, yes, new(), typed, remark, isFine));
 
     /// <summary>
     /// Runs what a tap started, its failures caught: an unexpected one is logged and told, not a
@@ -165,7 +168,7 @@ public sealed partial class Shell : UserControl
     {
         if (Overlay.IsVisible)
         {
-            Answer(false);
+            Answer(yes: false);
             e.Handled = true;
         }
         else if (PageHost.Content is IPage page && page.GoBack())
@@ -194,9 +197,15 @@ public sealed partial class Shell : UserControl
 
     private void RefreshPage() => (PageHost.Content as IPage)?.Refresh();
 
-    private void Enqueue(string text, string? yes, TaskCompletionSource<bool>? answer)
+    private Task<string?> Ask(Message message)
     {
-        _messages.Enqueue((text, yes, answer));
+        Enqueue(message);
+        return message.Answer!.Task;
+    }
+
+    private void Enqueue(Message message)
+    {
+        _messages.Enqueue(message);
         if (!Overlay.IsVisible)
         {
             ShowNext();
@@ -207,26 +216,56 @@ public sealed partial class Shell : UserControl
     {
         if (!_messages.TryDequeue(out var message))
         {
+            _shown = null;
             Overlay.IsVisible = false;
             return;
         }
 
+        _shown = message;
         OverlayText.Text = message.Text;
         OverlayYes.Content = message.Yes ?? "OK";
         OverlayNo.IsVisible = message.Yes is not null;
-        _answer = message.Answer;
+        OverlayBox.IsVisible = message.Typed is not null;
+        OverlayBox.Text = message.Typed ?? string.Empty;
+        ShowRemark();
         Overlay.IsVisible = true;
+        if (message.Typed is not null)
+        {
+            OverlayBox.Focus();
+            OverlayBox.SelectAll();
+        }
+    }
+
+    // What is wrong with the text typed, under it; OK only once it is fine.
+    private void ShowRemark()
+    {
+        var text = OverlayBox.Text ?? string.Empty;
+        var remark = _shown?.Remark?.Invoke(text);
+        OverlayRemark.Text = remark;
+        OverlayRemark.IsVisible = _shown?.Typed is not null && remark is not null;
+        OverlayYes.IsEnabled = _shown?.IsFine?.Invoke(text) ?? true;
     }
 
     private void Answer(bool yes)
     {
-        var answer = _answer;
-        _answer = null;
+        var shown = _shown;
+        var text = shown?.Typed is null ? string.Empty : OverlayBox.Text ?? string.Empty;
         ShowNext();
-        answer?.SetResult(yes);
+        shown?.Answer?.SetResult(yes ? text : null);
     }
 
-    private void OverlayYes_Click(object? sender, RoutedEventArgs e) => Answer(true);
+    private void OverlayBox_TextChanged(object? sender, TextChangedEventArgs e) => ShowRemark();
 
-    private void OverlayNo_Click(object? sender, RoutedEventArgs e) => Answer(false);
+    private void OverlayYes_Click(object? sender, RoutedEventArgs e) => Answer(yes: true);
+
+    private void OverlayNo_Click(object? sender, RoutedEventArgs e) => Answer(yes: false);
+
+    /// <summary>A message, a question (<see cref="Yes"/>, answered by <see cref="Answer"/>: null when cancelled), or a text asked (<see cref="Typed"/>).</summary>
+    private sealed record Message(
+        string Text,
+        string? Yes,
+        TaskCompletionSource<string?>? Answer,
+        string? Typed = null,
+        Func<string, string?>? Remark = null,
+        Func<string, bool>? IsFine = null);
 }

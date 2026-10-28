@@ -56,6 +56,22 @@ public sealed class RenamePlannerTests
         Assert.Equal(status, _planner.Plan(_dune, text).Status);
     }
 
+    [Theory]
+    [InlineData("", "Type a name.")]
+    [InlineData("Dune relates to Arrakis", "A name cannot contain a link phrase, such as “relates to”.")]
+    [InlineData("Dune", "Same name.")]
+    [InlineData("Dune (novel)", null)]
+    [InlineData("arrakis", "“arrakis” exists already: renaming makes a homonym.")]
+    [InlineData("Caladan", "“Caladan” exists already (2 times): renaming makes a homonym.")]
+    public void TheRemark_SaysWhatIsWrong_WithoutKeys(string text, string? remark)
+    {
+        Add("Arrakis");
+        Add("Caladan");
+        Add("Caladan");
+
+        Assert.Equal(remark, _planner.Plan(_dune, text).Remark);
+    }
+
     [Fact]
     public void AChangeOfCaseOnly_IsARename() =>
         Assert.True(_planner.Plan(_dune, "DUNE").CanRename);

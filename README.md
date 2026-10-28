@@ -42,18 +42,18 @@ Both apps share the same vaults and the same core; each shows its own set of fea
 | Search names, pinned and recent nodes | ✔ | ✔ |
 | Search field values | ✔ | ✔ |
 | Recent: opened here or changed on any device (last 7 days) | ✔ empty input box | ✔ home |
-| Node details, links | ✔ | ✔ (read only) |
+| Node details, links | ✔ | ✔ |
 | Node types and fields shown | ✔ | ✔ (read only; an image's thumbnail, *Open with…*) |
 | Views: trees and lists, as tabs | ✔ rows, cards, details | ✔ rows |
-| Pin (synced: listed while the input box is empty) | ✔ | shown, set on Windows |
+| Pin (synced: listed while the input box is empty) | ✔ | ✔ **⋯** on the node's page |
 | Keep offline (this device only: content downloaded ahead) | ✔ server vaults | ✔ |
 | **Change** | | |
 | Add nodes and links (input box, creation screen) | ✔ | — |
-| Rename, colour, pin, delete; move and copy in a tree | ✔ | — |
+| Rename, colour, pin, delete; move and copy in a tree | ✔ | ✔ rename, colour, pin, delete a node (**⋯**), remove a link (long press); not in a tree |
 | Types: add to a node, take out | ✔ | — |
 | Your node types: create, change, remove, copy from another vault (Settings > Node types) | ✔ | — |
 | Fields: fill, add your own, merge, resolve a conflict | ✔ | — |
-| History: a node's versions (text, file, view, names, colours, field values) | ✔ listed, restored | ✔ listed (restored on Windows) |
+| History: a node's versions (text, file, view, names, colours, field values) | ✔ listed, restored | ✔ listed, restored |
 | Notes: edit | ✔ editor with a Markdown toolbar and a task list editor | ✔ Markdown text, task list editor (no reordering); tap a checkbox |
 | Notes: resolve a conflict | ✔ keep one, or merge by hand | ✔ keep one |
 | Datasets: add files | ✔ creation screen, drop zone, drop on a tree | ✔ **＋**, with a preview; a photo or video taken |
@@ -107,14 +107,15 @@ A vault holds your nodes, notes and files, encrypted. There are two kinds:
 
 ## On Android
 
-kofrenot for Android **reads** your server vaults, also offline, and **edits their notes and adds files**; the rest (nodes, links, pins, sharing) is changed in kofrenot on Windows.
+kofrenot for Android **reads** your server vaults, also offline, and **changes their nodes**: notes, files, names, colours, pins, deletes. What defines a vault (your node and link types, its name, its keys) is changed in kofrenot on Windows ([why](docs/ANDROID-CONCEPT.md#what-the-phone-changes)).
 
 - **Install**: download `kofrenot-android-<version>.apk` from the [releases](https://github.com/dyze/kofrenot/releases) and open it (Android 8.0 or later; allow installing from your browser or file app when asked).
 - **Sign in** with your server account, then **Add from the server**: your vaults and those shared with you, which show your role (reader or writer) in the list; a vault shared with you to read says so in a banner. The account's pass phrase opens them; tick *Remember it on this phone* to keep it in the phone's Keystore.
-- **Read**: search names, pinned nodes, recent nodes (opened on the phone or changed on any device), a node's details and links (back goes through them), notes with their task lists, views as tabs, a node's **History** (its versions, restored in kofrenot on Windows). A dataset shows its file's name and size: *Open with…* hands it to another app, *Save as…* saves it where you choose. A copy opened with another app is deleted from kofrenot at its next start.
+- **Read**: search names, pinned nodes, recent nodes (opened on the phone or changed on any device), a node's details and links (back goes through them), notes with their task lists, views as tabs, a node's **History** (its versions; **Restore** makes one the current one again, after a confirmation). A dataset shows its file's name and size: *Open with…* hands it to another app, *Save as…* saves it where you choose. A copy opened with another app is deleted from kofrenot at its next start.
 - **Add files**: **＋** picks one or several files on the phone; a preview lists them (their number and total size, the names already taken), then **Add** makes each a dataset named after its file. One file added opens; several show among the recent nodes.
 - **Take a photo** or **Record a video** (under **＋**): the phone's camera app takes it, then the same preview names it after when it was taken (*Photo 2026-10-28 20.30*) and **Add** makes it a dataset. kofrenot asks it to write into kofrenot's own files, not the gallery, and deletes its copy once added or cancelled; some camera apps still keep one of their own in the gallery.
 - **Share to kofrenot** from another app (its *Share* button): files become datasets, text or a link becomes a new note named after its first line. A preview names the open vault and lists what will be added; nothing is before **Add**. When no vault is open yet, it waits until you open one.
+- **Change a node**: **⋯** on its page renames it, gives it a colour, pins or unpins it, or deletes it with its links (asked first, naming what goes). A long press on a link removes it (asked first); the nodes stay. Each change reaches your other devices at the next sync.
 - **Edit notes**: tap a checkbox to check its item, or **Edit** to change the note, then **Save**. A note whose lines are all items opens as its list, as on Windows: a checkbox and a text per item, **Enter** adds the next, **✕** removes one, checked items below the others; **Checkboxes** turns a text into items, **Text** turns them back into lines. Other notes are edited as Markdown text (`# heading`, `- item`); **Cancel** keeps it as it was, and leaving the note with changes not saved asks before discarding them. A note edited on two devices before they synced shows both versions: **Keep this version** keeps one.
 - **Offline**: every name and link is on the phone; a note's text once it has been shown, and the content of the nodes you **Keep offline** (on the node's page) at once. What you save offline waits on the phone (*· 2 to upload*) and is uploaded at the next sync. The phone syncs when the app opens or comes back, then every 30 seconds while it is shown; the dot says how it stands, a tap syncs now.
 - **Private**: the app's screens stay out of the recent apps list and of screenshots.

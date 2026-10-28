@@ -102,9 +102,10 @@ public sealed partial class NodePage : UserControl, IPage
         ShowFields(details);
         ShowConflicts(details);
         ShowContent(vault, details.Node, details.Color);
-        Links.ItemsSource = details.Links.Select(link => NodeRow.Of(vault.Graph, link.OtherNode, link.Type)).ToList();
+        Links.ItemsSource = details.Links.Select(link => NodeRow.Of(vault.Graph, link.OtherNode, link.Type, link: link.Link)).ToList();
         LinksHeader.IsVisible = details.Links.Count > 0;
         ShowHistory(vault.Graph, details.Node);
+        ShowActions(details);
     }
 
     // The fields of its types and its own, empty ones of its types included, as on Windows.

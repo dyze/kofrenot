@@ -34,6 +34,16 @@ public sealed record RenamePlan(Node Node, string Name, RenameProblem Problem, I
         _ when Homonyms.Count > 0 => $"“{Name}” exists already{(Homonyms.Count > 1 ? $" ({Homonyms.Count} times)" : string.Empty)}. Enter renames anyway, Esc cancels.",
         _ => "Enter renames, Esc cancels.",
     };
+
+    /// <summary>What is wrong with the name, or worth a warning, without keys: shown on the phone; null when nothing is.</summary>
+    public string? Remark => Problem switch
+    {
+        RenameProblem.Empty => "Type a name.",
+        RenameProblem.LinkPhrase => "A name cannot contain a link phrase, such as “relates to”.",
+        RenameProblem.Unchanged => "Same name.",
+        _ when Homonyms.Count > 0 => $"“{Name}” exists already{(Homonyms.Count > 1 ? $" ({Homonyms.Count} times)" : string.Empty)}: renaming makes a homonym.",
+        _ => null,
+    };
 }
 
 /// <summary>

@@ -8,8 +8,8 @@ namespace Kofrenot.Phone.Views;
 /// <summary>A header between the rows of a list (Pinned, Recent).</summary>
 public sealed record HeaderRow(string Text);
 
-/// <summary>A node in a list: its picture, name and a detail (its type, how a link reads).</summary>
-public sealed record NodeRow(Node Node, string Name, string Detail, string Glyph, IBrush? Color, int Depth = 0)
+/// <summary>A node in a list: its picture, name and a detail (its type, how a link reads); on a node's page, the <see cref="Link"/> it is shown by.</summary>
+public sealed record NodeRow(Node Node, string Name, string Detail, string Glyph, IBrush? Color, int Depth = 0, Link? Link = null)
 {
     private const double IndentStep = 20;
 
@@ -20,11 +20,11 @@ public sealed record NodeRow(Node Node, string Name, string Detail, string Glyph
     public Thickness Indent => new(8 + Depth * IndentStep, 0, 8, 0);
 
     /// <summary>A node's row, its type as the detail unless <paramref name="detail"/> is given.</summary>
-    public static NodeRow Of(KnowledgeGraph graph, Node node, string? detail = null, string? mark = null, int depth = 0)
+    public static NodeRow Of(KnowledgeGraph graph, Node node, string? detail = null, string? mark = null, int depth = 0, Link? link = null)
     {
         var visual = NodeVisual.Of(graph, node);
         var glyph = visual.TypeIcon is { } icon ? NodeLook.TypeGlyph(icon) : NodeLook.Glyph(visual.Icon);
-        return new NodeRow(node, node.Name + mark, detail ?? graph.Types.NodeTypeName(node.Type), glyph, NodeLook.Brush(visual.Color), depth);
+        return new NodeRow(node, node.Name + mark, detail ?? graph.Types.NodeTypeName(node.Type), glyph, NodeLook.Brush(visual.Color), depth, link);
     }
 }
 
