@@ -170,6 +170,25 @@ public sealed class KofreClientTests
     }
 
     [Fact]
+    public async Task EachRequest_IsCounted_WithItsBytes_OrAsFailed()
+    {
+        var exchanges = new ExchangeStats(clock: _clock);
+        var offline = false;
+        var stub = new StubHandler(_ => offline ? throw new HttpRequestException("down") : new HttpResponseMessage(HttpStatusCode.OK) { Content = new ByteArrayContent(new byte[42]) });
+        var client = new KofreClient(stub.Client(), Valid, _clock, _log, exchanges);
+        var store = Guid.NewGuid();
+
+        Assert.Equal(UploadResult.Uploaded, await client.UploadAsync(store, "content/ab/abcd.kfd", () => new MemoryStream(new byte[7]), fence: 0));
+        await client.DownloadAsync(store, "content/ab/abcd.kft", new MemoryStream());
+        offline = true;
+        await Assert.ThrowsAsync<ServerException>(() => client.DownloadAsync(store, "content/ab/abcd.kft", new MemoryStream()));
+
+        var day = Assert.Single(exchanges.Days);
+        Assert.Equal(new ExchangeCount(1, 0, 7, 42), day.Kinds[ExchangeKind.Files]);
+        Assert.Equal(new ExchangeCount(2, 1, 0, 42), day.Kinds[ExchangeKind.Thumbnails]);
+    }
+
+    [Fact]
     public async Task ASessionRenewedMeanwhile_IsNotRenewedTwice()
     {
         var refreshes = 0;

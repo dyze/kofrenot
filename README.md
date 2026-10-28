@@ -67,6 +67,7 @@ Both apps share the same vaults and the same core; each shows its own set of fea
 | **App** | | |
 | Hotkeys, tray, start with Windows, update check | ✔ | *never* (Windows desktop) / — update check |
 | Settings | ✔ every tab | sign out, forget the pass phrase, logging |
+| Exchanges with the server, per day (Settings > Logging) | ✔ | ✔ |
 
 How to use each: [Using kofrenot](#using-kofrenot) (Windows), [On Android](#on-android).
 
@@ -182,13 +183,13 @@ Gear button in the title bar, or tray menu > Settings. Changes are saved at once
 | Node types   | Your node types: name, icon, colour and fields                                        |
 | Link types   | The link types and their aliases; your own link types                                 |
 | Appearance   | Light, dark, or as Windows                                                            |
-| Logging      | Debug logging, the log window                                                         |
+| Logging      | Debug logging, the log window; exchanges with the server per day (30 days), to copy   |
 | About        | Version, update check, changelog, kofrenot's files                                    |
 
 ## Your data
 
 - **Where**: your vaults are in the folders you chose or on your server. kofrenot's own files (settings, remembered pass phrases protected by Windows, a cache, logs) are in `%LOCALAPPDATA%\kofrenot`, listed in Settings > About. On Android, in the app's private storage, its remembered pass phrases protected by the Keystore.
-- **Private**: kofrenot logs what you do (*Node added*) and errors, never names, file names, content or pass phrases. Its only network use, besides your Kofre server, is a daily check for a newer release, which can be switched off.
+- **Private**: kofrenot logs what you do (*Node added*) and errors, never names, file names, content or pass phrases. Its **exchanges with the server** (requests, failures and bytes, per day and kind, for 30 days) are counted on each device only, in Settings > Logging, to analyse a slow sync: numbers only, nothing sent. Its only network use, besides your Kofre server, is a daily check for a newer release, which can be switched off.
 
 **Backup**:
 

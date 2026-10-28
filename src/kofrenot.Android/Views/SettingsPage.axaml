@@ -1,6 +1,18 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:server="using:Kofrenot.Core.Server"
              x:Class="Kofrenot.Phone.Views.SettingsPage">
+  <UserControl.Resources>
+    <!-- A line of the exchanges' statistics: the day or kind, then its numbers, on two lines to fit the phone. -->
+    <DataTemplate x:Key="ExchangeLine" DataType="server:ExchangeRow">
+      <StackPanel Margin="0,2">
+        <TextBlock Text="{Binding Label}" />
+        <TextBlock Classes="caption">
+          <Run Text="{Binding Requests}" /><Run Text=" requests, " /><Run Text="{Binding Failed}" /><Run Text=" failed · ↑ " /><Run Text="{Binding Up}" /><Run Text=" ↓ " /><Run Text="{Binding Down}" />
+        </TextBlock>
+      </StackPanel>
+    </DataTemplate>
+  </UserControl.Resources>
   <DockPanel>
     <Border DockPanel.Dock="Top" Classes="bar">
       <Grid ColumnDefinitions="Auto,*">
@@ -21,6 +33,13 @@
         <TextBlock Classes="caption" Text="Logging" Margin="0,16,0,0" />
         <CheckBox x:Name="DebugBox" Content="Debug details in the log" IsCheckedChanged="Debug_Changed" />
         <TextBlock x:Name="LogFolder" Classes="caption" TextWrapping="Wrap" />
+        <!-- This phone's exchanges with the server, per day for 30 days, then by kind (SettingsPage.Exchanges). -->
+        <TextBlock Text="Exchanges with the server" Margin="0,8,0,0" />
+        <TextBlock Classes="caption" Text="Per day for 30 days, on this phone only: to analyse a slow sync." TextWrapping="Wrap" />
+        <ItemsControl x:Name="ExchangeDays" ItemTemplate="{StaticResource ExchangeLine}" />
+        <TextBlock Classes="caption" Text="By kind" Margin="0,4,0,0" />
+        <ItemsControl x:Name="ExchangeKinds" ItemTemplate="{StaticResource ExchangeLine}" />
+        <Button Content="Copy" Click="CopyExchanges_Click" />
 
         <TextBlock Classes="caption" Text="About" Margin="0,16,0,0" />
         <TextBlock x:Name="About" TextWrapping="Wrap" />

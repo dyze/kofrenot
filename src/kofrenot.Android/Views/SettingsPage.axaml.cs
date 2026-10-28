@@ -1,4 +1,5 @@
 using Avalonia.Controls;
+using Avalonia.Input.Platform;
 using Avalonia.Interactivity;
 using Kofrenot.Core.Logging;
 
@@ -32,6 +33,19 @@ public sealed partial class SettingsPage : UserControl, IPage
         var selected = services.Session.Selected;
         Vault.Text = selected is null ? "None open" : services.Session.NameOf(selected);
         ForgetButton.IsEnabled = selected is not null && services.Session.IsRemembered(selected);
+        ExchangeDays.ItemsSource = services.Server.Exchanges.DayRows();
+        ExchangeKinds.ItemsSource = services.Server.Exchanges.KindRows();
+    }
+
+    private void CopyExchanges_Click(object? sender, RoutedEventArgs e) => _shell.Run(CopyExchangesAsync);
+
+    private async Task CopyExchangesAsync()
+    {
+        if (TopLevel.GetTopLevel(this)?.Clipboard is { } clipboard)
+        {
+            await clipboard.SetTextAsync(_shell.Services.Server.Exchanges.Text());
+            _shell.Services.Log.Info("Action", "Exchange statistics copied");
+        }
     }
 
     private void SignOut_Click(object? sender, RoutedEventArgs e) => _shell.Run(SignOutAsync);

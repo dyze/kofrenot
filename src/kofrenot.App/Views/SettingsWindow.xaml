@@ -20,6 +20,23 @@
       <Style x:Key="SectionHeader" TargetType="TextBlock" BasedOn="{StaticResource HeadingText}">
         <Setter Property="Margin" Value="0,16,0,0" />
       </Style>
+      <!-- A line of the exchanges' statistics (ExchangeRow): its columns share their widths. -->
+      <DataTemplate x:Key="ExchangeRowTemplate">
+        <Grid Margin="0,1">
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto" MinWidth="100" SharedSizeGroup="Label" />
+            <ColumnDefinition Width="Auto" MinWidth="90" SharedSizeGroup="Requests" />
+            <ColumnDefinition Width="Auto" MinWidth="70" SharedSizeGroup="Failed" />
+            <ColumnDefinition Width="Auto" MinWidth="90" SharedSizeGroup="Up" />
+            <ColumnDefinition Width="Auto" MinWidth="90" SharedSizeGroup="Down" />
+          </Grid.ColumnDefinitions>
+          <TextBlock Text="{Binding Label}" />
+          <TextBlock Grid.Column="1" HorizontalAlignment="Right" Text="{Binding Requests, StringFormat={}{0} requests}" />
+          <TextBlock Grid.Column="2" HorizontalAlignment="Right" Style="{StaticResource SecondaryText}" Text="{Binding Failed, StringFormat={}{0} failed}" />
+          <TextBlock Grid.Column="3" HorizontalAlignment="Right" Text="{Binding Up, StringFormat=↑ {0}}" />
+          <TextBlock Grid.Column="4" HorizontalAlignment="Right" Text="{Binding Down, StringFormat=↓ {0}}" />
+        </Grid>
+      </DataTemplate>
     </ResourceDictionary>
   </Window.Resources>
 
@@ -213,6 +230,17 @@
                   HorizontalAlignment="Left"
                   Content="Open log window"
                   Click="OpenLogButton_Click" />
+
+          <!-- This computer's exchanges with the server, per day for 30 days, then by kind (SettingsWindow.Exchanges). -->
+          <StackPanel Tag="{x:Static settings:SettingsCatalog.ExchangesId}" Margin="0,18,0,0">
+            <TextBlock FontWeight="SemiBold" Text="Exchanges with the server" />
+            <TextBlock Margin="0,2,0,6" Style="{StaticResource SecondaryText}" TextWrapping="Wrap"
+                       Text="Per day for 30 days, on this computer only: to analyse a slow sync." />
+            <ItemsControl x:Name="ExchangeDays" Grid.IsSharedSizeScope="True" ItemTemplate="{StaticResource ExchangeRowTemplate}" />
+            <TextBlock Margin="0,10,0,4" Style="{StaticResource SecondaryText}" Text="By kind" />
+            <ItemsControl x:Name="ExchangeKinds" Grid.IsSharedSizeScope="True" ItemTemplate="{StaticResource ExchangeRowTemplate}" />
+            <Button Margin="0,10,0,0" Padding="12,4" HorizontalAlignment="Left" Content="Copy" ToolTip="Copy them as text, to paste in a message" Click="CopyExchanges_Click" />
+          </StackPanel>
         </StackPanel>
 
         <StackPanel Tag="{x:Static settings:SettingsCatalog.AboutTab}">

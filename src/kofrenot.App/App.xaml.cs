@@ -82,7 +82,7 @@ public partial class App : Application
         var logHub = _logHub;
         var protector = new DpapiProtector();
         var ui = new DispatcherUiThread();
-        var server = _server = new ServerConnection(settings, new ServerSessionMemory(files.ServerSession, protector, log), new AccountIdentities(files.AccountIdentity, log), new VaultOwners(files.VaultOwners, log), ui, log);
+        var server = _server = new ServerConnection(settings, new ServerSessionMemory(files.ServerSession, protector, log), new AccountIdentities(files.AccountIdentity, log), new VaultOwners(files.VaultOwners, log), ui, log, exchanges: new ExchangeStats(files.ExchangeStats, log: log));
         var sync = _sync = new SyncService(settings, files, server, ui, log);
         var session = _session = new VaultSession(settings, files, new KeyMemory(files.RememberedKeys, protector, log), new VaultNameMemory(files.VaultNames, protector, log), server, sync, ui, new VaultWatching(), new WpfThumbnailMaker(), log);
         session.Changed += sync.Soon;

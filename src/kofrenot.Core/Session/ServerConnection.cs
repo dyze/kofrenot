@@ -23,8 +23,10 @@ public sealed class ServerConnection : IDisposable
     private HttpClient? _http;
 
     /// <param name="handler">Sends the requests; null for the network.</param>
-    public ServerConnection(SettingsStore settings, ServerSessionMemory sessions, AccountIdentities identities, VaultOwners owners, IUiThread ui, ILog log, HttpMessageHandler? handler = null)
+    /// <param name="exchanges">Counts the exchanges with the server; null for none kept.</param>
+    public ServerConnection(SettingsStore settings, ServerSessionMemory sessions, AccountIdentities identities, VaultOwners owners, IUiThread ui, ILog log, HttpMessageHandler? handler = null, ExchangeStats? exchanges = null)
     {
+        Exchanges = exchanges ?? new ExchangeStats();
         _ui = ui;
         _handler = handler;
         _settings = settings;
@@ -47,6 +49,9 @@ public sealed class ServerConnection : IDisposable
     public KofreClient? Client { get; private set; }
 
     public bool IsSignedIn => Client?.Session is not null;
+
+    /// <summary>The statistics of this device's exchanges with the server (Settings > Logging).</summary>
+    public ExchangeStats Exchanges { get; }
 
     /// <summary>Why the server is too old for kofrenot (it keeps no account data); null when it is not, or not known yet.</summary>
     public string? TooOld { get; private set; }
@@ -113,7 +118,11 @@ public sealed class ServerConnection : IDisposable
         }
     }
 
-    public void Dispose() => _http?.Dispose();
+    public void Dispose()
+    {
+        Exchanges.Save();
+        _http?.Dispose();
+    }
 
     /// <summary>The client for this account, a new one (signed out) when the server or email changed.</summary>
     private KofreClient Use(Uri server, string email)
@@ -134,7 +143,7 @@ public sealed class ServerConnection : IDisposable
     {
         _http?.Dispose();
         _http = new HttpClient(_handler ?? new HttpClientHandler(), disposeHandler: _handler is null) { BaseAddress = server, Timeout = Timeout };
-        Client = new KofreClient(_http, session, log: _log);
+        Client = new KofreClient(_http, session, log: _log, exchanges: Exchanges);
         Client.SessionChanged += changed =>
         {
             // Raised on the thread of the call that renewed it: a sync runs in the background.

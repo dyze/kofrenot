@@ -19,7 +19,6 @@ Scope of each planned version. Implemented features move to [CHANGELOG.md](CHANG
 ## 0.12
 1. Android · **Add and edit.** Input box, creation screen, renames, colours, pins (notes and files: 0.10).
 2. Android · **Sharing.** Members, roles, share, leave.
-3. Both · Stores **statistics** about data exchanges with server. It could be useful for analysing performance problems.
 
 ## 0.13
 1. Both · **Events and qualifiers.**

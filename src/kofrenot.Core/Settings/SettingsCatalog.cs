@@ -35,6 +35,7 @@ public static class SettingsCatalog
     public const string ThemeId = "Theme";
     public const string DebugLoggingId = "DebugLogging";
     public const string LogWindowId = "LogWindow";
+    public const string ExchangesId = "Exchanges";
     public const string AboutId = "About";
     public const string UpdatesId = "Updates";
     public const string FilesId = "Files";
@@ -58,6 +59,7 @@ public static class SettingsCatalog
         new(ThemeId, AppearanceTab, "Theme", ["dark", "light", "mode", "color", "colour"]),
         new(DebugLoggingId, LoggingTab, "Detailed (debug) logging", ["log", "verbose", "trace"]),
         new(LogWindowId, LoggingTab, "Open log window", ["log", "view", "errors"]),
+        new(ExchangesId, LoggingTab, "Exchanges with the server, per day", ["statistics", "traffic", "bytes", "requests", "slow", "performance"]),
         new(AboutId, AboutTab, "Version, website, issues and changelog", ["github", "web", "link", "bug", "report", "help", "feedback", "release notes", "changes", "what's new"]),
         new(UpdatesId, AboutTab, "Check for updates once a day", ["update", "release", "download", "newer", "network", "internet"]),
         new(FilesId, AboutTab, "kofrenot's files", ["path", "location", "data", "json", "explorer", "program", "show"]),

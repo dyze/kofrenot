@@ -102,6 +102,6 @@ public class SettingsCatalogTests
         // "log" is also in "changelog", on the About row.
         var found = SettingsCatalog.Find("log");
 
-        Assert.Equal(new[] { SettingsCatalog.DebugLoggingId, SettingsCatalog.LogWindowId, SettingsCatalog.AboutId }, found.Select(entry => entry.Id));
+        Assert.Equal(new[] { SettingsCatalog.DebugLoggingId, SettingsCatalog.LogWindowId, SettingsCatalog.ExchangesId, SettingsCatalog.AboutId }, found.Select(entry => entry.Id));
     }
 }

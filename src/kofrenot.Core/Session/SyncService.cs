@@ -94,6 +94,7 @@ public sealed class SyncService : IDisposable
                 _statuses[store.Id] = await RunOneAsync(store);
             }
 
+            _server.Exchanges.Save();
             Changed?.Invoke();
         }
         while (_again);

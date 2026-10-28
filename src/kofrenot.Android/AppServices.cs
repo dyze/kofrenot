@@ -28,7 +28,7 @@ public sealed class AppServices : IDisposable
         var log = Log;
         var protector = new KeystoreProtector();
         var ui = new AvaloniaUiThread();
-        Server = new ServerConnection(Settings, new ServerSessionMemory(Files.ServerSession, protector, log), new AccountIdentities(Files.AccountIdentity, log), new VaultOwners(Files.VaultOwners, log), ui, log);
+        Server = new ServerConnection(Settings, new ServerSessionMemory(Files.ServerSession, protector, log), new AccountIdentities(Files.AccountIdentity, log), new VaultOwners(Files.VaultOwners, log), ui, log, exchanges: new ExchangeStats(Files.ExchangeStats, log: log));
         Sync = new SyncService(Settings, Files, Server, ui, log);
         Session = new VaultSession(Settings, Files, new KeyMemory(Files.RememberedKeys, protector, log), new VaultNameMemory(Files.VaultNames, protector, log), Server, Sync, ui, new NothingToWatch(), new AndroidThumbnailMaker(), log, mode: ClientMode.Content);
         Recent = new RecentNodes(Files.RecentNodes, log);

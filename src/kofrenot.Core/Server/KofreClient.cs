@@ -12,7 +12,7 @@ namespace Kofrenot.Core.Server;
 /// own, and tells <see cref="SessionChanged"/> so the new refresh token is kept. Thread-safe.
 /// </summary>
 /// <param name="http">Its <see cref="HttpClient.BaseAddress"/> is the server's address.</param>
-public sealed class KofreClient(HttpClient http, ServerSession? session = null, TimeProvider? clock = null, ILog? log = null) : IStoreFiles
+public sealed class KofreClient(HttpClient http, ServerSession? session = null, TimeProvider? clock = null, ILog? log = null, ExchangeStats? exchanges = null) : IStoreFiles
 {
     public const string PasswordHeader = "X-Password";
     public const string FenceHeader = "Store-Fence";
@@ -285,16 +285,21 @@ public sealed class KofreClient(HttpClient http, ServerSession? session = null, 
                 request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", session.AccessToken);
             }
 
+            var (address, up) = (request.RequestUri?.OriginalString ?? string.Empty, request.Content?.Headers.ContentLength ?? 0);
             try
             {
-                return await http.SendAsync(request, completion, cancel);
+                var response = await http.SendAsync(request, completion, cancel);
+                exchanges?.Record(address, up, response.Content.Headers.ContentLength ?? 0, failed: !response.IsSuccessStatusCode);
+                return response;
             }
             catch (HttpRequestException ex)
             {
+                exchanges?.Record(address, up, 0, failed: true);
                 throw new ServerException(ServerFailure.Offline, inner: ex);
             }
             catch (TaskCanceledException ex) when (!cancel.IsCancellationRequested)
             {
+                exchanges?.Record(address, up, 0, failed: true);
                 throw new ServerException(ServerFailure.Offline, inner: ex);
             }
         }

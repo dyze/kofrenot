@@ -108,6 +108,9 @@ public sealed class AppFiles
 
     public string Logs => Path.Combine(DataDirectory, "logs");
 
+    /// <summary>The statistics of this device's exchanges with the server (<see cref="Server.ExchangeStats"/>).</summary>
+    public string ExchangeStats => Path.Combine(DataDirectory, "exchanges.json");
+
     /// <summary>The server session (refresh token), protected by Windows (DPAPI).</summary>
     public string ServerSession => Path.Combine(DataDirectory, "server-session.json");
 

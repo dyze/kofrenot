@@ -278,6 +278,7 @@ public partial class SettingsWindow : Window
     {
         _loading = true;
         DebugLoggingCheckBox.IsChecked = _settings.DebugLogging;
+        ShowExchanges();
         HotkeyBox.Text = _settings.Hotkey.ToString();
         ThemeComboBox.SelectedItem = ThemeOptions.First(option => option.Value == _settings.Theme);
         PositionComboBox.SelectedItem = PositionOptions.First(option => option.Value == _settings.MainWindowPosition);
