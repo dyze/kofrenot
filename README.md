@@ -159,7 +159,7 @@ A dataset holds one file: drop it on the creation screen or on the dataset. Text
 ### Views
 A view shows your vault another way, in a tab: **a tree** from a node, following a link type (*contains* by default), or **a list** of every node of a type. **+** in the tab bar opens or creates one.
 
-- In a tree: **Ctrl+C**, **Ctrl+X**, **Ctrl+V** and **Del** copy, move and delete, or drag a node onto another. Drop a file on a node to add it under it (the creation screen); several files are previewed first, as with **Drop files**, then added under it.
+- In a tree: **Ctrl+C**, **Ctrl+X**, **Ctrl+V** and **Del** copy, move and delete, or drag a node onto another. A copy has its original's types, colour and field values, images included. Drop a file on a node to add it under it (the creation screen); several files are previewed first, as with **Drop files**, then added under it.
 - **Cards** on a list's bar shows its nodes as cards, with a preview. **Details** shows type, size and last change in columns.
 - **Ctrl+F** finds a node in the view.
 
