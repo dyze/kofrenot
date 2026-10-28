@@ -6,6 +6,7 @@ using Kofrenot.Core.Fields;
 using Kofrenot.Core.Graph;
 using Kofrenot.Core.Input;
 using Kofrenot.Core.Session;
+using Kofrenot.Core.Settings;
 
 namespace Kofrenot.UI.Views;
 
@@ -23,14 +24,34 @@ public sealed record TypeLine(CustomNodeType Type)
         : string.Join(", ", Type.Type.Fields.Select(definition => $"{definition.Name} ({FieldKinds.NameOf(definition.Kind)})"));
 }
 
+/// <summary>A node type of another vault, ticked to copy it here unless copying writes nothing.</summary>
+public sealed class CopyLine(TypeCopy copy) : Bindable
+{
+    private bool _isChecked = copy.Change is not null;
+
+    public TypeCopy Copy { get; } = copy;
+
+    public string Glyph => TypeGlyphs.Of(Copy.Type.Type.Icon);
+
+    public bool CanCopy => Copy.Change is not null;
+
+    public bool IsChecked
+    {
+        get => _isChecked;
+        set => Set(ref _isChecked, value);
+    }
+}
+
 /// <summary>
 /// Settings > Node types: lists the user's node types of the open vault, adds, changes and removes
-/// them (<see cref="NodeTypePlanner"/>) in a form shown in place of the list.
+/// them (<see cref="NodeTypePlanner"/>) in a form shown in place of the list, and copies another
+/// vault's (<see cref="TypeCopyPlanner"/>).
 /// </summary>
 public partial class NodeTypesSection : UserControl
 {
     private VaultSession? _session;
     private NodeTypeForm? _form;
+    private IReadOnlyList<CopyLine>? _copies;
 
     public NodeTypesSection() => InitializeComponent();
 
@@ -54,16 +75,79 @@ public partial class NodeTypesSection : UserControl
             : "A node type is a name, an icon, a colour and fields: its nodes show its fields in their details, to fill. "
               + "Built in: Generic, Note, Dataset and View. Your node types are stored in the vault, so every device shares them.";
         NewTypeButton.IsEnabled = graph is not null;
+        CopyFromButton.IsEnabled = graph is not null && OtherVaults.Count > 0;
+        _copies = graph is null ? null : _copies;
         if (_form is { Edited: { } edited } && graph?.NodeTypes.Find(edited.Type.Id) is null)
         {
             _form = null;
         }
 
         TypeList.ItemsSource = graph?.NodeTypes.All.Select(type => new TypeLine(type)).ToList();
-        ListPanel.Visibility = _form is null ? Visibility.Visible : Visibility.Collapsed;
+        ListPanel.Visibility = _form is null && _copies is null ? Visibility.Visible : Visibility.Collapsed;
+        CopyPanel.Visibility = _form is null && _copies is not null ? Visibility.Visible : Visibility.Collapsed;
+        CopyList.ItemsSource = _copies;
         FormPanel.Visibility = _form is null ? Visibility.Collapsed : Visibility.Visible;
         FormPanel.DataContext = _form;
         _form?.Refresh();
+    }
+
+    private IReadOnlyList<RegisteredVault> OtherVaults =>
+        _session is null ? [] : _session.Vaults.Where(vault => vault.Location != _session.Selected?.Location).ToList();
+
+    private void CopyFrom_Click(object sender, RoutedEventArgs e)
+    {
+        var menu = new ContextMenu { PlacementTarget = CopyFromButton };
+        foreach (var vault in OtherVaults)
+        {
+            var item = new MenuItem { Header = _session!.NameOf(vault) };
+            item.Click += (_, _) => ReadTypes(vault);
+            menu.Items.Add(item);
+        }
+
+        menu.IsOpen = menu.Items.Count > 0;
+    }
+
+    // Another vault's types, read (its pass phrase asked when not remembered), each with what copying it does.
+    private void ReadTypes(RegisteredVault vault)
+    {
+        var window = Window.GetWindow(this)!;
+        if (_session is null || Graph is not { } graph || _session.NodeTypesOf(new WpfQuestions(window), vault) is not { } types)
+        {
+            return;
+        }
+
+        var name = _session.NameOf(vault);
+        if (types.Count == 0)
+        {
+            MessageDialog.Inform(window, $"“{name}” has no node types of its own.");
+            return;
+        }
+
+        CopyTitle.Text = $"Copy from “{name}”";
+        _copies = new TypeCopyPlanner(graph).Plan(types).Select(copy => new CopyLine(copy)).ToList();
+        Show();
+    }
+
+    private void Copy_Click(object sender, RoutedEventArgs e)
+    {
+        var changes = _copies?.Where(line => line.IsChecked).Select(line => line.Copy.Change).OfType<Change>().ToList() ?? [];
+        if (_session is null || changes.Count == 0)
+        {
+            return;
+        }
+
+        if (_session.Write(new WpfQuestions(Window.GetWindow(this)!), changes, $"Node types copied ({changes.Count})"))
+        {
+            _copies = null;
+        }
+
+        Show();
+    }
+
+    private void CancelCopy_Click(object sender, RoutedEventArgs e)
+    {
+        _copies = null;
+        Show();
     }
 
     private NodeTypePlan? PlanType(NodeTypeForm form)
