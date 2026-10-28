@@ -402,6 +402,9 @@ UTF-8 JSON before encryption:
   "nodeType": { "id": "<first definition id>", "name": "Person", "icon": "Contact", "color": "blue",
                 "fields": [{ "id": "…", "name": "Born", "kind": "date" }, { "id": "…", "name": "Genre", "kind": "choice", "choices": ["Novel", "Poem"] }],
                 "replaces": ["<definition id>", "…"] } }
+{ "format": 8, "at": "…", "op": "setField",
+  "field": { "node": "<node id>", "owner": "<node type id>", "id": "<field id>", "name": "Portrait", "kind": "image",
+             "file": { "name": "bruce.jpg", "size": 52430, "sha256": "9f86…08" }, "content": "<the change whose file it keeps, if not this one>", "replaces": ["…"] } }
 { "format": 8, "at": "…", "op": "addNodeType", "addType": { "node": "<node id>", "type": "<node type id>" } }
 { "format": 8, "at": "…", "op": "removeNodeType", "removeType": { "node": "<node id>", "removes": ["<node id, retype or addNodeType id>", "…"] } }
 { "format": 8, "at": "…", "op": "setField",
@@ -471,13 +474,14 @@ removeNodeType ── takes out by the changes          owner "own", or a field 
 
 | Part | How |
 | --- | --- |
-| Field kinds (`FieldKind`, `FieldKinds`) | Small: text, number, date, url, checkbox, choice (metadata, in the change). Content: markdown, file, view (a note's, a dataset's, a view's own changes) |
+| Field kinds (`FieldKind`, `FieldKinds`) | Small: text, number, date, url, checkbox, choice (metadata, in the change). Image: described in the change, its file and thumbnail stored as a dataset version's (`OfTypes`: what a type's field can be). Content: markdown, file, view (a note's, a dataset's, a view's own changes) |
 | Values (`FieldValue`) | Text, written the same everywhere: number `1234.5`, date `2026-10-27`, url with its scheme, checkbox `true`/`false`, choice as its option. Typed numbers and dates are also read in the user's culture; a value read is checked against its kind, else the change is refused |
 | Built-in types (`TypeCatalog`) | *generic* (none), *note* (Body: markdown), *dataset* (File: file), *view* (Definition: view) |
 | User types (`CustomNodeTypes`) | `defineNodeType` (`NodeTypeDefined`), its id the first definition's; later ones replace it, two made apart are a conflict (latest shown); removed with all its definitions by `remove`. A definition of a built-in id is ignored |
 | A node's types (`NodeTypeSets`, `KnowledgeGraph.TypesOf`, `TypeIdsOf`, `HasType`) | The type it was added with and the retypes of format ≤ 7 (two current ones are both kept), then `addNodeType` (`NodeTypeAdded`) and `removeNodeType` (`NodeTypeRemoved`, listing the changes it takes out, the node's id for the type it was added with). None left: *generic* |
 | The type shown (`Node.Type`) | Its type with content if it has one, else its latest: what the icon, the content and the tabs follow |
 | Values (`FieldValues`, `KnowledgeGraph.FieldsOf`) | `setField` (`FieldSet`): node, owner (type id or `own`), field id, name and kind, value (none clears it), replaces. Current values per (owner, field), two made apart a conflict |
+| Images (`FieldSet.Image`) | An image's `setField` has a `file` (name, size, SHA-256) instead of a value: its content (`.kfd`) and thumbnail are named by the change's id, or by `content`, the change whose file it keeps (one of a conflict kept). `FieldSet.Image` gives it as the `DatasetEdited` it is stored as, never written as one, so `WriteDataset`, `FetchAsync`, `ReadThumbnail`, the export and the image window are the datasets'. `FieldPlanner.SetImage` takes images the viewer decodes, up to `DatasetType.MaxImageSize`; `VaultSession.SaveImage` writes the files off the UI thread, then the change |
 
 - `TypeSetPlanner` adds a type (taking *generic* out, and the other type with content: a node is a note, a dataset or a view at most) or takes one out. A type with content taken out hides its content (kept by `NodeVersions` whatever the type), never deletes it; the plan says what is hidden (`TypeSetPlan.Hidden`), for the confirmation. A view asks its definition first (`VaultSession.ChangeTypes`).
 - `NodeTypePlanner` adds, changes (replacing every current definition: a conflict is resolved) and removes the user's types. A field keeps its id when renamed, so its values follow it; a field taken out, or a type removed, leaves its values on the nodes as their own fields (nothing is written to them).
@@ -713,7 +717,7 @@ search                                    details, level 2 of 4
 - `NodeBrowser` holds the trail: one level per node opened, each keeping its selected link, so going back shows it again. `LinkRow.CanOpen` is false at `MaxDepth` (4) and for a node already in the trail. `Details` is read from the graph each time, so a refresh shows changes from elsewhere.
 - Search rows and detail links are two lists (`MainWindow`, `NodeDetailsPanel`) sharing their size, **›** button and row style (`Views/SharedStyles.xaml`: `RowFrame`, highlighted when hovered; `RowSelectionBar`, the accent bar of the selected row). A click selects a row through the same logic as the keys (`InputPresenter.Select`, `NodeBrowser.Select`; while a link is typed, it chooses a homonym), a double-click opens it as Enter does. Nothing takes the focus, so typing stays in the input box.
 - `NodeDetailsPanel` takes the place of the search in `MainWindow` and handles Up/Down/Enter/Esc while shown. It raises `BackToSearch` when the trail is empty. The trail is closed when its vault closes.
-- Layout: breadcrumb; properties (types as chips, `NodeDetailsPanel.Type`; fields, `NodeDetailsPanel.Fields`, a tab per type and *Its own* when there are several groups, the tab shown kept by its name; a box typed in, `NodeDetailsPanel.FieldEdit`: marked once changed, kept while the details are shown again, written by `LeaveFields` before they are left, as `LeaveNote`), and for a dataset its file on their right (`DatasetPanel`, half the width: file, then its buttons, wrapped when narrow; the column has no width for other types); a note's editor under them; links across the width. The properties row grows only while a dataset's text is shown (`FitDatasetRow`).
+- Layout: breadcrumb; properties (types as chips, `NodeDetailsPanel.Type`; fields, `NodeDetailsPanel.Fields`, a tab per type and *Its own* when there are several groups, the tab shown kept by its name; an image's thumbnail, `NodeDetailsPanel.FieldImage`; a box typed in, `NodeDetailsPanel.FieldEdit`: marked once changed, kept while the details are shown again, written by `LeaveFields` before they are left, as `LeaveNote`), and for a dataset its file on their right (`DatasetPanel`, half the width: file, then its buttons, wrapped when narrow; the column has no width for other types); a note's editor under them; links across the width. The properties row grows only while a dataset's text is shown (`FitDatasetRow`).
 
 ## Logging
 - `Core` writes through `ILog` (`log.Info(category, message)`); only `App` knows Serilog.

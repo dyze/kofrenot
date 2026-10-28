@@ -34,7 +34,7 @@ a node's fields = the fields of each of its types  +  its own fields
 
 | Topic | Decision |
 | --- | --- |
-| Field kinds | The only part in code, each written once: Text, Number, Date, Url, Checkbox, Choice to start; Markdown, File and View definition are today's content |
+| Field kinds | The only part in code, each written once: Text, Number, Date, Url, Checkbox, Choice, and Image (its file stored as a dataset's, its thumbnail synced); Markdown, File and View definition are today's content |
 | Types | A name, an icon, a colour and a list of fields; *generic*, *note*, *dataset* and *view* are built-in field lists, shipped with kofrenot |
 | Several types | A node has a set of types (Frank Herbert: *Person* and *Author*), each bringing its fields; added on two devices, both are kept, no conflict |
 | A node's own fields | Any node can have fields of its own, beside its types'. One exists only while it has a value; it is not a choice (a choice needs its options, from a type) |
@@ -44,7 +44,7 @@ a node's fields = the fields of each of its types  +  its own fields
 | Field added to a type | Its nodes show it empty; nothing is written to them |
 | Field removed from a type | Its nodes with a value keep it, as their own field; the same on a retype |
 | Same name | A type's field and an own field (or two types' fields) of the same name are both shown, labelled by where they come from (*Birth date (Person)*, *Birth date (own)*); merged only on demand, keeping one value |
-| Values | Small values (text, number, date, url, checkbox, choice) are metadata, always local and searchable offline; Markdown and File stay content, fetched on demand |
+| Values | Small values (text, number, date, url, checkbox, choice) are metadata, always local and searchable offline; an image, a Markdown text and a File stay content, fetched on demand (an image's thumbnail synced) |
 | Links | A value that names another node is a link, not a field. Qualifiers (fields on links) would later use the same field kinds |
 | Filled in | A node's details (Windows); in the input box later |
 | Content types | A node has one type with content (*note*, *dataset*, *view*) at most; adding one takes the other out, hiding its content, not deleting it |

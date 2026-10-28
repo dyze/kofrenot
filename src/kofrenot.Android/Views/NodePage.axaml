@@ -23,7 +23,11 @@
             <DataTemplate DataType="views:FieldLine">
               <Grid ColumnDefinitions="120,*" Margin="0,2">
                 <TextBlock Classes="caption" Text="{Binding Label}" TextWrapping="Wrap" VerticalAlignment="Top" />
-                <SelectableTextBlock Grid.Column="1" Text="{Binding Value}" TextWrapping="Wrap" />
+                <StackPanel Grid.Column="1" Spacing="4">
+                  <SelectableTextBlock Text="{Binding Value}" TextWrapping="Wrap" />
+                  <Image Source="{Binding Thumbnail}" MaxHeight="96" HorizontalAlignment="Left" IsVisible="{Binding HasThumbnail}" />
+                  <Button Content="Open with…" Tag="{Binding}" IsVisible="{Binding HasImage}" Click="OpenImage_Click" />
+                </StackPanel>
               </Grid>
             </DataTemplate>
           </ItemsControl.ItemTemplate>

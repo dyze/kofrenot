@@ -14,6 +14,7 @@ Vault format 8: a vault upgraded is closed by kofrenot 0.10 and older, on Window
 - **Both**
   - **Fields**: a node type is a list of fields of a kind (text, number, date, address, checkbox, choice); a node shows the fields of its types in its details, empty until filled. A note's text, a dataset's file and a view's definition are the fields of the built-in types ([README](README.md#node-types-and-fields)).
   - **Several types per node**: each brings its fields; types added on two devices are both kept. A node is a note, a dataset or a view at most.
+  - **Image fields**: a field of a type can hold an image (a *Person*'s portrait), stored encrypted as a dataset's file, its thumbnail synced; Windows sets, shows and removes it, Android shows its thumbnail and opens it.
   - **Values searched offline**: the input box (on the phone, the home) also finds a node by its fields' values, after the nodes found by name, with the field that matched.
   - **Build date in About**: Settings > About and the log show the date and time of the build's commit beside its hash, in local time: `0.11-dev (a23478d, 2026-10-27 14:05)`.
 - **Windows**

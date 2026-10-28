@@ -1,6 +1,7 @@
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Media;
+using Avalonia.Media.Imaging;
 using Avalonia.Platform.Storage;
 using Kofrenot.Core.Browse;
 using Kofrenot.Core.Datasets;
@@ -16,8 +17,13 @@ namespace Kofrenot.Phone.Views;
 /// <summary>A version of a dataset's file: its name and size, to open with another app or save.</summary>
 public sealed record FileRow(DatasetEdited Version, string Name, string Size);
 
-/// <summary>A field shown on a node's page: its label and its value as shown.</summary>
-public sealed record FieldLine(string Label, string Value);
+/// <summary>A field shown on a node's page: its label, its value as shown, and an image field's image and thumbnail.</summary>
+public sealed record FieldLine(string Label, string Value, DatasetEdited? Image = null, Bitmap? Thumbnail = null)
+{
+    public bool HasImage => Image is not null;
+
+    public bool HasThumbnail => Thumbnail is not null;
+}
 
 /// <summary>
 /// A node's details, as in the main window: name, type, colour, links read from its side; a tap
@@ -103,8 +109,29 @@ public sealed partial class NodePage : UserControl, IPage
     // The fields of its types and its own, empty ones of its types included, as on Windows.
     private void ShowFields(NodeDetails details)
     {
-        Fields.ItemsSource = details.Fields.Select(field => new FieldLine(field.Label, field.Value is null ? "—" : field.Display)).ToList();
+        Fields.ItemsSource = details.Fields.Select(field => LineOf(field)).ToList();
         Fields.IsVisible = details.Fields.Count > 0;
+    }
+
+    // An image's thumbnail is read from the vault (a server vault downloads it, then the page is shown again).
+    private FieldLine LineOf(NodeField field)
+    {
+        if (field.Image?.Image is not { } image)
+        {
+            return new FieldLine(field.Label, field.HasValue ? field.Display : "—");
+        }
+
+        var png = Vault?.ReadThumbnail(image.Id);
+        using var thumbnail = png is null ? null : new MemoryStream(png);
+        return new FieldLine(field.Label, field.Display, image, thumbnail is null ? null : new Bitmap(thumbnail));
+    }
+
+    private void OpenImage_Click(object? sender, RoutedEventArgs e)
+    {
+        if ((sender as Control)?.Tag is FieldLine { Image: { } image })
+        {
+            _shell.Run(() => OpenWithAsync(image));
+        }
     }
 
     private void ShowConflicts(NodeDetails details)

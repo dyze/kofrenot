@@ -43,7 +43,7 @@ Both apps share the same vaults and the same core; each shows its own set of fea
 | Search field values | ✔ | ✔ |
 | Recent: opened here or changed on any device (last 7 days) | ✔ empty input box | ✔ home |
 | Node details, links | ✔ | ✔ (read only) |
-| Node types and fields shown | ✔ | ✔ (read only) |
+| Node types and fields shown | ✔ | ✔ (read only; an image's thumbnail, *Open with…*) |
 | Views: trees and lists, as tabs | ✔ rows, cards, details | ✔ rows |
 | Pin (synced: listed while the input box is empty) | ✔ | shown, set on Windows |
 | Keep offline (this device only: content downloaded ahead) | ✔ server vaults | ✔ |
@@ -140,9 +140,10 @@ Type in the box at the top of the main window; the line under it says what Enter
 ### Node types and fields
 A node has one or several **types**, each with its **fields**: *Frank Herbert* can be a *Person* (Born, Website) and an *Author* (Genre). **Add type…** in its details adds one, **×** takes one out (asked first). A note, a dataset and a view are built-in types: a node is one of them at most, and adding another hides its content until it gets that type back.
 
-- **Your node types**, in Settings > **Node types**: a name, an icon, a colour, and fields of a kind: text, number, date, address, checkbox or choice (its options). A field added shows empty on its nodes; one taken out stays on them, with its value, as their own.
+- **Your node types**, in Settings > **Node types**: a name, an icon, a colour, and fields of a kind: text, number, date, address, checkbox, choice (its options) or image (a *Person*'s portrait). A field added shows empty on its nodes; one taken out stays on them, with its value, as their own.
 - **Copy from…** (Settings > Node types) copies node types from another of your vaults: tick the ones to copy, each saying what copying does (*Adds it*, *Updates it*, *Already the same here*, or refused when a type here has its name). Only the types are copied, not the values of their nodes; copied again later, a type is updated, not added twice. The other vault is read as it is on this computer (a server vault: as last synced), never changed.
 - **Fill a field** in the details: type its value (**Enter** or leaving the box writes it, **Esc** puts it back, empty clears it), tick a checkbox, or choose an option. A box changed has the accent's border; a value changed is saved when you leave the details, as a note is (one that does not fit, say *soon* for a date, asks to be discarded or kept editing). Dates and numbers are written the same way on every device (`2026-10-27`, `1234.5`).
+- **An image field** shows its thumbnail: a click shows the image, **Choose…** sets another (PNG, JPEG, GIF, BMP, TIFF or WebP, up to 64 MB), **×** removes it (asked first). It is stored encrypted as a dataset's file is, downloaded when shown in a server vault; its thumbnail comes with the sync.
 - **Add field…** gives a node a field of its own, with its first value; cleared, it goes. A node with fields of its own, or of several types, shows them in a tab per type, then *Its own*, so they fit without scrolling; the tab chosen stays from node to node, a dot marks one with a value in conflict. Two fields of one name show where they come from (*Born (Person)*, *Born (own)*); the merge button keeps one value.
 - A value set on two devices before they synced shows both, to keep one.
 - The input box also finds a node by its values: *Frank Herbert — Birthplace: Tacoma*, after the nodes found by name.
