@@ -271,9 +271,11 @@
           </StackPanel>
         </Grid>
 
-        <!-- Its fields (NodeDetailsPanel.Fields): those of its types, then its own, each edited in place; a value
-             set on two devices offers each to keep. Add field… adds one of its own, with its first value. -->
+        <!-- Its fields (NodeDetailsPanel.Fields): those of its types, then its own, a tab each when there are
+             several, each edited in place; a value set on two devices offers each to keep. Add field… adds one of
+             its own, with its first value. -->
         <StackPanel x:Name="FieldsPanel" Margin="2,6,0,0">
+          <WrapPanel x:Name="FieldTabs" Margin="-8,2,0,2" Visibility="Collapsed" />
           <Grid x:Name="FieldGrid">
             <Grid.ColumnDefinitions>
               <ColumnDefinition Width="110" />
