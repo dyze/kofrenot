@@ -33,7 +33,12 @@
     <ScrollViewer DockPanel.Dock="Top" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
       <StackPanel x:Name="Tabs" Orientation="Horizontal" Margin="8,4" Spacing="4" />
     </ScrollViewer>
-    <TextBox x:Name="SearchBox" DockPanel.Dock="Top" Margin="12,4" PlaceholderText="Search names" TextChanged="Search_TextChanged" />
+    <TextBox x:Name="SearchBox" DockPanel.Dock="Top" Margin="12,4" PlaceholderText="Search, or add: Dune relates to Frank Herbert" TextChanged="Search_TextChanged" />
+    <!-- What the text adds, as the input box on Windows: a tap shows the creation screen (CreationPage). -->
+    <Button x:Name="AddButton" DockPanel.Dock="Top" Classes="flat" Margin="12,0" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
+            IsVisible="False" Click="Add_Click">
+      <TextBlock x:Name="AddText" TextWrapping="Wrap" Foreground="{StaticResource Accent}" />
+    </Button>
     <TextBlock x:Name="Message" DockPanel.Dock="Top" Classes="caption" Margin="16,8" TextWrapping="Wrap" IsVisible="False" />
     <ListBox x:Name="List" SelectionChanged="List_SelectionChanged">
       <ListBox.DataTemplates>

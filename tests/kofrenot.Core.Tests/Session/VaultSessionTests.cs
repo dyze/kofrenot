@@ -408,6 +408,24 @@ public sealed class VaultSessionTests : IDisposable
     }
 
     [Fact]
+    public void AFormFilledElsewhere_IsAdded_WithItsNote()
+    {
+        Assert.Null(Session.Add(Ask, new CreationForm(new KnowledgeGraph(), InputParser.Parse("Dune")!)));
+        _device.CreateFolderVault();
+        var form = new CreationForm(_device.Vault.Graph, InputParser.Parse("Dune relates to Frank Herbert")!);
+        form.SetType(Side.Left, TypeCatalog.Note);
+        form.SetContent(Side.Left, "# Spice");
+
+        var plan = Session.Add(Ask, form);
+
+        Assert.NotNull(plan);
+        var dune = Assert.Single(_device.Vault.Graph.Nodes, node => node.Name == "Dune");
+        Assert.Equal("# Spice", _device.Vault.ReadNote(Assert.Single(_device.Vault.Graph.NoteVersionsOf(dune.Id)).Id));
+        Assert.Single(_device.Vault.Graph.LinksOf(dune.Id));
+        Assert.Null(Session.Add(Ask, new CreationForm(_device.Vault.Graph, InputParser.Parse("x relates to x")!)));
+    }
+
+    [Fact]
     public void ANote_IsSaved_AndANodeRenamed()
     {
         _device.CreateFolderVault();

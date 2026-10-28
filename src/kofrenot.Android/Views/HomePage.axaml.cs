@@ -4,6 +4,7 @@ using Avalonia.Interactivity;
 using Kofrenot.Core.Browse;
 using Kofrenot.Core.Graph;
 using Kofrenot.Core.Input;
+using Kofrenot.Core.Logging;
 using Kofrenot.Core.Storage;
 using Kofrenot.Core.Views;
 using CoreTreeView = Kofrenot.Core.Views.TreeView;
@@ -33,6 +34,9 @@ public sealed partial class HomePage : UserControl, IPage
     private readonly Shell _shell;
     private readonly HashSet<string> _expanded = [];
     private Tab _tab;
+
+    // What the search box's text adds; null when it adds nothing.
+    private CreationForm? _adding;
 
     public HomePage(Shell shell, Tab? tab = null)
     {
@@ -137,6 +141,7 @@ public sealed partial class HomePage : UserControl, IPage
         var graph = vault.Graph;
         var text = SearchBox.Text ?? string.Empty;
         Message.IsVisible = false;
+        ShowAdd(graph, text);
         if (_tab.View is { } view)
         {
             List.ItemsSource = ViewRows(graph, view, text);
@@ -249,6 +254,25 @@ public sealed partial class HomePage : UserControl, IPage
         }
 
         Select(Tab.Search);
+    }
+
+    // The search tab's text read as the input box reads it: what it adds, offered under the box.
+    private void ShowAdd(KnowledgeGraph graph, string text)
+    {
+        _adding = _tab.IsSearch && !_shell.Services.Session.IsReadOnly && InputParser.Parse(text, graph.Types) is { } request
+            ? new CreationForm(graph, request)
+            : null;
+        AddButton.IsVisible = _adding is { CanAdd: true };
+        AddText.Text = _adding is null ? string.Empty : $"＋ {_adding.Status}";
+    }
+
+    private void Add_Click(object? sender, RoutedEventArgs e)
+    {
+        if (_adding is { } form)
+        {
+            _shell.Services.Log.Info("Action", form.IsLink ? "Creation screen shown for a link" : "Creation screen shown for a node");
+            _shell.Push(new CreationPage(_shell, form));
+        }
     }
 
     private void Search_TextChanged(object? sender, TextChangedEventArgs e)

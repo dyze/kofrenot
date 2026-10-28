@@ -190,6 +190,18 @@ public sealed partial class VaultSession : IDisposable
             return null;
         }
 
+        return Add(ask, vault, form);
+    }
+
+    /// <summary>
+    /// Adds what a creation form filled elsewhere says (kofrenot for Android shows its own screen).
+    /// The plan added; null when no vault is open, the form cannot add, or it cannot be written (the user is told).
+    /// </summary>
+    public AddPlan? Add(ISessionQuestions ask, CreationForm form) =>
+        Current is { } vault && form.CanAdd && CanWrite(ask) ? Add(ask, vault, form) : null;
+
+    private AddPlan? Add(ISessionQuestions ask, Vault vault, CreationForm form)
+    {
         var notes = form.NotesToSave();
         var withNotes = notes.Count > 0 ? $", {notes.Count} with content" : string.Empty;
         var added = Append(ask, vault, [.. form.Plan.Changes, .. form.LinksToSave(), .. form.ViewsToSave()], form.Plan switch

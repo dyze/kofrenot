@@ -1,0 +1,22 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="Kofrenot.Phone.Views.CreationPage">
+  <!-- What the search box's text adds, before it is: the link's type, then each new node's type and a
+       new note's text (CreationForm, as the creation screen on Windows). Add adds it; back cancels. -->
+  <DockPanel>
+    <Border DockPanel.Dock="Top" Classes="bar">
+      <Grid ColumnDefinitions="Auto,*">
+        <Button Classes="flat" Content="‹" FontSize="24" Click="Back_Click" />
+        <TextBlock x:Name="Heading" Grid.Column="1" Classes="title" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+      </Grid>
+    </Border>
+    <StackPanel DockPanel.Dock="Bottom" Margin="16,8,16,16" Spacing="6">
+      <TextBlock x:Name="Status" TextWrapping="Wrap" />
+      <TextBlock x:Name="Warning" Classes="error" IsVisible="False" />
+      <Button x:Name="AddButton" Classes="accent" Content="Add" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Click="Add_Click" />
+    </StackPanel>
+    <ScrollViewer>
+      <StackPanel x:Name="Sides" Margin="16,8,16,8" Spacing="10" />
+    </ScrollViewer>
+  </DockPanel>
+</UserControl>
