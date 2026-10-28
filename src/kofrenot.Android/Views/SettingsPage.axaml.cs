@@ -33,6 +33,7 @@ public sealed partial class SettingsPage : UserControl, IPage
         var selected = services.Session.Selected;
         Vault.Text = selected is null ? "None open" : services.Session.NameOf(selected);
         ForgetButton.IsEnabled = selected is not null && services.Session.IsRemembered(selected);
+        MembersButton.IsVisible = services.Session.Current is not null && selected?.Location.IsOnServer == true;
         ExchangeDays.ItemsSource = services.Server.Exchanges.DayRows();
         ExchangeKinds.ItemsSource = services.Server.Exchanges.KindRows();
     }
@@ -86,6 +87,12 @@ public sealed partial class SettingsPage : UserControl, IPage
         _shell.Services.Settings.SetDebugLogging(debug);
         _shell.Services.Logs.SetDebug(debug);
         _shell.Services.Log.Info("Settings", $"Debug logging {(debug ? "on" : "off")}");
+    }
+
+    private void Members_Click(object? sender, RoutedEventArgs e)
+    {
+        _shell.Services.Log.Info("Action", "Members shown");
+        _shell.Push(new MembersPage(_shell));
     }
 
     private void Back_Click(object? sender, RoutedEventArgs e) => _shell.Back();

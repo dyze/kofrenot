@@ -13,8 +13,9 @@ public sealed record PassPhraseNeeded(string Place, string? Hint);
 /// <summary>
 /// The session's questions, answered before it asks them: Android has no dialog that waits for
 /// an answer. A pass phrase asked is noted in <see cref="Needed"/>: a screen asks it, checks it
-/// (<see cref="VaultSession.UnlockAheadAsync"/>), then opens the vault again. The phone only
-/// reads, so every other question is declined.
+/// (<see cref="VaultSession.UnlockAheadAsync"/>), then opens the vault again. A question the
+/// phone asked on its own screen first is answered as <see cref="Confirmed"/>, and a share as
+/// <see cref="Share"/>; every other question is declined.
 /// </summary>
 public sealed class PreparedAnswers : ISessionQuestions
 {
@@ -24,7 +25,13 @@ public sealed class PreparedAnswers : ISessionQuestions
 
     public void Tell(string message) => Told.Add(message);
 
-    public bool Confirm(string message, string yes, string no = "Cancel") => false;
+    /// <summary>The answer to the session's confirmation: true when the phone asked it already.</summary>
+    public bool Confirmed { get; init; }
+
+    /// <summary>Who to share the vault with, and as what, chosen on the phone's screen first.</summary>
+    public ShareChoice? Share { get; init; }
+
+    public bool Confirm(string message, string yes, string no = "Cancel") => Confirmed;
 
     public UnlockAnswer? AskPassPhrase(string place, Func<string, bool> accept, string? hint = null)
     {
@@ -50,7 +57,7 @@ public sealed class PreparedAnswers : ISessionQuestions
 
     public bool? AskRecoveryKey(string place, Func<RecoveryKey, bool> accept) => null;
 
-    public ShareChoice? AskShare(string place, Func<string, Task<(Lookup Result, ShareCandidate? Candidate)>> find) => null;
+    public ShareChoice? AskShare(string place, Func<string, Task<(Lookup Result, ShareCandidate? Candidate)>> find) => Share;
 
     public bool AskCreation(CreationForm form, string? file) => false;
 

@@ -53,7 +53,8 @@ Before 0.12 the phone wrote content only (`ClientMode.Content`: notes and files)
                                          │ search box           │ links, tap ─► Node details
                                          │ pinned, recent       └ back: trail
                                          └ view tabs ─► View (flat / tree) ─► Node details
- Settings: server, account, vaults, remember key, theme, logging, about
+ Settings: server, account, vaults, members, remember key, theme, logging, about
+ Home: the search box's text ─► Creation (types, a note's text) ─► Node details (⋯: rename, colour, pin, fields, types, delete)
 ```
 
 One window, navigation by back button; light and dark themes follow the phone.

@@ -1,0 +1,42 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:graph="using:Kofrenot.Core.Graph"
+             x:Class="Kofrenot.Phone.Views.MembersPage">
+  <!-- The open vault's members and their roles (Settings > Members). Its owner shares it and changes a role;
+       a member removed is on Windows, as it rotates the vault's key. A member leaves a vault shared with them. -->
+  <DockPanel>
+    <Border DockPanel.Dock="Top" Classes="bar">
+      <Grid ColumnDefinitions="Auto,*">
+        <Button Classes="flat" Content="‹" FontSize="24" Click="Back_Click" />
+        <TextBlock Grid.Column="1" Classes="title" Text="Members" VerticalAlignment="Center" />
+      </Grid>
+    </Border>
+    <ScrollViewer>
+      <StackPanel Margin="16" Spacing="8">
+        <TextBlock x:Name="Intro" Classes="caption" TextWrapping="Wrap" />
+        <ItemsControl x:Name="MembersList">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate DataType="graph:VaultMember">
+              <Button Classes="flat" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" Padding="0" MinHeight="44"
+                      Tag="{Binding}" Click="Member_Click">
+                <Grid ColumnDefinitions="*,Auto">
+                  <TextBlock Text="{Binding Email}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                  <TextBlock Grid.Column="1" Classes="caption" Text="{Binding Role}" VerticalAlignment="Center" />
+                </Grid>
+              </Button>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+        <StackPanel x:Name="SharePanel" Orientation="Horizontal" Spacing="8" Margin="0,8,0,0">
+          <Button Classes="accent" Content="Share…" Click="Share_Click" />
+          <ComboBox x:Name="RoleBox" SelectedIndex="0">
+            <ComboBoxItem Content="as a writer" />
+            <ComboBoxItem Content="as a reader" />
+          </ComboBox>
+        </StackPanel>
+        <Button x:Name="LeaveButton" Content="Leave this vault" Click="Leave_Click" />
+        <ProgressBar x:Name="Busy" IsIndeterminate="True" IsVisible="False" />
+      </StackPanel>
+    </ScrollViewer>
+  </DockPanel>
+</UserControl>

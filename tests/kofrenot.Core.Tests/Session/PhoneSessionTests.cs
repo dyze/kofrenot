@@ -7,6 +7,7 @@ namespace Kofrenot.Core.Tests.Session;
 public sealed class PhoneSessionTests : IDisposable
 {
     private const string OnWindows = "This change is made in kofrenot on Windows";
+    private const string Grace = "grace@example.com";
     private static readonly DateTimeOffset Start = new(2026, 10, 1, 12, 0, 0, TimeSpan.Zero);
 
     private readonly FakeKofre _kofre = new();
@@ -253,6 +254,29 @@ public sealed class PhoneSessionTests : IDisposable
         Assert.Null(_phone.Session.Current);
         Assert.Contains(_phone.Ask.Told, told => told.Contains("It still opens with its own pass phrase"));
         Assert.DoesNotContain(nameof(ISessionQuestions.AskAccount), _phone.Ask.Asked);
+    }
+
+    [Fact]
+    public async Task AVault_IsShared_AndARoleChanged_OnThePhone_ButNoMemberRemoved()
+    {
+        using var grace = new Device(_kofre);
+        await grace.SignInAsync(Grace);
+        grace.Ask.PassPhrase = "grace pass phrase";
+        grace.Session.SetAccountPassPhrase(grace.Ask);
+        await AddLaptopsVaultAsync();
+        var session = _phone.Session;
+        Assert.True(session.CanShare);
+
+        _phone.Ask.ShareWith = (Grace, MemberRole.Writer);
+        await session.Share(_phone.Ask);
+        var member = session.Members.Single(member => member.Email == Grace);
+        await session.ChangeRole(_phone.Ask, member);
+
+        Assert.Equal(MemberRole.Reader, session.Members.Single(member => member.Email == Grace).Role);
+        Assert.True(session.CanManageMembers);
+        Assert.False(session.CanRemoveMembers);
+        await session.RemoveMember(_phone.Ask, member);
+        Assert.Equal(2, session.Members.Count);
     }
 
     /// <summary>The laptop's new server vault, added on the phone with the account's pass phrase.</summary>

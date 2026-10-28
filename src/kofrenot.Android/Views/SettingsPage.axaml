@@ -28,6 +28,7 @@
 
         <TextBlock Classes="caption" Text="Vault" Margin="0,16,0,0" />
         <TextBlock x:Name="Vault" TextWrapping="Wrap" />
+        <Button x:Name="MembersButton" Content="Members…" Click="Members_Click" />
         <Button x:Name="ForgetButton" Content="Forget its remembered pass phrase" Click="Forget_Click" />
 
         <TextBlock Classes="caption" Text="Logging" Margin="0,16,0,0" />

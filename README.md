@@ -63,7 +63,7 @@ Both apps share the same vaults and the same core; each shows its own set of fea
 | Datasets: open in another app, save as | ✔ **Open**, **Export…**, drag out | ✔ *Open with…*, *Save as…* |
 | Views: create, edit | ✔ | — |
 | **Share** | | |
-| Members, roles, share, leave | ✔ | — (your role shown) |
+| Members, roles, share, leave | ✔ | ✔ share, change a role, leave (Settings > **Members…**); a member removed on Windows |
 | **App** | | |
 | Hotkeys, tray, start with Windows, update check | ✔ | *never* (Windows desktop) / — update check |
 | Settings | ✔ every tab | sign out, forget the pass phrase, logging |
@@ -118,6 +118,7 @@ kofrenot for Android **reads** your server vaults, also offline, and **changes t
 - **Add nodes and links**: type in the search box as in the input box on Windows: `Dune`, `Dune relates to Frank Herbert`, `Kitchen contains Knives`. The line under it says what it adds; a tap shows the creation screen: the link's type, each new node's type (a note with its text), then **Add** adds them and opens the node. A view is made on Windows, a dataset with **＋**.
 - **Change a node**: **⋯** on its page renames it, gives it a colour, pins or unpins it, or deletes it with its links (asked first, naming what goes). A long press on a link removes it (asked first); the nodes stay. Each change reaches your other devices at the next sync.
 - **Fields and types**: a tap on a field fills it: a text typed (empty clears it), a checkbox ticked, an option chosen; an image is set on Windows. **⋯** adds a field of its own (a text), adds a type or takes one out (asked first; the values of its fields stay, as the node's own). A name, colour or value set on two devices before they synced shows each, to keep one.
+- **Members**: Settings > **Members…** lists the open vault's members and their roles. Its owner shares it with another account of the server (by its email, after comparing its fingerprint), as a writer or a reader, and a tap on a member makes them a reader or a writer; removing one is done on Windows, as it changes the vault's key. A member leaves a vault shared with them.
 - **Edit notes**: tap a checkbox to check its item, or **Edit** to change the note, then **Save**. A note whose lines are all items opens as its list, as on Windows: a checkbox and a text per item, **Enter** adds the next, **✕** removes one, checked items below the others; **Checkboxes** turns a text into items, **Text** turns them back into lines. Other notes are edited as Markdown text (`# heading`, `- item`); **Cancel** keeps it as it was, and leaving the note with changes not saved asks before discarding them. A note edited on two devices before they synced shows both versions: **Keep this version** keeps one.
 - **Offline**: every name and link is on the phone; a note's text once it has been shown, and the content of the nodes you **Keep offline** (on the node's page) at once. What you save offline waits on the phone (*· 2 to upload*) and is uploaded at the next sync. The phone syncs when the app opens or comes back, then every 30 seconds while it is shown; the dot says how it stands, a tap syncs now.
 - **Private**: the app's screens stay out of the recent apps list and of screenshots.

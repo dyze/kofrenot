@@ -15,8 +15,11 @@ namespace Kofrenot.Core.Session;
 /// </summary>
 public sealed partial class VaultSession
 {
-    /// <summary>This account owns the open shared vault: it removes members.</summary>
-    public bool CanRemoveMembers => !IsPhone && CanShare && Members.Count > 0;
+    /// <summary>This account owns the open shared vault: it changes its members' roles.</summary>
+    public bool CanManageMembers => CanShare && Members.Count > 0;
+
+    /// <summary>As <see cref="CanManageMembers"/>, and it removes members: not the phone, as a removal rotates the vault's key.</summary>
+    public bool CanRemoveMembers => !IsPhone && CanManageMembers;
 
     /// <summary>The open vault is shared with this account by someone else: it can leave it.</summary>
     public bool CanLeave => Current is { } vault && MyRoleIn(vault) is MemberRole.Reader or MemberRole.Writer && _server.IsSignedIn;
@@ -49,7 +52,7 @@ public sealed partial class VaultSession
     /// <summary>Makes a member a reader if a writer, a writer if a reader: their record in the vault, then their role on the server.</summary>
     public async Task ChangeRole(ISessionQuestions ask, VaultMember member)
     {
-        if (!CanRemoveMembers || member.Role == MemberRole.Owner || Current is not { } vault || _access is not { } access
+        if (!CanManageMembers || member.Role == MemberRole.Owner || Current is not { } vault || _access is not { } access
             || Selected?.Location.Store is not { } store || _server.Client is not { } client)
         {
             return;
