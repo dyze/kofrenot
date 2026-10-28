@@ -20,6 +20,7 @@ Vault format 8: a vault upgraded is closed by kofrenot 0.10 and older, on Window
   - **Your node types** in Settings > Node types: a name, an icon, a colour and fields. A field added shows empty on its nodes; one taken out, or a type removed, leaves its values on them as their own fields.
   - **Fill fields** in a node's details; **Add field…** gives it a field of its own; two fields of the same name are shown apart (*Born (Person)*, *Born (own)*) and merged on demand, keeping one value; a value set on two devices offers each to keep.
   - **Add type…** and **×** in a node's details add a type to a node and take one out.
+  - **Copy node types from another vault**: Settings > Node types > **Copy from…** lists another vault's node types, each ticked, with what copying does; they keep their ids, so a type copied again is updated, not added twice. The other vault is only read ([README](README.md#node-types-and-fields)).
 - **Android**
   - A node's page shows its types and fields; your node types' icons show in the lists.
 

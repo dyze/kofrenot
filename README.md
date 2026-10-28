@@ -51,7 +51,7 @@ Both apps share the same vaults and the same core; each shows its own set of fea
 | Add nodes and links (input box, creation screen) | ✔ | — |
 | Rename, colour, pin, delete; move and copy in a tree | ✔ | — |
 | Types: add to a node, take out | ✔ | — |
-| Your node types: create, change, remove (Settings > Node types) | ✔ | — |
+| Your node types: create, change, remove, copy from another vault (Settings > Node types) | ✔ | — |
 | Fields: fill, add your own, merge, resolve a conflict | ✔ | — |
 | Notes: edit | ✔ editor with a Markdown toolbar and a task list editor | ✔ Markdown text, task list editor (no reordering); tap a checkbox |
 | Notes: resolve a conflict | ✔ keep one, or merge by hand | ✔ keep one |
@@ -141,6 +141,7 @@ Type in the box at the top of the main window; the line under it says what Enter
 A node has one or several **types**, each with its **fields**: *Frank Herbert* can be a *Person* (Born, Website) and an *Author* (Genre). **Add type…** in its details adds one, **×** takes one out (asked first). A note, a dataset and a view are built-in types: a node is one of them at most, and adding another hides its content until it gets that type back.
 
 - **Your node types**, in Settings > **Node types**: a name, an icon, a colour, and fields of a kind: text, number, date, address, checkbox or choice (its options). A field added shows empty on its nodes; one taken out stays on them, with its value, as their own.
+- **Copy from…** (Settings > Node types) copies node types from another of your vaults: tick the ones to copy, each saying what copying does (*Adds it*, *Updates it*, *Already the same here*, or refused when a type here has its name). Only the types are copied, not the values of their nodes; copied again later, a type is updated, not added twice. The other vault is read as it is on this computer (a server vault: as last synced), never changed.
 - **Fill a field** in the details: type its value (**Enter** or leaving the box writes it, **Esc** puts it back, empty clears it), tick a checkbox, or choose an option. Dates and numbers are written the same way on every device (`2026-10-27`, `1234.5`).
 - **Add field…** gives a node a field of its own, with its first value; cleared, it goes. Two fields of one name show where they come from (*Born (Person)*, *Born (own)*); the merge button keeps one value.
 - A value set on two devices before they synced shows both, to keep one.
