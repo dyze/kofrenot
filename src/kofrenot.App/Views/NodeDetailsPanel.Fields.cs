@@ -12,27 +12,37 @@ namespace Kofrenot.UI.Views;
 
 /// <summary>
 /// A node's fields (<see cref="NodeFields"/>), each edited in place (<see cref="FieldPlanner"/>): a
-/// text, number, date or address in a box (Enter or leaving it writes it, Esc puts it back, empty
-/// clears it), a checkbox, a choice in a list. A value set on two devices offers each to keep; two
-/// fields of one name offer to merge them. Add field… adds one of the node's own, with its first value.
+/// text, number, date or address in a box (<see cref="NodeDetailsPanel"/>'s FieldEdit), a checkbox,
+/// a choice in a list. Under a caption per type, then "Its own", when the node has fields of its own
+/// or several types. A value set on two devices offers each to keep; two fields of one name offer to
+/// merge them. Add field… adds one of the node's own, with its first value.
 /// </summary>
 public partial class NodeDetailsPanel
 {
     private const string ClearChoice = "—";
-
-    // The box being typed in, and the field it writes: its value is written when Enter is pressed or it is left.
-    private (TextBox Box, NodeField Field)? _fieldBox;
+    private const string OwnCaption = "Its own";
 
     private void ShowFields(NodeDetails details)
     {
-        _fieldBox = null;
+        var typing = TypingKept(details.Node);
+        _boxes.Clear();
         FieldGrid.Children.Clear();
         FieldGrid.RowDefinitions.Clear();
         var canEdit = WriteChanges is not null;
+        var withCaptions = details.Fields.Any(field => field.IsOwn) || details.Fields.Select(field => field.Type).Distinct().Count() > 1;
+        string? caption = null;
         foreach (var field in details.Fields)
         {
+            if (withCaptions && (field.Type?.Name ?? OwnCaption) is var group && group != caption)
+            {
+                AddCaption(group);
+                caption = group;
+            }
+
             AddFieldRow(field, details.Fields, canEdit);
         }
+
+        TypeBack(typing);
 
         AddFieldButton.Visibility = canEdit ? Visibility.Visible : Visibility.Collapsed;
         if (OwnFieldKind.ItemsSource is null)
@@ -40,6 +50,23 @@ public partial class NodeDetailsPanel
             OwnFieldKind.ItemsSource = FieldPlanner.OwnKinds;
             OwnFieldKind.SelectedIndex = 0;
         }
+    }
+
+    // A caption above the fields of a type, or of the node's own.
+    private void AddCaption(string text)
+    {
+        var row = FieldGrid.RowDefinitions.Count;
+        FieldGrid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+        var caption = new TextBlock
+        {
+            Margin = new Thickness(0, row == 0 ? 4 : 10, 0, 0),
+            FontSize = (double)FindResource("CaptionFontSize"),
+            FontWeight = FontWeights.SemiBold,
+            Opacity = 0.7,
+            Text = text,
+        };
+        Place(caption, row, 0);
+        Grid.SetColumnSpan(caption, 3);
     }
 
     private void AddFieldRow(NodeField field, IReadOnlyList<NodeField> fields, bool canEdit)
@@ -129,10 +156,7 @@ public partial class NodeDetailsPanel
                 };
                 return list;
             default:
-                var box = new TextBox { Margin = margin, Text = field.Value ?? string.Empty, ToolTip = HintOf(field.Kind) };
-                box.GotKeyboardFocus += (_, _) => _fieldBox = (box, field);
-                box.LostKeyboardFocus += (_, _) => WriteBox(box, field);
-                return box;
+                return BoxOf(field, margin);
         }
     }
 
@@ -151,14 +175,6 @@ public partial class NodeDetailsPanel
         }
     }
 
-    private static string HintOf(FieldKind kind) => kind switch
-    {
-        FieldKind.Number => "A number, like 1234.5",
-        FieldKind.Date => "A date, like 2026-10-27",
-        FieldKind.Url => "An address, like https://example.com",
-        _ => "Its text",
-    };
-
     private Button SmallButton(string glyph, string tip, Action click)
     {
         var button = new Button
@@ -171,45 +187,6 @@ public partial class NodeDetailsPanel
         };
         button.Click += (_, _) => click();
         return button;
-    }
-
-    /// <summary>Enter writes the field typed in, Esc puts its value back; the other keys type in it.</summary>
-    private bool HandleFieldKey(Key key)
-    {
-        switch (key)
-        {
-            case Key.Enter when _fieldBox is { } typed:
-                WriteBox(typed.Box, typed.Field);
-                return true;
-            case Key.Enter when OwnFieldForm.IsKeyboardFocusWithin:
-                AddOwnField();
-                return true;
-            case Key.Escape when OwnFieldForm.IsKeyboardFocusWithin:
-                CloseOwnField();
-                return true;
-            case Key.Escape when _fieldBox is { } typed:
-                typed.Box.Text = typed.Field.Value ?? string.Empty;
-                _fieldBox = null;
-                FieldStatus.Visibility = Visibility.Collapsed;
-                Focus();
-                return true;
-            default:
-                return false;
-        }
-    }
-
-    private void WriteBox(TextBox box, NodeField field)
-    {
-        if (_fieldBox?.Box != box || box.Text == (field.Value ?? string.Empty))
-        {
-            return;
-        }
-
-        _fieldBox = null;
-        if (!WriteFields(planner => planner.Set(Node, field, box.Text), "Field set"))
-        {
-            _fieldBox = (box, field);
-        }
     }
 
     /// <summary>Writes a plan of the node's fields, or says why it cannot; false when nothing was written.</summary>

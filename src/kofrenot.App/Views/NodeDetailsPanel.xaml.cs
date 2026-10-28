@@ -132,7 +132,7 @@ public partial class NodeDetailsPanel : UserControl
 
                 return true;
             case Key.Enter:
-                if (Browser.OpenSelected())
+                if (LeaveFields() && Browser.OpenSelected())
                 {
                     Opened();
                 }
@@ -153,6 +153,11 @@ public partial class NodeDetailsPanel : UserControl
 
     private void GoBackTo(int depth)
     {
+        if (!LeaveFields())
+        {
+            return;
+        }
+
         StopEditing();
         LeaveNote();
         Browser.BackTo(depth);
@@ -197,7 +202,7 @@ public partial class NodeDetailsPanel : UserControl
 
         if (e.ClickCount == 2)
         {
-            if (Browser.OpenLinked(link.OtherNode))
+            if (LeaveFields() && Browser.OpenLinked(link.OtherNode))
             {
                 Opened();
             }
@@ -212,7 +217,7 @@ public partial class NodeDetailsPanel : UserControl
 
     private void OpenLink_Click(object sender, RoutedEventArgs e)
     {
-        if (sender is FrameworkElement { DataContext: LinkRow link } && Browser.OpenLinked(link.OtherNode))
+        if (sender is FrameworkElement { DataContext: LinkRow link } && LeaveFields() && Browser.OpenLinked(link.OtherNode))
         {
             Opened();
         }

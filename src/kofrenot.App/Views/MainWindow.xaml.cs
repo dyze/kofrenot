@@ -609,13 +609,17 @@ public partial class MainWindow : Window
     private void SettingsButton_Click(object sender, RoutedEventArgs e) => ShowSettings();
 
     /// <summary>Why kofrenot must not quit now (an unsaved note, an import running), or null.</summary>
-    public string? WhyNotQuit() => QuitRefusal.Reason(DetailsPanel.UnsavedNote, _session.ImportsRunning);
+    public string? WhyNotQuit()
+    {
+        DetailsPanel.LeaveFields(ask: false);
+        return QuitRefusal.Reason(DetailsPanel.UnsavedNote, _session.ImportsRunning);
+    }
 
     /// <summary>Closing hides the window: kofrenot keeps running in the notification area until Quit.</summary>
     private void Window_Closing(object? sender, CancelEventArgs e)
     {
         e.Cancel = true;
-        DetailsPanel.LeaveNote();
+        DetailsPanel.Leave();
         HideCovered();
         _log.Debug("Window", "Hidden");
     }
