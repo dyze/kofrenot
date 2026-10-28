@@ -7,8 +7,10 @@ public enum ClientMode
     Full,
 
     /// <summary>
-    /// Notes' and datasets' content only: a note saved, a file imported (kofrenot for Android).
-    /// Everything else (nodes, links, pins, the vault itself, members, keys) is left to kofrenot on Windows.
+    /// The vault's nodes, as its role allows (kofrenot for Android): nodes, links, names, colours,
+    /// pins, types and fields of a node, content, members invited. What defines the vault (the
+    /// user's node and link types, aliases, its name, keys, a member removed) is left to kofrenot
+    /// on Windows (<see cref="PhoneChanges"/>).
     /// </summary>
-    Content,
+    Phone,
 }

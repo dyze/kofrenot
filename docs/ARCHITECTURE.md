@@ -684,7 +684,7 @@ versions of "Dune"                      Restore n1
 
 - `NodeHistory.Of` lists every content version (`KnowledgeGraph.ContentHistoryOf`: a note's texts, a dataset's files, a view's definitions), every name (`NameHistoryOf`, the name it was added with first), colour and field value, newest first. A `HistoryEntry` says what it held from the metadata only (a name, a colour, a value, a file's name and size, what a view shows; nothing for a note's text) and whether it is current. It can be restored unless it is the only current one of its kind (or of its field).
 - `RestorePlanner` writes it again as a new version replacing every current one of its kind, as a rename does, so restoring one of a conflict resolves it. A note's text and a dataset's file are written again under the new version's id (`ContentCopy`, as a copy in a tree does: `VaultSession.Restore`, downloaded first in a server vault); an image keeps the file it was written with (`FieldSet.Content`), a view's definition is in its change.
-- Types (added, taken out) and links have no versions; a node removed is not restored. `ClientMode.Content` refuses a restore: Android lists the history only.
+- Types (added, taken out) and links have no versions; a node removed is not restored. Android restores too (`ClientMode.Phone` allows it).
 
 ### Input
 `Dune relates to Frank Herbert` → link; `Dune` → node.

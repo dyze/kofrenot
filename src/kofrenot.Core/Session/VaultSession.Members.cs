@@ -16,10 +16,10 @@ namespace Kofrenot.Core.Session;
 public sealed partial class VaultSession
 {
     /// <summary>This account owns the open shared vault: it removes members.</summary>
-    public bool CanRemoveMembers => CanShare && Members.Count > 0;
+    public bool CanRemoveMembers => !IsPhone && CanShare && Members.Count > 0;
 
     /// <summary>The open vault is shared with this account by someone else: it can leave it.</summary>
-    public bool CanLeave => !EditsContentOnly && Current is { } vault && MyRoleIn(vault) is MemberRole.Reader or MemberRole.Writer && _server.IsSignedIn;
+    public bool CanLeave => Current is { } vault && MyRoleIn(vault) is MemberRole.Reader or MemberRole.Writer && _server.IsSignedIn;
 
     /// <summary>Removes a member from the open vault: their server access at once, then a new key they do not have.</summary>
     public async Task RemoveMember(ISessionQuestions ask, VaultMember member)

@@ -28,8 +28,7 @@ public sealed partial class VaultSession
 
     /// <summary>The open vault can be shared from here: a server vault of this account, opened with its pass phrase, the server recent enough.</summary>
     public bool CanShare =>
-        !EditsContentOnly
-        && Current is { } vault
+        Current is { } vault
         && Selected?.Location.IsOnServer == true
         && _server.IsSignedIn && _server.TooOld is null
         && _server.Identity is { } account && _access?.Identity?.Id == account.Identity.Id
@@ -114,17 +113,9 @@ public sealed partial class VaultSession
     private MemberRole? MyRoleIn(Vault vault) =>
         _server.Identity is { } account && Current == vault ? VaultSharing.RoleOf(Members, account.Identity.Id) : null;
 
-    /// <summary>
-    /// False, the user told, when the open vault is read only for this account, or when this
-    /// client edits content only and the change is not to <paramref name="content"/>.
-    /// </summary>
-    private bool CanWrite(ISessionQuestions ask, bool content = false)
+    /// <summary>False, the user told, when the open vault is read only for this account.</summary>
+    private bool CanWrite(ISessionQuestions ask)
     {
-        if (!content && RefusesChanges(ask))
-        {
-            return false;
-        }
-
         if (!IsReadOnly)
         {
             return true;
@@ -134,4 +125,8 @@ public sealed partial class VaultSession
         ask.Tell(ReadOnlyMessage);
         return false;
     }
+
+    /// <summary>As <see cref="CanWrite(ISessionQuestions)"/>, and false, the user told, when the phone leaves one of <paramref name="changes"/> to Windows.</summary>
+    private bool CanWrite(ISessionQuestions ask, Vault vault, IReadOnlyList<Change> changes) =>
+        !RefusesChanges(ask, vault, changes) && CanWrite(ask);
 }

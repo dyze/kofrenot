@@ -45,7 +45,7 @@ public sealed partial class VaultSession : IDisposable
     /// <param name="thumbnails">Makes an image's thumbnail when it is imported.</param>
     /// <param name="keyIterations">The key derivation's rounds for a pass phrase set here; fewer only in tests.</param>
     /// <param name="time">Runs the timers; null for the system's.</param>
-    /// <param name="mode">What this client may change: content only for kofrenot for Android.</param>
+    /// <param name="mode">What this client may change: the vault's nodes only for kofrenot for Android.</param>
     public VaultSession(SettingsStore settings, AppFiles files, KeyMemory keys, VaultNameMemory names, ServerConnection server, SyncService sync, IUiThread ui, IVaultWatcher watching, IThumbnailMaker thumbnails, ILog log, int keyIterations = KeyWrap.DefaultIterations, TimeProvider? time = null, ClientMode mode = ClientMode.Full)
     {
         _keyIterations = keyIterations;
@@ -114,7 +114,7 @@ public sealed partial class VaultSession : IDisposable
 
         // A server vault still opening with its own pass phrase moves to its account's, when the
         // server can be asked; else at a later opening.
-        if (!EditsContentOnly && _server.IsSignedIn && _server.TooOld is null)
+        if (!IsPhone && _server.IsSignedIn && _server.TooOld is null)
         {
             AttachToAccount(ask, folder, vault);
         }
@@ -221,7 +221,7 @@ public sealed partial class VaultSession : IDisposable
     public Task<bool> SaveDataset(ISessionQuestions ask, DatasetEdited version, Func<Stream> open, IProgress<long>? progress = null)
     {
         var replaced = version.Replaces.Count > 1 ? $", a conflict of {version.Replaces.Count} versions resolved" : string.Empty;
-        return SaveFile(ask, version, open, progress, version, $"Dataset imported ({version.File.Size} bytes{replaced})", isContent: true);
+        return SaveFile(ask, version, open, progress, version, $"Dataset imported ({version.File.Size} bytes{replaced})");
     }
 
     /// <summary>
@@ -233,13 +233,13 @@ public sealed partial class VaultSession : IDisposable
     public Task<bool> SaveImage(ISessionQuestions ask, FieldSet value, Func<Stream> open)
     {
         var image = value.Image ?? throw new ArgumentException("The value has no image", nameof(value));
-        return SaveFile(ask, image, open, progress: null, value, $"Field image set ({image.File.Size} bytes)", isContent: false);
+        return SaveFile(ask, image, open, progress: null, value, $"Field image set ({image.File.Size} bytes)");
     }
 
     // Writes a file as a dataset version's off the UI thread, then the change that has it.
-    private async Task<bool> SaveFile(ISessionQuestions ask, DatasetEdited file, Func<Stream> open, IProgress<long>? progress, Change change, string action, bool isContent)
+    private async Task<bool> SaveFile(ISessionQuestions ask, DatasetEdited file, Func<Stream> open, IProgress<long>? progress, Change change, string action)
     {
-        if (Current is not { } vault || !CanWrite(ask, isContent) || !_importing.Add(file.Node))
+        if (Current is not { } vault || !CanWrite(ask, vault, [change]) || !_importing.Add(file.Node))
         {
             return false;
         }
@@ -262,7 +262,7 @@ public sealed partial class VaultSession : IDisposable
             Changed?.Invoke();
         }
 
-        return Current == vault && Append(ask, vault, [change], action, isContent: isContent);
+        return Current == vault && Append(ask, vault, [change], action);
     }
 
     /// <summary>
@@ -431,13 +431,12 @@ public sealed partial class VaultSession : IDisposable
     /// <summary>Saves a note version with its content. False when no vault is open, or it cannot be written (the user is told).</summary>
     public bool SaveNote(ISessionQuestions ask, NoteEdited version, string content) =>
         Current is { } vault
-        && Append(ask, vault, [], version.Replaces.Count > 1 ? $"Note saved (a conflict of {version.Replaces.Count} versions resolved)" : "Note saved", [new NoteToSave(version, content)], isContent: true);
+        && Append(ask, vault, [], version.Replaces.Count > 1 ? $"Note saved (a conflict of {version.Replaces.Count} versions resolved)" : "Note saved", [new NoteToSave(version, content)]);
 
     /// <summary>Writes the changes, then the note versions (each content file, then its change).</summary>
-    /// <param name="isContent">The changes save content (a note, files imported): a client that edits content only writes them.</param>
-    private bool Append(ISessionQuestions ask, Vault vault, IReadOnlyList<Change> changes, string action, IReadOnlyList<NoteToSave>? notes = null, bool isContent = false)
+    private bool Append(ISessionQuestions ask, Vault vault, IReadOnlyList<Change> changes, string action, IReadOnlyList<NoteToSave>? notes = null)
     {
-        if (!CanWrite(ask, isContent))
+        if (!CanWrite(ask, vault, [.. changes, .. (notes ?? []).Select(note => note.Version)]))
         {
             return false;
         }

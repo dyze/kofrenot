@@ -22,7 +22,7 @@ public sealed partial class VaultSession
 
         var plan = new FileImportPlanner(vault.Graph, _time).Plan(preview);
         var under = preview.Under is null ? string.Empty : ", in a tree";
-        if (!Append(ask, vault, plan.Changes, $"Files imported as datasets ({preview.Count} files, {preview.TotalSize} bytes{under})", isContent: true))
+        if (!Append(ask, vault, plan.Changes, $"Files imported as datasets ({preview.Count} files, {preview.TotalSize} bytes{under})"))
         {
             return [];
         }

@@ -17,8 +17,8 @@ Scope of each planned version. Implemented features move to [CHANGELOG.md](CHANG
 | 0.11    | Released  | Composition: node types made of fields, several per node; fields of a node's own   |
 
 ## 0.12
-1. Android · **Add and edit.** Input box, creation screen, renames, colours, pins (notes and files: 0.10).
-2. Android · **Sharing.** Members, roles, share, leave.
+1. Android · **Add and edit.** Input box, creation screen, renames, colours, pins, deletes, fields and types of a node, a version restored (notes and files: 0.10; what the phone may change: [ANDROID-CONCEPT.md](docs/ANDROID-CONCEPT.md#what-the-phone-changes)).
+2. Android · **Sharing.** Members, roles, share, leave; removing a member stays on Windows (it rotates the key).
 
 ## 0.13
 1. Both · **Events and qualifiers.**

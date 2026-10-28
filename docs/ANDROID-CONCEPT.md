@@ -1,19 +1,20 @@
 # kofrenot: Android concept
 
-An Android client for **server vaults**: the same vaults as on Windows, read on the phone, offline, their notes edited and files added there since 0.10. Released in 0.9 ([CHANGELOG.md](../CHANGELOG.md#09---2026-10-26)); what is later or open is marked so.
+An Android client for **server vaults**: the same vaults as on Windows, read on the phone, offline, their notes edited and files added there since 0.10, their nodes changed there since 0.12. Released in 0.9 ([CHANGELOG.md](../CHANGELOG.md#09---2026-10-26)); what is later or open is marked so.
 
 ```
  Windows (kofrenot.App)          Kofre server            Android (kofrenot.Android)
 ┌──────────────────────┐       ┌──────────────┐        ┌──────────────────────┐
-│ read, add, edit,     │◄─────►│ stores       │◄──────►│ read, search, edit   │
-│ share, folder vaults │ sync  │ (encrypted)  │  sync  │ notes, add files     │
+│ read, add, edit,     │◄─────►│ stores       │◄──────►│ read, search, add,   │
+│ share, folder vaults,│ sync  │ (encrypted)  │  sync  │ edit, delete nodes,  │
+│ types, keys          │       │              │        │ invite members       │
 └──────────────────────┘       └──────────────┘        └──────────────────────┘
 ```
 
 ## Scope
 
 ### Supported
-What the phone does, beside Windows: the [feature matrix](../README.md#windows-and-android); how to use it: [On Android](../README.md#on-android); what comes next: [ROADMAP.md](../ROADMAP.md). The first version (0.9) only read; since 0.10 the phone also edits notes and adds files, and nothing else ([Content only, safely](#content-only-safely)). Below: why it differs, and how.
+What the phone does, beside Windows: the [feature matrix](../README.md#windows-and-android); how to use it: [On Android](../README.md#on-android); what comes next: [ROADMAP.md](../ROADMAP.md). The first version (0.9) only read; since 0.10 the phone also edits notes and adds files; since 0.12 it changes the vault's nodes too, and leaves what defines the vault to Windows ([What the phone changes](#what-the-phone-changes)). Below: why it differs, and how.
 
 ### Not supported
 | Feature | Why |
@@ -21,11 +22,21 @@ What the phone does, beside Windows: the [feature matrix](../README.md#windows-a
 | **Folder vaults** | A phone has no shared folder to sync; server vaults cover it. Never planned |
 | Tray, global hotkeys, window positions, single instance, drag export | Windows desktop features, no Android counterpart |
 | Account setup on the phone: choosing the account pass phrase, recovery key, pass phrase change | They write account data: done on Windows first |
-| Vault upgrade, attach, key rotation, delete from server | They write to the vault or the store |
+| Vault upgrade, attach, key rotation, delete from server; a member removed (it rotates the key) | They write to the vault or the store |
+| Your node types, link types and aliases; the vault's name | They define the vault: changed on Windows ([What the phone changes](#what-the-phone-changes)) |
 | Update check (GitHub releases) | Depends on the distribution ([Open questions](#open-questions)) |
 
-## Content only, safely
-The phone must not leave a vault in a state Windows cannot fix. Rule: **the phone writes content only** (a note saved, a file imported as a new dataset, text shared by another app as a new note: `ClientMode.Content`); everything else (nodes, links, pins, types and field values, the vault itself, members, keys) is refused in Core, and left to Windows. Its writes go to its mirror, then to the server at the next sync, as on Windows.
+## What the phone changes
+The phone must not leave a vault in a state Windows cannot fix. Rule (since 0.12, `ClientMode.Phone`): **the phone changes the vault's nodes, never what defines the vault**. `PhoneChanges` checks every change in Core, not only the screens; its writes go to its mirror, then to the server at the next sync, as on Windows.
+
+| The phone writes | Left to Windows |
+| --- | --- |
+| Nodes and links added; names, colours, pins; nodes and links deleted (asked first) | Your node types, link types and aliases (their definitions, a removal of one) |
+| Fields filled; types added to a node, taken out | The vault's name; upgrade, attach, keys, key rotation |
+| Notes, files, photos; a version restored | A member removed (it rotates the vault key) |
+| Members invited, roles changed; leaving a vault shared with you | Vaults created, moved, deleted; the account's pass phrase, recovery key |
+
+Before 0.12 the phone wrote content only (`ClientMode.Content`: notes and files).
 
 | Case | On Android |
 | --- | --- |
@@ -65,7 +76,7 @@ kofrenot.App      (WPF, net10.0-windows)          kofrenot.Android   (Avalonia, 
 | Data folder | `AppFiles` (`%LocalAppData%`, portable) | The app's private files folder |
 | Logs | `ILog`, Serilog in App | Same rules, a file in the app's folder |
 | Sync timing, sign-in, opening a vault | `SyncService`, `ServerConnection`, `VaultSession` in Core (`Session/`: `TimeProvider` timers, `IUiThread`, `ISessionQuestions`) | `AvaloniaUiThread` on Avalonia's dispatcher; `PreparedAnswers`: Android has no dialog that waits, so the pass phrase is asked on its own screen first, then the session called with it |
-| Content only | — | `VaultSession` made with `ClientMode.Content`: other writes refused in Core, not only hidden by the screens |
+| What the phone changes | — | `VaultSession` made with `ClientMode.Phone`: a change that defines the vault refused in Core (`PhoneChanges`), not only hidden by the screens |
 | Vault refresh after a download | `VaultWatcher` (`FileSystemWatcher`) | Read after each sync (`VaultSession.AfterSync`): no watcher (`NothingToWatch`) |
 | Thumbnails | `IThumbnailMaker` | `AndroidThumbnailMaker` (since 0.10, for the images added on the phone) |
 

@@ -17,6 +17,7 @@ It covers kofrenot on Windows and on Android; versions before 0.9 ran on Windows
 
 ### Changed
 - **Android**
+  - **The phone changes the vault's nodes**, no longer only notes and files: what defines a vault (your node types, link types and aliases, its name, its keys, a member removed) stays with kofrenot on Windows, and is refused in Core ([ANDROID-CONCEPT.md](docs/ANDROID-CONCEPT.md#what-the-phone-changes)).
   - **Compact lists**: the rows of the home, of views and of a node's links keep their two lines (name, then type) with less empty space around them, so more fit on the screen; a row is still easy to tap.
 
 ## [0.11] - 2026-10-28

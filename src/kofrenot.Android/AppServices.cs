@@ -15,7 +15,7 @@ namespace Kofrenot.Phone;
 
 /// <summary>
 /// What kofrenot holds on the phone, wired once: its files in the app's private folder, the log,
-/// the server account, the syncs, the session, which edits notes and files only, and the files
+/// the server account, the syncs, the session, which changes the vault's nodes only, and the files
 /// opened with other apps and the photos and videos taken, deleted at each start.
 /// </summary>
 public sealed class AppServices : IDisposable
@@ -30,7 +30,7 @@ public sealed class AppServices : IDisposable
         var ui = new AvaloniaUiThread();
         Server = new ServerConnection(Settings, new ServerSessionMemory(Files.ServerSession, protector, log), new AccountIdentities(Files.AccountIdentity, log), new VaultOwners(Files.VaultOwners, log), ui, log, exchanges: new ExchangeStats(Files.ExchangeStats, log: log));
         Sync = new SyncService(Settings, Files, Server, ui, log);
-        Session = new VaultSession(Settings, Files, new KeyMemory(Files.RememberedKeys, protector, log), new VaultNameMemory(Files.VaultNames, protector, log), Server, Sync, ui, new NothingToWatch(), new AndroidThumbnailMaker(), log, mode: ClientMode.Content);
+        Session = new VaultSession(Settings, Files, new KeyMemory(Files.RememberedKeys, protector, log), new VaultNameMemory(Files.VaultNames, protector, log), Server, Sync, ui, new NothingToWatch(), new AndroidThumbnailMaker(), log, mode: ClientMode.Phone);
         Recent = new RecentNodes(Files.RecentNodes, log);
         ViewTabs = new ViewTabs(Files.ViewTabs, log);
         log.Info("App", $"kofrenot {Version} for Android started");
