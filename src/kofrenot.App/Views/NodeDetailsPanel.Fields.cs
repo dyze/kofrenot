@@ -13,18 +13,13 @@ namespace Kofrenot.UI.Views;
 /// <summary>
 /// A node's fields (<see cref="NodeFields"/>), each edited in place (<see cref="FieldPlanner"/>): a
 /// text, number, date or address in a box (<see cref="NodeDetailsPanel"/>'s FieldEdit), a checkbox,
-/// a choice in a list. A tab per type, then "Its own", when the node has fields of both, or of several
-/// types: the tab chosen is kept by its name, from node to node. A value set on two devices offers each
-/// to keep, its tab marked; two fields of one name offer to merge them. Add field… adds one of the
-/// node's own, with its first value.
+/// a choice in a list, those of the tab shown (NodeDetailsPanel's Tabs). A value set on two devices
+/// offers each to keep, its tab marked; two fields of one name offer to merge them. Add field… adds
+/// one of the node's own, with its first value.
 /// </summary>
 public partial class NodeDetailsPanel
 {
     private const string ClearChoice = "—";
-    private const string OwnTab = "Its own";
-
-    // The tab of fields shown, by its name: kept from node to node.
-    private string? _fieldTab;
 
     private void ShowFields(NodeDetails details)
     {
@@ -33,64 +28,18 @@ public partial class NodeDetailsPanel
         FieldGrid.Children.Clear();
         FieldGrid.RowDefinitions.Clear();
         var canEdit = WriteChanges is not null;
-        var groups = details.Fields.GroupBy(TabOf).ToList();
-        var shown = groups.FirstOrDefault(group => group.Key == _fieldTab) ?? groups.FirstOrDefault();
-        ShowFieldTabs(groups, shown?.Key);
-        foreach (var field in shown ?? Enumerable.Empty<NodeField>())
+        foreach (var field in ShowTabs(details))
         {
             AddFieldRow(field, details.Fields, canEdit);
         }
 
         TypeBack(typing);
 
-        AddFieldButton.Visibility = canEdit ? Visibility.Visible : Visibility.Collapsed;
+        AddFieldButton.Visibility = canEdit && !(_shownTab?.IsContent ?? false) ? Visibility.Visible : Visibility.Collapsed;
         if (OwnFieldKind.ItemsSource is null)
         {
             OwnFieldKind.ItemsSource = FieldPlanner.OwnKinds;
             OwnFieldKind.SelectedIndex = 0;
-        }
-    }
-
-    private static string TabOf(NodeField field) => field.Type?.Name ?? OwnTab;
-
-    // A tab per group of fields when there are several: the one shown underlined, one in conflict marked.
-    private void ShowFieldTabs(IReadOnlyList<IGrouping<string, NodeField>> groups, string? shown)
-    {
-        FieldTabs.Children.Clear();
-        FieldTabs.Visibility = groups.Count > 1 ? Visibility.Visible : Visibility.Collapsed;
-        if (groups.Count < 2)
-        {
-            return;
-        }
-
-        foreach (var group in groups)
-        {
-            var isShown = group.Key == shown;
-            var tab = new Button
-            {
-                Margin = new Thickness(0, 0, 4, 0),
-                Padding = new Thickness(8, 2, 8, 2),
-                Focusable = false,
-                Style = (Style)FindResource("FlatButton"),
-                Content = new TextBlock
-                {
-                    Text = group.Any(field => field.Conflict.Count > 0) ? $"{group.Key} •" : group.Key,
-                    FontWeight = isShown ? FontWeights.SemiBold : FontWeights.Normal,
-                    TextDecorations = isShown ? TextDecorations.Underline : null,
-                },
-                ToolTip = group.Any(field => field.Conflict.Count > 0) ? "A value set on two devices: choose one" : null,
-            };
-            tab.Click += (_, _) => ShowFieldTab(group.Key);
-            FieldTabs.Children.Add(tab);
-        }
-    }
-
-    private void ShowFieldTab(string tab)
-    {
-        if (tab != _fieldTab && LeaveFields())
-        {
-            _fieldTab = tab;
-            Show();
         }
     }
 
@@ -273,7 +222,7 @@ public partial class NodeDetailsPanel
         if (OwnFieldKind.SelectedItem is FieldKind kind
             && WriteFields(planner => planner.AddOwn(Node, OwnFieldName.Text, kind, OwnFieldValue.Text), "Field of its own added"))
         {
-            _fieldTab = OwnTab;
+            ShowOwnTab();
             CloseOwnField();
             Show();
         }

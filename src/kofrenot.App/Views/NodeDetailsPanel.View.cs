@@ -13,7 +13,7 @@ public partial class NodeDetailsPanel
 
     private void ShowView(NodeDetails details)
     {
-        var isView = details.Node.Type == TypeCatalog.View.Id && Browser.Graph is not null;
+        var isView = details.Node.Type == TypeCatalog.View.Id && Browser.Graph is not null && ContentShown;
         ShowsLabel.Visibility = ShowsPanel.Visibility = isView ? Visibility.Visible : Visibility.Collapsed;
         if (isView)
         {

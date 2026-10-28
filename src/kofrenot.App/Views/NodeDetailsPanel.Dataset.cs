@@ -47,7 +47,7 @@ public partial class NodeDetailsPanel
 
     private void ShowDataset(NodeDetails details)
     {
-        var vault = details.Node.Type == TypeCatalog.Dataset.Id ? OpenVault?.Invoke() : null;
+        var vault = details.Node.Type == TypeCatalog.Dataset.Id && ContentShown ? OpenVault?.Invoke() : null;
         DatasetBox.Visibility = vault is null ? Visibility.Collapsed : Visibility.Visible;
         ContentColumn.Width = vault is null ? new GridLength(0) : new GridLength(1, GridUnitType.Star);
         if (vault is null)

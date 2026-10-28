@@ -19,7 +19,7 @@ Vault format 8: a vault upgraded is closed by kofrenot 0.10 and older, on Window
   - **Build date in About**: Settings > About and the log show the date and time of the build's commit beside its hash, in local time: `0.11-dev (a23478d, 2026-10-27 14:05)`.
 - **Windows**
   - **Your node types** in Settings > Node types: a name, an icon, a colour and fields. A field added shows empty on its nodes; one taken out, or a type removed, leaves its values on them as their own fields.
-  - **Fill fields** in a node's details, a value changed saved on leaving them, as a note; **Add field…** gives it a field of its own, in a tab *Its own*, the others in a tab per type; two fields of the same name are shown apart (*Born (Person)*, *Born (own)*) and merged on demand, keeping one value; a value set on two devices offers each to keep.
+  - **Fill fields** in a node's details, a value changed saved on leaving them, as a note; **Add field…** gives it a field of its own, with a tab per type (a note's text, a dataset's file or a view in its own) and *Its own* when a node has several; two fields of the same name are shown apart (*Born (Person)*, *Born (own)*) and merged on demand, keeping one value; a value set on two devices offers each to keep.
   - **Add type…** and **×** in a node's details add a type to a node and take one out.
   - **Copy node types from another vault**: Settings > Node types > **Copy from…** lists another vault's node types, each ticked, with what copying does; they keep their ids, so a type copied again is updated, not added twice. The other vault is only read ([README](README.md#node-types-and-fields)).
 - **Android**
