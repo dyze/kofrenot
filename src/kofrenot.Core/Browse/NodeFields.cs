@@ -10,21 +10,30 @@ namespace Kofrenot.Core.Browse;
 /// node no longer has, keeping its value. <see cref="Label"/> is its name, with where it comes from
 /// when another field has that name: <c>Born (Person)</c>, <c>Born (own)</c>.
 /// </summary>
-/// <param name="Values">Its current values; null before it is set.</param>
+/// <param name="Values">Its current values; null before it is set. An image's is its file (<see cref="Image"/>).</param>
 public sealed record NodeField(string Owner, string Field, string Name, FieldKind Kind, IReadOnlyList<string> Choices, NodeType? Type, string Label, FieldVersions? Values)
 {
     public bool IsOwn => Type is null;
 
-    /// <summary>The value shown; null when it has none.</summary>
+    /// <summary>The value shown; null when it has none, and for an image.</summary>
     public string? Value => Values?.Shown.Value;
 
-    /// <summary>The value as shown (<see cref="FieldValue.Display"/>); empty when it has none.</summary>
-    public string Display => Value is { } value ? FieldValue.Display(Kind, value) : string.Empty;
+    /// <summary>An image's version shown, its file stored as a dataset version's; null when it has none.</summary>
+    public FieldSet? Image => Values?.Shown is { File: not null } shown ? shown : null;
+
+    /// <summary>Whether it has a value, or an image.</summary>
+    public bool HasValue => Value is not null || Image is not null;
+
+    /// <summary>The value as shown (<see cref="FieldValue.Display"/>), an image's file name; empty when it has none.</summary>
+    public string Display => Values?.Shown is { } shown ? DisplayOf(shown) : string.Empty;
 
     /// <summary>The values set on two devices before they synced, oldest first, as shown; empty without a conflict.</summary>
     public IReadOnlyList<string> Conflict => Values is { IsConflict: true } values
-        ? values.Current.Select(version => version.Value is { } value ? FieldValue.Display(Kind, value) : "(none)").ToList()
+        ? values.Current.Select(version => DisplayOf(version) is { Length: > 0 } shown ? shown : "(none)").ToList()
         : [];
+
+    private string DisplayOf(FieldSet version) =>
+        version.File?.Name ?? (version.Value is { } value ? FieldValue.Display(Kind, value) : string.Empty);
 
     /// <summary>The ids of its current values: what a new value replaces.</summary>
     public IReadOnlyList<Guid> Current => Values?.Current.Select(version => version.Id).ToList() ?? [];
@@ -46,12 +55,12 @@ public static class NodeFields
         var fields = new List<(string Owner, FieldDefinition Field, NodeType? Type)>();
         foreach (var type in graph.TypeIdsOf(node).Select(graph.Types.FindNodeType).OfType<NodeType>())
         {
-            fields.AddRange(type.Fields.Where(field => field.Kind.IsSmall()).Select(field => (type.Id, field, (NodeType?)type)));
+            fields.AddRange(type.Fields.Where(field => !field.Kind.IsContent()).Select(field => (type.Id, field, (NodeType?)type)));
         }
 
         var ofTypes = fields.Select(field => (field.Owner, field.Field.Id)).ToHashSet();
         fields.AddRange(graph.FieldsOf(node)
-            .Where(field => !ofTypes.Contains((field.Owner, field.Field)) && field.Shown.Value is not null)
+            .Where(field => !ofTypes.Contains((field.Owner, field.Field)) && (field.Shown.Value is not null || field.Shown.File is not null))
             .Select(field => (field.Owner, new FieldDefinition(field.Field, field.Shown.Name, field.Shown.Kind), (NodeType?)null)));
 
         var sameName = fields.GroupBy(field => NameKey.Of(field.Field.Name)).Where(names => names.Count() > 1).Select(names => names.Key).ToHashSet();

@@ -15,7 +15,7 @@ public sealed record NodeType(string Id, string Name, IReadOnlyList<FieldDefinit
     }
 
     /// <summary>Whether its nodes have content (a note's text, a dataset's file, a view's definition): a node has one such type at most.</summary>
-    public bool HasContent => Fields.Any(definition => !definition.Kind.IsSmall());
+    public bool HasContent => Fields.Any(definition => definition.Kind.IsContent());
 
     public bool Equals(NodeType? other) => other is not null && other.Id == Id;
 

@@ -218,9 +218,28 @@ public sealed partial class VaultSession : IDisposable
     /// open, it closed meanwhile, or a file cannot be read or written (the user is told).
     /// <paramref name="progress"/> is told the bytes sealed so far.
     /// </summary>
-    public async Task<bool> SaveDataset(ISessionQuestions ask, DatasetEdited version, Func<Stream> open, IProgress<long>? progress = null)
+    public Task<bool> SaveDataset(ISessionQuestions ask, DatasetEdited version, Func<Stream> open, IProgress<long>? progress = null)
     {
-        if (Current is not { } vault || !CanWrite(ask, content: true) || !_importing.Add(version.Node))
+        var replaced = version.Replaces.Count > 1 ? $", a conflict of {version.Replaces.Count} versions resolved" : string.Empty;
+        return SaveFile(ask, version, open, progress, version, $"Dataset imported ({version.File.Size} bytes{replaced})", isContent: true);
+    }
+
+    /// <summary>
+    /// Saves an image chosen for an image field (<see cref="FieldPlanner.SetImage"/>): its files (its
+    /// thumbnail, then the image, read from <paramref name="open"/>) written off the UI thread, as a
+    /// dataset's are, then its change. False as <see cref="SaveDataset"/>.
+    /// </summary>
+    /// <exception cref="ArgumentException"><paramref name="value"/> has no image.</exception>
+    public Task<bool> SaveImage(ISessionQuestions ask, FieldSet value, Func<Stream> open)
+    {
+        var image = value.Image ?? throw new ArgumentException("The value has no image", nameof(value));
+        return SaveFile(ask, image, open, progress: null, value, $"Field image set ({image.File.Size} bytes)", isContent: false);
+    }
+
+    // Writes a file as a dataset version's off the UI thread, then the change that has it.
+    private async Task<bool> SaveFile(ISessionQuestions ask, DatasetEdited file, Func<Stream> open, IProgress<long>? progress, Change change, string action, bool isContent)
+    {
+        if (Current is not { } vault || !CanWrite(ask, isContent) || !_importing.Add(file.Node))
         {
             return false;
         }
@@ -228,23 +247,22 @@ public sealed partial class VaultSession : IDisposable
         Changed?.Invoke();
         try
         {
-            await Task.Run(() => vault.WriteDataset(version, open, _thumbnails, progress));
+            await Task.Run(() => vault.WriteDataset(file, open, _thumbnails, progress));
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidDataException)
         {
             // The message names the file: shown, not logged.
-            _log.Warn("Action", $"Cannot import the dataset's file ({ex.GetType().Name})");
+            _log.Warn("Action", $"Cannot import the file ({ex.GetType().Name})");
             ask.Tell($"Cannot import the file.\n\n{ex.Message}");
             return false;
         }
         finally
         {
-            _importing.Remove(version.Node);
+            _importing.Remove(file.Node);
             Changed?.Invoke();
         }
 
-        var replaced = version.Replaces.Count > 1 ? $", a conflict of {version.Replaces.Count} versions resolved" : string.Empty;
-        return Current == vault && Append(ask, vault, [version], $"Dataset imported ({version.File.Size} bytes{replaced})", isContent: true);
+        return Current == vault && Append(ask, vault, [change], action, isContent: isContent);
     }
 
     /// <summary>

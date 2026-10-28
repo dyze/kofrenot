@@ -112,9 +112,9 @@ public sealed class NodeTypePlanner(KnowledgeGraph graph, TimeProvider? clock = 
         }
 
         var fields = draft.Fields.Select(FieldOf).ToList();
-        if (fields.Any(field => !field.Kind.IsSmall()))
+        if (fields.Any(field => field.Kind.IsContent()))
         {
-            throw new ArgumentException("A type of the user's has small fields only", nameof(draft));
+            throw new ArgumentException("A type of the user's has no content field", nameof(draft));
         }
 
         if (fields.Any(field => field.Name.Length == 0))

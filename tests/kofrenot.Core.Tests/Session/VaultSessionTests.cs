@@ -554,6 +554,29 @@ public sealed class VaultSessionTests : IDisposable
     }
 
     [Fact]
+    public async Task AnImage_IsSaved_AsADatasetVersionsFile_ThenItsValue()
+    {
+        _device.CreateFolderVault();
+        var portrait = new FieldDefinition("portrait", "Portrait", FieldKind.Image);
+        Session.Write(Ask, new NodeTypeDefined(Guid.NewGuid(), Start, "person", "Person", null, null, [portrait], []), "Node type added");
+        var bruce = AddNode("Bruce", "person");
+        var source = _device.Folder("bruce.png");
+        File.WriteAllText(source, "not really a png");
+        var field = NodeFields.Of(_device.Vault.Graph, bruce.Id).Single();
+        var value = Assert.IsType<FieldSet>(Assert.Single(new FieldPlanner(_device.Vault.Graph).SetImage(bruce, field, DatasetFiles.Describe(source)).Changes));
+
+        Assert.True(await Session.SaveImage(Ask, value, () => File.OpenRead(source)));
+
+        Assert.True(_device.Vault.Datasets.Exists(value.Id));
+        Assert.Equal("bruce.png", NodeFields.Of(_device.Vault.Graph, bruce.Id).Single().Display);
+        using var target = new MemoryStream();
+        Assert.True(await Session.ExportDataset(Ask, value.Image!, target));
+        Assert.Equal("not really a png", System.Text.Encoding.UTF8.GetString(target.ToArray()));
+        Assert.Contains(_device.Log.Entries, entry => entry.Message == "Field image set (16 bytes)");
+        await Assert.ThrowsAsync<ArgumentException>(() => Session.SaveImage(Ask, value with { File = null }, () => File.OpenRead(source)));
+    }
+
+    [Fact]
     public async Task ADataset_IsExported_ToAStream()
     {
         _device.CreateFolderVault();

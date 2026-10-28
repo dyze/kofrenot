@@ -57,12 +57,15 @@ public sealed record NodeTypeDefined(
     IReadOnlyList<Guid> Replaces) : Change(Id, At), IReplacing;
 
 /// <summary>
-/// A value of a field of <see cref="Node"/>, or none when <see cref="Value"/> is null. <see cref="Owner"/>
-/// is the node type the field belongs to, or <see cref="Own"/> for a field of the node's own;
-/// <see cref="Field"/> is the field's id. Its <see cref="Name"/> and <see cref="Kind"/> are written
-/// with it, so a value whose field left its type still shows. <see cref="Replaces"/> are the values
-/// of the same field it was written over (none for the first): two replacing the same one, neither
-/// knowing the other, make a conflict.
+/// A value of a field of <see cref="Node"/>, or none when <see cref="Value"/> and <see cref="File"/>
+/// are null. <see cref="Owner"/> is the node type the field belongs to, or <see cref="Own"/> for a
+/// field of the node's own; <see cref="Field"/> is the field's id. Its <see cref="Name"/> and
+/// <see cref="Kind"/> are written with it, so a value whose field left its type still shows. An
+/// <see cref="FieldKind.Image"/>'s value is its <see cref="File"/>: its content and thumbnail are
+/// kept as a dataset version's, named by this change's id, or by <see cref="Content"/>, the change
+/// whose file it keeps (one of a conflict kept) (<see cref="Image"/>). <see cref="Replaces"/>
+/// are the values of the same field it was written over (none for the first): two replacing the
+/// same one, neither knowing the other, make a conflict.
 /// </summary>
 public sealed record FieldSet(
     Guid Id,
@@ -73,10 +76,18 @@ public sealed record FieldSet(
     string Name,
     FieldKind Kind,
     string? Value,
-    IReadOnlyList<Guid> Replaces) : Change(Id, At), INodeVersion
+    IReadOnlyList<Guid> Replaces,
+    DatasetFile? File = null,
+    Guid? Content = null) : Change(Id, At), INodeVersion
 {
     /// <summary>The <see cref="Owner"/> of a field of the node's own.</summary>
     public const string Own = "own";
+
+    /// <summary>
+    /// An image's file as the dataset version it is stored as (never written as one): what reads,
+    /// downloads, shows and exports it. Null without a file.
+    /// </summary>
+    public DatasetEdited? Image => File is { } file ? new DatasetEdited(Content ?? Id, At, Node, file, []) : null;
 }
 
 /// <summary>

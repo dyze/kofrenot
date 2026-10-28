@@ -239,19 +239,26 @@ internal sealed record ChangeData(
 
     /// <summary>
     /// <c>"field": { "node": "…", "owner": "&lt;type id&gt;", "id": "…", "name": "Born", "kind": "date", "value": "1920-10-08", "replaces": [] }</c>;
-    /// <c>"owner": "own"</c> for a field of the node's own, no value to clear it.
+    /// <c>"owner": "own"</c> for a field of the node's own, no value to clear it. An image has a
+    /// <c>"file": { "name": "…", "size": 1, "sha256": "…" }</c> instead of a value, and the
+    /// <c>"content"</c> change whose file it keeps when not its own.
     /// </summary>
-    internal sealed record FieldData(Guid Node, string? Owner, string? Id, string? Name, string? Kind, string? Value, List<Guid>? Replaces)
+    internal sealed record FieldData(Guid Node, string? Owner, string? Id, string? Name, string? Kind, string? Value, List<Guid>? Replaces, FileData? File = null, Guid? Content = null)
     {
         public static FieldData From(FieldSet field) =>
-            new(field.Node, field.Owner, field.Field, field.Name, FieldKinds.NameOf(field.Kind), field.Value, [.. field.Replaces]);
+            new(field.Node, field.Owner, field.Field, field.Name, FieldKinds.NameOf(field.Kind), field.Value, [.. field.Replaces], field.File is { } file ? FileData.From(file) : null, field.Content);
 
         /// <summary>The change, or null when incomplete, or with a value its kind does not write.</summary>
         public FieldSet? ToChange(Guid id, DateTimeOffset at) =>
             Node != Guid.Empty && Owner is { Length: > 0 } && Id is { Length: > 0 } && !string.IsNullOrWhiteSpace(Name)
-            && FieldKinds.Parse(Kind) is { } kind && Replaces is not null && (Value is null || FieldValue.IsValid(kind, Value))
-                ? new FieldSet(id, at, Node, Owner, Id, Name, kind, Value, Replaces)
+            && FieldKinds.Parse(Kind) is { } kind && Replaces is not null && HasValueOf(kind)
+                ? new FieldSet(id, at, Node, Owner, Id, Name, kind, Value, Replaces, File?.ToFile(), Content)
                 : null;
+
+        // An image has a file or none (its content only with a file), the other kinds a value they write or none.
+        private bool HasValueOf(FieldKind kind) => kind == FieldKind.Image
+            ? Value is null && (File is null ? Content is null : IsComplete(File) && Content != Guid.Empty)
+            : File is null && Content is null && (Value is null || FieldValue.IsValid(kind, Value));
     }
 
     /// <summary><c>"vault": { "name": "Personal", "replaces": ["…"] }</c></summary>

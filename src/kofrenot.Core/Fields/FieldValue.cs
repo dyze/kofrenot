@@ -44,6 +44,7 @@ public static class FieldValue
             FieldKind.Url => ParseUrl(typed),
             FieldKind.Checkbox => ParseCheckbox(typed),
             FieldKind.Choice => ParseChoice(typed, choices ?? []),
+            FieldKind.Image => FieldInput.Refused("An image is chosen, not typed in"),
             _ => FieldInput.Refused($"A {FieldKinds.NameOf(kind)} is not typed in"),
         };
     }

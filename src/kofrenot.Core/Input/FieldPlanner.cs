@@ -1,4 +1,5 @@
 using Kofrenot.Core.Browse;
+using Kofrenot.Core.Datasets;
 using Kofrenot.Core.Fields;
 using Kofrenot.Core.Graph;
 
@@ -47,8 +48,14 @@ public sealed record FieldPlan(FieldProblem Problem, string? Error, IReadOnlyLis
 /// </summary>
 public sealed class FieldPlanner(KnowledgeGraph graph, TimeProvider? clock = null)
 {
-    /// <summary>The kinds a field of a node's own can have: a choice needs its options, from a type.</summary>
+    /// <summary>The kinds a field of a node's own can have, typed: a choice needs its options, from a type.</summary>
     public static IReadOnlyList<FieldKind> OwnKinds { get; } = FieldKinds.Small.Where(kind => kind != FieldKind.Choice).ToList();
+
+    /// <summary>Why <paramref name="file"/> cannot be an image field's: null when it can (one kofrenot shows, small enough to decode).</summary>
+    public static string? WhyNotImage(DatasetFile file) =>
+        DatasetType.Of(file).Viewer != DatasetViewer.Image ? $"“{file.Name}” is not an image kofrenot shows: choose a PNG, JPEG, GIF, BMP, TIFF or WebP."
+        : file.Size > DatasetType.MaxImageSize ? $"“{file.Name}” is too large for an image field: {ByteSize.Format(DatasetType.MaxImageSize)} at most."
+        : null;
 
     private readonly TimeProvider _clock = clock ?? TimeProvider.System;
 
@@ -69,8 +76,22 @@ public sealed class FieldPlanner(KnowledgeGraph graph, TimeProvider? clock = nul
 
     public FieldPlan Clear(Node node, NodeField field) => Write(node, field, value: null);
 
-    /// <summary>Keeps one of the values of a conflict (<see cref="FieldVersions.Current"/>).</summary>
-    public FieldPlan Keep(Node node, NodeField field, FieldSet version) => Write(node, field, version.Value);
+    /// <summary>An image chosen for an image field: its file is written with the change (<c>VaultSession.SaveImage</c>).</summary>
+    public FieldPlan SetImage(Node node, NodeField field, DatasetFile file)
+    {
+        if (field.Kind != FieldKind.Image)
+        {
+            throw new ArgumentException("Not an image field", nameof(field));
+        }
+
+        return WhyNotImage(file) is { } why ? FieldPlan.Refused(FieldProblem.Invalid, why) : Write(node, field, value: null, file);
+    }
+
+    /// <summary>Keeps one of the values of a conflict (<see cref="FieldVersions.Current"/>); an image keeps its file, written already.</summary>
+    public FieldPlan Keep(Node node, NodeField field, FieldSet version) =>
+        version.File is null
+            ? Write(node, field, version.Value)
+            : new FieldPlan(FieldProblem.None, Error: null, [version with { Id = Guid.NewGuid(), At = _clock.GetUtcNow(), Replaces = field.Current, Content = version.Content ?? version.Id }]);
 
     /// <summary>A field of the node's own, with its first value.</summary>
     public FieldPlan AddOwn(Node node, string nameText, FieldKind kind, string text)
@@ -117,11 +138,11 @@ public sealed class FieldPlanner(KnowledgeGraph graph, TimeProvider? clock = nul
         return new FieldPlan(FieldProblem.None, Error: null, changes);
     }
 
-    private FieldPlan Write(Node node, NodeField field, string? value) =>
-        field.Value == value && field.Values is not { IsConflict: true }
+    private FieldPlan Write(Node node, NodeField field, string? value, DatasetFile? file = null) =>
+        field.Value == value && field.Image?.File == file && field.Values is not { IsConflict: true }
             ? FieldPlan.Refused(FieldProblem.Unchanged)
-            : new FieldPlan(FieldProblem.None, Error: null, [ValueOf(node, field, value, _clock.GetUtcNow())]);
+            : new FieldPlan(FieldProblem.None, Error: null, [ValueOf(node, field, value, _clock.GetUtcNow(), file)]);
 
-    private static FieldSet ValueOf(Node node, NodeField field, string? value, DateTimeOffset at) =>
-        new(Guid.NewGuid(), at, node.Id, field.Owner, field.Field, field.Name, field.Kind, value, field.Current);
+    private static FieldSet ValueOf(Node node, NodeField field, string? value, DateTimeOffset at, DatasetFile? file = null) =>
+        new(Guid.NewGuid(), at, node.Id, field.Owner, field.Field, field.Name, field.Kind, value, field.Current, file);
 }
