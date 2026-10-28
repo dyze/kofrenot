@@ -76,6 +76,7 @@ public sealed partial class HomePage : UserControl, IPage
         // Notes and files are edited here; a reader edits nothing.
         ReadOnlyBanner.IsVisible = _shell.Services.Session.IsReadOnly;
         AddFilesButton.IsVisible = !_shell.Services.Session.IsReadOnly;
+        TakePhotoItem.IsVisible = RecordVideoItem.IsVisible = _shell.Services.Camera.IsAvailable;
         ReadOnlyText.Text = "Shared with you to read only.";
         SyncChanged();
         ShowTabs(vault);

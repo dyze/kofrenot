@@ -11,6 +11,8 @@ It covers kofrenot on Windows and on Android; versions before 0.9 ran on Windows
 ### Added
 - **Both**
   - **History**: a node's versions, newest first: its text, file or view definition, its names, colours and field values, each with when and what it held, read offline. On Windows, the clock beside the pin lists them and **Restore** writes one again as the current version, after a confirmation; restoring a version of a conflict resolves it, and nothing is lost: the others stay in the history. On Android, the node's page lists them under *History*, to restore on Windows ([README](README.md#node-details)).
+- **Android**
+  - **Take a photo or record a video** under **＋**: the phone's camera app takes it, the same preview as for files names it after when it was taken, then it becomes a dataset. It is written into kofrenot's own files, not the gallery, with no camera permission asked, and deleted once added or cancelled ([README](README.md#on-android)).
 
 ### Changed
 - **Android**

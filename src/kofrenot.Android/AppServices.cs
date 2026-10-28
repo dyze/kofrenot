@@ -16,11 +16,11 @@ namespace Kofrenot.Phone;
 /// <summary>
 /// What kofrenot holds on the phone, wired once: its files in the app's private folder, the log,
 /// the server account, the syncs, the session, which edits notes and files only, and the files
-/// opened with other apps, deleted at each start.
+/// opened with other apps and the photos and videos taken, deleted at each start.
 /// </summary>
 public sealed class AppServices : IDisposable
 {
-    public AppServices(string dataDirectory, AppChooser chooser, PickedFiles picked)
+    public AppServices(string dataDirectory, AppChooser chooser, PickedFiles picked, CameraCapture camera)
     {
         Files = new AppFiles(dataDirectory, AppContext.BaseDirectory);
         Settings = new SettingsStore(Files.Settings, Files.MirrorOf);
@@ -38,6 +38,9 @@ public sealed class AppServices : IDisposable
         Picked = picked;
         Opened = new OpenedFiles(chooser.Folder, log);
         Opened.Clear();
+        Camera = camera;
+        Captures = new OpenedFiles(camera.Folder, log);
+        Captures.Clear();
     }
 
     /// <summary>The version with its commit and the commit's date, for Settings > About and the log.</summary>
@@ -66,6 +69,11 @@ public sealed class AppServices : IDisposable
     public AppChooser Chooser { get; }
 
     public PickedFiles Picked { get; }
+
+    public CameraCapture Camera { get; }
+
+    /// <summary>The photos and videos taken, until they are added (or at the next start).</summary>
+    public OpenedFiles Captures { get; }
 
     public void Dispose()
     {

@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- What FileProvider may hand to another app: the files of OpenedFiles, nothing else of the app. -->
+<!-- What FileProvider may hand to another app: the files opened with it, the photo or video the camera app
+     writes (CameraCapture), nothing else of the app. -->
 <paths>
   <cache-path name="open" path="open/" />
+  <cache-path name="camera" path="camera/" />
 </paths>

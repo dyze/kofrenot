@@ -38,6 +38,25 @@ public sealed class OpenedFilesTests : IDisposable
     }
 
     [Fact]
+    public void Delete_DeletesOneFile_WithItsFolder_AndNothingElse()
+    {
+        var opened = new OpenedFiles(_temp.Sub("open"));
+        var photo = opened.NewPath("photo.jpg");
+        File.WriteAllText(photo, "a");
+        var kept = opened.NewPath("b.txt");
+        var outside = _temp.Sub("other.txt");
+        File.WriteAllText(outside, "c");
+
+        opened.Delete(photo);
+        opened.Delete(photo);
+        opened.Delete(outside);
+
+        Assert.False(Directory.Exists(Path.GetDirectoryName(photo)));
+        Assert.True(Directory.Exists(Path.GetDirectoryName(kept)));
+        Assert.True(File.Exists(outside));
+    }
+
+    [Fact]
     public void Clear_WithNothingOpened_DoesNothing()
     {
         new OpenedFiles(_temp.Sub("open")).Clear();

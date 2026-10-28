@@ -24,7 +24,21 @@ public sealed class MainActivity : AvaloniaMainActivity
         // The vault's content stays out of the recent apps list and of screenshots.
         Window?.SetFlags(WindowManagerFlags.Secure, WindowManagerFlags.Secure);
         base.OnCreate(savedInstanceState);
+        App.Current?.Shown(this);
         Received(Intent);
+    }
+
+    protected override void OnDestroy()
+    {
+        App.Current?.Shown(null);
+        base.OnDestroy();
+    }
+
+    // The camera app is done; the file picker's results go on to Avalonia.
+    protected override void OnActivityResult(int requestCode, Result resultCode, Intent? data)
+    {
+        base.OnActivityResult(requestCode, resultCode, data);
+        App.Current?.ActivityFinished(requestCode, resultCode);
     }
 
     protected override void OnNewIntent(Intent? intent)

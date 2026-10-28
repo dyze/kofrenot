@@ -76,5 +76,11 @@ public sealed partial class App : Application
     private AppServices Services => _services ??= ServicesOf(global::Android.App.Application.Context);
 
     private static AppServices ServicesOf(global::Android.Content.Context context) =>
-        new(context.FilesDir!.AbsolutePath, new AppChooser(context), new PickedFiles(context));
+        new(context.FilesDir!.AbsolutePath, new AppChooser(context), new PickedFiles(context), new CameraCapture(context));
+
+    /// <summary>The activity shown, or none: what starts the camera app.</summary>
+    public void Shown(global::Android.App.Activity? activity) => Services.Camera.Activity = activity;
+
+    /// <summary>An app started for a result is done (the camera app).</summary>
+    public void ActivityFinished(int requestCode, global::Android.App.Result result) => Services.Camera.Finished(requestCode, result);
 }
