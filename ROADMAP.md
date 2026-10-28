@@ -17,12 +17,11 @@ Scope of each planned version. Implemented features move to [CHANGELOG.md](CHANG
 | 0.11    | Released  | Composition: node types made of fields, several per node; fields of a node's own   |
 
 ## 0.12
-1. Both · **Restore previous versions.** A node's versions are listed, so a mistake can be undone by restoring one of them.
-2. Android · **Add and edit.** Input box, creation screen, renames, colours, pins (notes and files: 0.10).
-3. Android · **Import from the camera.** A photo or video taken from kofrenot becomes a dataset, after the same preview as **＋**, without passing through the phone's gallery.
-4. Android · **Sharing.** Members, roles, share, leave.
-5. Both · Stores **statistics** about data exchanges with server. It could be useful for analysing performance problems.
-6. Android · **Compact lists**. Today lists use entries that have too much empty space.
+1. Android · **Add and edit.** Input box, creation screen, renames, colours, pins (notes and files: 0.10).
+2. Android · **Import from the camera.** A photo or video taken from kofrenot becomes a dataset, after the same preview as **＋**, without passing through the phone's gallery.
+3. Android · **Sharing.** Members, roles, share, leave.
+4. Both · Stores **statistics** about data exchanges with server. It could be useful for analysing performance problems.
+5. Android · **Compact lists**. Today lists use entries that have too much empty space.
 
 ## 0.13
 1. Both · **Events and qualifiers.**

@@ -8,6 +8,10 @@ It covers kofrenot on Windows and on Android; versions before 0.9 ran on Windows
 
 ## [Unreleased]
 
+### Added
+- **Both**
+  - **History**: a node's versions, newest first: its text, file or view definition, its names, colours and field values, each with when and what it held, read offline. On Windows, the clock beside the pin lists them and **Restore** writes one again as the current version, after a confirmation; restoring a version of a conflict resolves it, and nothing is lost: the others stay in the history. On Android, the node's page lists them under *History*, to restore on Windows ([README](README.md#node-details)).
+
 ## [0.11] - 2026-10-28
 
 Vault format 8: a vault upgraded is closed by kofrenot 0.10 and older, on Windows and Android ([Format](docs/ARCHITECTURE.md#format)).

@@ -422,6 +422,43 @@ public sealed class VaultSessionTests : IDisposable
     }
 
     [Fact]
+    public async Task ANotesOldText_IsRestored_AsANewVersion()
+    {
+        _device.CreateFolderVault();
+        var node = AddNode("Dune", TypeCatalog.Note.Id);
+        var first = new NoteEdited(Guid.NewGuid(), Start, node.Id, []);
+        Session.SaveNote(Ask, first, "# Spice");
+        Session.SaveNote(Ask, new NoteEdited(Guid.NewGuid(), Start.AddMinutes(1), node.Id, [first.Id]), "# Sand");
+        var graph = _device.Vault.Graph;
+        var entry = Assert.Single(NodeHistory.Of(graph, node), entry => entry.Id == first.Id);
+
+        Assert.True(await Session.Restore(Ask, new RestorePlanner(graph).Plan(node, entry)!));
+
+        Assert.Equal("# Spice", _device.Vault.ReadNote(Assert.Single(graph.NoteVersionsOf(node.Id)).Id));
+        Assert.Equal(3, NodeHistory.Of(graph, node).Count(version => version.Kind == VersionKind.Text));
+        Assert.Contains(_device.Log.Entries, log => log.Message == "Version restored (Text)");
+    }
+
+    [Fact]
+    public async Task AVersionWhoseContentIsGone_IsNotRestored_AndTold()
+    {
+        _device.CreateFolderVault();
+        var node = AddNode("Survey", TypeCatalog.Dataset.Id);
+        var source = _device.Folder("survey.csv");
+        File.WriteAllText(source, "a,b");
+        var first = new DatasetEdited(Guid.NewGuid(), Start, node.Id, DatasetFiles.Describe(source), []);
+        Assert.True(await Session.SaveDataset(Ask, first, () => File.OpenRead(source)));
+        Session.Write(Ask, new DatasetEdited(Guid.NewGuid(), Start.AddMinutes(1), node.Id, first.File, [first.Id]), "Dataset edited");
+        var graph = _device.Vault.Graph;
+        var plan = new RestorePlanner(graph).Plan(node, Assert.Single(NodeHistory.Of(graph, node), entry => entry.Id == first.Id))!;
+        File.Delete(Assert.Single(Directory.GetFiles(Path.Combine(Session.Folder!, "content"), $"{first.Id:N}.kfd", SearchOption.AllDirectories)));
+
+        Assert.False(await Session.Restore(Ask, plan));
+
+        Assert.StartsWith("Cannot restore.", Ask.Told[^1], StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void AWriteThatFails_IsTold()
     {
         var folder = _device.CreateFolderVault();

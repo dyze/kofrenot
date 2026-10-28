@@ -53,6 +53,7 @@ Both apps share the same vaults and the same core; each shows its own set of fea
 | Types: add to a node, take out | ✔ | — |
 | Your node types: create, change, remove, copy from another vault (Settings > Node types) | ✔ | — |
 | Fields: fill, add your own, merge, resolve a conflict | ✔ | — |
+| History: a node's versions (text, file, view, names, colours, field values) | ✔ listed, restored | ✔ listed (restored on Windows) |
 | Notes: edit | ✔ editor with a Markdown toolbar and a task list editor | ✔ Markdown text, task list editor (no reordering); tap a checkbox |
 | Notes: resolve a conflict | ✔ keep one, or merge by hand | ✔ keep one |
 | Datasets: add files | ✔ creation screen, drop zone, drop on a tree | ✔ **＋**, with a preview |
@@ -109,7 +110,7 @@ kofrenot for Android **reads** your server vaults, also offline, and **edits the
 
 - **Install**: download `kofrenot-android-<version>.apk` from the [releases](https://github.com/dyze/kofrenot/releases) and open it (Android 8.0 or later; allow installing from your browser or file app when asked).
 - **Sign in** with your server account, then **Add from the server**: your vaults and those shared with you, which show your role (reader or writer) in the list; a vault shared with you to read says so in a banner. The account's pass phrase opens them; tick *Remember it on this phone* to keep it in the phone's Keystore.
-- **Read**: search names, pinned nodes, recent nodes (opened on the phone or changed on any device), a node's details and links (back goes through them), notes with their task lists, views as tabs. A dataset shows its file's name and size: *Open with…* hands it to another app, *Save as…* saves it where you choose. A copy opened with another app is deleted from kofrenot at its next start.
+- **Read**: search names, pinned nodes, recent nodes (opened on the phone or changed on any device), a node's details and links (back goes through them), notes with their task lists, views as tabs, a node's **History** (its versions, restored in kofrenot on Windows). A dataset shows its file's name and size: *Open with…* hands it to another app, *Save as…* saves it where you choose. A copy opened with another app is deleted from kofrenot at its next start.
 - **Add files**: **＋** picks one or several files on the phone; a preview lists them (their number and total size, the names already taken), then **Add** makes each a dataset named after its file. One file added opens; several show among the recent nodes.
 - **Share to kofrenot** from another app (its *Share* button): files become datasets, text or a link becomes a new note named after its first line. A preview names the open vault and lists what will be added; nothing is before **Add**. When no vault is open yet, it waits until you open one.
 - **Edit notes**: tap a checkbox to check its item, or **Edit** to change the note, then **Save**. A note whose lines are all items opens as its list, as on Windows: a checkbox and a text per item, **Enter** adds the next, **✕** removes one, checked items below the others; **Checkboxes** turns a text into items, **Text** turns them back into lines. Other notes are edited as Markdown text (`# heading`, `- item`); **Cancel** keeps it as it was, and leaving the note with changes not saved asks before discarding them. A note edited on two devices before they synced shows both versions: **Keep this version** keeps one.
@@ -136,6 +137,8 @@ Type in the box at the top of the main window; the line under it says what Enter
 
 ### Node details
 **Enter** or a double-click on a node opens its details: its name, types, colour, pin, fields and links. **F2** renames it; **+ Link** (**Ctrl+K**) links it to another; a link opens the node at its other end. **Esc** goes back.
+
+**History** (the clock beside the pin) lists its versions, newest first: its text, file or view definition, its names, colours and field values, each with when and what it held (a note's text is not shown). **Restore** makes one the current version again, after a confirmation: it is written as a new version, so the others stay in the history; restoring one of a conflict resolves it. A note's text or a dataset's file restored in a server vault is downloaded first. Its types and links have no versions, and a node deleted is not restored.
 
 ### Node types and fields
 A node has one or several **types**, each with its **fields**: *Frank Herbert* can be a *Person* (Born, Website) and an *Author* (Genre). **Add type…** in its details adds one, **×** takes one out (asked first). A note, a dataset and a view are built-in types: a node is one of them at most, and adding another hides its content until it gets that type back.

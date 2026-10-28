@@ -82,6 +82,24 @@ public sealed class ContentOnlySessionTests : IDisposable
     }
 
     [Fact]
+    public async Task AVersion_IsNotRestoredOnThePhone()
+    {
+        await AddLaptopsVaultAsync();
+        var node = new Node(Guid.NewGuid(), TypeCatalog.Note.Id, "Ideas", Start);
+        _laptop.Session.Write(_laptop.Ask, new NodeAdded(Guid.NewGuid(), Start, node), "Node added");
+        _laptop.Session.Rename(_laptop.Ask, new NodeRenamed(Guid.NewGuid(), Start.AddMinutes(1), node.Id, "Plans", [node.Id]));
+        await _laptop.SyncAsync();
+        await _phone.SyncAsync();
+        var graph = _phone.Vault.Graph;
+        var plan = new RestorePlanner(graph).Plan(node, Assert.Single(NodeHistory.Of(graph, node), entry => entry.Id == node.Id))!;
+
+        Assert.False(await _phone.Session.Restore(_phone.Ask, plan));
+
+        Assert.StartsWith(ContentOnly, _phone.Ask.Told[^1], StringComparison.Ordinal);
+        Assert.Equal("Plans", graph.FindNode(node.Id)!.Name);
+    }
+
+    [Fact]
     public async Task AFileAddedOnThePhone_ReachesTheLaptop()
     {
         await AddLaptopsVaultAsync();

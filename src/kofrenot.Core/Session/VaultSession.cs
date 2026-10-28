@@ -399,25 +399,33 @@ public sealed partial class VaultSession : IDisposable
     /// dataset may be large), then its changes. False when no vault is open, it closed meanwhile,
     /// or a file cannot be read or written (the user is told).
     /// </summary>
-    public async Task<bool> Copy(ISessionQuestions ask, CopyPlan plan)
+    public Task<bool> Copy(ISessionQuestions ask, CopyPlan plan) =>
+        WriteWithContents(ask, plan.Contents, plan.Changes, "copy", $"Nodes copied ({plan.Nodes.Count}, {plan.Contents.Count} with content)");
+
+    /// <summary>
+    /// Writes the content of <paramref name="contents"/> again (downloaded first when it is not
+    /// here) off the UI thread, then <paramref name="changes"/>. False when no vault is open, it
+    /// closed meanwhile, or a file cannot be read or written (the user is told they cannot <paramref name="verb"/>).
+    /// </summary>
+    private async Task<bool> WriteWithContents(ISessionQuestions ask, IReadOnlyList<ContentCopy> contents, IReadOnlyList<Change> changes, string verb, string action)
     {
-        if (Current is not { } vault || !CanWrite(ask) || !await Fetch(ask, vault, plan.Contents.Select(copy => copy.From).ToList(), "copy"))
+        if (Current is not { } vault || !CanWrite(ask) || !await Fetch(ask, vault, contents.Select(copy => copy.From).ToList(), verb))
         {
             return false;
         }
 
         try
         {
-            await Task.Run(() => vault.WriteCopies(plan.Contents, _thumbnails));
+            await Task.Run(() => vault.WriteCopies(contents, _thumbnails));
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidDataException)
         {
-            _log.Warn("Action", $"Cannot copy the nodes' content ({ex.GetType().Name})");
-            ask.Tell($"Cannot copy.\n\n{ex.Message}");
+            _log.Warn("Action", $"Cannot {verb}: content not written ({ex.GetType().Name})");
+            ask.Tell($"Cannot {verb}.\n\n{ex.Message}");
             return false;
         }
 
-        return Current == vault && Append(ask, vault, plan.Changes, $"Nodes copied ({plan.Nodes.Count}, {plan.Contents.Count} with content)");
+        return Current == vault && Append(ask, vault, changes, action);
     }
 
     /// <summary>Saves a note version with its content. False when no vault is open, or it cannot be written (the user is told).</summary>

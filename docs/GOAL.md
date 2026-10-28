@@ -140,6 +140,7 @@ What each version contains: [ROADMAP.md](../ROADMAP.md).
 | Keys | Vault keys wrapped for an identity (key pair) unlocked by a pass phrase or a recovery key; same model for folder and server vaults, format 6; a server vault's identity is its account's, one for all its server vaults (since 0.7) |
 | Clients | Windows (WPF); Android for server vaults only, with Avalonia: read only in 0.9, notes and files edited since 0.10 ([ANDROID-CONCEPT.md](ANDROID-CONCEPT.md)) |
 | Types and fields | Composition: a type is a list of fields, a node has several types and fields of its own (since 0.11, format 8: [Composition](#composition-types-made-of-fields)) |
+| History | A node's versions (its text, file or view definition, names, colours and field values) are listed, newest first; restoring one writes it again as a new version, so nothing is lost. One version at a time, not the node at a point in time; deleted nodes are not restored. Listed on Android, restored on Windows (since 0.12) |
 | Views | A node type holding a definition (a tree from a root node through a link type, or a list of the nodes of a type), in versions kept in its changes: views work offline (since 0.4) |
 
 ## Open questions
@@ -148,7 +149,6 @@ Decisions to take with the owner before the matching features:
 | Topic | Question |
 | --- | --- |
 | Sharing | Below a complete vault: a single node or view? |
-| Versioning | Show and restore history? |
 | Packs | One file per change makes many small files. Pack old changes into bigger files in the vault folder, as git's packs? Who packs, when, and how does it stay safe with several apps and the sync tool? |
 | Search | Full-text on content kept offline? |
 

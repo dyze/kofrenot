@@ -74,6 +74,22 @@
             </DataTemplate>
           </ItemsControl.ItemTemplate>
         </ItemsControl>
+        <!-- Its versions, newest first, read only: a version is restored in kofrenot on Windows (NodePage.History). -->
+        <Expander x:Name="HistoryBox" Header="History" Margin="0,12,0,0" HorizontalAlignment="Stretch">
+          <StackPanel Spacing="4">
+            <TextBlock Classes="caption" Text="Restore a version in kofrenot on Windows." TextWrapping="Wrap" />
+            <ItemsControl x:Name="History">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate DataType="views:HistoryLine">
+                  <StackPanel Margin="0,4">
+                    <TextBlock Classes="caption" Text="{Binding Heading}" />
+                    <TextBlock Text="{Binding Label}" TextWrapping="Wrap" IsVisible="{Binding HasLabel}" />
+                  </StackPanel>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </StackPanel>
+        </Expander>
       </StackPanel>
     </ScrollViewer>
   </DockPanel>

@@ -35,6 +35,7 @@
     <Using Include="Kofrenot.Core.Datasets" />
     <Using Include="Kofrenot.Core.Fields" />
     <Using Include="Kofrenot.Core.Graph" />
+    <Using Include="Kofrenot.Core.History" />
     <Using Include="Kofrenot.Core.Input" />
     <Using Include="Kofrenot.Core.Logging" />
     <Using Include="Kofrenot.Core.Notes" />

@@ -115,6 +115,10 @@ public sealed class KnowledgeGraph
     /// <summary>The current definitions of a view, oldest first, as <see cref="NoteVersionsOf"/>.</summary>
     public IReadOnlyList<ViewEdited> ViewVersionsOf(Guid node) => _views.Current(node);
 
+    /// <summary>Every content version of a node (its texts, files or view definitions), whatever they replace: its history.</summary>
+    public IEnumerable<ContentEdited> ContentHistoryOf(Guid node) =>
+        _notes.Of(node).Concat<ContentEdited>(_datasets.Of(node)).Concat(_views.Of(node));
+
     /// <summary>
     /// The current names of the vault, oldest first: none before it is named, one, or several when
     /// it was named on two devices before they synced (a conflict).
@@ -140,6 +144,15 @@ public sealed class KnowledgeGraph
     /// </summary>
     public IReadOnlyList<NameVersion> NamesOf(Guid node) =>
         _names.TryGetValue(node, out var names) && names.Added is not null ? names.Current() : [];
+
+    /// <summary>
+    /// Every name of a node, whatever they replace: the name it was added with (its id the node's),
+    /// then its renames. Empty for an unknown node.
+    /// </summary>
+    public IReadOnlyList<NameVersion> NameHistoryOf(Guid node) =>
+        _names.TryGetValue(node, out var names) && names.Added is { } added
+            ? names.Renames.Select(rename => new NameVersion(rename.Id, rename.Name, rename.At)).Prepend(new NameVersion(added.Id, added.Name, added.Created)).ToList()
+            : [];
 
     /// <summary>The nodes with this name (case, accents and spaces ignored), oldest first.</summary>
     public IReadOnlyList<Node> NodesNamed(string name) =>
