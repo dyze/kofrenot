@@ -32,6 +32,8 @@ public sealed partial class Shell : UserControl
     public Shell(AppServices services)
     {
         Services = services;
+        // Here, not when the app starts: the services are built once the activity shows its view.
+        PhoneTheme.Apply(services.Settings.Theme);
         InitializeComponent();
         services.Session.Changed += RefreshPage;
         services.Sync.Changed += () => (PageHost.Content as IPage)?.SyncChanged();

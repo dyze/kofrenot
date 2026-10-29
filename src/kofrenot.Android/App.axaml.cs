@@ -26,8 +26,6 @@ public sealed partial class App : Application
             e.Handled = true;
         };
 
-        PhoneTheme.Apply(Services.Settings.Theme);
-
         if (ApplicationLifetime is IActivityApplicationLifetime activity)
         {
             activity.MainViewFactory = () => _shell = new Shell(Services);
