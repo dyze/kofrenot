@@ -5,7 +5,7 @@ using Kofrenot.Core.Logging;
 
 namespace Kofrenot.Phone.Views;
 
-/// <summary>The server account, the open vault's remembered pass phrase, logging, and the version.</summary>
+/// <summary>The phone's settings, under the topics of the Settings window on Windows: Vault, Server, Logging, About.</summary>
 public sealed partial class SettingsPage : UserControl, IPage
 {
     private readonly Shell _shell;
