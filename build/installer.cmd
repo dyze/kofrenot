@@ -19,12 +19,14 @@ if not defined VERSION (
   exit /b 1
 )
 
-rem Inno Setup compiler: on PATH, or in the default install folders (all users, then per user).
+rem Inno Setup compiler: on PATH, or in the default install folders of 7, then 6 (all users, then per user).
 set "ISCC="
 for /f "delims=" %%i in ('where ISCC.exe 2^>nul') do if not defined ISCC set "ISCC=%%i"
-if not defined ISCC if exist "%ProgramFiles(x86)%\Inno Setup 6\ISCC.exe" set "ISCC=%ProgramFiles(x86)%\Inno Setup 6\ISCC.exe"
-if not defined ISCC if exist "%ProgramFiles%\Inno Setup 6\ISCC.exe" set "ISCC=%ProgramFiles%\Inno Setup 6\ISCC.exe"
-if not defined ISCC if exist "%LOCALAPPDATA%\Programs\Inno Setup 6\ISCC.exe" set "ISCC=%LOCALAPPDATA%\Programs\Inno Setup 6\ISCC.exe"
+for %%v in (7 6) do (
+  if not defined ISCC if exist "%ProgramFiles%\Inno Setup %%v\ISCC.exe" set "ISCC=%ProgramFiles%\Inno Setup %%v\ISCC.exe"
+  if not defined ISCC if exist "%ProgramFiles(x86)%\Inno Setup %%v\ISCC.exe" set "ISCC=%ProgramFiles(x86)%\Inno Setup %%v\ISCC.exe"
+  if not defined ISCC if exist "%LOCALAPPDATA%\Programs\Inno Setup %%v\ISCC.exe" set "ISCC=%LOCALAPPDATA%\Programs\Inno Setup %%v\ISCC.exe"
+)
 if not defined ISCC (
   echo Inno Setup was not found. Install it from https://jrsoftware.org/isinfo.php, or put ISCC.exe on PATH.
   exit /b 1
