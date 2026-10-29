@@ -23,8 +23,7 @@ public sealed record NodeRow(Node Node, string Name, string Detail, string Glyph
     public static NodeRow Of(KnowledgeGraph graph, Node node, string? detail = null, string? mark = null, int depth = 0, Link? link = null)
     {
         var visual = NodeVisual.Of(graph, node);
-        var glyph = visual.TypeIcon is { } icon ? NodeLook.TypeGlyph(icon) : NodeLook.Glyph(visual.Icon);
-        return new NodeRow(node, node.Name + mark, detail ?? graph.Types.NodeTypeName(node.Type), glyph, NodeLook.Brush(visual.Color), depth, link);
+        return new NodeRow(node, node.Name + mark, detail ?? graph.Types.NodeTypeName(node.Type), NodeLook.GlyphOf(visual), NodeLook.Brush(visual.Color), depth, link);
     }
 }
 
@@ -70,6 +69,9 @@ public static class NodeLook
 
     /// <summary>The glyph of a node type's icon (<see cref="TypeIcons"/>); the generic one for a name this version does not know.</summary>
     public static string TypeGlyph(string icon) => TypeGlyphs.GetValueOrDefault(icon) ?? Glyph(NodeIcon.Generic);
+
+    /// <summary>The glyph a node shows: its type's icon, or else its own.</summary>
+    public static string GlyphOf(NodeVisual visual) => visual.TypeIcon is { } icon ? TypeGlyph(icon) : Glyph(visual.Icon);
 
     public static string Glyph(NodeIcon icon) => icon switch
     {

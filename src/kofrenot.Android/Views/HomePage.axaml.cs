@@ -43,6 +43,7 @@ public sealed partial class HomePage : UserControl, IPage
         _shell = shell;
         _tab = tab ?? Tab.Search;
         InitializeComponent();
+        WatchSearchBox();
         Refresh();
     }
 
@@ -50,21 +51,22 @@ public sealed partial class HomePage : UserControl, IPage
 
     public bool GoBack()
     {
-        if (_tab.IsSearch && string.IsNullOrEmpty(SearchBox.Text))
+        if (_tab.IsSearch && _chips.IsEmpty)
         {
             return false;
         }
 
         // Back clears the search, then goes to the search tab.
-        if (!string.IsNullOrEmpty(SearchBox.Text))
+        if (!_chips.IsEmpty)
         {
-            SearchBox.Text = string.Empty;
+            ClearSearch();
         }
         else
         {
             _tab = Tab.Search;
-            Refresh();
         }
+
+        Refresh();
 
         return true;
     }
@@ -139,9 +141,10 @@ public sealed partial class HomePage : UserControl, IPage
     private void ShowList(Vault vault)
     {
         var graph = vault.Graph;
-        var text = SearchBox.Text ?? string.Empty;
+        var text = _chips.Text;
         Message.IsVisible = false;
         ShowAdd(graph, text);
+        ShowChips(graph);
         if (_tab.View is { } view)
         {
             List.ItemsSource = ViewRows(graph, view, text);
@@ -236,7 +239,7 @@ public sealed partial class HomePage : UserControl, IPage
     private void Select(Tab tab)
     {
         _tab = tab;
-        SearchBox.Text = string.Empty;
+        ClearSearch();
         Refresh();
     }
 
@@ -268,18 +271,11 @@ public sealed partial class HomePage : UserControl, IPage
 
     private void Add_Click(object? sender, RoutedEventArgs e)
     {
-        if (_adding is { } form)
+        if (_adding is { } form && Vault is { } vault)
         {
+            LabelAll(vault.Graph);
             _shell.Services.Log.Info("Action", form.IsLink ? "Creation screen shown for a link" : "Creation screen shown for a node");
             _shell.Push(new CreationPage(_shell, form));
-        }
-    }
-
-    private void Search_TextChanged(object? sender, TextChangedEventArgs e)
-    {
-        if (Vault is { } vault)
-        {
-            ShowList(vault);
         }
     }
 

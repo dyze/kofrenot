@@ -2,6 +2,36 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:views="using:Kofrenot.Phone.Views"
              x:Class="Kofrenot.Phone.Views.HomePage">
+  <UserControl.Styles>
+    <!-- A label of the search box: a node's (its glyph and colour), new (dashed, ＋), or the link type (accent). -->
+    <Style Selector="Border.chip">
+      <Setter Property="Padding" Value="5,1,7,1" />
+      <Setter Property="CornerRadius" Value="4" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="BorderBrush" Value="#55888888" />
+      <Setter Property="Background" Value="#22888888" />
+    </Style>
+    <Style Selector="Border.chip.new">
+      <Setter Property="BorderBrush" Value="Transparent" />
+      <Setter Property="Background" Value="Transparent" />
+    </Style>
+    <Style Selector="Border.chip.link">
+      <Setter Property="Padding" Value="7,1" />
+      <Setter Property="BorderBrush" Value="Transparent" />
+      <Setter Property="Background" Value="{StaticResource Accent}" />
+    </Style>
+    <Style Selector="Border.chip.link TextBlock">
+      <Setter Property="Foreground" Value="White" />
+    </Style>
+    <Style Selector="Rectangle.newOutline">
+      <Setter Property="RadiusX" Value="4" />
+      <Setter Property="RadiusY" Value="4" />
+      <Setter Property="Fill" Value="#226FBF4A" />
+      <Setter Property="Stroke" Value="#6FBF4A" />
+      <Setter Property="StrokeThickness" Value="1" />
+      <Setter Property="StrokeDashArray" Value="3,2" />
+    </Style>
+  </UserControl.Styles>
   <DockPanel>
     <Border DockPanel.Dock="Top" Classes="bar">
       <Grid ColumnDefinitions="*,Auto,Auto,Auto">
@@ -33,7 +63,18 @@
     <ScrollViewer DockPanel.Dock="Top" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
       <StackPanel x:Name="Tabs" Orientation="Horizontal" Margin="8,4" Spacing="4" />
     </ScrollViewer>
-    <TextBox x:Name="SearchBox" DockPanel.Dock="Top" Margin="12,4" PlaceholderText="Search, or add: Dune relates to Frank Herbert" TextChanged="Search_TextChanged" />
+    <!-- The labels (ChipInput) before the text, as the input box on Windows: a tap on the last one
+         (or Backspace with no text) turns it back into text. A tap on the proposal accepts it (Tab on Windows). -->
+    <TextBox x:Name="SearchBox" DockPanel.Dock="Top" Margin="12,4" PlaceholderText="Search, or add: Dune relates to Frank Herbert" TextChanged="Search_TextChanged">
+      <TextBox.InnerLeftContent>
+        <StackPanel x:Name="Chips" Orientation="Horizontal" Spacing="4" Margin="6,0,0,0" VerticalAlignment="Center" />
+      </TextBox.InnerLeftContent>
+      <TextBox.InnerRightContent>
+        <Button x:Name="ProposalButton" Classes="flat" Padding="8,0" IsVisible="False" Click="Proposal_Click">
+          <TextBlock x:Name="ProposalText" Foreground="{StaticResource Secondary}" />
+        </Button>
+      </TextBox.InnerRightContent>
+    </TextBox>
     <!-- What the text adds, as the input box on Windows: a tap shows the creation screen (CreationPage). -->
     <Button x:Name="AddButton" DockPanel.Dock="Top" Classes="flat" Margin="12,0" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
             IsVisible="False" Click="Add_Click">
