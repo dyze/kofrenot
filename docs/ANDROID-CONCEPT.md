@@ -57,7 +57,7 @@ Before 0.12 the phone wrote content only (`ClientMode.Content`: notes and files)
  Home: the search box's text ─► Creation (types, a note's text) ─► Node details (⋯: rename, colour, pin, fields, types, delete)
 ```
 
-One window, navigation by back button; light and dark themes follow the phone.
+One window, navigation by back button; light and dark themes follow the phone, or the theme chosen in Settings > Appearance (what Android draws itself, the status bar and the splash, follows the phone).
 
 ## Architecture
 A new project, beside `kofrenot.App`. Everything it shows comes from `kofrenot.Core`, unchanged in its rules ([CLAUDE.md](../CLAUDE.md#architecture-rules-keep-it-this-way)).

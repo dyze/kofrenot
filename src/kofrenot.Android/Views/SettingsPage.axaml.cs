@@ -2,10 +2,11 @@ using Avalonia.Controls;
 using Avalonia.Input.Platform;
 using Avalonia.Interactivity;
 using Kofrenot.Core.Logging;
+using Kofrenot.Core.Settings;
 
 namespace Kofrenot.Phone.Views;
 
-/// <summary>The phone's settings, under the topics of the Settings window on Windows: Vault, Server, Logging, About.</summary>
+/// <summary>The phone's settings, under the topics of the Settings window on Windows: Vault, Server, Appearance, Logging, About.</summary>
 public sealed partial class SettingsPage : UserControl, IPage
 {
     private readonly Shell _shell;
@@ -14,6 +15,7 @@ public sealed partial class SettingsPage : UserControl, IPage
     {
         _shell = shell;
         InitializeComponent();
+        ThemeBox.SelectedIndex = (int)shell.Services.Settings.Theme;
         DebugBox.IsChecked = shell.Services.Settings.DebugLogging;
         LogFolder.Text = $"Kept on this phone only: {shell.Services.Files.Logs}";
         About.Text = $"kofrenot {AppServices.Version} for Android. It reads and changes your server vaults, also offline; what defines a vault (your node and link types, its name, its keys) is changed in kofrenot on Windows.";
@@ -74,6 +76,19 @@ public sealed partial class SettingsPage : UserControl, IPage
 
         _shell.Services.Session.Forget(selected);
         Refresh();
+    }
+
+    private void Theme_Changed(object? sender, SelectionChangedEventArgs e)
+    {
+        var theme = (ThemeChoice)ThemeBox.SelectedIndex;
+        if (!Enum.IsDefined(theme) || theme == _shell.Services.Settings.Theme)
+        {
+            return;
+        }
+
+        _shell.Services.Settings.SetTheme(theme);
+        PhoneTheme.Apply(theme);
+        _shell.Services.Log.Info("Settings", $"Theme: {theme}");
     }
 
     private void Debug_Changed(object? sender, RoutedEventArgs e)

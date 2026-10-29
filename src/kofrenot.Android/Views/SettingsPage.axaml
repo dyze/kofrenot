@@ -41,6 +41,15 @@
         <TextBlock x:Name="Account" TextWrapping="Wrap" />
         <Button Content="Sign out" Click="SignOut_Click" />
 
+        <TextBlock Classes="section" Text="{x:Static settings:SettingsCatalog.AppearanceTab}" />
+        <TextBlock Text="Theme" />
+        <!-- In the order of ThemeChoice: System, Light, Dark. -->
+        <ComboBox x:Name="ThemeBox" HorizontalAlignment="Stretch" SelectionChanged="Theme_Changed">
+          <ComboBoxItem Content="Follow Android" />
+          <ComboBoxItem Content="Light" />
+          <ComboBoxItem Content="Dark" />
+        </ComboBox>
+
         <TextBlock Classes="section" Text="{x:Static settings:SettingsCatalog.LoggingTab}" />
         <CheckBox x:Name="DebugBox" Content="Debug details in the log" IsCheckedChanged="Debug_Changed" />
         <TextBlock x:Name="LogFolder" Classes="caption" TextWrapping="Wrap" />
