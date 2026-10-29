@@ -25,6 +25,9 @@ public sealed class MainActivity : AvaloniaMainActivity
         Window?.SetFlags(WindowManagerFlags.Secure, WindowManagerFlags.Secure);
         base.OnCreate(savedInstanceState);
         App.Current?.Shown(this);
+        // The camera app is done. Avalonia's activity overrides OnActivityResult already (its file picker):
+        // overriding it again here leaves .NET Android without its native methods, and the app without a start.
+        ActivityResult += (requestCode, resultCode, _) => App.Current?.ActivityFinished(requestCode, resultCode);
         Received(Intent);
     }
 
@@ -32,13 +35,6 @@ public sealed class MainActivity : AvaloniaMainActivity
     {
         App.Current?.Shown(null);
         base.OnDestroy();
-    }
-
-    // The camera app is done; the file picker's results go on to Avalonia.
-    protected override void OnActivityResult(int requestCode, Result resultCode, Intent? data)
-    {
-        base.OnActivityResult(requestCode, resultCode, data);
-        App.Current?.ActivityFinished(requestCode, resultCode);
     }
 
     protected override void OnNewIntent(Intent? intent)
