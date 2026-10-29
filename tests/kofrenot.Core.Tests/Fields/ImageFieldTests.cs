@@ -83,11 +83,19 @@ public sealed class ImageFieldTests
     [Theory]
     [InlineData("bruce.svg", 10, "“bruce.svg” is not an image kofrenot shows: choose a PNG, JPEG, GIF, BMP, TIFF or WebP.")]
     [InlineData("notes.txt", 10, "“notes.txt” is not an image kofrenot shows: choose a PNG, JPEG, GIF, BMP, TIFF or WebP.")]
-    [InlineData("huge.png", DatasetType.MaxImageSize + 1, "“huge.png” is too large for an image field: 64.0 MB at most.")]
     public void AFileNotShown_IsRefused(string name, long size, string why)
     {
         var plan = Planner.SetImage(_bruce, Field, new DatasetFile(name, size, Photo.Sha256));
 
+        Assert.Equal((FieldProblem.Invalid, why), (plan.Problem, plan.Status));
+    }
+
+    [Fact]
+    public void AFileTooLarge_IsRefused_WithTheLimitInTheCurrentCulture()
+    {
+        var plan = Planner.SetImage(_bruce, Field, new DatasetFile("huge.png", DatasetType.MaxImageSize + 1, Photo.Sha256));
+
+        var why = $"“huge.png” is too large for an image field: {ByteSize.Format(DatasetType.MaxImageSize)} at most.";
         Assert.Equal((FieldProblem.Invalid, why), (plan.Problem, plan.Status));
     }
 

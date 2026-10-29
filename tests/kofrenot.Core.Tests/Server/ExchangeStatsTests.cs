@@ -92,7 +92,7 @@ public sealed class ExchangeStatsTests : IDisposable
         stats.Record("v1/sessions", 10, 0, failed: true);
 
         var day = Assert.Single(stats.DayRows(), row => row.Label != "Total");
-        Assert.Equal((2, 1, "10 bytes", "2.0 KB"), (day.Requests, day.Failed, day.Up, day.Down));
+        Assert.Equal((2, 1, "10 bytes", ByteSize.Format(2048)), (day.Requests, day.Failed, day.Up, day.Down));
         Assert.Equal("Total", stats.DayRows()[^1].Label);
         Assert.Equal(["Notes", "Account"], stats.KindRows().Select(row => row.Label));
         var text = stats.Text();
