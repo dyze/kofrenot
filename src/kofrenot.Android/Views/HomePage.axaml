@@ -66,7 +66,8 @@
     <!-- The labels (ChipInput) before the text, as the input box on Windows: a tap on the last one
          (or Backspace with no text) turns it back into text. A tap on the proposal accepts it (Tab on Windows). -->
     <Panel x:Name="SearchArea" DockPanel.Dock="Top" Margin="12,4" ClipToBounds="True">
-      <TextBox x:Name="SearchBox" PlaceholderText="Search, or add: Dune relates to Frank Herbert" TextChanged="Search_TextChanged">
+      <!-- Go, not Android's default Done for one line: Avalonia hides the keyboard on Done; Go sends Enter only. -->
+      <TextBox x:Name="SearchBox" TextInputOptions.ReturnKeyType="Go" PlaceholderText="Search, or add: Dune relates to Frank Herbert" TextChanged="Search_TextChanged">
         <TextBox.InnerLeftContent>
           <StackPanel x:Name="Chips" Orientation="Horizontal" Spacing="4" Margin="6,0,0,0" VerticalAlignment="Center" />
         </TextBox.InnerLeftContent>

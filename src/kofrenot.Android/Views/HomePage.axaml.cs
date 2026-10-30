@@ -269,14 +269,20 @@ public sealed partial class HomePage : UserControl, IPage
         AddText.Text = _adding is null ? string.Empty : $"＋ {_adding.Status}";
     }
 
-    private void Add_Click(object? sender, RoutedEventArgs e)
+    private void Add_Click(object? sender, RoutedEventArgs e) => ShowCreation();
+
+    /// <summary>A tap on what the text adds, or Enter: all of it as labels, then its creation screen. False when it adds nothing.</summary>
+    private bool ShowCreation()
     {
-        if (_adding is { } form && Vault is { } vault)
+        if (_adding is not { CanAdd: true } form || Vault is not { } vault)
         {
-            LabelAll(vault.Graph);
-            _shell.Services.Log.Info("Action", form.IsLink ? "Creation screen shown for a link" : "Creation screen shown for a node");
-            _shell.Push(new CreationPage(_shell, form));
+            return false;
         }
+
+        LabelAll(vault.Graph);
+        _shell.Services.Log.Info("Action", form.IsLink ? "Creation screen shown for a link" : "Creation screen shown for a node");
+        _shell.Push(new CreationPage(_shell, form, added: ClearSearch));
+        return true;
     }
 
     private void List_SelectionChanged(object? sender, SelectionChangedEventArgs e)

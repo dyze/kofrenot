@@ -62,19 +62,28 @@ public sealed partial class HomePage
         {
             e.Handled = UnlabelLast();
         }
+        else if (e.Key == Key.Enter)
+        {
+            // As on Windows: the proposal becomes a label (Tab there), or else what the text adds shows its creation screen.
+            e.Handled = AcceptProposal() || ShowCreation();
+        }
     }
 
-    /// <summary>A tap on the proposal (Tab on Windows): it becomes a label.</summary>
-    private void Proposal_Tapped(object? sender, TappedEventArgs e)
+    private void Proposal_Tapped(object? sender, TappedEventArgs e) => AcceptProposal();
+
+    /// <summary>A tap on the proposal, or Enter (Tab on Windows): it becomes a label. False when there is none.</summary>
+    private bool AcceptProposal()
     {
-        if (Vault is { } vault && _chips.Accept(vault.Graph))
+        if (Vault is not { } vault || !_chips.Accept(vault.Graph))
         {
-            _shell.Services.Log.Debug("Input", "Proposal accepted");
-            SetSearchText(_chips.Tail);
-            ShowList(vault);
+            return false;
         }
 
+        _shell.Services.Log.Debug("Input", "Proposal accepted");
+        SetSearchText(_chips.Tail);
+        ShowList(vault);
         SearchBox.Focus();
+        return true;
     }
 
     /// <summary>Backspace with no text, or a tap on the last label: it becomes text again.</summary>

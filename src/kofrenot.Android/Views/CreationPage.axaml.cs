@@ -10,17 +10,20 @@ namespace Kofrenot.Phone.Views;
 /// <summary>
 /// The phone's creation screen for what the search box's text adds (<see cref="CreationForm"/>):
 /// the link's type, each new node's type (a view or a dataset is made elsewhere: on Windows, or a
-/// file added with ＋) and a new note's text. Add adds it, then opens the node; back cancels.
+/// file added with ＋) and a new note's text. Add adds it and goes back, as on Windows: its nodes first
+/// among the recent ones, the search box cleared (<paramref name="added"/>); back cancels.
 /// </summary>
 public sealed partial class CreationPage : UserControl, IPage
 {
     private readonly Shell _shell;
     private readonly CreationForm _form;
+    private readonly Action _added;
 
-    public CreationPage(Shell shell, CreationForm form)
+    public CreationPage(Shell shell, CreationForm form, Action added)
     {
         _shell = shell;
         _form = form;
+        _added = added;
         InitializeComponent();
         Heading.Text = form.Title;
         ShowSides();
@@ -100,12 +103,14 @@ public sealed partial class CreationPage : UserControl, IPage
             return;
         }
 
-        _shell.Back();
-        if ((plan.NewNodes.Count > 0 ? plan.NewNodes : plan.Nodes).FirstOrDefault() is { } node && vault.Graph.FindNode(node.Id) is { } added)
+        // The first typed on top.
+        foreach (var node in plan.Nodes.Reverse())
         {
-            _shell.Services.Recent.Opened(vault.Id, added.Id);
-            _shell.Push(new NodePage(_shell, added));
+            _shell.Services.Recent.Opened(vault.Id, node.Id);
         }
+
+        _added();
+        _shell.Back();
     }
 
     private void Back_Click(object? sender, RoutedEventArgs e)

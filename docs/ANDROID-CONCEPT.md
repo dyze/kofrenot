@@ -54,7 +54,8 @@ Before 0.12 the phone wrote content only (`ClientMode.Content`: notes and files)
                                          │ pinned, recent       └ back: trail
                                          └ view tabs ─► View (flat / tree) ─► Node details
  Settings: server, account, vaults, members, remember key, theme, logging, about
- Home: the search box's text ─► Creation (types, a note's text) ─► Node details (⋯: rename, colour, pin, fields, types, delete)
+ Home: the search box's text ─► Creation (types, a note's text) ─► Home (cleared, the nodes added first among the recent)
+ Node details: ⋯ (rename, colour, pin, fields, types, delete)
 ```
 
 One window, navigation by back button; light and dark themes follow the phone, or the theme chosen in Settings > Appearance (what Android draws itself, the status bar and the splash, follows the phone).
