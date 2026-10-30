@@ -64,6 +64,9 @@ One window, navigation by back button; light and dark themes follow the phone, o
 | Part | How |
 | --- | --- |
 | Tokens | `App.axaml`: touch target (48 dp), bar height, type sizes (title, section, body, caption), colours; code reads them with `PhoneTheme.Brush` and `PhoneTheme.Size` |
+| Insets | Edge to edge (`InsetsManager`): the `Shell`'s padding is the safe area, at the bottom the keyboard (`InputPane`) when it covers more; the focused field brought into view (`Shell.Insets`) |
+| Transitions | `TransitioningContentControl` with a `PageSlide`, reversed going back |
+| Back | `TopLevel.BackRequested`, with predictive back (`enableOnBackInvokedCallback`) |
 
 ## Architecture
 A new project, beside `kofrenot.App`. Everything it shows comes from `kofrenot.Core`, unchanged in its rules ([CLAUDE.md](../CLAUDE.md#architecture-rules-keep-it-this-way)).

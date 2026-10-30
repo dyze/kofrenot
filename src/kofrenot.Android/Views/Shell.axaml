@@ -1,8 +1,14 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              x:Class="Kofrenot.Phone.Views.Shell">
+  <!-- Its padding keeps the screens clear of the system bars and the keyboard (Shell.Insets). -->
   <Grid>
-    <ContentControl x:Name="PageHost" />
+    <!-- A screen slides in from the right going forward, from the left going back. -->
+    <TransitioningContentControl x:Name="PageHost">
+      <TransitioningContentControl.PageTransition>
+        <PageSlide Duration="0:0:0.25" Orientation="Horizontal" />
+      </TransitioningContentControl.PageTransition>
+    </TransitioningContentControl>
     <Border x:Name="Overlay" IsVisible="False" Background="{StaticResource Scrim}">
       <Border Background="{DynamicResource SystemControlBackgroundAltHighBrush}" CornerRadius="12" Padding="20"
               Margin="24" VerticalAlignment="Center">

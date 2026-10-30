@@ -99,6 +99,12 @@ public sealed partial class Shell : UserControl
     public void Push(Control page)
     {
         _pages.Push(page);
+        ShowPage(page, back: false);
+    }
+
+    private void ShowPage(Control page, bool back)
+    {
+        PageHost.IsTransitionReversed = back;
         PageHost.Content = page;
     }
 
@@ -152,6 +158,7 @@ public sealed partial class Shell : UserControl
         if (TopLevel.GetTopLevel(this) is { } top)
         {
             top.BackRequested += OnBackRequested;
+            WatchInsets(top);
         }
     }
 
@@ -160,6 +167,7 @@ public sealed partial class Shell : UserControl
         if (TopLevel.GetTopLevel(this) is { } top)
         {
             top.BackRequested -= OnBackRequested;
+            UnwatchInsets(top);
         }
 
         base.OnDetachedFromVisualTree(e);
@@ -192,7 +200,7 @@ public sealed partial class Shell : UserControl
         }
 
         _pages.Pop();
-        PageHost.Content = _pages.Peek();
+        ShowPage(_pages.Peek(), back: true);
         RefreshPage();
         return true;
     }

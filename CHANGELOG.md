@@ -11,6 +11,8 @@ It covers kofrenot on Windows and on Android; versions before 0.9 ran on Windows
 ### Changed
 - **Android**
   - **Touch targets of 48 dp**: every button, row, tab, field and link is at least 48 dp high, as Android asks; type sizes and colours are shared tokens (`App.axaml`), none written in a screen ([ANDROID-CONCEPT.md](docs/ANDROID-CONCEPT.md#layout)).
+  - **Edge to edge**: the app draws behind the status and navigation bars, as Android enforces from API 35, its screens kept clear of them and of the keyboard; the field typed in scrolls into view. Back previews the screen before (predictive back) ([ANDROID-CONCEPT.md](docs/ANDROID-CONCEPT.md#layout)).
+  - **Screens slide**: in from the right going forward, from the left going back.
 
 ## [0.12] - 2026-10-30
 

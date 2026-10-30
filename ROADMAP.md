@@ -19,11 +19,10 @@ Scope of each planned version. Implemented features move to [CHANGELOG.md](CHANG
 
 ## 0.13
 Android navigation and layouts, as Android's [principles of navigation](https://developer.android.com/guide/navigation/principles) and Material 3. Open points: [Android open questions](docs/ANDROID-CONCEPT.md#open-questions).
-1. Android · **Edge to edge.** Content kept clear of the status and navigation bars and of the keyboard (edge to edge is enforced from API 35); Back checked with predictive back (on by default from API 36).
-2. Android · **Spacing.** Margins and gaps as shared resources too, as the touch sizes, type and colours already are.
-3. Android · **Material layout.** A top bar with ← and ⋮, icons instead of text glyphs; node actions and adding in bottom sheets; a ＋ button (FAB) on Home; screens slide forward and back.
-4. Android · **One back stack.** Back and ← both go to the screen before. A share from another app opens on Home › node, as a deep link would.
-5. Android · **Lighter Home.** The search box in the top bar; the vault and its sync in a sheet.
+1. Android · **Spacing.** Margins and gaps as shared resources too, as the touch sizes, type and colours already are.
+2. Android · **Material layout.** A top bar with ← and ⋮, icons instead of text glyphs; node actions and adding in bottom sheets; a ＋ button (FAB) on Home.
+3. Android · **One back stack.** Back and ← both go to the screen before. A share from another app opens on Home › node, as a deep link would.
+4. Android · **Lighter Home.** The search box in the top bar; the vault and its sync in a sheet.
 
 ## 0.14
 1. Both · **Events and qualifiers.**
