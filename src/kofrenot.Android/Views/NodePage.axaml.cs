@@ -27,9 +27,10 @@ public sealed record FieldLine(string Label, string Value, DatasetEdited? Image 
 
 /// <summary>
 /// A node's details, as in the main window: name, type, colour, links read from its side; a tap
-/// on a link opens that node (back goes through the trail). A note's content is shown, fetched
-/// when not here; a dataset's file is opened with another app or saved, downloaded first when not
-/// here; a view opens as a tab.
+/// on a link opens that node as a screen of its own, so Back goes through them one by one (the
+/// trail at the top: the screens before). A note's content is shown, fetched when not here; a
+/// dataset's file is opened with another app or saved, downloaded first when not here; a view
+/// opens as a tab.
 /// </summary>
 public sealed partial class NodePage : UserControl, IPage
 {
@@ -51,28 +52,11 @@ public sealed partial class NodePage : UserControl, IPage
 
     private Vault? Vault => _shell.Services.Session.Current;
 
-    public bool GoBack()
-    {
-        if (AsksBeforeLeaving(() =>
-            {
-                if (!GoBack())
-                {
-                    _shell.Back();
-                }
-            }))
-        {
-            return true;
-        }
+    /// <summary>The node's name, told from its homonyms, for the trail.</summary>
+    public string Label => _browser.Trail.FirstOrDefault() ?? string.Empty;
 
-        if (_browser.Depth <= 1)
-        {
-            return false;
-        }
-
-        _browser.Back();
-        Refresh();
-        return true;
-    }
+    // A note changed and not saved: asked before leaving.
+    public bool GoBack() => AsksBeforeLeaving(() => _shell.Back());
 
     public void SyncChanged()
     {
@@ -80,9 +64,19 @@ public sealed partial class NodePage : UserControl, IPage
 
     public void Refresh()
     {
-        // The graph read again: a sync may have changed the node.
-        if (Vault is not { } vault || _browser.Details?.Node is not { } open || vault.Graph.FindNode(open.Id) is null)
+        // The graph read again: a sync may have changed the node, or removed it (then the screen before).
+        if (Vault is not { } vault || _browser.Details?.Node is not { } open)
         {
+            return;
+        }
+
+        if (vault.Graph.FindNode(open.Id) is null)
+        {
+            if (_shell.IsShown(this))
+            {
+                _shell.Back();
+            }
+
             return;
         }
 
@@ -92,7 +86,7 @@ public sealed partial class NodePage : UserControl, IPage
         }
 
         var details = _browser.Details!;
-        Trail.Text = string.Join(" › ", _browser.Trail);
+        Trail.Text = string.Join(" › ", _shell.PagesUpTo(this).Select(LabelOf).OfType<string>());
         NodeName.Text = details.Name;
         NodeType.Text = details.Type;
         ColorDot.Fill = NodeLook.Brush(details.Color);
@@ -168,17 +162,19 @@ public sealed partial class NodePage : UserControl, IPage
 
     private void Opened(Vault vault, Node node) => _shell.Services.Recent.Opened(vault.Id, node.Id);
 
+    private static string? LabelOf(Control page) => page switch
+    {
+        HomePage => "Home",
+        NodePage node => node.Label,
+        _ => null,
+    };
+
+    // A screen of its own: this one stays as it is, a note being edited included, until Back comes to it.
     private void Link_Click(object? sender, RoutedEventArgs e)
     {
-        if ((sender as Control)?.Tag is NodeRow row && Vault is { } vault && !AsksBeforeLeaving(() => Link_Click(sender, e)))
+        if ((sender as Control)?.Tag is NodeRow row)
         {
-            if (!_browser.OpenLinked(row.Node))
-            {
-                _browser.Open(vault.Graph, row.Node);
-            }
-
-            Opened(vault, row.Node);
-            Refresh();
+            _shell.Push(new NodePage(_shell, row.Node));
         }
     }
 

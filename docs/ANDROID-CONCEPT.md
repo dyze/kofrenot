@@ -50,8 +50,8 @@ Before 0.12 the phone wrote content only (`ClientMode.Content`: notes and files)
 
 ```
  Sign in ─► Pass phrase ─► Vault list ─► Home ─────────────► Node details ─► Note
-                                         │ search box           │ links, tap ─► Node details
-                                         │ pinned, recent       └ back: trail
+                                         │ search box           │ links, tap ─► Node details (a screen each)
+                                         │ pinned, recent       └ Back, ←: the screen before
                                          └ view tabs ─► View (flat / tree) ─► Node details
  Settings: server, account, vaults, members, remember key, theme, logging, about
  Home: the search box's text ─► Creation (types, a note's text) ─► Home (cleared, the nodes added first among the recent)
@@ -71,6 +71,7 @@ One window, navigation by back button; light and dark themes follow the phone, o
 | Top bar | `TopBar` (a templated control, its look in `App.axaml`): ← when the `Shell` has a screen before, the title or the screen's own content (the search box, the trail), its actions (⋮); ← raises the same back as Android's Back |
 | Icons | `StreamGeometry` paths of our own in `App.axaml` (←, ⋮, ＋, ☰, ✕), shown with `PathIcon` |
 | Sheets | `Shell.ShowSheet(title, choices)`: a bottom sheet over the screen, instead of menus; a choice closes it, then runs; Back or a tap outside closes it |
+| Back stack | `Shell`: one stack of screens; a deep link (a share from another app) shows the home, then its node over it (`ShowOverHome`) |
 
 ## Architecture
 A new project, beside `kofrenot.App`. Everything it shows comes from `kofrenot.Core`, unchanged in its rules ([CLAUDE.md](../CLAUDE.md#architecture-rules-keep-it-this-way)).
@@ -123,6 +124,7 @@ Same vaults, same files, same encryption ([Encryption](ARCHITECTURE.md#encryptio
 | Topic | Decision |
 | --- | --- |
 | Material controls | Top bar, bottom sheets and FAB built in the app on the Fluent theme: no new package |
+| Node trail | Each node opened from a link is a screen of the one back stack; the trail at the top is the screens before (`Shell.PagesUpTo`); `NodeBrowser` keeps one level on the phone |
 
 ## Open questions
 | Topic | Question |
@@ -130,5 +132,4 @@ Same vaults, same files, same encryption ([Encryption](ARCHITECTURE.md#encryptio
 | Distribution | F-Droid or Google Play later? An update check of the APK? |
 | Lock | Lock the vault after some time in the background? Fingerprint unlock of the remembered key? |
 | Background sync | Also in the background (WorkManager) later? |
-| Node trail | Each node opened from a link a screen of the one back stack, or the trail kept within the node screen (`NodeBrowser`) with Back only made consistent? |
 | Large screens | A list beside the node's details from 600 dp wide (tablets, landscape), or phone layout only for now? |

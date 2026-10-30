@@ -10,7 +10,7 @@ namespace Kofrenot.Phone.Views;
 /// <summary>A screen of the app: refreshed when the vault or the account changes; told when a sync ends.</summary>
 public interface IPage
 {
-    /// <summary>Goes back within the screen (a trail of nodes); false when it has nowhere to go.</summary>
+    /// <summary>Handles Back within the screen (a search cleared, a note not saved asked about); false to show the screen before.</summary>
     bool GoBack();
 
     void Refresh();
@@ -20,8 +20,9 @@ public interface IPage
 }
 
 /// <summary>
-/// The app's one window: its screens (back goes to the one before), and the messages and
-/// questions shown over them. Opens the vault, asking its pass phrase on its own screen first.
+/// The app's one window: its screens, one back stack (Back and ← go to the screen before), and
+/// the messages and questions shown over them. Opens the vault, asking its pass phrase on its own
+/// screen first.
 /// </summary>
 public sealed partial class Shell : UserControl
 {
@@ -201,6 +202,27 @@ public sealed partial class Shell : UserControl
 
     /// <summary>Whether there is a screen before the one shown.</summary>
     public bool CanGoBack => _pages.Count > 1;
+
+    public bool IsShown(Control page) => _pages.TryPeek(out var shown) && shown == page;
+
+    /// <summary>The screens from the first to <paramref name="page"/>, it included (shown or about to be).</summary>
+    public IEnumerable<Control> PagesUpTo(Control page) => _pages.Reverse().TakeWhile(before => before != page).Append(page);
+
+    /// <summary>The home, with <paramref name="page"/> over it, as a deep link opens: Back goes to the home.</summary>
+    public void ShowOverHome(Control page)
+    {
+        if (_pages.LastOrDefault() is not HomePage)
+        {
+            Show(new HomePage(this));
+        }
+
+        while (_pages.Count > 1)
+        {
+            _pages.Pop();
+        }
+
+        Push(page);
+    }
 
     /// <summary>Shows the screen before; false at the first one.</summary>
     public bool Back()

@@ -89,7 +89,7 @@ public sealed partial class Shell
 
         if (added is [var one])
         {
-            Push(new NodePage(this, one));
+            ShowOverHome(new NodePage(this, one));
         }
         else
         {

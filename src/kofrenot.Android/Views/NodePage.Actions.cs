@@ -93,10 +93,8 @@ public sealed partial class NodePage
             return;
         }
 
-        if (Write(answers => _shell.Services.Session.Write(answers, deletion.Change, "Node deleted")) && !GoBack())
-        {
-            _shell.Back();
-        }
+        // Gone: the page shows the screen before (Refresh).
+        Write(answers => _shell.Services.Session.Write(answers, deletion.Change, "Node deleted"));
     }
 
     private void Link_ContextRequested(object? sender, ContextRequestedEventArgs e)

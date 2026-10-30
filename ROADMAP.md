@@ -20,7 +20,6 @@ Scope of each planned version. Implemented features move to [CHANGELOG.md](CHANG
 ## 0.13
 Android navigation and layouts, as Android's [principles of navigation](https://developer.android.com/guide/navigation/principles) and Material 3. Open points: [Android open questions](docs/ANDROID-CONCEPT.md#open-questions).
 1. Android · **Spacing.** Margins and gaps as shared resources too, as the touch sizes, type and colours already are.
-2. Android · **One back stack.** Back and ← both go to the screen before. A share from another app opens on Home › node, as a deep link would.
 
 ## 0.14
 1. Both · **Events and qualifiers.**

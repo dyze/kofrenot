@@ -15,6 +15,7 @@ It covers kofrenot on Windows and on Android; versions before 0.9 ran on Windows
   - **Screens slide**: in from the right going forward, from the left going back.
   - **Material layout**: each screen has a top bar with **←** (the same as Back) and **⋮**, drawn icons instead of text glyphs; menus are bottom sheets: a node's actions, a field's options, a link's removal (long press), the views to open as a tab; **＋** is a floating button at the bottom right of the home ([README](README.md#on-android)).
   - **Lighter home**: the search box is in the top bar, between **☰** (the open vault and where its sync stands, *Sync now*, the other vaults, *Vaults…*) and **⋮** (*Settings*); the dot on **☰** shows the sync ([README](README.md#on-android)).
+  - **One back stack**: a link on a node's page opens that node as a screen of its own, so Back and **←** go back through them one by one, the trail at the top naming them; a note being edited stays as it was until you come back to it. One node added from another app's share opens over the home, as a deep link would ([ANDROID-CONCEPT.md](docs/ANDROID-CONCEPT.md#layout)).
 
 ## [0.12] - 2026-10-30
 
