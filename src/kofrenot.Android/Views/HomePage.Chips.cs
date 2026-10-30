@@ -131,7 +131,7 @@ public sealed partial class HomePage
     // Once the box has laid out its new text.
     private void PlaceProposalLater() => Dispatcher.UIThread.Post(PlaceProposal, DispatcherPriority.Loaded);
 
-    // The proposal right after the text, while the caret is at its end and the end is in sight.
+    // The proposal right after the text, on its line, while the caret is at its end and the end is in sight.
     private void PlaceProposal()
     {
         var text = SearchBox.Text ?? string.Empty;
@@ -142,7 +142,7 @@ public sealed partial class HomePage
             && end is { X: var x } && x < SearchArea.Bounds.Width;
         if (end is { } point)
         {
-            ProposalText.Margin = new Thickness(point.X, 0, 0, 0);
+            ProposalText.Margin = new Thickness(point.X, point.Y, 0, 0);
         }
     }
 

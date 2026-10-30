@@ -17,6 +17,10 @@ It covers kofrenot on Windows and on Android; versions before 0.9 ran on Windows
   - **Lighter home**: the search box is in the top bar, between **☰** (the open vault and where its sync stands, *Sync now*, the other vaults, *Vaults…*) and **⋮** (*Settings*); the dot on **☰** shows the sync ([README](README.md#on-android)).
   - **One back stack**: a link on a node's page opens that node as a screen of its own, so Back and **←** go back through them one by one, the trail at the top naming them; a note being edited stays as it was until you come back to it. One node added from another app's share opens over the home, as a deep link would ([ANDROID-CONCEPT.md](docs/ANDROID-CONCEPT.md#layout)).
 
+### Fixed
+- **Android**
+  - **Search box text** lines up with its labels and with the name proposed after it, no longer higher.
+
 ## [0.12] - 2026-10-30
 
 ### Added

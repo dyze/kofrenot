@@ -47,13 +47,13 @@
                (or Backspace with no text) turns it back into text. A tap on the proposal accepts it (Tab on Windows). -->
           <Panel x:Name="SearchArea" Grid.Column="1" Margin="4,0" ClipToBounds="True">
             <!-- Go, not Android's default Done for one line: Avalonia hides the keyboard on Done; Go sends Enter only. -->
-            <TextBox x:Name="SearchBox" TextInputOptions.ReturnKeyType="Go" PlaceholderText="Search or add" TextChanged="Search_TextChanged">
+            <TextBox x:Name="SearchBox" VerticalContentAlignment="Center" TextInputOptions.ReturnKeyType="Go" PlaceholderText="Search or add" TextChanged="Search_TextChanged">
               <TextBox.InnerLeftContent>
                 <StackPanel x:Name="Chips" Orientation="Horizontal" Spacing="{StaticResource GapS}" Margin="6,0,0,0" VerticalAlignment="Center" />
               </TextBox.InnerLeftContent>
             </TextBox>
             <!-- Placed right after the text (HomePage.Chips), as on Windows. -->
-            <TextBlock x:Name="ProposalText" HorizontalAlignment="Left" VerticalAlignment="Center" Background="Transparent"
+            <TextBlock x:Name="ProposalText" HorizontalAlignment="Left" VerticalAlignment="Top" Background="Transparent"
                        Foreground="{StaticResource Secondary}" IsVisible="False" Tapped="Proposal_Tapped" />
           </Panel>
         </Grid>
