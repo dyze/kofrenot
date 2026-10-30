@@ -107,9 +107,16 @@ Same vaults, same files, same encryption ([Encryption](ARCHITECTURE.md#encryptio
 | Privacy | `FLAG_SECURE`: the app's screens stay out of the recent apps list and of screenshots; Settings > General turns it off, on by default |
 | Background sync | Only while the app is shown |
 
+## Decided (0.13)
+| Topic | Decision |
+| --- | --- |
+| Material controls | Top bar, bottom sheets and FAB built in the app on the Fluent theme: no new package |
+
 ## Open questions
 | Topic | Question |
 | --- | --- |
 | Distribution | F-Droid or Google Play later? An update check of the APK? |
 | Lock | Lock the vault after some time in the background? Fingerprint unlock of the remembered key? |
 | Background sync | Also in the background (WorkManager) later? |
+| Node trail | Each node opened from a link a screen of the one back stack, or the trail kept within the node screen (`NodeBrowser`) with Back only made consistent? |
+| Large screens | A list beside the node's details from 600 dp wide (tablets, landscape), or phone layout only for now? |
