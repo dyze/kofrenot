@@ -69,12 +69,30 @@ public sealed partial class NodePage
             return;
         }
 
-        var value = await _shell.AskText($"{name.Trim()}: its value", string.Empty, "Add", text => planner.AddOwn(node, name, FieldKind.Text, text).Error, text => planner.AddOwn(node, name, FieldKind.Text, text).CanApply);
+        // Its kind next, as on Windows; then its value, ticked or not for a checkbox.
+        _shell.ShowSheet($"{name.Trim()}: its kind", FieldPlanner.OwnKinds.Select(kind => new SheetChoice(KindLabel(kind), kind == FieldKind.Checkbox
+            ? () => AskChecked(planner, node, name)
+            : () => _shell.Run(() => AddFieldValueAsync(planner, node, name, kind)))));
+    }
+
+    private async Task AddFieldValueAsync(FieldPlanner planner, Node node, string name, FieldKind kind)
+    {
+        var value = await _shell.AskText($"{name.Trim()}: its value", string.Empty, "Add", text => planner.AddOwn(node, name, kind, text).Error, text => planner.AddOwn(node, name, kind, text).CanApply);
         if (value is not null)
         {
-            WriteField(planner.AddOwn(node, name, FieldKind.Text, value), "Field of its own added");
+            WriteField(planner.AddOwn(node, name, kind, value), "Field of its own added");
         }
     }
+
+    private void AskChecked(FieldPlanner planner, Node node, string name) =>
+        _shell.ShowSheet($"{name.Trim()}: its value", new[] { true, false }.Select(isChecked => new SheetChoice(isChecked ? "Checked" : "Not checked",
+            () => WriteField(planner.AddOwn(node, name, FieldKind.Checkbox, FieldValue.Of(isChecked)), "Field of its own added"))));
+
+    private static string KindLabel(FieldKind kind) => kind switch
+    {
+        FieldKind.Url => "Web address",
+        _ => kind.ToString(),
+    };
 
     // What is wrong with a field's name; its value is asked next.
     private static string? NameRemark(FieldPlan plan) =>
