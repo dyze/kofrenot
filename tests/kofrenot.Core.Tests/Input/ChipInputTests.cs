@@ -98,6 +98,17 @@ public sealed class ChipInputTests
     }
 
     [Fact]
+    public void TheSameTextTypedAgain_KeepsTheProposal()
+    {
+        Add("Dune");
+        TypeEach("dun");
+
+        Assert.False(_input.Type(_graph, "dun"));
+
+        Assert.Equal("Dune", _input.Proposal(_graph)?.Label);
+    }
+
+    [Fact]
     public void AcceptingALinkType_MakesItAndTheFirstNodeLabels()
     {
         TypeEach("Old map con");

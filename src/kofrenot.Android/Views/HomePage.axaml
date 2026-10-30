@@ -65,16 +65,16 @@
     </ScrollViewer>
     <!-- The labels (ChipInput) before the text, as the input box on Windows: a tap on the last one
          (or Backspace with no text) turns it back into text. A tap on the proposal accepts it (Tab on Windows). -->
-    <TextBox x:Name="SearchBox" DockPanel.Dock="Top" Margin="12,4" PlaceholderText="Search, or add: Dune relates to Frank Herbert" TextChanged="Search_TextChanged">
-      <TextBox.InnerLeftContent>
-        <StackPanel x:Name="Chips" Orientation="Horizontal" Spacing="4" Margin="6,0,0,0" VerticalAlignment="Center" />
-      </TextBox.InnerLeftContent>
-      <TextBox.InnerRightContent>
-        <Button x:Name="ProposalButton" Classes="flat" Padding="8,0" IsVisible="False" Click="Proposal_Click">
-          <TextBlock x:Name="ProposalText" Foreground="{StaticResource Secondary}" />
-        </Button>
-      </TextBox.InnerRightContent>
-    </TextBox>
+    <Panel x:Name="SearchArea" DockPanel.Dock="Top" Margin="12,4" ClipToBounds="True">
+      <TextBox x:Name="SearchBox" PlaceholderText="Search, or add: Dune relates to Frank Herbert" TextChanged="Search_TextChanged">
+        <TextBox.InnerLeftContent>
+          <StackPanel x:Name="Chips" Orientation="Horizontal" Spacing="4" Margin="6,0,0,0" VerticalAlignment="Center" />
+        </TextBox.InnerLeftContent>
+      </TextBox>
+      <!-- Placed right after the text (HomePage.Chips), as on Windows. -->
+      <TextBlock x:Name="ProposalText" HorizontalAlignment="Left" VerticalAlignment="Center" Background="Transparent"
+                 Foreground="{StaticResource Secondary}" IsVisible="False" Tapped="Proposal_Tapped" />
+    </Panel>
     <!-- What the text adds, as the input box on Windows: a tap shows the creation screen (CreationPage). -->
     <Button x:Name="AddButton" DockPanel.Dock="Top" Classes="flat" Margin="12,0" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
             IsVisible="False" Click="Add_Click">

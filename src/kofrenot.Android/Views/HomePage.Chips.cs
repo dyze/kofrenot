@@ -1,8 +1,12 @@
+using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Presenters;
 using Avalonia.Controls.Shapes;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Layout;
+using Avalonia.Threading;
+using Avalonia.VisualTree;
 using Kofrenot.Core.Browse;
 using Kofrenot.Core.Graph;
 using Kofrenot.Core.Input;
@@ -18,18 +22,28 @@ public sealed partial class HomePage
 {
     private readonly ChipInput _chips = new();
     private string? _placeholder;
-    private bool _settingSearch;
 
     // Backspace is seen before the box handles it: with no text left, it turns the last label back into text.
+    // The proposal follows the caret: shown only while it is at the end.
     private void WatchSearchBox()
     {
         _placeholder = SearchBox.PlaceholderText;
+        ProposalText.FontSize = SearchBox.FontSize;
         SearchBox.AddHandler(KeyDownEvent, SearchBox_KeyDown, RoutingStrategies.Tunnel);
+        SearchBox.PropertyChanged += (_, e) =>
+        {
+            if (e.Property == TextBox.CaretIndexProperty)
+            {
+                PlaceProposalLater();
+            }
+        };
     }
 
+    // Avalonia tells of a change later, maybe several times: each reads the box as it is now, the same
+    // text again changing nothing (ChipInput.Type), the text set here included.
     private void Search_TextChanged(object? sender, TextChangedEventArgs e)
     {
-        if (_settingSearch || Vault is not { } vault)
+        if (Vault is not { } vault)
         {
             return;
         }
@@ -51,7 +65,7 @@ public sealed partial class HomePage
     }
 
     /// <summary>A tap on the proposal (Tab on Windows): it becomes a label.</summary>
-    private void Proposal_Click(object? sender, RoutedEventArgs e)
+    private void Proposal_Tapped(object? sender, TappedEventArgs e)
     {
         if (Vault is { } vault && _chips.Accept(vault.Graph))
         {
@@ -101,9 +115,26 @@ public sealed partial class HomePage
 
         Chips.IsVisible = chips.Count > 0;
         SearchBox.PlaceholderText = _chips.IsEmpty ? _placeholder : null;
-        var proposal = _chips.Proposal(graph);
-        ProposalText.Text = proposal?.Label;
-        ProposalButton.IsVisible = proposal is not null;
+        ProposalText.Text = _chips.Proposal(graph)?.Rest;
+        PlaceProposalLater();
+    }
+
+    // Once the box has laid out its new text.
+    private void PlaceProposalLater() => Dispatcher.UIThread.Post(PlaceProposal, DispatcherPriority.Loaded);
+
+    // The proposal right after the text, while the caret is at its end and the end is in sight.
+    private void PlaceProposal()
+    {
+        var text = SearchBox.Text ?? string.Empty;
+        var presenter = SearchBox.GetVisualDescendants().OfType<TextPresenter>().FirstOrDefault();
+        var end = presenter?.TranslatePoint(new Point(presenter.TextLayout.HitTestTextPosition(text.Length).Right, 0), SearchArea);
+        ProposalText.IsVisible = !string.IsNullOrEmpty(ProposalText.Text) && text.Length > 0
+            && SearchBox.CaretIndex == text.Length && SearchBox.SelectionStart == SearchBox.SelectionEnd
+            && end is { X: var x } && x < SearchArea.Bounds.Width;
+        if (end is { } point)
+        {
+            ProposalText.Margin = new Thickness(point.X, 0, 0, 0);
+        }
     }
 
     // A label as on Windows: a node's glyph and colour, or new (dashed, ＋); the link type in the accent.
@@ -155,9 +186,7 @@ public sealed partial class HomePage
     // Sets the text after the labels without reading it as typed, the caret at its end.
     private void SetSearchText(string text)
     {
-        _settingSearch = true;
         SearchBox.Text = text;
         SearchBox.CaretIndex = text.Length;
-        _settingSearch = false;
     }
 }

@@ -30,9 +30,15 @@ public sealed class ChipInput
     /// <summary>
     /// The text after the labels, typed or edited. True when labels formed: the text after them is
     /// then <see cref="Tail"/>. Labels form, and a proposal shows, only for text added at its end.
+    /// The same text again changes nothing: a box may tell of one change several times (Avalonia's, later).
     /// </summary>
     public bool Type(KnowledgeGraph graph, string tail)
     {
+        if (tail == Tail)
+        {
+            return false;
+        }
+
         _typedAtEnd = tail.Length > Tail.Length && tail.StartsWith(Tail, StringComparison.Ordinal);
         Tail = tail;
         return _typedAtEnd && _linkType is null && Recognize(graph.Types);
