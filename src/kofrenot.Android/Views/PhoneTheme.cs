@@ -1,4 +1,6 @@
 using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Media;
 using Avalonia.Styling;
 using Kofrenot.Core.Settings;
 
@@ -23,4 +25,13 @@ public static class PhoneTheme
             };
         }
     }
+
+    /// <summary>A colour of the tokens (App.axaml), for what a screen builds in code.</summary>
+    public static IBrush Brush(string key) => (IBrush)Token(key);
+
+    /// <summary>A size of the tokens (App.axaml), for what a screen builds in code.</summary>
+    public static double Size(string key) => (double)Token(key);
+
+    private static object Token(string key) =>
+        Application.Current?.FindResource(key) ?? throw new KeyNotFoundException($"No token {key} in App.axaml.");
 }

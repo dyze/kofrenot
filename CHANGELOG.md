@@ -8,6 +8,10 @@ It covers kofrenot on Windows and on Android; versions before 0.9 ran on Windows
 
 ## [Unreleased]
 
+### Changed
+- **Android**
+  - **Touch targets of 48 dp**: every button, row, tab, field and link is at least 48 dp high, as Android asks; type sizes and colours are shared tokens (`App.axaml`), none written in a screen ([ANDROID-CONCEPT.md](docs/ANDROID-CONCEPT.md#layout)).
+
 ## [0.12] - 2026-10-30
 
 ### Added

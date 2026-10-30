@@ -21,7 +21,7 @@ public sealed class VaultRow(RegisteredVault vault, string name) : INotifyProper
 
     public string Detail { get; private set; } = string.Empty;
 
-    public IBrush Dot { get; private set; } = Brushes.Gray;
+    public IBrush Dot { get; private set; } = VaultsPage.DotOf(SyncLevel.Waiting);
 
     public void Show(SyncStatus status)
     {
@@ -96,9 +96,9 @@ public sealed partial class VaultsPage : UserControl, IPage
     /// <summary>The dot of the main window: green synced, grey waiting or offline, red when the user is needed.</summary>
     public static IBrush DotOf(SyncLevel level) => level switch
     {
-        SyncLevel.Synced => Brushes.MediumSeaGreen,
-        SyncLevel.Problem => Brushes.IndianRed,
-        _ => Brushes.Gray,
+        SyncLevel.Synced => PhoneTheme.Brush("Synced"),
+        SyncLevel.Problem => PhoneTheme.Brush("Problem"),
+        _ => PhoneTheme.Brush("Idle"),
     };
 
     private void Add_Click(object? sender, RoutedEventArgs e) => _shell.Run(ChooseAsync);

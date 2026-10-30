@@ -8,8 +8,8 @@
       <Setter Property="Padding" Value="5,1,7,1" />
       <Setter Property="CornerRadius" Value="4" />
       <Setter Property="BorderThickness" Value="1" />
-      <Setter Property="BorderBrush" Value="#55888888" />
-      <Setter Property="Background" Value="#22888888" />
+      <Setter Property="BorderBrush" Value="{StaticResource ChipStroke}" />
+      <Setter Property="Background" Value="{StaticResource ChipFill}" />
     </Style>
     <Style Selector="Border.chip.new">
       <Setter Property="BorderBrush" Value="Transparent" />
@@ -21,13 +21,13 @@
       <Setter Property="Background" Value="{StaticResource Accent}" />
     </Style>
     <Style Selector="Border.chip.link TextBlock">
-      <Setter Property="Foreground" Value="White" />
+      <Setter Property="Foreground" Value="{StaticResource OnAccent}" />
     </Style>
     <Style Selector="Rectangle.newOutline">
       <Setter Property="RadiusX" Value="4" />
       <Setter Property="RadiusY" Value="4" />
-      <Setter Property="Fill" Value="#226FBF4A" />
-      <Setter Property="Stroke" Value="#6FBF4A" />
+      <Setter Property="Fill" Value="{StaticResource NewFill}" />
+      <Setter Property="Stroke" Value="{StaticResource NewStroke}" />
       <Setter Property="StrokeThickness" Value="1" />
       <Setter Property="StrokeDashArray" Value="3,2" />
     </Style>
@@ -87,7 +87,7 @@
         <DataTemplate DataType="views:TreeRow">
           <Grid ColumnDefinitions="Auto,*" Margin="{Binding Indent}">
             <Button Classes="flat toggle" Content="{Binding Toggle}" IsVisible="{Binding Item.CanExpand}" Tag="{Binding}"
-                    Click="Toggle_Click" Width="32" MinWidth="32" MinHeight="40" Padding="0" />
+                    Click="Toggle_Click" Width="{StaticResource TouchTarget}" Padding="0" />
             <ContentControl Grid.Column="1" Content="{Binding Row}" Margin="{Binding Shift}" />
           </Grid>
         </DataTemplate>

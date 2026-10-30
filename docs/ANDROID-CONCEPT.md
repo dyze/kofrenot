@@ -60,6 +60,11 @@ Before 0.12 the phone wrote content only (`ClientMode.Content`: notes and files)
 
 One window, navigation by back button; light and dark themes follow the phone, or the theme chosen in Settings > Appearance (what Android draws itself, the status bar and the splash, follows the phone).
 
+### Layout
+| Part | How |
+| --- | --- |
+| Tokens | `App.axaml`: touch target (48 dp), bar height, type sizes (title, section, body, caption), colours; code reads them with `PhoneTheme.Brush` and `PhoneTheme.Size` |
+
 ## Architecture
 A new project, beside `kofrenot.App`. Everything it shows comes from `kofrenot.Core`, unchanged in its rules ([CLAUDE.md](../CLAUDE.md#architecture-rules-keep-it-this-way)).
 

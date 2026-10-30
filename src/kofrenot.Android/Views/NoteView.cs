@@ -68,7 +68,7 @@ public static class NoteView
 
     private static SelectableTextBlock TextOf(IReadOnlyList<TextRun> runs)
     {
-        var text = new SelectableTextBlock { TextWrapping = TextWrapping.Wrap, FontSize = 15 };
+        var text = new SelectableTextBlock { TextWrapping = TextWrapping.Wrap, FontSize = PhoneTheme.Size("BodySize") };
         text.Inlines ??= [];
         foreach (var run in runs)
         {
@@ -81,7 +81,7 @@ public static class NoteView
             {
                 // Shown as a link, not followed: the phone opens nothing from a vault.
                 inline.TextDecorations = TextDecorations.Underline;
-                inline.Foreground = Application.Current?.FindResource("Accent") as IBrush;
+                inline.Foreground = PhoneTheme.Brush("Accent");
             }
 
             text.Inlines.Add(inline);

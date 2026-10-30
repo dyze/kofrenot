@@ -11,7 +11,7 @@ namespace Kofrenot.Phone.Views;
 /// The phone's creation screen for what the search box's text adds (<see cref="CreationForm"/>):
 /// the link's type, each new node's type (a view or a dataset is made elsewhere: on Windows, or a
 /// file added with ＋) and a new note's text. Add adds it and goes back, as on Windows: its nodes first
-/// among the recent ones, the search box cleared (<paramref name="added"/>); back cancels.
+/// among the recent ones, the search box cleared (its added action); back cancels.
 /// </summary>
 public sealed partial class CreationPage : UserControl, IPage
 {

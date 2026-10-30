@@ -5,11 +5,30 @@
              RequestedThemeVariant="Default">
   <!-- Default: light or dark, as the phone. -->
 
+  <!-- The tokens: the touch sizes, type sizes and colours of the screens, none written in a screen. -->
   <Application.Resources>
+    <!-- Sizes, in dp: 48 is Android's smallest touch target. -->
+    <x:Double x:Key="TouchTarget">48</x:Double>
+    <x:Double x:Key="BarHeight">64</x:Double>
+    <!-- Type: title, section, body, caption. -->
+    <x:Double x:Key="TitleSize">22</x:Double>
+    <x:Double x:Key="SectionSize">18</x:Double>
+    <x:Double x:Key="BodySize">16</x:Double>
+    <x:Double x:Key="CaptionSize">13</x:Double>
+    <!-- Colours. -->
     <SolidColorBrush x:Key="Accent" Color="#11968A" />
+    <SolidColorBrush x:Key="OnAccent" Color="White" />
     <SolidColorBrush x:Key="Secondary" Color="#888888" />
     <SolidColorBrush x:Key="Banner" Color="#3311968A" />
     <SolidColorBrush x:Key="Scrim" Color="#99000000" />
+    <SolidColorBrush x:Key="Error" Color="#D9534F" />
+    <SolidColorBrush x:Key="ChipFill" Color="#22888888" />
+    <SolidColorBrush x:Key="ChipStroke" Color="#55888888" />
+    <SolidColorBrush x:Key="NewFill" Color="#226FBF4A" />
+    <SolidColorBrush x:Key="NewStroke" Color="#6FBF4A" />
+    <SolidColorBrush x:Key="Synced" Color="MediumSeaGreen" />
+    <SolidColorBrush x:Key="Problem" Color="IndianRed" />
+    <SolidColorBrush x:Key="Idle" Color="Gray" />
   </Application.Resources>
 
   <Application.DataTemplates>
@@ -17,15 +36,14 @@
       <TextBlock Classes="caption" Text="{Binding Text}" Margin="16,10,16,2" />
     </DataTemplate>
     <DataTemplate DataType="views:NodeRow">
-      <!-- Two tight lines, at least 40 high: still a comfortable tap. -->
-      <Grid ColumnDefinitions="Auto,*" Margin="{Binding Indent}" MinHeight="40">
+      <Grid ColumnDefinitions="Auto,*" Margin="{Binding Indent}" MinHeight="{StaticResource TouchTarget}">
         <Grid Width="24" Height="24" VerticalAlignment="Center">
-          <TextBlock Text="{Binding Glyph}" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center" />
+          <TextBlock Text="{Binding Glyph}" FontSize="{StaticResource BodySize}" HorizontalAlignment="Center" VerticalAlignment="Center" />
           <Ellipse Width="8" Height="8" Fill="{Binding Color}" IsVisible="{Binding HasColor}"
                    HorizontalAlignment="Right" VerticalAlignment="Bottom" />
         </Grid>
         <StackPanel Grid.Column="1" Margin="10,2,0,2" VerticalAlignment="Center">
-          <TextBlock Text="{Binding Name}" FontSize="16" TextTrimming="CharacterEllipsis" />
+          <TextBlock Text="{Binding Name}" FontSize="{StaticResource BodySize}" TextTrimming="CharacterEllipsis" />
           <TextBlock Classes="caption" Text="{Binding Detail}" IsVisible="{Binding HasDetail}" TextTrimming="CharacterEllipsis" />
         </StackPanel>
       </Grid>
@@ -40,21 +58,32 @@
       </FluentTheme.Palettes>
     </FluentTheme>
     <Style Selector=":is(TextBlock).title">
-      <Setter Property="FontSize" Value="22" />
+      <Setter Property="FontSize" Value="{StaticResource TitleSize}" />
       <Setter Property="FontWeight" Value="SemiBold" />
     </Style>
+    <Style Selector=":is(TextBlock).section">
+      <Setter Property="FontSize" Value="{StaticResource SectionSize}" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
+    <Style Selector=":is(TextBlock).body">
+      <Setter Property="FontSize" Value="{StaticResource BodySize}" />
+    </Style>
     <Style Selector=":is(TextBlock).caption">
-      <Setter Property="FontSize" Value="13" />
+      <Setter Property="FontSize" Value="{StaticResource CaptionSize}" />
       <Setter Property="Foreground" Value="{StaticResource Secondary}" />
     </Style>
     <Style Selector=":is(TextBlock).error">
-      <Setter Property="Foreground" Value="#D9534F" />
+      <Setter Property="Foreground" Value="{StaticResource Error}" />
       <Setter Property="TextWrapping" Value="Wrap" />
+    </Style>
+    <!-- Every button is a touch target. -->
+    <Style Selector="Button">
+      <Setter Property="MinHeight" Value="{StaticResource TouchTarget}" />
+      <Setter Property="VerticalContentAlignment" Value="Center" />
     </Style>
     <Style Selector="Button.flat">
       <Setter Property="Background" Value="Transparent" />
-      <Setter Property="MinHeight" Value="44" />
-      <Setter Property="MinWidth" Value="44" />
+      <Setter Property="MinWidth" Value="{StaticResource TouchTarget}" />
     </Style>
     <Style Selector="ListBox">
       <Setter Property="Background" Value="Transparent" />
@@ -64,17 +93,12 @@
       <Setter Property="Padding" Value="0" />
       <Setter Property="MinHeight" Value="0" />
     </Style>
-    <Style Selector="Button.tab">
-      <Setter Property="Height" Value="40" />
-      <Setter Property="MinHeight" Value="0" />
-      <Setter Property="VerticalContentAlignment" Value="Center" />
-    </Style>
     <Style Selector="Button.toggle">
-      <Setter Property="FontSize" Value="18" />
+      <Setter Property="FontSize" Value="{StaticResource SectionSize}" />
     </Style>
     <Style Selector="Border.bar">
-      <Setter Property="Padding" Value="8,4" />
-      <Setter Property="MinHeight" Value="56" />
+      <Setter Property="Padding" Value="4,0" />
+      <Setter Property="MinHeight" Value="{StaticResource BarHeight}" />
     </Style>
   </Application.Styles>
 </Application>

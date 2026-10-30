@@ -6,8 +6,6 @@
   <UserControl.Styles>
     <!-- A topic's header, named as its tab in the Settings window on Windows (SettingsCatalog). -->
     <Style Selector="TextBlock.section">
-      <Setter Property="FontSize" Value="18" />
-      <Setter Property="FontWeight" Value="SemiBold" />
       <Setter Property="Margin" Value="0,16,0,0" />
     </Style>
   </UserControl.Styles>

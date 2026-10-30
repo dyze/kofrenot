@@ -21,7 +21,7 @@
           <Grid ColumnDefinitions="Auto,*,Auto" MinHeight="56">
             <Ellipse Width="10" Height="10" Fill="{Binding Dot}" VerticalAlignment="Center" Margin="8,0" />
             <StackPanel Grid.Column="1" VerticalAlignment="Center">
-              <TextBlock Text="{Binding Name}" FontSize="16" TextTrimming="CharacterEllipsis" />
+              <TextBlock Text="{Binding Name}" Classes="body" TextTrimming="CharacterEllipsis" />
               <TextBlock Classes="caption" Text="{Binding Detail}" TextTrimming="CharacterEllipsis" />
             </StackPanel>
             <Button Grid.Column="2" Classes="flat" Content="✕" Tag="{Binding}" Click="Remove_Click" />
@@ -29,7 +29,7 @@
         </DataTemplate>
         <DataTemplate DataType="views:StoreRow">
           <StackPanel MinHeight="56" VerticalAlignment="Center" Margin="8,0">
-            <TextBlock Text="{Binding Name}" FontSize="16" />
+            <TextBlock Text="{Binding Name}" Classes="body" />
             <TextBlock Classes="caption" Text="{Binding Detail}" />
           </StackPanel>
         </DataTemplate>

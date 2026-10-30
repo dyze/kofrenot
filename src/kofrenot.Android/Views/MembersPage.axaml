@@ -17,7 +17,7 @@
         <ItemsControl x:Name="MembersList">
           <ItemsControl.ItemTemplate>
             <DataTemplate DataType="graph:VaultMember">
-              <Button Classes="flat" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" Padding="0" MinHeight="44"
+              <Button Classes="flat" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" Padding="0"
                       Tag="{Binding}" Click="Member_Click">
                 <Grid ColumnDefinitions="*,Auto">
                   <TextBlock Text="{Binding Email}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
