@@ -13,12 +13,13 @@ namespace Kofrenot.Phone.Views;
 /// </summary>
 public sealed partial class HomePage
 {
-    // ＋: a sheet; the camera's choices only when the phone has a camera app.
+    // ＋: a sheet, a node first (HomePage.AddNode); the camera's choices only when the phone has a camera app.
     private void AddFiles_Click(object? sender, RoutedEventArgs e)
     {
         var camera = _shell.Services.Camera.IsAvailable;
         _shell.ShowSheet("Add",
         [
+            .. AddNodeChoice() is { } node ? [node] : Array.Empty<SheetChoice>(),
             new("Files…", () => _shell.Run(AddFilesAsync)),
             .. camera ? new SheetChoice[]
             {

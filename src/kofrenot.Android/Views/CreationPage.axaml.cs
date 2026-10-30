@@ -8,10 +8,11 @@ using Kofrenot.Phone.Platform;
 namespace Kofrenot.Phone.Views;
 
 /// <summary>
-/// The phone's creation screen for what the search box's text adds (<see cref="CreationForm"/>):
-/// the link's type, each new node's type (a view or a dataset is made elsewhere: on Windows, or a
-/// file added with ＋) and a new note's text. Add adds it and goes back, as on Windows: its nodes first
-/// among the recent ones, the search box cleared (its added action); back cancels.
+/// The phone's creation screen for what the search box's text adds, or for a node added with ＋
+/// (its name typed here) (<see cref="CreationForm"/>): the link's type, each new node's type (a
+/// view or a dataset is made elsewhere: on Windows, or a file added with ＋) and a new note's text.
+/// Add adds it and goes back, as on Windows: its nodes first among the recent ones, the search box
+/// cleared (its added action); back cancels.
 /// </summary>
 public sealed partial class CreationPage : UserControl, IPage
 {
@@ -70,22 +71,41 @@ public sealed partial class CreationPage : UserControl, IPage
         }
     }
 
-    // A new node: its name, its type, and for a note its text.
+    // A new node: its name (typed here when started from ＋), its type (fixed by a list), and for a note its text.
     private void ShowSide(Side side)
     {
-        Sides.Children.Add(new TextBlock { Classes = { "caption" }, Text = $"New node: {_form.NameOf(side)}", Margin = new Avalonia.Thickness(0, 8, 0, 0) });
+        var text = new TextBox { AcceptsReturn = true, TextWrapping = Avalonia.Media.TextWrapping.Wrap, MinHeight = 120, PlaceholderText = "Its text: Markdown, - [ ] task", Text = _form.ContentOf(side), IsVisible = _form.IsNote(side) };
+        text.TextChanged += (_, _) => _form.SetContent(side, text.Text ?? string.Empty);
+        Sides.Children.Add(_form.IsNameEditable ? NameBox() : Caption($"New node: {_form.NameOf(side)}"));
+        Sides.Children.Add(_form.IsTypeFixed ? Caption($"Type: {_form.TypeOf(side).Name}") : TypeBox(side, text));
+        Sides.Children.Add(text);
+    }
+
+    private static TextBlock Caption(string text) => new() { Classes = { "caption" }, Text = text, Margin = new Avalonia.Thickness(0, 8, 0, 0) };
+
+    private TextBox NameBox()
+    {
+        var name = new TextBox { PlaceholderText = "Its name", Text = _form.Name };
+        name.TextChanged += (_, _) =>
+        {
+            _form.Name = name.Text ?? string.Empty;
+            ShowStatus();
+        };
+        name.AttachedToVisualTree += (_, _) => name.Focus();
+        return name;
+    }
+
+    private ComboBox TypeBox(Side side, TextBox text)
+    {
         var types = Types;
         var type = new ComboBox { ItemsSource = types.Select(nodeType => nodeType.Name).ToList(), SelectedIndex = Math.Max(0, types.ToList().IndexOf(_form.TypeOf(side))), HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Stretch };
-        var text = new TextBox { AcceptsReturn = true, TextWrapping = Avalonia.Media.TextWrapping.Wrap, MinHeight = 120, PlaceholderText = "Its text: Markdown, - [ ] task", Text = _form.ContentOf(side), IsVisible = _form.IsNote(side) };
         type.SelectionChanged += (_, _) =>
         {
             _form.SetType(side, types[type.SelectedIndex]);
             text.IsVisible = _form.IsNote(side);
             ShowStatus();
         };
-        text.TextChanged += (_, _) => _form.SetContent(side, text.Text ?? string.Empty);
-        Sides.Children.Add(type);
-        Sides.Children.Add(text);
+        return type;
     }
 
     private static string VerbName(LinkVerb verb) => verb.Phrases[0];

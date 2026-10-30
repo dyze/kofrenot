@@ -8,6 +8,10 @@ It covers kofrenot on Windows and on Android; versions before 0.9 ran on Windows
 
 ## [Unreleased]
 
+### Added
+- **Android**
+  - **Add a node from ＋**: **＋** > *Add a node…* opens the creation screen with the name to type, on any tab, as a view's *New* on Windows: in a list view, of its type; in a tree view, under its root ([README](README.md#on-android)).
+
 ### Changed
 - **Android**
   - **Touch targets of 48 dp**: every button, row, tab, field and link is at least 48 dp high, as Android asks; spacing, type sizes and colours are shared tokens (`App.axaml`) ([ANDROID-CONCEPT.md](docs/ANDROID-CONCEPT.md#layout)).
