@@ -95,7 +95,7 @@ Same vaults, same files, same encryption ([Encryption](ARCHITECTURE.md#encryptio
 | --- | --- |
 | Phone lost or stolen | Mirror and snapshot encrypted as on Windows; key remembered only in the Keystore, or not at all |
 | Other apps reading the files | App-private storage; a file leaves only on *Open with…* (a copy in `cache/open/`, given read only to the app picked, deleted at the next start) or *Save as…* (where the user chooses) |
-| Content visible in the recent apps list, screenshots | `FLAG_SECURE`: neither shows it |
+| Content visible in the recent apps list, screenshots | `FLAG_SECURE`: neither shows it, unless the privacy screen is turned off in Settings (to take a screenshot) |
 | Cleartext traffic | HTTPS only (Android's network security config), but to the phone itself (a server reached through `adb reverse` while developing) |
 
 ## Decided (0.9)
@@ -103,7 +103,7 @@ Same vaults, same files, same encryption ([Encryption](ARCHITECTURE.md#encryptio
 | --- | --- |
 | Distribution | An APK on GitHub releases, signed with the owner's key (`build\android.cmd`); no update check yet |
 | Minimum Android version | 8.0 (API 26) |
-| Privacy | `FLAG_SECURE`: the app's screens stay out of the recent apps list and of screenshots |
+| Privacy | `FLAG_SECURE`: the app's screens stay out of the recent apps list and of screenshots; Settings > General turns it off, on by default |
 | Background sync | Only while the app is shown |
 
 ## Open questions

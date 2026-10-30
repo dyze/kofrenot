@@ -21,7 +21,7 @@ public sealed class MainActivity : AvaloniaMainActivity
 {
     protected override void OnCreate(Bundle? savedInstanceState)
     {
-        // The vault's content stays out of the recent apps list and of screenshots.
+        // Private from the start; once the settings are read, Shown keeps it so or not (App.ApplyPrivacyScreen).
         Window?.SetFlags(WindowManagerFlags.Secure, WindowManagerFlags.Secure);
         base.OnCreate(savedInstanceState);
         App.Current?.Shown(this);

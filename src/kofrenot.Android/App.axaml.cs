@@ -78,8 +78,33 @@ public sealed partial class App : Application
     private static AppServices ServicesOf(global::Android.Content.Context context) =>
         new(context.FilesDir!.AbsolutePath, new AppChooser(context), new PickedFiles(context), new CameraCapture(context));
 
-    /// <summary>The activity shown, or none: what starts the camera app.</summary>
-    public void Shown(global::Android.App.Activity? activity) => Services.Camera.Activity = activity;
+    /// <summary>The activity shown, or none: what starts the camera app, and whose screens the privacy screen keeps private.</summary>
+    public void Shown(global::Android.App.Activity? activity)
+    {
+        Services.Camera.Activity = activity;
+        ApplyPrivacyScreen();
+    }
+
+    /// <summary>
+    /// The privacy screen (Settings > General), on by default: the app's screens stay out of screenshots
+    /// and of the recent apps list (FLAG_SECURE); off, both show them.
+    /// </summary>
+    public void ApplyPrivacyScreen()
+    {
+        if (Services.Camera.Activity?.Window is not { } window)
+        {
+            return;
+        }
+
+        if (Services.Settings.PrivacyScreen)
+        {
+            window.AddFlags(global::Android.Views.WindowManagerFlags.Secure);
+        }
+        else
+        {
+            window.ClearFlags(global::Android.Views.WindowManagerFlags.Secure);
+        }
+    }
 
     /// <summary>An app started for a result is done (the camera app).</summary>
     public void ActivityFinished(int requestCode, global::Android.App.Result result) => Services.Camera.Finished(requestCode, result);
