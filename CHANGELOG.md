@@ -8,6 +8,8 @@ It covers kofrenot on Windows and on Android; versions before 0.9 ran on Windows
 
 ## [Unreleased]
 
+## [0.12] - 2026-10-30
+
 ### Added
 - **Both**
   - **History**: a node's versions, newest first: its text, file or view definition, its names, colours and field values, each with when and what it held, read offline. On Windows, the clock beside the pin lists them and **Restore** writes one again as the current version, after a confirmation; restoring a version of a conflict resolves it, and nothing is lost: the others stay in the history. On Android, the node's page lists them under *History*, each with **Restore** ([README](README.md#node-details)).
@@ -270,7 +272,8 @@ Vault format 8: a vault upgraded is closed by kofrenot 0.10 and older, on Window
 - **Update check** once a day against GitHub releases, switchable in About.
 - **Installer and portable zip** (`build\installer.cmd`), self-contained.
 
-[Unreleased]: https://github.com/dyze/kofrenot/compare/0.11...HEAD
+[Unreleased]: https://github.com/dyze/kofrenot/compare/0.12...HEAD
+[0.12]: https://github.com/dyze/kofrenot/compare/0.11...0.12
 [0.11]: https://github.com/dyze/kofrenot/compare/0.10...0.11
 [0.10]: https://github.com/dyze/kofrenot/compare/0.9...0.10
 [0.9]: https://github.com/dyze/kofrenot/compare/0.8...0.9

@@ -15,13 +15,11 @@ Scope of each planned version. Implemented features move to [CHANGELOG.md](CHANG
 | 0.9     | Released  | Android: server vaults read and searched offline on the phone                      |
 | 0.10    | Released  | Offline pins, file drops; notes and files added on Android                         |
 | 0.11    | Released  | Composition: node types made of fields, several per node; fields of a node's own   |
-
-## 0.12
-
-1. android. Total redesign.
+| 0.12    | Released  | History: versions restored; the phone adds and changes nodes, links, fields and members |
 
 ## 0.13
-1. Both · **Events and qualifiers.**
+1. Android · **Total redesign.**
+2. Both · **Events and qualifiers.**
 	* **Qualifiers** add context to a link: date, place, source, quantity, confidence. *Dune → written by → Frank Herbert (date: 1965)*.
 	* **Events** link several nodes, each in a role, with qualifiers of their own. *Publication of Dune (work: Dune, publisher: Chilton Books, date: 1965, country: USA)*.
 	* Qualifiers and roles are [fields](README.md#node-types-and-fields), so they are searched offline like any other.
