@@ -92,10 +92,6 @@
       <Setter Property="FontSize" Value="{StaticResource TitleSize}" />
       <Setter Property="FontWeight" Value="SemiBold" />
     </Style>
-    <Style Selector=":is(TextBlock).section">
-      <Setter Property="FontSize" Value="{StaticResource SectionSize}" />
-      <Setter Property="FontWeight" Value="SemiBold" />
-    </Style>
     <Style Selector=":is(TextBlock).body">
       <Setter Property="FontSize" Value="{StaticResource BodySize}" />
     </Style>

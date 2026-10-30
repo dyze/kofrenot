@@ -22,6 +22,7 @@ It covers kofrenot on Windows and on Android; versions before 0.9 ran on Windows
   - **One back stack**: a link on a node's page opens that node as a screen of its own, so Back and **←** go back through them one by one, the trail at the top naming them; a note being edited stays as it was until you come back to it. One node added from another app's share opens over the home, as a deep link would ([ANDROID-CONCEPT.md](docs/ANDROID-CONCEPT.md#layout)).
   - **A field of its own of any kind**: **⋮** > *Add field…* asks its kind after its name, as on Windows: text, number, date, web address or checkbox, no longer text only ([README](README.md#on-android)).
   - **History on a screen of its own**: **⋮** > *History…* on a node's page lists its versions, each with **Restore**, instead of a section at the bottom of the page; a reader's **⋮** has it too ([README](README.md#on-android)).
+  - **Settings as a list of topics**, as Android's own settings: General, Vault, Server, Appearance, Logging and About, each with where it stands; a tap opens the topic on a screen of its own, instead of every setting on one page ([README](README.md#on-android)).
 
 ### Fixed
 - **Android**

@@ -6,15 +6,39 @@ using Kofrenot.Core.Settings;
 
 namespace Kofrenot.Phone.Views;
 
-/// <summary>The phone's settings, under the topics of the Settings window on Windows: General, Vault, Server, Appearance, Logging, About.</summary>
+/// <summary>
+/// The phone's settings, as Android's own: a list of topics, each with where it stands, named as the
+/// tabs of the Settings window on Windows (General, Vault, Server, Appearance, Logging, About); a
+/// topic opens on a screen of its own, the same page showing that topic's panel only.
+/// </summary>
 public sealed partial class SettingsPage : UserControl, IPage
 {
     private readonly Shell _shell;
+    private readonly string? _topic;
+    private readonly Dictionary<string, Control> _panels;
 
-    public SettingsPage(Shell shell)
+    /// <param name="topic">A topic (<see cref="SettingsCatalog"/>'s tab name); null for the list of topics.</param>
+    public SettingsPage(Shell shell, string? topic = null)
     {
         _shell = shell;
+        _topic = topic;
         InitializeComponent();
+        _panels = new()
+        {
+            [SettingsCatalog.GeneralTab] = GeneralPanel,
+            [SettingsCatalog.VaultTab] = VaultPanel,
+            [SettingsCatalog.ServerTab] = ServerPanel,
+            [SettingsCatalog.AppearanceTab] = AppearancePanel,
+            [SettingsCatalog.LoggingTab] = LoggingPanel,
+            [SettingsCatalog.AboutTab] = AboutPanel,
+        };
+        Bar.Title = topic ?? "Settings";
+        Topics.IsVisible = topic is null;
+        foreach (var (name, panel) in _panels)
+        {
+            panel.IsVisible = name == topic;
+        }
+
         ThemeBox.SelectedIndex = (int)shell.Services.Settings.Theme;
         PrivacyBox.IsChecked = shell.Services.Settings.PrivacyScreen;
         DebugBox.IsChecked = shell.Services.Settings.DebugLogging;
@@ -39,6 +63,49 @@ public sealed partial class SettingsPage : UserControl, IPage
         MembersButton.IsVisible = services.Session.Current is not null && selected?.Location.IsOnServer == true;
         ExchangeDays.ItemsSource = services.Server.Exchanges.DayRows();
         ExchangeKinds.ItemsSource = services.Server.Exchanges.KindRows();
+        if (_topic is null)
+        {
+            ShowTopics();
+        }
+    }
+
+    // Each topic with where it stands, read again when coming back to the list.
+    private void ShowTopics()
+    {
+        var settings = _shell.Services.Settings;
+        string Summary(string topic) => topic switch
+        {
+            SettingsCatalog.GeneralTab => settings.PrivacyScreen ? "Out of screenshots and the recent apps list" : "Screenshots allowed",
+            SettingsCatalog.VaultTab => Vault.Text ?? string.Empty,
+            SettingsCatalog.ServerTab => Account.Text ?? string.Empty,
+            SettingsCatalog.AppearanceTab => (ThemeBox.SelectedItem as ComboBoxItem)?.Content as string ?? string.Empty,
+            SettingsCatalog.LoggingTab => settings.DebugLogging ? "Debug details on" : "Debug details off",
+            _ => $"kofrenot {AppServices.Version}",
+        };
+
+        Topics.Children.Clear();
+        foreach (var topic in _panels.Keys)
+        {
+            var button = new Button
+            {
+                Classes = { "choice" },
+                Content = new StackPanel
+                {
+                    Margin = new Avalonia.Thickness(0, 6),
+                    Children =
+                    {
+                        new TextBlock { Text = topic, Classes = { "body" } },
+                        new TextBlock { Text = Summary(topic), Classes = { "caption" }, TextTrimming = Avalonia.Media.TextTrimming.CharacterEllipsis },
+                    },
+                },
+            };
+            button.Click += (_, _) =>
+            {
+                _shell.Services.Log.Info("Action", $"Settings > {topic} shown");
+                _shell.Push(new SettingsPage(_shell, topic));
+            };
+            Topics.Children.Add(button);
+        }
     }
 
     private void CopyExchanges_Click(object? sender, RoutedEventArgs e) => _shell.Run(CopyExchangesAsync);

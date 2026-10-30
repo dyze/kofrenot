@@ -2,14 +2,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:views="using:Kofrenot.Phone.Views"
              xmlns:server="using:Kofrenot.Core.Server"
-             xmlns:settings="using:Kofrenot.Core.Settings"
              x:Class="Kofrenot.Phone.Views.SettingsPage">
-  <UserControl.Styles>
-    <!-- A topic's header, named as its tab in the Settings window on Windows (SettingsCatalog). -->
-    <Style Selector="TextBlock.section">
-      <Setter Property="Margin" Value="0,16,0,0" />
-    </Style>
-  </UserControl.Styles>
   <UserControl.Resources>
     <!-- A line of the exchanges' statistics: the day or kind, then its numbers, on two lines to fit the phone. -->
     <DataTemplate x:Key="ExchangeLine" DataType="server:ExchangeRow">
@@ -22,47 +15,56 @@
     </DataTemplate>
   </UserControl.Resources>
   <DockPanel>
-    <views:TopBar DockPanel.Dock="Top" Title="Settings" />
+    <views:TopBar x:Name="Bar" DockPanel.Dock="Top" Title="Settings" />
     <ScrollViewer>
-      <!-- The topics in the order of the Windows tabs; those the phone has no setting for are left out. -->
+      <!-- Settings: the list of its topics, named and ordered as the Windows tabs (those the phone has no setting
+           for left out). A topic: its own screen, the other panels hidden (SettingsPage). -->
       <StackPanel Margin="{StaticResource PageMargin}" Spacing="{StaticResource Gap}">
-        <TextBlock Classes="section" Text="{x:Static settings:SettingsCatalog.GeneralTab}" />
-        <!-- The privacy screen as on Windows: here, out of screenshots and the recent apps list (App.ApplyPrivacyScreen). -->
-        <CheckBox x:Name="PrivacyBox" IsCheckedChanged="Privacy_Changed">
-          <TextBlock Text="Keep kofrenot out of screenshots and the recent apps list" TextWrapping="Wrap" />
-        </CheckBox>
+        <StackPanel x:Name="Topics" />
 
-        <TextBlock Classes="section" Text="{x:Static settings:SettingsCatalog.VaultTab}" />
-        <TextBlock x:Name="Vault" TextWrapping="Wrap" />
-        <Button x:Name="MembersButton" Content="Members…" Click="Members_Click" />
-        <Button x:Name="ForgetButton" Content="Forget its remembered pass phrase" Click="Forget_Click" />
+        <StackPanel x:Name="GeneralPanel" Spacing="{StaticResource Gap}">
+          <!-- The privacy screen as on Windows: here, out of screenshots and the recent apps list (App.ApplyPrivacyScreen). -->
+          <CheckBox x:Name="PrivacyBox" IsCheckedChanged="Privacy_Changed">
+            <TextBlock Text="Keep kofrenot out of screenshots and the recent apps list" TextWrapping="Wrap" />
+          </CheckBox>
+        </StackPanel>
 
-        <TextBlock Classes="section" Text="{x:Static settings:SettingsCatalog.ServerTab}" />
-        <TextBlock x:Name="Account" TextWrapping="Wrap" />
-        <Button Content="Sign out" Click="SignOut_Click" />
+        <StackPanel x:Name="VaultPanel" Spacing="{StaticResource Gap}">
+          <TextBlock x:Name="Vault" TextWrapping="Wrap" />
+          <Button x:Name="MembersButton" Content="Members…" Click="Members_Click" />
+          <Button x:Name="ForgetButton" Content="Forget its remembered pass phrase" Click="Forget_Click" />
+        </StackPanel>
 
-        <TextBlock Classes="section" Text="{x:Static settings:SettingsCatalog.AppearanceTab}" />
-        <TextBlock Text="Theme" />
-        <!-- In the order of ThemeChoice: System, Light, Dark. -->
-        <ComboBox x:Name="ThemeBox" HorizontalAlignment="Stretch" SelectionChanged="Theme_Changed">
-          <ComboBoxItem Content="Follow Android" />
-          <ComboBoxItem Content="Light" />
-          <ComboBoxItem Content="Dark" />
-        </ComboBox>
+        <StackPanel x:Name="ServerPanel" Spacing="{StaticResource Gap}">
+          <TextBlock x:Name="Account" TextWrapping="Wrap" />
+          <Button Content="Sign out" Click="SignOut_Click" />
+        </StackPanel>
 
-        <TextBlock Classes="section" Text="{x:Static settings:SettingsCatalog.LoggingTab}" />
-        <CheckBox x:Name="DebugBox" Content="Debug details in the log" IsCheckedChanged="Debug_Changed" />
-        <TextBlock x:Name="LogFolder" Classes="caption" TextWrapping="Wrap" />
-        <!-- This phone's exchanges with the server, per day for 30 days, then by kind (SettingsPage.Exchanges). -->
-        <TextBlock Text="Exchanges with the server" Margin="0,8,0,0" />
-        <TextBlock Classes="caption" Text="Per day for 30 days, on this phone only: to analyse a slow sync." TextWrapping="Wrap" />
-        <ItemsControl x:Name="ExchangeDays" ItemTemplate="{StaticResource ExchangeLine}" />
-        <TextBlock Classes="caption" Text="By kind" Margin="0,4,0,0" />
-        <ItemsControl x:Name="ExchangeKinds" ItemTemplate="{StaticResource ExchangeLine}" />
-        <Button Content="Copy" Click="CopyExchanges_Click" />
+        <StackPanel x:Name="AppearancePanel" Spacing="{StaticResource Gap}">
+          <TextBlock Text="Theme" />
+          <!-- In the order of ThemeChoice: System, Light, Dark. -->
+          <ComboBox x:Name="ThemeBox" HorizontalAlignment="Stretch" SelectionChanged="Theme_Changed">
+            <ComboBoxItem Content="Follow Android" />
+            <ComboBoxItem Content="Light" />
+            <ComboBoxItem Content="Dark" />
+          </ComboBox>
+        </StackPanel>
 
-        <TextBlock Classes="section" Text="{x:Static settings:SettingsCatalog.AboutTab}" />
-        <TextBlock x:Name="About" TextWrapping="Wrap" />
+        <StackPanel x:Name="LoggingPanel" Spacing="{StaticResource Gap}">
+          <CheckBox x:Name="DebugBox" Content="Debug details in the log" IsCheckedChanged="Debug_Changed" />
+          <TextBlock x:Name="LogFolder" Classes="caption" TextWrapping="Wrap" />
+          <!-- This phone's exchanges with the server, per day for 30 days, then by kind. -->
+          <TextBlock Text="Exchanges with the server" Margin="0,8,0,0" />
+          <TextBlock Classes="caption" Text="Per day for 30 days, on this phone only: to analyse a slow sync." TextWrapping="Wrap" />
+          <ItemsControl x:Name="ExchangeDays" ItemTemplate="{StaticResource ExchangeLine}" />
+          <TextBlock Classes="caption" Text="By kind" Margin="0,4,0,0" />
+          <ItemsControl x:Name="ExchangeKinds" ItemTemplate="{StaticResource ExchangeLine}" />
+          <Button Content="Copy" Click="CopyExchanges_Click" />
+        </StackPanel>
+
+        <StackPanel x:Name="AboutPanel" Spacing="{StaticResource Gap}">
+          <TextBlock x:Name="About" TextWrapping="Wrap" />
+        </StackPanel>
       </StackPanel>
     </ScrollViewer>
   </DockPanel>
