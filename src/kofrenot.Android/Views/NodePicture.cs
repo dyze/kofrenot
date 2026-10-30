@@ -12,7 +12,7 @@ namespace Kofrenot.Phone.Views;
 /// </summary>
 public sealed class NodePicture : Grid
 {
-    public static readonly StyledProperty<NodeRow?> RowProperty = AvaloniaProperty.Register<NodePicture, NodeRow?>(nameof(Row));
+    public static readonly StyledProperty<NodeRow?> ItemProperty = AvaloniaProperty.Register<NodePicture, NodeRow?>(nameof(Item));
 
     private readonly TextBlock _glyph = new() { HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center };
     private readonly Ellipse _dot = new() { Width = 8, Height = 8, HorizontalAlignment = HorizontalAlignment.Right, VerticalAlignment = VerticalAlignment.Bottom };
@@ -28,18 +28,18 @@ public sealed class NodePicture : Grid
         Children.Add(_frame);
     }
 
-    public NodeRow? Row
+    public NodeRow? Item
     {
-        get => GetValue(RowProperty);
-        set => SetValue(RowProperty, value);
+        get => GetValue(ItemProperty);
+        set => SetValue(ItemProperty, value);
     }
 
     protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
     {
         base.OnPropertyChanged(change);
-        if (change.Property == RowProperty)
+        if (change.Property == ItemProperty)
         {
-            Show(Row);
+            Show(Item);
         }
     }
 
@@ -57,7 +57,7 @@ public sealed class NodePicture : Grid
 
         // A row reused for another node while it was read shows that one's.
         var image = await ThumbnailCache.Shared.Get(version);
-        if (image is not null && Row?.Thumbnail == version)
+        if (image is not null && Item?.Thumbnail == version)
         {
             _image.Source = image;
             _frame.IsVisible = true;

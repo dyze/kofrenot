@@ -43,7 +43,7 @@ Both apps share the same vaults and the same core; each shows its own set of fea
 | Search field values | ✔ | ✔ |
 | Recent: opened here or changed on any device (last 7 days) | ✔ empty input box | ✔ home |
 | Node details, links | ✔ | ✔ |
-| Node types and fields shown | ✔ | ✔ (an image's thumbnail, *Open with…*) |
+| Node types and fields shown | ✔ | ✔ (an image's thumbnail, **Open**) |
 | Views: trees and lists, as tabs | ✔ rows, cards, details | ✔ rows |
 | Pin (synced: listed while the input box is empty) | ✔ | ✔ **⋮** on the node's page |
 | Keep offline (this device only: content downloaded ahead) | ✔ server vaults | ✔ |
@@ -60,8 +60,8 @@ Both apps share the same vaults and the same core; each shows its own set of fea
 | Datasets: add files | ✔ creation screen, drop zone, drop on a tree | ✔ **＋**, with a preview; a photo or video taken |
 | Add what another app shares (files as datasets, text as a note) | — (drop files instead) | ✔ the share sheet, with a preview |
 | Datasets: new version of a file, resolve a conflict | ✔ | — |
-| Datasets: view images and texts | ✔ | — |
-| Datasets: open in another app, save as | ✔ **Open**, **Export…**, drag out | ✔ *Open with…*, *Save as…* |
+| Datasets: view images and texts | ✔ | an image's thumbnail |
+| Datasets: open in another app, export, share | ✔ **Open**, **Export…**, drag out | ✔ **Open**, **Export…**, **Share…** (Android's share sheet) |
 | Views: create, edit | ✔ | — |
 | **Share** | | |
 | Members, roles, share, leave | ✔ | ✔ share, change a role, leave (Settings > Vault > **Members…**); a member removed on Windows |
@@ -113,7 +113,7 @@ kofrenot for Android **reads** your server vaults, also offline, and **changes t
 
 - **Install**: download `kofrenot-android-<version>.apk` from the [releases](https://github.com/dyze/kofrenot/releases) and open it (Android 8.0 or later; allow installing from your browser or file app when asked).
 - **Sign in** with your server account, then **Add from the server**: your vaults and those shared with you, which show your role (reader or writer) in the list; a vault shared with you to read says so in a banner. The account's pass phrase opens them; tick *Remember it on this phone* to keep it in the phone's Keystore. **☰** on the home shows the open vault, opens another, or lists them all (*Vaults…*).
-- **Read**: search names, pinned nodes, recent nodes (opened on the phone or changed on any device), each row with its icon, or its thumbnail for an image (a dataset's, or its image field's), as on Windows; a node's details and links (a link opens a screen of its own; Back or **←** goes back through them, the trail at the top shows them), notes with their task lists, views as tabs, a node's **History** (**⋮** > *History…*: its versions on a screen of their own; **Restore** makes one the current one again, after a confirmation). A dataset shows its file's name and size: *Open with…* hands it to another app, *Save as…* saves it where you choose. A copy opened with another app is deleted from kofrenot at its next start.
+- **Read**: search names, pinned nodes, recent nodes (opened on the phone or changed on any device), each row with its icon, or its thumbnail for an image (a dataset's, or its image field's), as on Windows; a node's details and links (a link opens a screen of its own; Back or **←** goes back through them, the trail at the top shows them), notes with their task lists, views as tabs, a node's **History** (**⋮** > *History…*: its versions on a screen of their own; **Restore** makes one the current one again, after a confirmation). A dataset shows its file's name and size, and an image its thumbnail: **Open** hands it to the app you pick, **Export…** saves it where you choose, **Share…** sends it through Android's share sheet (a message, a mail, a cloud). A copy opened with another app is deleted from kofrenot at its next start.
 - **Add files**: **＋** (at the bottom right of the home) picks one or several files on the phone; a preview lists them (their number and total size, the names already taken), then **Add** makes each a dataset named after its file. One file added opens; several show among the recent nodes.
 - **Take a photo** or **Record a video** (under **＋**): the phone's camera app takes it, then the same preview names it after when it was taken (*Photo 2026-10-28 20.30*) and **Add** makes it a dataset. kofrenot asks it to write into kofrenot's own files, not the gallery, and deletes its copy once added or cancelled; some camera apps still keep one of their own in the gallery.
 - **Share to kofrenot** from another app (its *Share* button): files become datasets, text or a link becomes a new note named after its first line. A preview names the open vault and lists what will be added; nothing is before **Add**. When no vault is open yet, it waits until you open one.

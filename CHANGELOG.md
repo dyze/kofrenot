@@ -12,6 +12,8 @@ It covers kofrenot on Windows and on Android; versions before 0.9 ran on Windows
 - **Both**
   - **An image field is the node's picture**: a node with an image field set shows its thumbnail in every list (search, links, views, cards), as an image dataset does; the first in the order of its fields ([README](README.md#node-types-and-fields)).
 - **Android**
+  - **Share a dataset's file**: **Share…** beside *Open* and *Export…* sends it through Android's share sheet: a message, a mail, a cloud ([README](README.md#on-android)).
+  - **An image dataset shows its thumbnail** on its page, as its header does on Windows.
   - **Add a node from ＋**: **＋** > *Add a node…* opens the creation screen with the name to type, on any tab, as a view's *New* on Windows: in a list view, of its type; in a tree view, under its root ([README](README.md#on-android)).
 
 ### Changed
@@ -27,6 +29,7 @@ It covers kofrenot on Windows and on Android; versions before 0.9 ran on Windows
   - **Settings as a list of topics**, as Android's own settings: General, Vault, Server, Appearance, Logging and About, each with where it stands; a tap opens the topic on a screen of its own, instead of every setting on one page ([README](README.md#on-android)).
   - **Thumbnails in the lists**, as on Windows: an image dataset, or a node with an image field set, shows its thumbnail instead of its icon in the search, the pinned and recent nodes, the views and a node's links; read off the screen's thread and kept in memory ([README](README.md#on-android)).
   - **No node type under the names**: a row is its icon (or thumbnail) and its name, as on Windows; a second line only says what the icon does not: a recent node's activity, the field a search matched, how a link reads.
+  - **Named as on Windows**: a dataset's *Open with…* is now **Open**, and *Save as…* **Export…**; an image field's *Open with…* is **Open**.
 
 ### Fixed
 - **Android**

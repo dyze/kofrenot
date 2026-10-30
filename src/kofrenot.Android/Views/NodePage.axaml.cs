@@ -120,17 +120,9 @@ public sealed partial class NodePage : UserControl, IPage
         return new FieldLine(field.Label, field.Display, image, thumbnail is null ? null : new Bitmap(thumbnail), field);
     }
 
-    private void OpenImage_Click(object? sender, RoutedEventArgs e)
-    {
-        if ((sender as Control)?.Tag is FieldLine { Image: { } image })
-        {
-            _shell.Run(() => OpenWithAsync(image));
-        }
-    }
-
     private void ShowContent(Vault vault, Node node, NodeColor color)
     {
-        NoteBox.IsVisible = ContentText.IsVisible = Files.IsVisible = OpenViewButton.IsVisible = false;
+        NoteBox.IsVisible = ContentText.IsVisible = Files.IsVisible = OpenViewButton.IsVisible = ThumbnailFrame.IsVisible = false;
         var graph = vault.Graph;
         if (graph.NoteVersionsOf(node.Id).Count > 0 || node.Type == TypeCatalog.Note.Id)
         {
@@ -145,6 +137,7 @@ public sealed partial class NodePage : UserControl, IPage
 
             Files.ItemsSource = datasets.Select(version => new FileRow(version, version.File.Name, ByteSize.Format(version.File.Size))).ToList();
             Files.IsVisible = true;
+            ShowThumbnail(datasets[^1]);
         }
         else if (node.Type == TypeCatalog.View.Id)
         {
@@ -182,73 +175,6 @@ public sealed partial class NodePage : UserControl, IPage
         {
             _shell.Services.ViewTabs.Open(vault.Id, view.Id);
             _shell.Show(new HomePage(_shell, new Tab(view)));
-        }
-    }
-
-    private void OpenWith_Click(object? sender, RoutedEventArgs e)
-    {
-        if ((sender as Control)?.Tag is FileRow row)
-        {
-            _shell.Run(() => OpenWithAsync(row.Version));
-        }
-    }
-
-    private void SaveAs_Click(object? sender, RoutedEventArgs e)
-    {
-        if ((sender as Control)?.Tag is FileRow row)
-        {
-            _shell.Run(() => SaveAsAsync(row.Version));
-        }
-    }
-
-    // Decrypted into the cache, then handed to the app the user picks.
-    private async Task OpenWithAsync(DatasetEdited version)
-    {
-        _shell.Services.Log.Info("Action", "Open a dataset's file with another app");
-        var path = _shell.Services.Opened.NewPath(version.File.Name);
-        if (await ExportAsync(answers => _shell.Services.Session.ExportDataset(answers, version, path)))
-        {
-            _shell.Services.Chooser.Open(path);
-        }
-    }
-
-    // Written where the user chooses; the file the picker made is deleted again when it cannot be.
-    private async Task SaveAsAsync(DatasetEdited version)
-    {
-        _shell.Services.Log.Info("Action", "Save a dataset's file");
-        if (TopLevel.GetTopLevel(this)?.StorageProvider is not { } storage
-            || await storage.SaveFilePickerAsync(new FilePickerSaveOptions { Title = "Save as", SuggestedFileName = version.File.Name }) is not { } file)
-        {
-            return;
-        }
-
-        bool saved;
-        await using (var target = await file.OpenWriteAsync())
-        {
-            saved = await ExportAsync(answers => _shell.Services.Session.ExportDataset(answers, version, target));
-        }
-
-        if (!saved)
-        {
-            await file.DeleteAsync();
-        }
-    }
-
-    // The file downloaded first when it is not here, the busy bar shown; what went wrong told.
-    private async Task<bool> ExportAsync(Func<PreparedAnswers, Task<bool>> export)
-    {
-        var answers = new PreparedAnswers();
-        Busy.IsVisible = true;
-        Files.IsEnabled = false;
-        try
-        {
-            return await export(answers);
-        }
-        finally
-        {
-            Busy.IsVisible = false;
-            Files.IsEnabled = true;
-            _shell.Tell(answers.Told);
         }
     }
 }

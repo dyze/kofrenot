@@ -109,7 +109,7 @@ Same vaults, same files, same encryption ([Encryption](ARCHITECTURE.md#encryptio
 | Risk on a phone | Addressed by |
 | --- | --- |
 | Phone lost or stolen | Mirror and snapshot encrypted as on Windows; key remembered only in the Keystore, or not at all |
-| Other apps reading the files | App-private storage; a file leaves only on *Open with…* (a copy in `cache/open/`, given read only to the app picked, deleted at the next start) or *Save as…* (where the user chooses) |
+| Other apps reading the files | App-private storage; a file leaves only on **Open** or **Share…** (a copy in `cache/open/`, given read only to the app picked, deleted at the next start) or **Export…** (where the user chooses) |
 | Content visible in the recent apps list, screenshots | `FLAG_SECURE`: neither shows it, unless the privacy screen is turned off in Settings (to take a screenshot) |
 | Cleartext traffic | HTTPS only (Android's network security config), but to the phone itself (a server reached through `adb reverse` while developing) |
 

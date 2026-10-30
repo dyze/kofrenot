@@ -32,7 +32,7 @@
                     <TextBlock Text="{Binding Value}" TextWrapping="Wrap" />
                   </Button>
                   <Image Source="{Binding Thumbnail}" MaxHeight="96" HorizontalAlignment="Left" IsVisible="{Binding HasThumbnail}" />
-                  <Button Content="Open with…" Tag="{Binding}" IsVisible="{Binding HasImage}" Click="OpenImage_Click" />
+                  <Button Content="Open" Tag="{Binding}" IsVisible="{Binding HasImage}" Click="OpenImage_Click" />
                 </StackPanel>
               </Grid>
             </DataTemplate>
@@ -56,15 +56,21 @@
           </StackPanel>
         </Border>
         <TextBlock x:Name="ContentText" TextWrapping="Wrap" IsVisible="False" />
+        <!-- An image dataset's thumbnail, as its header on Windows (NodePage.ShowThumbnail). -->
+        <Border x:Name="ThumbnailFrame" CornerRadius="8" ClipToBounds="True" HorizontalAlignment="Left" IsVisible="False">
+          <Image x:Name="Thumbnail" MaxHeight="240" Stretch="Uniform" />
+        </Border>
         <ItemsControl x:Name="Files" IsVisible="False">
           <ItemsControl.ItemTemplate>
             <DataTemplate DataType="views:FileRow">
               <StackPanel Spacing="{StaticResource GapS}" Margin="0,4">
                 <TextBlock Text="{Binding Name}" TextWrapping="Wrap" />
                 <TextBlock Classes="caption" Text="{Binding Size}" />
+                <!-- Named as on Windows: Open, Export…; Share… the phone's own. -->
                 <StackPanel Orientation="Horizontal" Spacing="{StaticResource Gap}">
-                  <Button Content="Open with…" Tag="{Binding}" Click="OpenWith_Click" />
-                  <Button Content="Save as…" Tag="{Binding}" Click="SaveAs_Click" />
+                  <Button Content="Open" Tag="{Binding}" Click="Open_Click" />
+                  <Button Content="Export…" Tag="{Binding}" Click="Export_Click" />
+                  <Button Content="Share…" Tag="{Binding}" Click="Share_Click" />
                 </StackPanel>
               </StackPanel>
             </DataTemplate>

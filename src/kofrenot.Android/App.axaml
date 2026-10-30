@@ -68,7 +68,7 @@
     </DataTemplate>
     <DataTemplate DataType="views:NodeRow">
       <Grid ColumnDefinitions="Auto,*" Margin="{Binding Indent}" MinHeight="{StaticResource TouchTarget}">
-        <views:NodePicture Row="{Binding}" Width="32" Height="32" VerticalAlignment="Center" />
+        <views:NodePicture Item="{Binding}" Width="32" Height="32" VerticalAlignment="Center" />
         <StackPanel Grid.Column="1" Margin="12,2,0,2" VerticalAlignment="Center">
           <TextBlock Text="{Binding Name}" FontSize="{StaticResource BodySize}" TextTrimming="CharacterEllipsis" />
           <TextBlock Classes="caption" Text="{Binding Detail}" IsVisible="{Binding HasDetail}" TextTrimming="CharacterEllipsis" />
