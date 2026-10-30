@@ -15,6 +15,10 @@
     <ApplicationDisplayVersion>$(Version)</ApplicationDisplayVersion>
     <ApplicationVersion>$([MSBuild]::Add($([MSBuild]::Multiply($([System.Version]::Parse('$(VersionNumber)').Major), 1000)), $([System.Version]::Parse('$(VersionNumber)').Minor)))</ApplicationVersion>
     <AndroidPackageFormat>apk</AndroidPackageFormat>
+    <!-- The processors: arm64 phones; with -p:KofrenotEmulator=true (build\android.cmd emulator), x64 too, for an
+         emulator on a PC. Set here, not on the command line: a global RuntimeIdentifiers reaches kofrenot.Core too. -->
+    <RuntimeIdentifiers>android-arm64</RuntimeIdentifiers>
+    <RuntimeIdentifiers Condition="'$(KofrenotEmulator)' == 'true'">android-arm64;android-x64</RuntimeIdentifiers>
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
     <!-- The screens are made in code with their shell, never loaded by their URI. -->
     <NoWarn>$(NoWarn);AVLN3001</NoWarn>

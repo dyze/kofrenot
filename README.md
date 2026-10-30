@@ -217,7 +217,7 @@ Gear button in the title bar, or tray menu > Settings. Changes are saved at once
 
 **Build** (the .NET 10 SDK): `build\windows.cmd` on Windows, `build/build.sh` on Linux or macOS (build and tests only: the app runs on Windows). Both build `kofrenot.sln` in Release and run the tests; output goes to `artifacts/`. The build fails below **95 %** line coverage of `Core`; `build\windows.cmd open` opens the coverage report. The version is set in `Directory.Build.props` only.
 
-**Android**: `build\android.cmd` makes `artifacts\android\kofrenot-android-<version>.apk` (needs the .NET Android workload, `dotnet workload install android`, the Android SDK and a JDK). It is signed with the release keystore named by `KOFRENOT_KEYSTORE` (alias `kofrenot`, password in `KOFRENOT_KEYSTORE_PASS`), else with Android's debug key, to try it, as `kofrenot-android-<version>-debug.apk`. The app is not in `kofrenot.sln`, so `build\windows.cmd` does not need the workload. On an emulator, `adb reverse tcp:5080 tcp:5080` lets it sign in to a Kofre server on this PC at `http://localhost:5080/`: plain HTTP is accepted only to the phone itself.
+**Android**: `build\android.cmd` makes `artifacts\android\kofrenot-android-<version>.apk`, for phones (arm64); `build\android.cmd emulator` makes `kofrenot-android-<version>-emulator.apk`, which also runs in an emulator on a PC (x64) (needs the .NET Android workload, `dotnet workload install android`, the Android SDK and a JDK). It is signed with the release keystore named by `KOFRENOT_KEYSTORE` (alias `kofrenot`, password in `KOFRENOT_KEYSTORE_PASS`), else with Android's debug key, to try it, as `kofrenot-android-<version>-debug.apk`. The app is not in `kofrenot.sln`, so `build\windows.cmd` does not need the workload. On an emulator (the `emulator` build), `adb reverse tcp:5080 tcp:5080` lets it sign in to a Kofre server on this PC at `http://localhost:5080/`: plain HTTP is accepted only to the phone itself.
 
 **Release signing** (Android): every update of the app must be signed with the same key, or phones cannot install it over the previous one.
 
@@ -226,12 +226,14 @@ Gear button in the title bar, or tray menu > Settings. Changes are saved at once
 keytool -genkeypair -v -keystore D:\keys\kofrenot-release.keystore -alias kofrenot -keyalg RSA -keysize 4096 -validity 10000
 ```
 1. Back up the keystore and its password (a password manager, a second copy): lost, the app cannot be updated, only uninstalled and installed again. Never add it to the repository.
-2. Build from the repository folder, the password typed rather than written in a file or the command history (PowerShell):
+2. Build from the repository folder, the password typed hidden rather than written in a file or the command history, and cleared once built (PowerShell; `emulator` after `android.cmd` for the emulator build):
    ```
    $env:KOFRENOT_KEYSTORE = "D:\keys\kofrenot-release.keystore"
-   $env:KOFRENOT_KEYSTORE_PASS = Read-Host "Keystore password"
-   .\build\android.cmd
+   $secure = Read-Host -AsSecureString "Keystore password"
+   $env:KOFRENOT_KEYSTORE_PASS = [System.Net.NetworkCredential]::new('', $secure).Password
+   try { .\build\android.cmd } finally { Remove-Item Env:KOFRENOT_KEYSTORE_PASS }
    ```
+   The password goes in as text: a `SecureString` put in the variable as it is reads `System.Security.SecureString`, and signing fails (`java.exe` exits with code 2).
 3. Check: `apksigner verify --print-certs <apk>` (Android SDK, `build-tools`) names your certificate, not *Android Debug*. A release APK does not install over one signed with the debug key: uninstall that one first.
 
 **Install on a phone** with `adb` (Android SDK, `platform-tools`): turn on the phone's *Developer options* (tap *Build number* 7 times in *About phone*), then *USB debugging*, plug it in and accept the prompt. `adb devices` lists it as `device`, then:

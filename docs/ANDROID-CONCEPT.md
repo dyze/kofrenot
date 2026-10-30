@@ -101,7 +101,7 @@ Same vaults, same files, same encryption ([Encryption](ARCHITECTURE.md#encryptio
 ## Decided (0.9)
 | Topic | Decision |
 | --- | --- |
-| Distribution | An APK on GitHub releases, signed with the owner's key (`build\android.cmd`); no update check yet |
+| Distribution | An APK on GitHub releases, for arm64 phones, signed with the owner's key (`build\android.cmd`; `emulator` adds x64, to try it in an emulator); no update check yet |
 | Minimum Android version | 8.0 (API 26) |
 | Privacy | `FLAG_SECURE`: the app's screens stay out of the recent apps list and of screenshots; Settings > General turns it off, on by default |
 | Background sync | Only while the app is shown |

@@ -1,6 +1,8 @@
 @echo off
 rem Builds kofrenot for Android (src\kofrenot.Android, not in kofrenot.sln):
 rem artifacts\android\kofrenot-android-<version>.apk, or kofrenot-android-<version>-debug.apk.
+rem   android.cmd            arm64 only: the phones, and the releases.
+rem   android.cmd emulator   arm64 and x64, to try it in an emulator on a PC too: ...-emulator.apk.
 rem Needs the .NET Android workload (dotnet workload install android), the Android SDK and a JDK.
 rem Signed with the release key when KOFRENOT_KEYSTORE names its keystore (alias "kofrenot", its
 rem password in KOFRENOT_KEYSTORE_PASS: never written here); else with Android's debug key, to try it.
@@ -8,6 +10,17 @@ setlocal
 cd /d "%~dp0.."
 
 set "PROJECT=src\kofrenot.Android\kofrenot.Android.csproj"
+
+rem The processors (ABIs) in the APK are set in the project: arm64, with x64 too for an emulator.
+set "EMULATOR=false"
+set "KIND="
+if /i "%~1"=="emulator" (
+  set "EMULATOR=true"
+  set "KIND=-emulator"
+) else if not "%~1"=="" (
+  echo Usage: build\android.cmd [emulator]
+  exit /b 1
+)
 
 rem The version comes from Directory.Build.props, the single source of truth.
 set "VERSION="
@@ -18,14 +31,14 @@ if not defined VERSION (
 )
 
 set SIGNING=
-set "APK=kofrenot-android-%VERSION%.apk"
+set "APK=kofrenot-android-%VERSION%%KIND%.apk"
 if defined KOFRENOT_KEYSTORE set SIGNING=-p:AndroidKeyStore=true "-p:AndroidSigningKeyStore=%KOFRENOT_KEYSTORE%" -p:AndroidSigningKeyAlias=kofrenot -p:AndroidSigningStorePass=env:KOFRENOT_KEYSTORE_PASS -p:AndroidSigningKeyPass=env:KOFRENOT_KEYSTORE_PASS
 if not defined KOFRENOT_KEYSTORE (
   echo No KOFRENOT_KEYSTORE: signed with the debug key, not for release.
-  set "APK=kofrenot-android-%VERSION%-debug.apk"
+  set "APK=kofrenot-android-%VERSION%%KIND%-debug.apk"
 )
 
-dotnet publish "%PROJECT%" -c Release %SIGNING% || exit /b 1
+dotnet publish "%PROJECT%" -c Release -p:KofrenotEmulator=%EMULATOR% %SIGNING% || exit /b 1
 
 rem dotnet publish names the APK after the package id: copy it under the name the releases use.
 if not exist artifacts\android mkdir artifacts\android
