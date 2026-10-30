@@ -10,7 +10,7 @@
         </Button>
       </views:TopBar.Actions>
     </views:TopBar>
-    <StackPanel DockPanel.Dock="Bottom" Margin="16" Spacing="8">
+    <StackPanel DockPanel.Dock="Bottom" Margin="{StaticResource PageMargin}" Spacing="{StaticResource Gap}">
       <TextBlock x:Name="Empty" Classes="caption" TextWrapping="Wrap" IsVisible="False" />
       <Button x:Name="AddButton" Classes="accent" Content="Add from the server" HorizontalAlignment="Stretch"
               HorizontalContentAlignment="Center" Click="Add_Click" />

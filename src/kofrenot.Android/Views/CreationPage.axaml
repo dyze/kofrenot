@@ -6,13 +6,13 @@
        new note's text (CreationForm, as the creation screen on Windows). Add adds it; back cancels. -->
   <DockPanel>
     <views:TopBar x:Name="Bar" DockPanel.Dock="Top" />
-    <StackPanel DockPanel.Dock="Bottom" Margin="16,8,16,16" Spacing="6">
+    <StackPanel DockPanel.Dock="Bottom" Margin="{StaticResource PageMargin}" Spacing="{StaticResource Gap}">
       <TextBlock x:Name="Status" TextWrapping="Wrap" />
       <TextBlock x:Name="Warning" Classes="error" IsVisible="False" />
       <Button x:Name="AddButton" Classes="accent" Content="Add" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Click="Add_Click" />
     </StackPanel>
     <ScrollViewer>
-      <StackPanel x:Name="Sides" Margin="16,8,16,8" Spacing="10" />
+      <StackPanel x:Name="Sides" Margin="{StaticResource PageMargin}" Spacing="{StaticResource GapM}" />
     </ScrollViewer>
   </DockPanel>
 </UserControl>

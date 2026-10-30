@@ -13,7 +13,7 @@
       </views:TopBar.Actions>
     </views:TopBar>
     <ScrollViewer>
-      <StackPanel Margin="16,8,16,24" Spacing="8">
+      <StackPanel Margin="{StaticResource PageMargin}" Spacing="{StaticResource Gap}">
         <Grid ColumnDefinitions="Auto,*,Auto">
           <Ellipse x:Name="ColorDot" Width="12" Height="12" Margin="0,0,8,0" VerticalAlignment="Center" />
           <SelectableTextBlock x:Name="NodeName" Grid.Column="1" Classes="title" TextWrapping="Wrap" />
@@ -26,7 +26,7 @@
             <DataTemplate DataType="views:FieldLine">
               <Grid ColumnDefinitions="120,*" Margin="0,2">
                 <TextBlock Classes="caption" Text="{Binding Label}" TextWrapping="Wrap" VerticalAlignment="Top" />
-                <StackPanel Grid.Column="1" Spacing="4">
+                <StackPanel Grid.Column="1" Spacing="{StaticResource GapS}">
                   <Button Classes="flat" Padding="0" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
                           Tag="{Binding}" Click="Field_Click">
                     <TextBlock Text="{Binding Value}" TextWrapping="Wrap" />
@@ -40,14 +40,14 @@
         </ItemsControl>
         <Button x:Name="OfflineButton" IsVisible="False" Click="Offline_Click" />
         <!-- A name, colour or value set on two devices: each offered to keep (NodePage.Fields). -->
-        <StackPanel x:Name="Conflicts" Spacing="2" IsVisible="False" />
+        <StackPanel x:Name="Conflicts" Spacing="{StaticResource GapS}" IsVisible="False" />
         <Border x:Name="NoteBox" CornerRadius="8" Padding="12" IsVisible="False">
-          <StackPanel Spacing="8">
-            <StackPanel x:Name="Note" Spacing="4" />
+          <StackPanel Spacing="{StaticResource Gap}">
+            <StackPanel x:Name="Note" Spacing="{StaticResource GapS}" />
             <TextBox x:Name="NoteEditor" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="160" IsVisible="False"
                      PlaceholderText="Markdown: # heading, - item, - [ ] task" />
             <views:TaskListEditor x:Name="TaskEditor" IsVisible="False" />
-            <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
+            <StackPanel Orientation="Horizontal" Spacing="{StaticResource Gap}" HorizontalAlignment="Right">
               <Button x:Name="CheckboxesButton" Content="Checkboxes" IsVisible="False" Click="Checkboxes_Click" />
               <Button x:Name="EditNoteButton" Content="Edit" Click="EditNote_Click" />
               <Button x:Name="CancelNoteButton" Content="Cancel" IsVisible="False" Click="CancelNote_Click" />
@@ -59,10 +59,10 @@
         <ItemsControl x:Name="Files" IsVisible="False">
           <ItemsControl.ItemTemplate>
             <DataTemplate DataType="views:FileRow">
-              <StackPanel Spacing="4" Margin="0,4">
+              <StackPanel Spacing="{StaticResource GapS}" Margin="0,4">
                 <TextBlock Text="{Binding Name}" TextWrapping="Wrap" />
                 <TextBlock Classes="caption" Text="{Binding Size}" />
-                <StackPanel Orientation="Horizontal" Spacing="8">
+                <StackPanel Orientation="Horizontal" Spacing="{StaticResource Gap}">
                   <Button Content="Open with…" Tag="{Binding}" Click="OpenWith_Click" />
                   <Button Content="Save as…" Tag="{Binding}" Click="SaveAs_Click" />
                 </StackPanel>
@@ -84,7 +84,7 @@
         </ItemsControl>
         <!-- Its versions, newest first; Restore makes one the current one again (NodePage.History). -->
         <Expander x:Name="HistoryBox" Header="History" Margin="0,12,0,0" HorizontalAlignment="Stretch">
-          <StackPanel Spacing="4">
+          <StackPanel Spacing="{StaticResource GapS}">
             <ItemsControl x:Name="History">
               <ItemsControl.ItemTemplate>
                 <DataTemplate DataType="views:HistoryLine">

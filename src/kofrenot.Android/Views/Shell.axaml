@@ -24,13 +24,13 @@
     </Border>
     <Border x:Name="Overlay" IsVisible="False" Background="{StaticResource Scrim}">
       <Border Background="{DynamicResource SystemControlBackgroundAltHighBrush}" CornerRadius="12" Padding="20"
-              Margin="24" VerticalAlignment="Center">
-        <StackPanel Spacing="16">
+              Margin="{StaticResource FormMargin}" VerticalAlignment="Center">
+        <StackPanel Spacing="{StaticResource GapL}">
           <TextBlock x:Name="OverlayText" TextWrapping="Wrap" />
           <!-- A text asked (a name): what is wrong with it under it, OK only once it is fine. -->
           <TextBox x:Name="OverlayBox" IsVisible="False" TextChanged="OverlayBox_TextChanged" />
           <TextBlock x:Name="OverlayRemark" Classes="caption" TextWrapping="Wrap" IsVisible="False" />
-          <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
+          <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="{StaticResource Gap}">
             <Button x:Name="OverlayNo" Content="Cancel" Classes="flat" Click="OverlayNo_Click" />
             <Button x:Name="OverlayYes" Content="OK" Classes="accent" Click="OverlayYes_Click" />
           </StackPanel>

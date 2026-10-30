@@ -49,7 +49,7 @@
             <!-- Go, not Android's default Done for one line: Avalonia hides the keyboard on Done; Go sends Enter only. -->
             <TextBox x:Name="SearchBox" TextInputOptions.ReturnKeyType="Go" PlaceholderText="Search or add" TextChanged="Search_TextChanged">
               <TextBox.InnerLeftContent>
-                <StackPanel x:Name="Chips" Orientation="Horizontal" Spacing="4" Margin="6,0,0,0" VerticalAlignment="Center" />
+                <StackPanel x:Name="Chips" Orientation="Horizontal" Spacing="{StaticResource GapS}" Margin="6,0,0,0" VerticalAlignment="Center" />
               </TextBox.InnerLeftContent>
             </TextBox>
             <!-- Placed right after the text (HomePage.Chips), as on Windows. -->
@@ -67,14 +67,14 @@
         <TextBlock x:Name="ReadOnlyText" Classes="caption" TextWrapping="Wrap" />
       </Border>
       <ScrollViewer DockPanel.Dock="Top" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
-        <StackPanel x:Name="Tabs" Orientation="Horizontal" Margin="8,4" Spacing="4" />
+        <StackPanel x:Name="Tabs" Orientation="Horizontal" Margin="8,4" Spacing="{StaticResource GapS}" />
       </ScrollViewer>
       <!-- What the text adds, as the input box on Windows: a tap shows the creation screen (CreationPage). -->
       <Button x:Name="AddButton" DockPanel.Dock="Top" Classes="flat" Margin="12,0" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
               IsVisible="False" Click="Add_Click">
         <TextBlock x:Name="AddText" TextWrapping="Wrap" Foreground="{StaticResource Accent}" />
       </Button>
-      <TextBlock x:Name="Message" DockPanel.Dock="Top" Classes="caption" Margin="16,8" TextWrapping="Wrap" IsVisible="False" />
+      <TextBlock x:Name="Message" DockPanel.Dock="Top" Classes="caption" Margin="{StaticResource PageMargin}" TextWrapping="Wrap" IsVisible="False" />
       <!-- Its last rows clear of ＋. -->
       <ListBox x:Name="List" Padding="0,0,0,88" SelectionChanged="List_SelectionChanged">
         <ListBox.DataTemplates>

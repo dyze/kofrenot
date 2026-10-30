@@ -64,7 +64,7 @@ One window, navigation by back button; light and dark themes follow the phone, o
 ### Layout
 | Part | How |
 | --- | --- |
-| Tokens | `App.axaml`: touch target (48 dp), bar height, type sizes (title, section, body, caption), colours; code reads them with `PhoneTheme.Brush` and `PhoneTheme.Size` |
+| Tokens | `App.axaml`: touch target (48 dp), bar height, spacing (gaps on a 4 dp grid, a screen's and a form's margin), type sizes (title, section, body, caption), colours; code reads them with `PhoneTheme.Brush` and `PhoneTheme.Size` |
 | Insets | Edge to edge (`InsetsManager`): the `Shell`'s padding is the safe area, at the bottom the keyboard (`InputPane`) when it covers more; the focused field brought into view (`Shell.Insets`) |
 | Transitions | `TransitioningContentControl` with a `PageSlide`, reversed going back |
 | Back | `TopLevel.BackRequested`, with predictive back (`enableOnBackInvokedCallback`) |

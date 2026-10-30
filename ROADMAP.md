@@ -16,10 +16,7 @@ Scope of each planned version. Implemented features move to [CHANGELOG.md](CHANG
 | 0.10    | Released  | Offline pins, file drops; notes and files added on Android                         |
 | 0.11    | Released  | Composition: node types made of fields, several per node; fields of a node's own   |
 | 0.12    | Released  | History: versions restored; the phone adds and changes nodes, links, fields and members |
-
-## 0.13
-Android navigation and layouts, as Android's [principles of navigation](https://developer.android.com/guide/navigation/principles) and Material 3. Open points: [Android open questions](docs/ANDROID-CONCEPT.md#open-questions).
-1. Android · **Spacing.** Margins and gaps as shared resources too, as the touch sizes, type and colours already are.
+| 0.13    | Implemented | Android navigation and layouts: edge to edge, top bar and sheets, one back stack |
 
 ## 0.14
 1. Both · **Events and qualifiers.**

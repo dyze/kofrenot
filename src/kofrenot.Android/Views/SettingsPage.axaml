@@ -25,7 +25,7 @@
     <views:TopBar DockPanel.Dock="Top" Title="Settings" />
     <ScrollViewer>
       <!-- The topics in the order of the Windows tabs; those the phone has no setting for are left out. -->
-      <StackPanel Margin="16,0,16,16" Spacing="8">
+      <StackPanel Margin="{StaticResource PageMargin}" Spacing="{StaticResource Gap}">
         <TextBlock Classes="section" Text="{x:Static settings:SettingsCatalog.GeneralTab}" />
         <!-- The privacy screen as on Windows: here, out of screenshots and the recent apps list (App.ApplyPrivacyScreen). -->
         <CheckBox x:Name="PrivacyBox" IsCheckedChanged="Privacy_Changed">

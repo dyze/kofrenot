@@ -8,7 +8,7 @@
   <DockPanel>
     <views:TopBar DockPanel.Dock="Top" Title="Members" />
     <ScrollViewer>
-      <StackPanel Margin="16" Spacing="8">
+      <StackPanel Margin="{StaticResource PageMargin}" Spacing="{StaticResource Gap}">
         <TextBlock x:Name="Intro" Classes="caption" TextWrapping="Wrap" />
         <ItemsControl x:Name="MembersList">
           <ItemsControl.ItemTemplate>
@@ -23,7 +23,7 @@
             </DataTemplate>
           </ItemsControl.ItemTemplate>
         </ItemsControl>
-        <StackPanel x:Name="SharePanel" Orientation="Horizontal" Spacing="8" Margin="0,8,0,0">
+        <StackPanel x:Name="SharePanel" Orientation="Horizontal" Spacing="{StaticResource Gap}" Margin="0,8,0,0">
           <Button Classes="accent" Content="Share…" Click="Share_Click" />
           <ComboBox x:Name="RoleBox" SelectedIndex="0">
             <ComboBoxItem Content="as a writer" />

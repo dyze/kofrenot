@@ -5,11 +5,18 @@
              RequestedThemeVariant="Default">
   <!-- Default: light or dark, as the phone. -->
 
-  <!-- The tokens: the touch sizes, type sizes and colours of the screens, none written in a screen. -->
+  <!-- The tokens: the touch sizes, spacing, type sizes and colours of the screens. -->
   <Application.Resources>
     <!-- Sizes, in dp: 48 is Android's smallest touch target. -->
     <x:Double x:Key="TouchTarget">48</x:Double>
     <x:Double x:Key="BarHeight">64</x:Double>
+    <!-- Spacing, on a 4 dp grid: between the items of a panel, around a screen's content, around a form. -->
+    <x:Double x:Key="GapS">4</x:Double>
+    <x:Double x:Key="Gap">8</x:Double>
+    <x:Double x:Key="GapM">12</x:Double>
+    <x:Double x:Key="GapL">16</x:Double>
+    <Thickness x:Key="PageMargin">16,8,16,16</Thickness>
+    <Thickness x:Key="FormMargin">24</Thickness>
     <!-- Type: title, section, body, caption. -->
     <x:Double x:Key="TitleSize">22</x:Double>
     <x:Double x:Key="SectionSize">18</x:Double>
