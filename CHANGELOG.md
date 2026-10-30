@@ -26,7 +26,7 @@ It covers kofrenot on Windows and on Android; versions before 0.9 ran on Windows
 - **Android**
   - **The phone changes the vault's nodes**, no longer only notes and files: what defines a vault (your node types, link types and aliases, its name, its keys, a member removed) stays with kofrenot on Windows, and is refused in Core ([ANDROID-CONCEPT.md](docs/ANDROID-CONCEPT.md#what-the-phone-changes)).
   - **Compact lists**: the rows of the home, of views and of a node's links keep their two lines (name, then type) with less empty space around them, so more fit on the screen; a row is still easy to tap.
-  - **Smaller APK**: `build\android.cmd` builds for arm64 phones only; `build\android.cmd emulator` adds x64, for an emulator on a PC, as `kofrenot-android-<version>-emulator.apk` ([README](README.md#development)).
+  - **Smaller APK**: `build\android.cmd` builds for arm64 phones only; `build\android.cmd emulator` adds x64, for an emulator on a PC, as `kofrenot-android-<version>-emulator.apk` ([README](README.md#development)). It always builds from clean, so a build after a failed one no longer gives an app that crashes at start.
   - **Settings grouped by topic**, under the names of the Windows Settings tabs: Vault (the open vault, **Members…**, its remembered pass phrase), Server (the account, sign out), Logging and About ([README](README.md#on-android)).
 
 ## [0.11] - 2026-10-28

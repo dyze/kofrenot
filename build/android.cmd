@@ -38,6 +38,10 @@ if not defined KOFRENOT_KEYSTORE (
   set "APK=kofrenot-android-%VERSION%%KIND%-debug.apk"
 )
 
+rem From clean: what a failed build leaves can give an APK without its marshal methods (no native
+rem onCreate: the app crashes at start, the build still succeeds).
+for %%d in (obj bin publish) do if exist "artifacts\%%d\kofrenot.Android" rmdir /s /q "artifacts\%%d\kofrenot.Android"
+
 dotnet publish "%PROJECT%" -c Release -p:KofrenotEmulator=%EMULATOR% %SIGNING% || exit /b 1
 
 rem dotnet publish names the APK after the package id: copy it under the name the releases use.
