@@ -70,6 +70,7 @@ One window, navigation by back button; light and dark themes follow the phone, o
 | Back | `TopLevel.BackRequested`, with predictive back (`enableOnBackInvokedCallback`) |
 | Top bar | `TopBar` (a templated control, its look in `App.axaml`): ← when the `Shell` has a screen before, the title or the screen's own content (the search box, the trail), its actions (⋮); ← raises the same back as Android's Back |
 | Icons | `StreamGeometry` paths of our own in `App.axaml` (←, ⋮, ＋, ☰, ✕), shown with `PathIcon` |
+| Node pictures | `NodePicture` in the rows: the thumbnail of `NodeVisual` (an image dataset's, or its image field's) read through `ThumbnailCache` (off the UI thread, the latest 100 in memory, emptied when another vault opens), else the glyph of its icon and a dot of its colour |
 | Sheets | `Shell.ShowSheet(title, choices)`: a bottom sheet over the screen, instead of menus; a choice closes it, then runs; Back or a tap outside closes it |
 | Back stack | `Shell`: one stack of screens; a deep link (a share from another app) shows the home, then its node over it (`ShowOverHome`) |
 

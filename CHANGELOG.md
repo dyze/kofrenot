@@ -25,6 +25,8 @@ It covers kofrenot on Windows and on Android; versions before 0.9 ran on Windows
   - **A field of its own of any kind**: **⋮** > *Add field…* asks its kind after its name, as on Windows: text, number, date, web address or checkbox, no longer text only ([README](README.md#on-android)).
   - **History on a screen of its own**: **⋮** > *History…* on a node's page lists its versions, each with **Restore**, instead of a section at the bottom of the page; a reader's **⋮** has it too ([README](README.md#on-android)).
   - **Settings as a list of topics**, as Android's own settings: General, Vault, Server, Appearance, Logging and About, each with where it stands; a tap opens the topic on a screen of its own, instead of every setting on one page ([README](README.md#on-android)).
+  - **Thumbnails in the lists**, as on Windows: an image dataset, or a node with an image field set, shows its thumbnail instead of its icon in the search, the pinned and recent nodes, the views and a node's links; read off the screen's thread and kept in memory ([README](README.md#on-android)).
+  - **No node type under the names**: a row is its icon (or thumbnail) and its name, as on Windows; a second line only says what the icon does not: a recent node's activity, the field a search matched, how a link reads.
 
 ### Fixed
 - **Android**

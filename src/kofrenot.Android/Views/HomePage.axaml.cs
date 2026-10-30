@@ -152,14 +152,10 @@ public sealed partial class HomePage : UserControl, IPage
         var start = StartNodes.Of(graph, _shell.Services.Recent.Of(vault.Id), DateTimeOffset.UtcNow);
         var rows = new List<object>();
         AddSection(rows, "Pinned", start.Pinned.Select(node => NodeRow.Of(graph, node)));
-        AddSection(rows, "Recent", start.Recent.Select(recent => NodeRow.Of(graph, recent.Node, detail: RecentDetail(graph, recent))));
+        AddSection(rows, "Recent", start.Recent.Select(recent => NodeRow.Of(graph, recent.Node, detail: recent.Detail)));
         List.ItemsSource = rows;
         ShowMessage(rows.Count == 0 ? "Type a name to find a node, or what to add: Dune relates to Frank Herbert. Pinned and recent nodes show here." : null);
     }
-
-    // Its type, and its latest activity when known: "Note · changed 5 min ago".
-    private static string? RecentDetail(KnowledgeGraph graph, RecentNode recent) =>
-        recent.Detail is { } detail ? $"{graph.Types.NodeTypeName(recent.Node.Type)} · {detail}" : null;
 
     private static void AddSection(List<object> rows, string header, IEnumerable<NodeRow> section)
     {

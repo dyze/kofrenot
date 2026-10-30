@@ -110,6 +110,7 @@ public sealed partial class Shell : UserControl
 
     private void ShowPage(Control page, bool back)
     {
+        ThumbnailCache.Shared.Use(Services.Session.Current);
         PageHost.IsTransitionReversed = back;
         PageHost.Content = page;
     }
@@ -238,7 +239,12 @@ public sealed partial class Shell : UserControl
         return true;
     }
 
-    private void RefreshPage() => (PageHost.Content as IPage)?.Refresh();
+    // The vault may have changed: the thumbnails are those of the one open.
+    private void RefreshPage()
+    {
+        ThumbnailCache.Shared.Use(Services.Session.Current);
+        (PageHost.Content as IPage)?.Refresh();
+    }
 
     private Task<string?> Ask(Message message)
     {

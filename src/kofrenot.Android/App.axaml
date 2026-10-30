@@ -68,12 +68,8 @@
     </DataTemplate>
     <DataTemplate DataType="views:NodeRow">
       <Grid ColumnDefinitions="Auto,*" Margin="{Binding Indent}" MinHeight="{StaticResource TouchTarget}">
-        <Grid Width="24" Height="24" VerticalAlignment="Center">
-          <TextBlock Text="{Binding Glyph}" FontSize="{StaticResource BodySize}" HorizontalAlignment="Center" VerticalAlignment="Center" />
-          <Ellipse Width="8" Height="8" Fill="{Binding Color}" IsVisible="{Binding HasColor}"
-                   HorizontalAlignment="Right" VerticalAlignment="Bottom" />
-        </Grid>
-        <StackPanel Grid.Column="1" Margin="10,2,0,2" VerticalAlignment="Center">
+        <views:NodePicture Row="{Binding}" Width="32" Height="32" VerticalAlignment="Center" />
+        <StackPanel Grid.Column="1" Margin="12,2,0,2" VerticalAlignment="Center">
           <TextBlock Text="{Binding Name}" FontSize="{StaticResource BodySize}" TextTrimming="CharacterEllipsis" />
           <TextBlock Classes="caption" Text="{Binding Detail}" IsVisible="{Binding HasDetail}" TextTrimming="CharacterEllipsis" />
         </StackPanel>
