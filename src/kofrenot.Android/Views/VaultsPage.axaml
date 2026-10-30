@@ -3,12 +3,13 @@
              xmlns:views="using:Kofrenot.Phone.Views"
              x:Class="Kofrenot.Phone.Views.VaultsPage">
   <DockPanel>
-    <Border DockPanel.Dock="Top" Classes="bar">
-      <Grid ColumnDefinitions="*,Auto">
-        <TextBlock x:Name="Title" Classes="title" Text="Vaults" VerticalAlignment="Center" Margin="8,0" />
-        <Button x:Name="SettingsButton" Grid.Column="1" Classes="flat" Content="⚙" FontSize="20" Click="Settings_Click" />
-      </Grid>
-    </Border>
+    <views:TopBar x:Name="Bar" DockPanel.Dock="Top" Title="Vaults">
+      <views:TopBar.Actions>
+        <Button x:Name="SettingsButton" Classes="icon" Click="More_Click">
+          <PathIcon Data="{StaticResource MoreIcon}" />
+        </Button>
+      </views:TopBar.Actions>
+    </views:TopBar>
     <StackPanel DockPanel.Dock="Bottom" Margin="16" Spacing="8">
       <TextBlock x:Name="Empty" Classes="caption" TextWrapping="Wrap" IsVisible="False" />
       <Button x:Name="AddButton" Classes="accent" Content="Add from the server" HorizontalAlignment="Stretch"
@@ -24,7 +25,9 @@
               <TextBlock Text="{Binding Name}" Classes="body" TextTrimming="CharacterEllipsis" />
               <TextBlock Classes="caption" Text="{Binding Detail}" TextTrimming="CharacterEllipsis" />
             </StackPanel>
-            <Button Grid.Column="2" Classes="flat" Content="✕" Tag="{Binding}" Click="Remove_Click" />
+            <Button Grid.Column="2" Classes="icon" Tag="{Binding}" Click="Remove_Click">
+              <PathIcon Data="{StaticResource CloseIcon}" />
+            </Button>
           </Grid>
         </DataTemplate>
         <DataTemplate DataType="views:StoreRow">

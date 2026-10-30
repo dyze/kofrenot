@@ -35,6 +35,11 @@ public sealed partial class Shell : UserControl
         // Here, not when the app starts: the services are built once the activity shows its view.
         PhoneTheme.Apply(services.Settings.Theme);
         InitializeComponent();
+        AddHandler(TopBar.BackEvent, (_, e) =>
+        {
+            GoBack();
+            e.Handled = true;
+        });
         services.Session.Changed += RefreshPage;
         services.Sync.Changed += () => (PageHost.Content as IPage)?.SyncChanged();
         services.Server.Changed += RefreshPage;
@@ -173,23 +178,29 @@ public sealed partial class Shell : UserControl
         base.OnDetachedFromVisualTree(e);
     }
 
-    // Back: the message shown, else within the screen, else the screen before; at the first one, Android's own (home).
-    private void OnBackRequested(object? sender, RoutedEventArgs e)
+    // Android's Back and ← of the top bar do the same; at the first screen, Back is Android's own (home).
+    private void OnBackRequested(object? sender, RoutedEventArgs e) => e.Handled = GoBack();
+
+    // The message shown, else the sheet, else within the screen, else the screen before.
+    private bool GoBack()
     {
         if (Overlay.IsVisible)
         {
             Answer(yes: false);
-            e.Handled = true;
+            return true;
         }
-        else if (PageHost.Content is IPage page && page.GoBack())
+
+        if (IsSheetShown)
         {
-            e.Handled = true;
+            CloseSheet();
+            return true;
         }
-        else
-        {
-            e.Handled = Back();
-        }
+
+        return PageHost.Content is IPage page && page.GoBack() || Back();
     }
+
+    /// <summary>Whether there is a screen before the one shown.</summary>
+    public bool CanGoBack => _pages.Count > 1;
 
     /// <summary>Shows the screen before; false at the first one.</summary>
     public bool Back()

@@ -3,14 +3,15 @@
              xmlns:views="using:Kofrenot.Phone.Views"
              x:Class="Kofrenot.Phone.Views.NodePage">
   <DockPanel>
-    <Border DockPanel.Dock="Top" Classes="bar">
-      <Grid ColumnDefinitions="Auto,*,Auto">
-        <Button Classes="flat" Content="‹" FontSize="24" Click="Back_Click" />
-        <TextBlock x:Name="Trail" Grid.Column="1" Classes="caption" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
-        <!-- Rename, colour, pin, delete (NodePage.Actions). -->
-        <Button x:Name="ActionsButton" Grid.Column="2" Classes="flat" Content="⋯" FontSize="20" />
-      </Grid>
-    </Border>
+    <views:TopBar DockPanel.Dock="Top">
+      <TextBlock x:Name="Trail" Classes="caption" Margin="12,0" TextTrimming="CharacterEllipsis" />
+      <views:TopBar.Actions>
+        <!-- Rename, colour, pin, fields, types, delete: a sheet (NodePage.Actions). -->
+        <Button x:Name="ActionsButton" Classes="icon" Click="Actions_Click">
+          <PathIcon Data="{StaticResource MoreIcon}" />
+        </Button>
+      </views:TopBar.Actions>
+    </views:TopBar>
     <ScrollViewer>
       <StackPanel Margin="16,8,16,24" Spacing="8">
         <Grid ColumnDefinitions="Auto,*,Auto">
@@ -75,15 +76,9 @@
         <ItemsControl x:Name="Links">
           <ItemsControl.ItemTemplate>
             <DataTemplate DataType="views:NodeRow">
+              <!-- A long press: remove the link, from a sheet (NodePage.Actions). -->
               <Button Classes="flat" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch"
-                      Padding="0" Content="{Binding}" Tag="{Binding}" Click="Link_Click">
-                <!-- A long press: remove the link (NodePage.Actions). -->
-                <Button.ContextFlyout>
-                  <MenuFlyout>
-                    <MenuItem Header="Remove link…" Click="RemoveLink_Click" />
-                  </MenuFlyout>
-                </Button.ContextFlyout>
-              </Button>
+                      Padding="0" Content="{Binding}" Tag="{Binding}" Click="Link_Click" ContextRequested="Link_ContextRequested" />
             </DataTemplate>
           </ItemsControl.ItemTemplate>
         </ItemsControl>

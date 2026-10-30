@@ -13,11 +13,20 @@ namespace Kofrenot.Phone.Views;
 /// </summary>
 public sealed partial class HomePage
 {
-    private void AddFiles_Click(object? sender, RoutedEventArgs e) => _shell.Run(AddFilesAsync);
-
-    private void TakePhoto_Click(object? sender, RoutedEventArgs e) => _shell.Run(() => CaptureAsync(CaptureKind.Photo));
-
-    private void RecordVideo_Click(object? sender, RoutedEventArgs e) => _shell.Run(() => CaptureAsync(CaptureKind.Video));
+    // ＋: a sheet; the camera's choices only when the phone has a camera app.
+    private void AddFiles_Click(object? sender, RoutedEventArgs e)
+    {
+        var camera = _shell.Services.Camera.IsAvailable;
+        _shell.ShowSheet("Add",
+        [
+            new("Files…", () => _shell.Run(AddFilesAsync)),
+            .. camera ? new SheetChoice[]
+            {
+                new("Take a photo", () => _shell.Run(() => CaptureAsync(CaptureKind.Photo))),
+                new("Record a video", () => _shell.Run(() => CaptureAsync(CaptureKind.Video))),
+            } : [],
+        ]);
+    }
 
     private async Task AddFilesAsync()
     {

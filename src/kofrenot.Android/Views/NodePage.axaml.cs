@@ -105,7 +105,7 @@ public sealed partial class NodePage : UserControl, IPage
         Links.ItemsSource = details.Links.Select(link => NodeRow.Of(vault.Graph, link.OtherNode, link.Type, link: link.Link)).ToList();
         LinksHeader.IsVisible = details.Links.Count > 0;
         ShowHistory(vault.Graph, details.Node);
-        ShowActions(vault.Graph, details);
+        ShowActions();
     }
 
     // The fields of its types and its own, empty ones of its types included, as on Windows.
@@ -255,14 +255,6 @@ public sealed partial class NodePage : UserControl, IPage
             Busy.IsVisible = false;
             Files.IsEnabled = true;
             _shell.Tell(answers.Told);
-        }
-    }
-
-    private void Back_Click(object? sender, RoutedEventArgs e)
-    {
-        if (!GoBack())
-        {
-            _shell.Back();
         }
     }
 }

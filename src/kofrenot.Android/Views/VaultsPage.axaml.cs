@@ -75,7 +75,7 @@ public sealed partial class VaultsPage : UserControl, IPage
             .Where(vault => vault.Location.Store is not null)
             .Select(vault => new VaultRow(vault, session.NameOf(vault)))
             .ToList();
-        Title.Text = "Vaults";
+        Bar.Title = "Vaults";
         List.ItemsSource = rows;
         Empty.Text = "No vault on this phone yet. Add your server vaults: their notes and files are read and edited here, the rest is changed in kofrenot on Windows.";
         Empty.IsVisible = rows.Count == 0;
@@ -125,7 +125,7 @@ public sealed partial class VaultsPage : UserControl, IPage
         }
 
         _choosing = true;
-        Title.Text = "Add a vault";
+        Bar.Title = "Add a vault";
         Empty.Text = "Vaults are named inside them: a vault not added yet shows its size and your role. Back to cancel.";
         Empty.IsVisible = true;
         AddButton.IsVisible = false;
@@ -195,7 +195,7 @@ public sealed partial class VaultsPage : UserControl, IPage
         Refresh();
     }
 
-    private void Settings_Click(object? sender, RoutedEventArgs e) => _shell.Push(new SettingsPage(_shell));
+    private void More_Click(object? sender, RoutedEventArgs e) => _shell.ShowSheet(null, [new("Settings", () => _shell.Push(new SettingsPage(_shell)))]);
 
     private void SetBusy(bool busy)
     {

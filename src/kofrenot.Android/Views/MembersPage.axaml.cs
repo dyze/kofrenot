@@ -148,6 +148,4 @@ public sealed partial class MembersPage : UserControl, IPage
         await work();
         return true;
     });
-
-    private void Back_Click(object? sender, RoutedEventArgs e) => _shell.Back();
 }

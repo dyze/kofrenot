@@ -78,11 +78,9 @@ public sealed partial class HomePage : UserControl, IPage
             return;
         }
 
-        VaultName.Text = vault.Graph.VaultName ?? "Vault";
         // Notes and files are edited here; a reader edits nothing.
         ReadOnlyBanner.IsVisible = _shell.Services.Session.IsReadOnly;
         AddFilesButton.IsVisible = !_shell.Services.Session.IsReadOnly;
-        TakePhotoItem.IsVisible = RecordVideoItem.IsVisible = _shell.Services.Camera.IsAvailable;
         ReadOnlyText.Text = "Shared with you to read only.";
         SyncChanged();
         ShowTabs(vault);
@@ -93,9 +91,7 @@ public sealed partial class HomePage : UserControl, IPage
     {
         if (_shell.Services.Session.Selected?.Location.Store is { } store)
         {
-            var status = _shell.Services.Sync.StatusOf(store);
-            SyncDot.Fill = VaultsPage.DotOf(status.Level);
-            SyncText.Text = status.Summary;
+            SyncDot.Fill = VaultsPage.DotOf(_shell.Services.Sync.StatusOf(store).Level);
         }
     }
 
@@ -117,23 +113,16 @@ public sealed partial class HomePage : UserControl, IPage
 
         if (!_tab.IsSearch)
         {
-            var close = new Button { Content = "✕", Classes = { "tab", "flat" } };
+            var close = new Button { Content = new PathIcon { Data = PhoneTheme.Icon("CloseIcon") }, Classes = { "icon" } };
             close.Click += (_, _) => CloseTab(vault);
             Tabs.Children.Add(close);
         }
 
+        // The views not open as a tab, from a sheet.
         if (new TabList(_shell.Services.ViewTabs).Closed(vault.Graph, vault.Id) is { Count: > 0 } closed)
         {
-            var open = new Button { Content = "+", Classes = { "tab", "flat" } };
-            var menu = new MenuFlyout();
-            foreach (var view in closed)
-            {
-                var item = new MenuItem { Header = view.Name };
-                item.Click += (_, _) => OpenTab(vault, view);
-                menu.Items.Add(item);
-            }
-
-            open.Flyout = menu;
+            var open = new Button { Content = new PathIcon { Data = PhoneTheme.Icon("AddIcon") }, Classes = { "icon" } };
+            open.Click += (_, _) => _shell.ShowSheet("Open a view", closed.Select(view => new SheetChoice(view.Name, () => OpenTab(vault, view))));
             Tabs.Children.Add(open);
         }
     }
@@ -165,7 +154,7 @@ public sealed partial class HomePage : UserControl, IPage
         AddSection(rows, "Pinned", start.Pinned.Select(node => NodeRow.Of(graph, node)));
         AddSection(rows, "Recent", start.Recent.Select(recent => NodeRow.Of(graph, recent.Node, detail: RecentDetail(graph, recent))));
         List.ItemsSource = rows;
-        ShowMessage(rows.Count == 0 ? "Type a name to find a node. Pinned and recent nodes show here." : null);
+        ShowMessage(rows.Count == 0 ? "Type a name to find a node, or what to add: Dune relates to Frank Herbert. Pinned and recent nodes show here." : null);
     }
 
     // Its type, and its latest activity when known: "Note · changed 5 min ago".
@@ -313,9 +302,27 @@ public sealed partial class HomePage : UserControl, IPage
         }
     }
 
-    private void Vaults_Click(object? sender, RoutedEventArgs e) => _shell.Push(new VaultsPage(_shell));
+    // ☰: the open vault and where its sync stands, the other vaults to open, and the list of vaults.
+    private void Vault_Click(object? sender, RoutedEventArgs e)
+    {
+        var session = _shell.Services.Session;
+        if (session.Selected is not { Location.Store: { } store } selected)
+        {
+            return;
+        }
 
-    private void Sync_Click(object? sender, RoutedEventArgs e) => _shell.Run(_shell.Services.Sync.SyncNowAsync);
+        var status = _shell.Services.Sync.StatusOf(store);
+        var others = session.Vaults
+            .Where(vault => vault.Location.Store is { } other && vault != selected)
+            .Select(vault => new SheetChoice(session.NameOf(vault), () => _shell.Open(vault.Location), VaultsPage.DotOf(_shell.Services.Sync.StatusOf(vault.Location.Store!).Level)));
+        _shell.ShowSheet($"{session.NameOf(selected)} · {status.Summary}",
+        [
+            new("Sync now", () => _shell.Run(_shell.Services.Sync.SyncNowAsync), VaultsPage.DotOf(status.Level)),
+            .. others,
+            new("Vaults…", () => _shell.Push(new VaultsPage(_shell))),
+        ]);
+    }
 
-    private void Settings_Click(object? sender, RoutedEventArgs e) => _shell.Push(new SettingsPage(_shell));
+    private void More_Click(object? sender, RoutedEventArgs e) =>
+        _shell.ShowSheet(null, [new("Settings", () => _shell.Push(new SettingsPage(_shell)))]);
 }

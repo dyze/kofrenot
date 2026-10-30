@@ -32,66 +32,65 @@
       <Setter Property="StrokeDashArray" Value="3,2" />
     </Style>
   </UserControl.Styles>
-  <DockPanel>
-    <Border DockPanel.Dock="Top" Classes="bar">
-      <Grid ColumnDefinitions="*,Auto,Auto,Auto">
-        <Button Classes="flat" Click="Vaults_Click" HorizontalAlignment="Left">
-          <TextBlock x:Name="VaultName" Classes="title" TextTrimming="CharacterEllipsis" />
-        </Button>
-        <Button Grid.Column="1" Classes="flat" Click="Sync_Click">
-          <StackPanel Orientation="Horizontal" Spacing="6">
-            <Ellipse x:Name="SyncDot" Width="10" Height="10" VerticalAlignment="Center" />
-            <TextBlock x:Name="SyncText" Classes="caption" VerticalAlignment="Center" />
-          </StackPanel>
-        </Button>
-        <!-- ＋: files from the phone, or a photo or video taken now (HomePage.AddFiles). -->
-        <Button x:Name="AddFilesButton" Grid.Column="2" Classes="flat" Content="＋" FontSize="20">
-          <Button.Flyout>
-            <MenuFlyout Placement="BottomEdgeAlignedRight">
-              <MenuItem Header="Files…" Click="AddFiles_Click" />
-              <MenuItem x:Name="TakePhotoItem" Header="Take a photo" Click="TakePhoto_Click" />
-              <MenuItem x:Name="RecordVideoItem" Header="Record a video" Click="RecordVideo_Click" />
-            </MenuFlyout>
-          </Button.Flyout>
-        </Button>
-        <Button Grid.Column="3" Classes="flat" Content="⚙" FontSize="20" Click="Settings_Click" />
-      </Grid>
-    </Border>
-    <Border x:Name="ReadOnlyBanner" DockPanel.Dock="Top" Background="{StaticResource Banner}" Padding="16,6">
-      <TextBlock x:Name="ReadOnlyText" Classes="caption" TextWrapping="Wrap" />
-    </Border>
-    <ScrollViewer DockPanel.Dock="Top" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
-      <StackPanel x:Name="Tabs" Orientation="Horizontal" Margin="8,4" Spacing="4" />
-    </ScrollViewer>
-    <!-- The labels (ChipInput) before the text, as the input box on Windows: a tap on the last one
-         (or Backspace with no text) turns it back into text. A tap on the proposal accepts it (Tab on Windows). -->
-    <Panel x:Name="SearchArea" DockPanel.Dock="Top" Margin="12,4" ClipToBounds="True">
-      <!-- Go, not Android's default Done for one line: Avalonia hides the keyboard on Done; Go sends Enter only. -->
-      <TextBox x:Name="SearchBox" TextInputOptions.ReturnKeyType="Go" PlaceholderText="Search, or add: Dune relates to Frank Herbert" TextChanged="Search_TextChanged">
-        <TextBox.InnerLeftContent>
-          <StackPanel x:Name="Chips" Orientation="Horizontal" Spacing="4" Margin="6,0,0,0" VerticalAlignment="Center" />
-        </TextBox.InnerLeftContent>
-      </TextBox>
-      <!-- Placed right after the text (HomePage.Chips), as on Windows. -->
-      <TextBlock x:Name="ProposalText" HorizontalAlignment="Left" VerticalAlignment="Center" Background="Transparent"
-                 Foreground="{StaticResource Secondary}" IsVisible="False" Tapped="Proposal_Tapped" />
-    </Panel>
-    <!-- What the text adds, as the input box on Windows: a tap shows the creation screen (CreationPage). -->
-    <Button x:Name="AddButton" DockPanel.Dock="Top" Classes="flat" Margin="12,0" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
-            IsVisible="False" Click="Add_Click">
-      <TextBlock x:Name="AddText" TextWrapping="Wrap" Foreground="{StaticResource Accent}" />
+  <Grid>
+    <DockPanel>
+      <!-- ☰: the vault and its sync, in a sheet (its dot: where the sync stands); the search box; ⋮: Settings. -->
+      <views:TopBar DockPanel.Dock="Top">
+        <Grid ColumnDefinitions="Auto,*">
+          <Button Classes="icon" Click="Vault_Click">
+            <Panel>
+              <PathIcon Data="{StaticResource MenuIcon}" />
+              <Ellipse x:Name="SyncDot" Width="8" Height="8" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,-2,-4,0" />
+            </Panel>
+          </Button>
+          <!-- The labels (ChipInput) before the text, as the input box on Windows: a tap on the last one
+               (or Backspace with no text) turns it back into text. A tap on the proposal accepts it (Tab on Windows). -->
+          <Panel x:Name="SearchArea" Grid.Column="1" Margin="4,0" ClipToBounds="True">
+            <!-- Go, not Android's default Done for one line: Avalonia hides the keyboard on Done; Go sends Enter only. -->
+            <TextBox x:Name="SearchBox" TextInputOptions.ReturnKeyType="Go" PlaceholderText="Search or add" TextChanged="Search_TextChanged">
+              <TextBox.InnerLeftContent>
+                <StackPanel x:Name="Chips" Orientation="Horizontal" Spacing="4" Margin="6,0,0,0" VerticalAlignment="Center" />
+              </TextBox.InnerLeftContent>
+            </TextBox>
+            <!-- Placed right after the text (HomePage.Chips), as on Windows. -->
+            <TextBlock x:Name="ProposalText" HorizontalAlignment="Left" VerticalAlignment="Center" Background="Transparent"
+                       Foreground="{StaticResource Secondary}" IsVisible="False" Tapped="Proposal_Tapped" />
+          </Panel>
+        </Grid>
+        <views:TopBar.Actions>
+          <Button Classes="icon" Click="More_Click">
+            <PathIcon Data="{StaticResource MoreIcon}" />
+          </Button>
+        </views:TopBar.Actions>
+      </views:TopBar>
+      <Border x:Name="ReadOnlyBanner" DockPanel.Dock="Top" Background="{StaticResource Banner}" Padding="16,6">
+        <TextBlock x:Name="ReadOnlyText" Classes="caption" TextWrapping="Wrap" />
+      </Border>
+      <ScrollViewer DockPanel.Dock="Top" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
+        <StackPanel x:Name="Tabs" Orientation="Horizontal" Margin="8,4" Spacing="4" />
+      </ScrollViewer>
+      <!-- What the text adds, as the input box on Windows: a tap shows the creation screen (CreationPage). -->
+      <Button x:Name="AddButton" DockPanel.Dock="Top" Classes="flat" Margin="12,0" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
+              IsVisible="False" Click="Add_Click">
+        <TextBlock x:Name="AddText" TextWrapping="Wrap" Foreground="{StaticResource Accent}" />
+      </Button>
+      <TextBlock x:Name="Message" DockPanel.Dock="Top" Classes="caption" Margin="16,8" TextWrapping="Wrap" IsVisible="False" />
+      <!-- Its last rows clear of ＋. -->
+      <ListBox x:Name="List" Padding="0,0,0,88" SelectionChanged="List_SelectionChanged">
+        <ListBox.DataTemplates>
+          <DataTemplate DataType="views:TreeRow">
+            <Grid ColumnDefinitions="Auto,*" Margin="{Binding Indent}">
+              <Button Classes="flat toggle" Content="{Binding Toggle}" IsVisible="{Binding Item.CanExpand}" Tag="{Binding}"
+                      Click="Toggle_Click" Width="{StaticResource TouchTarget}" Padding="0" />
+              <ContentControl Grid.Column="1" Content="{Binding Row}" Margin="{Binding Shift}" />
+            </Grid>
+          </DataTemplate>
+        </ListBox.DataTemplates>
+      </ListBox>
+    </DockPanel>
+    <!-- ＋: files from the phone, or a photo or video taken now, from a sheet (HomePage.AddFiles). -->
+    <Button x:Name="AddFilesButton" Classes="accent fab" Click="AddFiles_Click">
+      <PathIcon Data="{StaticResource AddIcon}" />
     </Button>
-    <TextBlock x:Name="Message" DockPanel.Dock="Top" Classes="caption" Margin="16,8" TextWrapping="Wrap" IsVisible="False" />
-    <ListBox x:Name="List" SelectionChanged="List_SelectionChanged">
-      <ListBox.DataTemplates>
-        <DataTemplate DataType="views:TreeRow">
-          <Grid ColumnDefinitions="Auto,*" Margin="{Binding Indent}">
-            <Button Classes="flat toggle" Content="{Binding Toggle}" IsVisible="{Binding Item.CanExpand}" Tag="{Binding}"
-                    Click="Toggle_Click" Width="{StaticResource TouchTarget}" Padding="0" />
-            <ContentControl Grid.Column="1" Content="{Binding Row}" Margin="{Binding Shift}" />
-          </Grid>
-        </DataTemplate>
-      </ListBox.DataTemplates>
-    </ListBox>
-  </DockPanel>
+  </Grid>
 </UserControl>

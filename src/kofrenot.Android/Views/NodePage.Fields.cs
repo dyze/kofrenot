@@ -10,7 +10,7 @@ namespace Kofrenot.Phone.Views;
 
 /// <summary>
 /// A node's fields and types on the phone: a tap on a field fills it (a text typed, a checkbox
-/// ticked, an option chosen); ⋯ adds a field of its own, adds a type or takes one out (asked first).
+/// ticked, an option chosen from a sheet); ⋮ adds a field of its own, adds a type or takes one out (asked first).
 /// A name, colour or value set on two devices offers each to keep. An image is set on Windows.
 /// </summary>
 public sealed partial class NodePage
@@ -19,11 +19,11 @@ public sealed partial class NodePage
     {
         if ((sender as Control)?.Tag is FieldLine { Field: { } field } && !_shell.Services.Session.IsReadOnly)
         {
-            _shell.Run(() => FillAsync(field, sender as Control));
+            _shell.Run(() => FillAsync(field));
         }
     }
 
-    private async Task FillAsync(NodeField field, Control? anchor)
+    private async Task FillAsync(NodeField field)
     {
         if (Vault is not { } vault || _browser.Details?.Node is not { } node)
         {
@@ -40,10 +40,9 @@ public sealed partial class NodePage
                 WriteField(planner.Check(node, field, !FieldValue.IsChecked(field.Value)), "Field value set");
                 break;
             case FieldKind.Choice:
-                var options = field.Choices.Select(choice => Item(choice, () => WriteField(planner.Set(node, field, choice), "Field value set")))
-                    .Append(Item("None", () => WriteField(planner.Clear(node, field), "Field value cleared")))
-                    .ToList();
-                new MenuFlyout { ItemsSource = options }.ShowAt(anchor ?? this);
+                _shell.ShowSheet(field.Label, field.Choices
+                    .Select(choice => new SheetChoice(choice, () => WriteField(planner.Set(node, field, choice), "Field value set"), IsCurrent: choice == field.Value))
+                    .Append(new SheetChoice("None", () => WriteField(planner.Clear(node, field), "Field value cleared"), IsCurrent: !field.HasValue)));
                 break;
             default:
                 var typed = await _shell.AskText(field.Label, field.Value ?? string.Empty, "Save", text => planner.Set(node, field, text).Error, text => planner.Set(node, field, text).Problem != FieldProblem.Invalid);
@@ -93,24 +92,24 @@ public sealed partial class NodePage
         }
     }
 
-    // ⋯ > Add type: the node types it has not, a view's excepted (what it shows is chosen on Windows).
-    private MenuItem AddTypeItem(KnowledgeGraph graph, NodeDetails details)
+    // ⋮ > Add type: the node types it has not, a view's excepted (what it shows is chosen on Windows).
+    private SheetChoice AddTypeChoice(KnowledgeGraph graph, NodeDetails details)
     {
         var types = graph.Types.NodeTypes
             .Where(type => type != TypeCatalog.Generic && type != TypeCatalog.View && !details.Types.Contains(type))
-            .Select(type => Item(type.Name, () => ChangeTypes(new TypeSetPlanner(graph).Add(details.Node, type))))
+            .Select(type => new SheetChoice(type.Name, () => ChangeTypes(new TypeSetPlanner(graph).Add(details.Node, type))))
             .ToList();
-        return new MenuItem { Header = "Add type", ItemsSource = types, IsEnabled = types.Count > 0 };
+        return new SheetChoice("Add type…", () => _shell.ShowSheet("Add type", types), IsEnabled: types.Count > 0);
     }
 
-    // ⋯ > Take out type: asked first, saying what it hides.
-    private MenuItem RemoveTypeItem(KnowledgeGraph graph, NodeDetails details)
+    // ⋮ > Take out type: asked first, saying what it hides.
+    private SheetChoice RemoveTypeChoice(KnowledgeGraph graph, NodeDetails details)
     {
         var types = details.Types
             .Where(type => type != TypeCatalog.Generic)
-            .Select(type => Item(type.Name, () => _shell.Run(() => RemoveTypeAsync(new TypeSetPlanner(graph).Remove(details.Node, type)))))
+            .Select(type => new SheetChoice(type.Name, () => _shell.Run(() => RemoveTypeAsync(new TypeSetPlanner(graph).Remove(details.Node, type)))))
             .ToList();
-        return new MenuItem { Header = "Take out type", ItemsSource = types, IsEnabled = types.Count > 0 };
+        return new SheetChoice("Take out type…", () => _shell.ShowSheet("Take out type", types), IsEnabled: types.Count > 0);
     }
 
     private async Task RemoveTypeAsync(TypeSetPlan plan)

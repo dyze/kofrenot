@@ -1,5 +1,6 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:views="using:Kofrenot.Phone.Views"
              xmlns:server="using:Kofrenot.Core.Server"
              xmlns:settings="using:Kofrenot.Core.Settings"
              x:Class="Kofrenot.Phone.Views.SettingsPage">
@@ -21,12 +22,7 @@
     </DataTemplate>
   </UserControl.Resources>
   <DockPanel>
-    <Border DockPanel.Dock="Top" Classes="bar">
-      <Grid ColumnDefinitions="Auto,*">
-        <Button Classes="flat" Content="‹" FontSize="24" Click="Back_Click" />
-        <TextBlock Grid.Column="1" Classes="title" Text="Settings" VerticalAlignment="Center" />
-      </Grid>
-    </Border>
+    <views:TopBar DockPanel.Dock="Top" Title="Settings" />
     <ScrollViewer>
       <!-- The topics in the order of the Windows tabs; those the phone has no setting for are left out. -->
       <StackPanel Margin="16,0,16,16" Spacing="8">

@@ -13,6 +13,8 @@ It covers kofrenot on Windows and on Android; versions before 0.9 ran on Windows
   - **Touch targets of 48 dp**: every button, row, tab, field and link is at least 48 dp high, as Android asks; type sizes and colours are shared tokens (`App.axaml`), none written in a screen ([ANDROID-CONCEPT.md](docs/ANDROID-CONCEPT.md#layout)).
   - **Edge to edge**: the app draws behind the status and navigation bars, as Android enforces from API 35, its screens kept clear of them and of the keyboard; the field typed in scrolls into view. Back previews the screen before (predictive back) ([ANDROID-CONCEPT.md](docs/ANDROID-CONCEPT.md#layout)).
   - **Screens slide**: in from the right going forward, from the left going back.
+  - **Material layout**: each screen has a top bar with **←** (the same as Back) and **⋮**, drawn icons instead of text glyphs; menus are bottom sheets: a node's actions, a field's options, a link's removal (long press), the views to open as a tab; **＋** is a floating button at the bottom right of the home ([README](README.md#on-android)).
+  - **Lighter home**: the search box is in the top bar, between **☰** (the open vault and where its sync stands, *Sync now*, the other vaults, *Vaults…*) and **⋮** (*Settings*); the dot on **☰** shows the sync ([README](README.md#on-android)).
 
 ## [0.12] - 2026-10-30
 

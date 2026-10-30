@@ -9,6 +9,19 @@
         <PageSlide Duration="0:0:0.25" Orientation="Horizontal" />
       </TransitioningContentControl.PageTransition>
     </TransitioningContentControl>
+    <!-- A bottom sheet of choices (Shell.Sheet): a tap outside it, or Back, closes it. -->
+    <Border x:Name="SheetScrim" IsVisible="False" Background="{StaticResource Scrim}" PointerPressed="SheetScrim_PointerPressed">
+      <Border Background="{DynamicResource SystemControlBackgroundAltHighBrush}" CornerRadius="16,16,0,0" VerticalAlignment="Bottom"
+              Padding="0,8,0,8">
+        <DockPanel>
+          <Border DockPanel.Dock="Top" Width="32" Height="4" CornerRadius="2" Background="{StaticResource Secondary}" Margin="0,4,0,8" />
+          <TextBlock x:Name="SheetTitle" DockPanel.Dock="Top" Classes="caption" Margin="24,4,24,8" TextTrimming="CharacterEllipsis" />
+          <ScrollViewer MaxHeight="480">
+            <StackPanel x:Name="SheetChoices" />
+          </ScrollViewer>
+        </DockPanel>
+      </Border>
+    </Border>
     <Border x:Name="Overlay" IsVisible="False" Background="{StaticResource Scrim}">
       <Border Background="{DynamicResource SystemControlBackgroundAltHighBrush}" CornerRadius="12" Padding="20"
               Margin="24" VerticalAlignment="Center">

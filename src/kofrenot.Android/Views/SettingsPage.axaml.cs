@@ -123,6 +123,4 @@ public sealed partial class SettingsPage : UserControl, IPage
         _shell.Services.Log.Info("Action", "Members shown");
         _shell.Push(new MembersPage(_shell));
     }
-
-    private void Back_Click(object? sender, RoutedEventArgs e) => _shell.Back();
 }

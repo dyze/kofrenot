@@ -25,12 +25,17 @@ public sealed partial class CreationPage : UserControl, IPage
         _form = form;
         _added = added;
         InitializeComponent();
-        Heading.Text = form.Title;
+        Bar.Title = form.Title;
         ShowSides();
         ShowStatus();
     }
 
-    public bool GoBack() => false;
+    // Back cancels: the screen before shows.
+    public bool GoBack()
+    {
+        _shell.Services.Log.Info("Action", "Creation cancelled");
+        return false;
+    }
 
     public void Refresh()
     {
@@ -110,12 +115,6 @@ public sealed partial class CreationPage : UserControl, IPage
         }
 
         _added();
-        _shell.Back();
-    }
-
-    private void Back_Click(object? sender, RoutedEventArgs e)
-    {
-        _shell.Services.Log.Info("Action", "Creation cancelled");
         _shell.Back();
     }
 }

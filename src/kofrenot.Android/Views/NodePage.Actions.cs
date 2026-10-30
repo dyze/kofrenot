@@ -1,6 +1,7 @@
 using Avalonia.Controls;
-using Avalonia.Controls.Shapes;
+using Avalonia.Input;
 using Avalonia.Interactivity;
+using Avalonia.Media;
 using Kofrenot.Core.Browse;
 using Kofrenot.Core.Graph;
 using Kofrenot.Core.Input;
@@ -10,47 +11,42 @@ using Kofrenot.Phone.Platform;
 namespace Kofrenot.Phone.Views;
 
 /// <summary>
-/// ⋯ on a node's page: rename, colour, pin or unpin, add a field or a type, take a type out, delete
-/// (asked first, naming what goes); a long
-/// press on a link removes it (asked first). Each is a change written as on Windows, synced at the
-/// next sync. Hidden in a vault shared with you to read.
+/// ⋮ on a node's page, a sheet: rename, colour, pin or unpin, add a field or a type, take a type out,
+/// delete (asked first, naming what goes); a long press on a link removes it (asked first). Each is a
+/// change written as on Windows, synced at the next sync. Hidden in a vault shared with you to read.
 /// </summary>
 public sealed partial class NodePage
 {
-    private void ShowActions(KnowledgeGraph graph, NodeDetails details)
+    private bool IsReadOnly => _shell.Services.Session.IsReadOnly;
+
+    private void ShowActions() => ActionsButton.IsVisible = !IsReadOnly;
+
+    private void Actions_Click(object? sender, RoutedEventArgs e)
     {
-        ActionsButton.IsVisible = !_shell.Services.Session.IsReadOnly;
-        var colors = new MenuItem { Header = "Colour" };
-        colors.ItemsSource = Enum.GetValues<NodeColor>().Select(color => ColorItem(color, details.Color)).ToList();
-        ActionsButton.Flyout = new MenuFlyout
+        if (Vault is not { } vault || _browser.Details is not { } details)
         {
-            ItemsSource = new List<MenuItem>
-            {
-                Item("Rename…", () => _shell.Run(RenameAsync)),
-                colors,
-                Item(details.IsPinned ? "Unpin" : "Pin", TogglePin),
-                Item("Add field…", () => _shell.Run(AddFieldAsync)),
-                AddTypeItem(graph, details),
-                RemoveTypeItem(graph, details),
-                Item("Delete…", () => _shell.Run(DeleteAsync)),
-            },
-        };
+            return;
+        }
+
+        _shell.ShowSheet(details.Name,
+        [
+            new("Rename…", () => _shell.Run(RenameAsync)),
+            new("Colour…", () => ShowColors(details.Color)),
+            new(details.IsPinned ? "Unpin" : "Pin", TogglePin),
+            new("Add field…", () => _shell.Run(AddFieldAsync)),
+            AddTypeChoice(vault.Graph, details),
+            RemoveTypeChoice(vault.Graph, details),
+            new("Delete…", () => _shell.Run(DeleteAsync)),
+        ]);
     }
 
-    private static MenuItem Item(string header, Action click)
-    {
-        var item = new MenuItem { Header = header };
-        item.Click += (_, _) => click();
-        return item;
-    }
-
-    private MenuItem ColorItem(NodeColor color, NodeColor current)
-    {
-        var item = Item(color == NodeColor.None ? "None" : color.ToString(), () => GiveColor(color));
-        item.Icon = new Ellipse { Width = 14, Height = 14, Fill = NodeLook.Brush(color), Stroke = NodeLook.Brush(NodeColor.Grey), StrokeThickness = color == NodeColor.None ? 1 : 0 };
-        item.FontWeight = color == current ? Avalonia.Media.FontWeight.SemiBold : Avalonia.Media.FontWeight.Normal;
-        return item;
-    }
+    // A dot of each colour; none, a clear one so the names line up.
+    private void ShowColors(NodeColor current) =>
+        _shell.ShowSheet("Colour", Enum.GetValues<NodeColor>().Select(color => new SheetChoice(
+            color == NodeColor.None ? "None" : color.ToString(),
+            () => GiveColor(color),
+            NodeLook.Brush(color) ?? Brushes.Transparent,
+            IsCurrent: color == current)));
 
     private async Task RenameAsync()
     {
@@ -103,11 +99,12 @@ public sealed partial class NodePage
         }
     }
 
-    private void RemoveLink_Click(object? sender, RoutedEventArgs e)
+    private void Link_ContextRequested(object? sender, ContextRequestedEventArgs e)
     {
-        if ((sender as Control)?.DataContext is NodeRow { Link: { } link } row)
+        if (!IsReadOnly && (sender as Control)?.Tag is NodeRow { Link: { } link } row)
         {
-            _shell.Run(() => RemoveLinkAsync(link, row));
+            e.Handled = true;
+            _shell.ShowSheet(row.Name, [new("Remove link…", () => _shell.Run(() => RemoveLinkAsync(link, row)))]);
         }
     }
 

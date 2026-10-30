@@ -29,6 +29,9 @@ public static class PhoneTheme
     /// <summary>A colour of the tokens (App.axaml), for what a screen builds in code.</summary>
     public static IBrush Brush(string key) => (IBrush)Token(key);
 
+    /// <summary>An icon of the tokens (App.axaml), for what a screen builds in code.</summary>
+    public static Geometry Icon(string key) => (Geometry)Token(key);
+
     /// <summary>A size of the tokens (App.axaml), for what a screen builds in code.</summary>
     public static double Size(string key) => (double)Token(key);
 
