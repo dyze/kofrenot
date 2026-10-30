@@ -1,0 +1,25 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:views="using:Kofrenot.Phone.Views"
+             x:Class="Kofrenot.Phone.Views.HistoryPage">
+  <!-- A node's versions, newest first; Restore makes one the current one again. -->
+  <DockPanel>
+    <views:TopBar x:Name="Bar" DockPanel.Dock="Top" />
+    <ProgressBar x:Name="Busy" DockPanel.Dock="Top" IsIndeterminate="True" IsVisible="False" />
+    <ScrollViewer>
+      <ItemsControl x:Name="History" Margin="{StaticResource PageMargin}">
+        <ItemsControl.ItemTemplate>
+          <DataTemplate DataType="views:HistoryLine">
+            <Grid ColumnDefinitions="*,Auto" MinHeight="{StaticResource TouchTarget}" Margin="0,4">
+              <StackPanel VerticalAlignment="Center">
+                <TextBlock Classes="caption" Text="{Binding Heading}" />
+                <TextBlock Text="{Binding Label}" TextWrapping="Wrap" IsVisible="{Binding HasLabel}" />
+              </StackPanel>
+              <Button Grid.Column="1" Content="Restore" Tag="{Binding}" IsVisible="{Binding CanRestore}" Click="Restore_Click" />
+            </Grid>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+    </ScrollViewer>
+  </DockPanel>
+</UserControl>

@@ -13,14 +13,14 @@ namespace Kofrenot.Phone.Views;
 /// <summary>
 /// ⋮ on a node's page, a sheet: rename, colour, pin or unpin, add a field or a type, take a type out,
 /// delete (asked first, naming what goes); a long press on a link removes it (asked first). Each is a
-/// change written as on Windows, synced at the next sync. Hidden in a vault shared with you to read.
+/// change written as on Windows, synced at the next sync. ⋮ > History… shows its versions on a screen
+/// of their own (HistoryPage); in a vault shared with you to read, that is all ⋮ has.
 /// </summary>
 public sealed partial class NodePage
 {
     private bool IsReadOnly => _shell.Services.Session.IsReadOnly;
 
-    private void ShowActions() => ActionsButton.IsVisible = !IsReadOnly;
-
+    // A reader has the history only.
     private void Actions_Click(object? sender, RoutedEventArgs e)
     {
         if (Vault is not { } vault || _browser.Details is not { } details)
@@ -28,8 +28,16 @@ public sealed partial class NodePage
             return;
         }
 
+        var history = new SheetChoice("History…", ShowHistory);
+        if (IsReadOnly)
+        {
+            _shell.ShowSheet(details.Name, [history]);
+            return;
+        }
+
         _shell.ShowSheet(details.Name,
         [
+            history,
             new("Rename…", () => _shell.Run(RenameAsync)),
             new("Colour…", () => ShowColors(details.Color)),
             new(details.IsPinned ? "Unpin" : "Pin", TogglePin),
@@ -38,6 +46,15 @@ public sealed partial class NodePage
             RemoveTypeChoice(vault.Graph, details),
             new("Delete…", () => _shell.Run(DeleteAsync)),
         ]);
+    }
+
+    // A note changed and not saved: asked first, as a restore may change it.
+    private void ShowHistory()
+    {
+        if (_browser.Details?.Node is { } node && !AsksBeforeLeaving(ShowHistory))
+        {
+            _shell.Push(new HistoryPage(_shell, node));
+        }
     }
 
     // A dot of each colour; none, a clear one so the names line up.

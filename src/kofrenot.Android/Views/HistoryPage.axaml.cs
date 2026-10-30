@@ -4,11 +4,12 @@ using Avalonia.Interactivity;
 using Kofrenot.Core.Graph;
 using Kofrenot.Core.History;
 using Kofrenot.Core.Logging;
+using Kofrenot.Core.Storage;
 using Kofrenot.Phone.Platform;
 
 namespace Kofrenot.Phone.Views;
 
-/// <summary>A version on a node's page: when and what (<see cref="Heading"/>), what it held, and whether it can be restored.</summary>
+/// <summary>A version of a node: when and what (<see cref="Heading"/>), what it held, and whether it can be restored.</summary>
 public sealed record HistoryLine(HistoryEntry Entry, string Heading, string Label, bool CanRestore)
 {
     public bool HasLabel => Label.Length > 0;
@@ -21,11 +22,50 @@ public sealed record HistoryLine(HistoryEntry Entry, string Heading, string Labe
             canWrite && entry.CanRestore);
 }
 
-/// <summary>A node's versions, as kofrenot on Windows lists them; Restore makes one the current one again, after a confirmation.</summary>
-public sealed partial class NodePage
+/// <summary>
+/// A node's versions on a screen of their own (⋮ > History… on its page), as kofrenot on Windows
+/// lists them; Restore makes one the current one again, after a confirmation.
+/// </summary>
+public sealed partial class HistoryPage : UserControl, IPage
 {
-    private void ShowHistory(KnowledgeGraph graph, Node node)
+    private readonly Shell _shell;
+    private readonly Guid _nodeId;
+
+    public HistoryPage(Shell shell, Node node)
     {
+        _shell = shell;
+        _nodeId = node.Id;
+        InitializeComponent();
+        Refresh();
+    }
+
+    private Vault? Vault => _shell.Services.Session.Current;
+
+    public bool GoBack() => false;
+
+    public void SyncChanged()
+    {
+    }
+
+    // Read again: a sync may have added a version, or removed the node (then the screen before).
+    public void Refresh()
+    {
+        if (Vault?.Graph is not { } graph)
+        {
+            return;
+        }
+
+        if (graph.FindNode(_nodeId) is not { } node)
+        {
+            if (_shell.IsShown(this))
+            {
+                _shell.Back();
+            }
+
+            return;
+        }
+
+        Bar.Title = $"History of {node.Name}";
         var canWrite = !_shell.Services.Session.IsReadOnly;
         History.ItemsSource = NodeHistory.Of(graph, node).Select(entry => HistoryLine.Of(entry, canWrite)).ToList();
     }
@@ -40,7 +80,7 @@ public sealed partial class NodePage
 
     private async Task RestoreAsync(HistoryLine line)
     {
-        if (Vault is not { } vault || _browser.Details?.Node is not { } node || AsksBeforeLeaving(() => _shell.Run(() => RestoreAsync(line)))
+        if (Vault is not { } vault || vault.Graph.FindNode(_nodeId) is not { } node
             || new RestorePlanner(vault.Graph).Plan(node, line.Entry) is not { } plan)
         {
             return;

@@ -82,24 +82,6 @@
             </DataTemplate>
           </ItemsControl.ItemTemplate>
         </ItemsControl>
-        <!-- Its versions, newest first; Restore makes one the current one again (NodePage.History). -->
-        <Expander x:Name="HistoryBox" Header="History" Margin="0,12,0,0" HorizontalAlignment="Stretch">
-          <StackPanel Spacing="{StaticResource GapS}">
-            <ItemsControl x:Name="History">
-              <ItemsControl.ItemTemplate>
-                <DataTemplate DataType="views:HistoryLine">
-                  <Grid ColumnDefinitions="*,Auto" Margin="0,4">
-                    <StackPanel VerticalAlignment="Center">
-                      <TextBlock Classes="caption" Text="{Binding Heading}" />
-                      <TextBlock Text="{Binding Label}" TextWrapping="Wrap" IsVisible="{Binding HasLabel}" />
-                    </StackPanel>
-                    <Button Grid.Column="1" Content="Restore" Tag="{Binding}" IsVisible="{Binding CanRestore}" Click="Restore_Click" />
-                  </Grid>
-                </DataTemplate>
-              </ItemsControl.ItemTemplate>
-            </ItemsControl>
-          </StackPanel>
-        </Expander>
       </StackPanel>
     </ScrollViewer>
   </DockPanel>
