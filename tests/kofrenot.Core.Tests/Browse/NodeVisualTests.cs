@@ -119,6 +119,53 @@ public sealed class NodeVisualTests
         Assert.Equal(new NodeVisual(NodeIcon.Image, version.Id), Assert.Single(browser.Details!.Links).Visual);
     }
 
+    [Fact]
+    public void ANodeWithImageFields_HasTheThumbnailOfTheFirstInTheOrderOfItsFields()
+    {
+        _graph.Apply(new NodeTypeDefined(Guid.NewGuid(), Start, "person", "Person", "Contact", null,
+            [new FieldDefinition("portrait", "Portrait", FieldKind.Image), new FieldDefinition("badge", "Badge", FieldKind.Image)], []));
+        var bruce = Add("person");
+        SetImage(bruce, "person", "badge", minutes: 0);
+        var portrait = SetImage(bruce, "person", "portrait", minutes: 1);
+
+        Assert.Equal(new NodeVisual(NodeIcon.Generic, portrait.Id, NodeColor.None, "Contact"), NodeVisual.Of(_graph, bruce));
+    }
+
+    [Fact]
+    public void ANodeWithoutAnImage_OrWithItsImageCleared_HasNoThumbnail()
+    {
+        var node = Add("generic");
+        _graph.Apply(new FieldSet(Guid.NewGuid(), Start, node.Id, FieldSet.Own, "born", "Born", FieldKind.Text, "1965", []));
+
+        Assert.Null(NodeVisual.Of(_graph, node).Thumbnail);
+
+        var image = SetImage(node, FieldSet.Own, "photo");
+        _graph.Apply(new FieldSet(Guid.NewGuid(), Start.AddMinutes(5), node.Id, FieldSet.Own, "photo", "Photo", FieldKind.Image, null, [image.Id]));
+
+        Assert.Null(NodeVisual.Of(_graph, node).Thumbnail);
+    }
+
+    [Fact]
+    public void ADataset_ShowsItsOwnImage_ElseItsImageField()
+    {
+        var photo = Add("dataset");
+        var version = Import(photo, "photo.png");
+        SetImage(photo, FieldSet.Own, "cover");
+        var paper = Add("dataset");
+        Import(paper, "paper.pdf");
+        var cover = SetImage(paper, FieldSet.Own, "cover");
+
+        Assert.Equal(version.Id, NodeVisual.Of(_graph, photo).Thumbnail);
+        Assert.Equal(new NodeVisual(NodeIcon.Pdf, cover.Id), NodeVisual.Of(_graph, paper));
+    }
+
+    private FieldSet SetImage(Node node, string owner, string field, int minutes = 0)
+    {
+        var image = new FieldSet(Guid.NewGuid(), Start.AddMinutes(minutes), node.Id, owner, field, field, FieldKind.Image, null, [], new DatasetFile($"{field}.png", 10, new string('b', 64)));
+        _graph.Apply(image);
+        return image;
+    }
+
     private Node Add(string type, string? name = null)
     {
         var node = new Node(Guid.NewGuid(), type, name ?? type, Start);

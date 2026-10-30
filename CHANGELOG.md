@@ -9,6 +9,8 @@ It covers kofrenot on Windows and on Android; versions before 0.9 ran on Windows
 ## [Unreleased]
 
 ### Added
+- **Both**
+  - **An image field is the node's picture**: a node with an image field set shows its thumbnail in every list (search, links, views, cards), as an image dataset does; the first in the order of its fields ([README](README.md#node-types-and-fields)).
 - **Android**
   - **Add a node from ＋**: **＋** > *Add a node…* opens the creation screen with the name to type, on any tab, as a view's *New* on Windows: in a list view, of its type; in a tree view, under its root ([README](README.md#on-android)).
 
