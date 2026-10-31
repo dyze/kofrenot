@@ -138,7 +138,7 @@ public sealed partial class NodePage : UserControl, IPage
 
     private void ShowContent(Vault vault, Node node, NodeColor color)
     {
-        NoteBox.IsVisible = ContentText.IsVisible = Files.IsVisible = OpenViewButton.IsVisible = ThumbnailFrame.IsVisible = false;
+        NoteBox.IsVisible = ContentText.IsVisible = Files.IsVisible = ImportButton.IsVisible = OpenViewButton.IsVisible = ThumbnailFrame.IsVisible = false;
         var graph = vault.Graph;
         if (graph.NoteVersionsOf(node.Id).Count > 0 || node.Type == TypeCatalog.Note.Id)
         {
@@ -148,12 +148,18 @@ public sealed partial class NodePage : UserControl, IPage
         {
             if (datasets.Count > 1)
             {
-                ShowText($"{datasets.Count} versions, in conflict: resolved in kofrenot on Windows.");
+                ShowText($"{datasets.Count} versions, in conflict: Import… one, or keep one in kofrenot on Windows.");
             }
 
             Files.ItemsSource = datasets.Select(version => new FileRow(version, version.File.Name, ByteSize.Format(version.File.Size))).ToList();
             Files.IsVisible = true;
+            ImportButton.IsVisible = !IsReadOnly;
             ShowThumbnail(datasets[^1]);
+        }
+        else if (node.Type == TypeCatalog.Dataset.Id)
+        {
+            ShowText(IsReadOnly ? "No file yet." : "No file yet: Import… adds it.");
+            ImportButton.IsVisible = !IsReadOnly;
         }
         else if (node.Type == TypeCatalog.View.Id)
         {

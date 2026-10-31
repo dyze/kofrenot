@@ -93,6 +93,8 @@
             </DataTemplate>
           </ItemsControl.ItemTemplate>
         </ItemsControl>
+        <!-- A new version of its file, as Import… on Windows (NodePage.Dataset). -->
+        <Button x:Name="ImportButton" Content="Import…" IsVisible="False" Click="Import_Click" />
         <ProgressBar x:Name="Busy" IsIndeterminate="True" IsVisible="False" />
         <Button x:Name="OpenViewButton" Content="Open as a tab" IsVisible="False" Click="OpenView_Click" />
         <TextBlock x:Name="LinksHeader" Classes="caption" Text="Links" Margin="0,12,0,0" />

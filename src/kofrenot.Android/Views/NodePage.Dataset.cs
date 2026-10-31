@@ -9,8 +9,9 @@ using Kofrenot.Phone.Platform;
 namespace Kofrenot.Phone.Views;
 
 /// <summary>
-/// A dataset's file on its page, named as on Windows: its thumbnail for an image, **Open** (with the
-/// app the user picks), **Export…** (where the user chooses), and the phone's own **Share…** (Android's
+/// A dataset's file on its page, named as on Windows: its thumbnail for an image, **Import…** (a new
+/// version, picked on the phone), **Open** (with the app the user picks), **Export…** (where the user
+/// chooses), and the phone's own **Share…** (Android's
 /// share sheet). The file is downloaded first when it is not here; Open and Share decrypt it into the
 /// cache (cache/open/, deleted at the next start). An image field's **Open** does as a file's.
 /// </summary>
@@ -49,6 +50,32 @@ public sealed partial class NodePage
         if ((sender as Control)?.Tag is FileRow row)
         {
             _shell.Run(() => HandAsync(row.Version, _shell.Services.Chooser.Share, "Share a dataset's file"));
+        }
+    }
+
+    private void Import_Click(object? sender, RoutedEventArgs e) => _shell.Run(ImportAsync);
+
+    // A file picked, saved as the new version (none when it is the latest already: told); the busy bar meanwhile.
+    private async Task ImportAsync()
+    {
+        if (_browser.Details?.Node is not { } node || await _shell.PickAsync("Import a file") is not [var file])
+        {
+            return;
+        }
+
+        var answers = new PreparedAnswers();
+        Busy.IsVisible = true;
+        Files.IsEnabled = ImportButton.IsEnabled = false;
+        try
+        {
+            await _shell.Services.Session.ImportVersion(answers, node, file);
+        }
+        finally
+        {
+            Busy.IsVisible = false;
+            Files.IsEnabled = ImportButton.IsEnabled = true;
+            _shell.Tell(answers.Told);
+            Refresh();
         }
     }
 
