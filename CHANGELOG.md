@@ -8,7 +8,10 @@ It covers kofrenot on Windows and on Android; versions before 0.9 ran on Windows
 
 ## [Unreleased]
 
-Vault format 9: a vault upgraded is closed by kofrenot 0.12 and older, on Windows and Android ([Format](docs/ARCHITECTURE.md#format)).
+> ⚠ **Vault format 9** (for the email and postal address fields). Consequences:
+> - Each vault asks once, when it opens, to be upgraded; until you agree, this kofrenot does not use it.
+> - Once upgraded, **kofrenot 0.12 and older no longer open it, on Windows and Android**: update kofrenot on all your devices, and ask the members of a shared vault to update theirs, before upgrading.
+> - There is no way back to format 8 ([Format](docs/ARCHITECTURE.md#format)).
 
 ### Added
 - **Both**
@@ -65,7 +68,10 @@ Vault format 9: a vault upgraded is closed by kofrenot 0.12 and older, on Window
 
 ## [0.11] - 2026-10-28
 
-Vault format 8: a vault upgraded is closed by kofrenot 0.10 and older, on Windows and Android ([Format](docs/ARCHITECTURE.md#format)).
+> ⚠ **Vault format 8** (for node types and fields). Consequences:
+> - Each vault asks once, when it opens, to be upgraded; until you agree, this kofrenot does not use it.
+> - Once upgraded, **kofrenot 0.10 and older no longer open it, on Windows and Android**: update kofrenot on all your devices, and ask the members of a shared vault to update theirs, before upgrading.
+> - There is no way back to format 7 ([Format](docs/ARCHITECTURE.md#format)).
 
 ### Added
 - **Both**
