@@ -195,7 +195,7 @@ public sealed partial class VaultsPage : UserControl, IPage
         Refresh();
     }
 
-    private void More_Click(object? sender, RoutedEventArgs e) => _shell.ShowSheet(null, [new("Settings", () => _shell.Push(new SettingsPage(_shell)))]);
+    private void More_Click(object? sender, RoutedEventArgs e) => _shell.ShowSheet(null, [new("Settings", () => _shell.Push(new SettingsPage(_shell)), Icon: "SettingsIcon")]);
 
     private void SetBusy(bool busy)
     {

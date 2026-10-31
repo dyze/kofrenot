@@ -108,7 +108,7 @@ public sealed partial class NodePage : UserControl, IPage
         ColorDot.Fill = NodeLook.Brush(details.Color);
         ColorDot.IsVisible = details.Color != NodeColor.None;
         Pinned.IsVisible = details.IsPinned;
-        ShowOffline(vault, details.Node);
+        ShowOffline(details.Node);
         ShowFields(details);
         ShowConflicts(details);
         ShowContent(vault, details.Node, details.Color);

@@ -1,24 +1,22 @@
 using Avalonia.Controls.Primitives;
 using Avalonia.Interactivity;
 using Kofrenot.Core.Graph;
-using Kofrenot.Core.Storage;
 
 namespace Kofrenot.Phone.Views;
 
 /// <summary>
-/// Keep offline, an action of the top bar (its icon in the accent while kept): a node's content
-/// downloaded ahead on this phone only, never written to the vault, so readers keep nodes offline
-/// too; where it stands under the node's type. The pin (synced, set on Windows) is only shown.
+/// Keep offline: a node's content downloaded ahead on this phone only, never written to the vault,
+/// so readers keep nodes offline too. An action of the top bar (its icon in the accent while kept)
+/// and of ⋮. The pin (synced, set on Windows) is only shown.
 /// </summary>
 public sealed partial class NodePage
 {
-    private void ShowOffline(Vault vault, Node node)
+    private void ShowOffline(Node node)
     {
         var session = _shell.Services.Session;
-        var isKept = session.IsKeptOffline(node.Id);
         OfflineButton.IsVisible = session.CanKeepOffline;
         // Not kept: the bar's own colour (a null brush would draw nothing).
-        if (isKept)
+        if (session.IsKeptOffline(node.Id))
         {
             OfflineIcon.Foreground = PhoneTheme.Brush("Accent");
         }
@@ -26,12 +24,16 @@ public sealed partial class NodePage
         {
             OfflineIcon.ClearValue(TemplatedControl.ForegroundProperty);
         }
-
-        OfflineText.IsVisible = session.CanKeepOffline && isKept;
-        OfflineText.Text = isKept ? $"✓ {vault.OfflineLabel(node.Id)}" : null;
     }
 
-    private void Offline_Click(object? sender, RoutedEventArgs e)
+    // ⋮'s choice, saying what it does now; none where nothing is fetched on demand.
+    private SheetChoice? OfflineChoice(Node node) => _shell.Services.Session.CanKeepOffline
+        ? new SheetChoice(_shell.Services.Session.IsKeptOffline(node.Id) ? "Don't keep offline" : "Keep offline", ToggleOffline, Icon: "OfflineIcon")
+        : null;
+
+    private void Offline_Click(object? sender, RoutedEventArgs e) => ToggleOffline();
+
+    private void ToggleOffline()
     {
         if (_browser.Details?.Node is { } node)
         {

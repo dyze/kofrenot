@@ -22,7 +22,8 @@
       <StackPanel Margin="{StaticResource PageMargin}" Spacing="{StaticResource Gap}">
         <Grid ColumnDefinitions="Auto,*,Auto">
           <Ellipse x:Name="ColorDot" Width="12" Height="12" Margin="0,0,8,0" VerticalAlignment="Center" />
-          <SelectableTextBlock x:Name="NodeName" Grid.Column="1" Classes="title" TextWrapping="Wrap" />
+          <!-- A tap renames it, as a click on the name does on Windows (NodePage.Actions). -->
+          <TextBlock x:Name="NodeName" Grid.Column="1" Classes="title" TextWrapping="Wrap" Background="Transparent" Tapped="NodeName_Tapped" />
           <TextBlock x:Name="Pinned" Grid.Column="2" Classes="caption" Text="Pinned" VerticalAlignment="Center" />
         </Grid>
         <TextBlock x:Name="NodeType" Classes="caption" />
@@ -55,7 +56,6 @@
             </DataTemplate>
           </ItemsControl.ItemTemplate>
         </ItemsControl>
-        <TextBlock x:Name="OfflineText" Classes="caption" IsVisible="False" />
         <!-- A name, colour or value set on two devices: each offered to keep (NodePage.Fields). -->
         <StackPanel x:Name="Conflicts" Spacing="{StaticResource GapS}" IsVisible="False" />
         <Border x:Name="NoteBox" CornerRadius="8" Padding="12" IsVisible="False">

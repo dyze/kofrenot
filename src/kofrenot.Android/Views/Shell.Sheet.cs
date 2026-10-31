@@ -6,8 +6,8 @@ using Avalonia.Media;
 
 namespace Kofrenot.Phone.Views;
 
-/// <summary>A choice of a bottom sheet: its label, a dot of colour before it, and what it does.</summary>
-public sealed record SheetChoice(string Label, Action Chosen, IBrush? Dot = null, bool IsEnabled = true, bool IsCurrent = false);
+/// <summary>A choice of a bottom sheet: its label, before it a dot of colour or an icon (a key of App.axaml's icons), and what it does.</summary>
+public sealed record SheetChoice(string Label, Action Chosen, IBrush? Dot = null, bool IsEnabled = true, bool IsCurrent = false, string? Icon = null);
 
 /// <summary>
 /// Bottom sheets, as Material on a phone, instead of menus: a screen's actions (⋮), what ＋ adds, the
@@ -51,7 +51,11 @@ public sealed partial class Shell
         var content = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 16 };
         if (choice.Dot is { } dot)
         {
-            content.Children.Add(new Ellipse { Width = 14, Height = 14, Fill = dot, VerticalAlignment = VerticalAlignment.Center });
+            content.Children.Add(new Ellipse { Width = 14, Height = 14, Margin = new Avalonia.Thickness(3), Fill = dot, VerticalAlignment = VerticalAlignment.Center });
+        }
+        else if (choice.Icon is { } icon)
+        {
+            content.Children.Add(new PathIcon { Data = PhoneTheme.Icon(icon), Width = 20, Height = 20, VerticalAlignment = VerticalAlignment.Center });
         }
 
         content.Children.Add(label);

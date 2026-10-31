@@ -28,24 +28,38 @@ public sealed partial class NodePage
             return;
         }
 
-        var history = new SheetChoice("History…", ShowHistory);
+        // What a reader has too: the history, and keep offline (this phone only, never written to the vault).
+        SheetChoice[] readers =
+        [
+            new("History…", ShowHistory, Icon: "HistoryIcon"),
+            .. OfflineChoice(details.Node) is { } offline ? [offline] : Array.Empty<SheetChoice>(),
+        ];
         if (IsReadOnly)
         {
-            _shell.ShowSheet(details.Name, [history]);
+            _shell.ShowSheet(details.Name, readers);
             return;
         }
 
         _shell.ShowSheet(details.Name,
         [
-            history,
-            new("Rename…", () => _shell.Run(RenameAsync)),
-            new("Colour…", () => ShowColors(details.Color)),
-            new(details.IsPinned ? "Unpin" : "Pin", TogglePin),
-            new("Add field…", () => _shell.Run(AddFieldAsync)),
+            .. readers,
+            new("Rename…", () => _shell.Run(RenameAsync), Icon: "RenameIcon"),
+            new("Colour…", () => ShowColors(details.Color), Icon: "ColorIcon"),
+            new(details.IsPinned ? "Unpin" : "Pin", TogglePin, Icon: "PinIcon"),
+            new("Add field…", () => _shell.Run(AddFieldAsync), Icon: "AddIcon"),
             AddTypeChoice(vault.Graph, details),
             RemoveTypeChoice(vault.Graph, details),
-            new("Delete…", () => _shell.Run(DeleteAsync)),
+            new("Delete…", () => _shell.Run(DeleteAsync), Icon: "DeleteIcon"),
         ]);
+    }
+
+    // A tap on the name renames it, as on Windows; a reader only reads it.
+    private void NodeName_Tapped(object? sender, TappedEventArgs e)
+    {
+        if (!IsReadOnly)
+        {
+            _shell.Run(RenameAsync);
+        }
     }
 
     // A note changed and not saved: asked first, as a restore may change it.
@@ -119,7 +133,7 @@ public sealed partial class NodePage
         if (!IsReadOnly && (sender as Control)?.Tag is NodeRow { Link: { } link } row)
         {
             e.Handled = true;
-            _shell.ShowSheet(row.Name, [new("Remove link…", () => _shell.Run(() => RemoveLinkAsync(link, row)))]);
+            _shell.ShowSheet(row.Name, [new("Remove link…", () => _shell.Run(() => RemoveLinkAsync(link, row)), Icon: "DeleteIcon")]);
         }
     }
 

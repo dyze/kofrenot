@@ -140,7 +140,7 @@ public sealed partial class NodePage
             .Where(type => type != TypeCatalog.Generic && type != TypeCatalog.View && !details.Types.Contains(type))
             .Select(type => new SheetChoice(type.Name, () => ChangeTypes(new TypeSetPlanner(graph).Add(details.Node, type))))
             .ToList();
-        return new SheetChoice("Add type…", () => _shell.ShowSheet("Add type", types), IsEnabled: types.Count > 0);
+        return new SheetChoice("Add type…", () => _shell.ShowSheet("Add type", types), IsEnabled: types.Count > 0, Icon: "AddIcon");
     }
 
     // ⋮ > Take out type: asked first, saying what it hides.
@@ -150,7 +150,7 @@ public sealed partial class NodePage
             .Where(type => type != TypeCatalog.Generic)
             .Select(type => new SheetChoice(type.Name, () => _shell.Run(() => RemoveTypeAsync(new TypeSetPlanner(graph).Remove(details.Node, type)))))
             .ToList();
-        return new SheetChoice("Take out type…", () => _shell.ShowSheet("Take out type", types), IsEnabled: types.Count > 0);
+        return new SheetChoice("Take out type…", () => _shell.ShowSheet("Take out type", types), IsEnabled: types.Count > 0, Icon: "RemoveIcon");
     }
 
     private async Task RemoveTypeAsync(TypeSetPlan plan)

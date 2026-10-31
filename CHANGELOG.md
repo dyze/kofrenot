@@ -39,7 +39,7 @@ It covers kofrenot on Windows and on Android; versions before 0.9 ran on Windows
   - **Thumbnails in the lists**, as on Windows: an image dataset, or a node with an image field set, shows its thumbnail instead of its icon in the search, the pinned and recent nodes, the views and a node's links; read off the screen's thread and kept in memory ([README](README.md#on-android)).
   - **No node type under the names**: a row is its icon (or thumbnail) and its name, as on Windows; a second line only says what the icon does not: a recent node's activity, the field a search matched, how a link reads.
   - **Named as on Windows**: a dataset's *Open with…* is now **Open**, and *Save as…* **Export…**; an image field's *Open with…* is **Open**.
-  - **A node's page**: *Keep offline* is an icon of its top bar (in the accent while kept, where it stands under its type), and a field's action an icon right of its value (open, mail, map), its label on the line of its value.
+  - **A node's page**: *Keep offline* is an icon of its top bar (in the accent while kept) and a choice of **⋮**; a tap on the name renames it, as on Windows; a field's action is an icon right of its value (open, mail, map), its label on the line of its value; every choice of a sheet has its icon.
 
 ### Fixed
 - **Windows**
