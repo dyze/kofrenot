@@ -36,12 +36,16 @@
     <SolidColorBrush x:Key="Synced" Color="MediumSeaGreen" />
     <SolidColorBrush x:Key="Problem" Color="IndianRed" />
     <SolidColorBrush x:Key="Idle" Color="Gray" />
-    <!-- Icons, on a 24 dp grid: ←, ⋮, ＋, ☰, ✕. -->
+    <!-- Icons, on a 24 dp grid: ←, ⋮, ＋, ☰, ✕; keep offline (a download), open (a page), write (a mail), map (a pin). -->
     <StreamGeometry x:Key="BackIcon">M20,11 H7.8 L13.4,5.4 L12,4 L4,12 L12,20 L13.4,18.6 L7.8,13 H20 Z</StreamGeometry>
     <StreamGeometry x:Key="MoreIcon">M10,6 a2,2 0 1,0 4,0 a2,2 0 1,0 -4,0 Z M10,12 a2,2 0 1,0 4,0 a2,2 0 1,0 -4,0 Z M10,18 a2,2 0 1,0 4,0 a2,2 0 1,0 -4,0 Z</StreamGeometry>
     <StreamGeometry x:Key="AddIcon">M11,5 H13 V11 H19 V13 H13 V19 H11 V13 H5 V11 H11 Z</StreamGeometry>
     <StreamGeometry x:Key="MenuIcon">M3,6 H21 V8 H3 Z M3,11 H21 V13 H3 Z M3,16 H21 V18 H3 Z</StreamGeometry>
     <StreamGeometry x:Key="CloseIcon">M6.4,5 L12,10.6 L17.6,5 L19,6.4 L13.4,12 L19,17.6 L17.6,19 L12,13.4 L6.4,19 L5,17.6 L10.6,12 L5,6.4 Z</StreamGeometry>
+    <StreamGeometry x:Key="OfflineIcon">M11,4 H13 V14.2 L16.6,10.6 L18,12 L12,18 L6,12 L7.4,10.6 L11,14.2 Z M5,19 H19 V21 H5 Z</StreamGeometry>
+    <StreamGeometry x:Key="OpenIcon">M14,3 H21 V10 H19 V6.4 L9.7,15.7 L8.3,14.3 L17.6,5 H14 Z M5,5 H11 V7 H7 V17 H17 V13 H19 V19 H5 Z</StreamGeometry>
+    <StreamGeometry x:Key="MailIcon">M3,5 H21 V19 H3 Z M5,7 V17 H19 V7 Z M5,7 L12,12 L19,7 V9.4 L12,14.4 L5,9.4 Z</StreamGeometry>
+    <StreamGeometry x:Key="PlaceIcon">M12,2 C8.1,2 5,5.1 5,9 C5,14.2 12,22 12,22 C12,22 19,14.2 19,9 C19,5.1 15.9,2 12,2 Z M12,6.5 C13.4,6.5 14.5,7.6 14.5,9 C14.5,10.4 13.4,11.5 12,11.5 C10.6,11.5 9.5,10.4 9.5,9 C9.5,7.6 10.6,6.5 12,6.5 Z</StreamGeometry>
     <!-- The top bar of every screen (TopBar). -->
     <ControlTheme x:Key="{x:Type views:TopBar}" TargetType="views:TopBar">
       <Setter Property="Template">

@@ -26,13 +26,13 @@ public sealed record FieldLine(string Label, string Value, DatasetEdited? Image 
 
     public bool HasLink => Link is not null;
 
-    /// <summary>Its button's name, as its tooltip on Windows says what it does.</summary>
-    public string LinkLabel => Field?.Kind switch
+    /// <summary>Its button's icon, as Windows' tooltip says what it does: a mail to write, a place on a map, a page to open.</summary>
+    public Geometry LinkIcon => PhoneTheme.Icon(Field?.Kind switch
     {
-        FieldKind.Email => "Write",
-        FieldKind.Address => "Map",
-        _ => "Open",
-    };
+        FieldKind.Email => "MailIcon",
+        FieldKind.Address => "PlaceIcon",
+        _ => "OpenIcon",
+    });
 
     public bool HasImage => Image is not null;
 

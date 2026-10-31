@@ -15,7 +15,7 @@ It covers kofrenot on Windows and on Android; versions before 0.9 ran on Windows
 
 ### Added
 - **Both**
-  - **Email and postal address fields**: two new kinds of field. An email opens a new mail to it, a postal address its place on Google Maps (**↗** on Windows; *Write* and *Map* on Android), as a web address opens its page. An email typed in a web address field is refused, saying where it goes, no longer turned into `https://…` ([README](README.md#node-types-and-fields)).
+  - **Email and postal address fields**: two new kinds of field. An email opens a new mail to it, a postal address its place on Google Maps (**↗** on Windows; a mail or a map icon on Android), as a web address opens its page. An email typed in a web address field is refused, saying where it goes, no longer turned into `https://…` ([README](README.md#node-types-and-fields)).
   - **An image field is the node's picture**: a node with an image field set shows its thumbnail in every list (search, links, views, cards), as an image dataset does; the first in the order of its fields ([README](README.md#node-types-and-fields)).
 - **Android**
   - **Share a dataset's file**: **Share…** beside *Open* and *Export…* sends it through Android's share sheet: a message, a mail, a cloud ([README](README.md#on-android)).
@@ -31,7 +31,7 @@ It covers kofrenot on Windows and on Android; versions before 0.9 ran on Windows
   - **Edge to edge**: the app draws behind the status and navigation bars, as Android enforces from API 35, its screens kept clear of them and of the keyboard; the field typed in scrolls into view. Back previews the screen before (predictive back) ([ANDROID-CONCEPT.md](docs/ANDROID-CONCEPT.md#layout)).
   - **Screens slide**: in from the right going forward, from the left going back.
   - **Material layout**: each screen has a top bar with **←** (the same as Back) and **⋮**, drawn icons instead of text glyphs; menus are bottom sheets: a node's actions, a field's options, a link's removal (long press), the views to open as a tab; **＋** is a floating button at the bottom right of the home ([README](README.md#on-android)).
-  - **Lighter home**: the search box is in the top bar, between **☰** (the open vault and where its sync stands, *Sync now*, the other vaults, *Vaults…*) and **⋮** (*Settings*); the dot on **☰** shows the sync ([README](README.md#on-android)).
+  - **Lighter home**: the search box is in the top bar, after **☰** (as a drawer: the open vault and where its sync stands, *Sync now*, the other vaults, *Vaults…* and *Settings*); the dot on **☰** shows the sync ([README](README.md#on-android)).
   - **One back stack**: a link on a node's page opens that node as a screen of its own, so Back and **←** go back through them one by one, the trail at the top naming them; a note being edited stays as it was until you come back to it. One node added from another app's share opens over the home, as a deep link would ([ANDROID-CONCEPT.md](docs/ANDROID-CONCEPT.md#layout)).
   - **A field of its own of any kind**: **⋮** > *Add field…* asks its kind after its name, as on Windows: text, number, date, web address or checkbox, no longer text only ([README](README.md#on-android)).
   - **History on a screen of its own**: **⋮** > *History…* on a node's page lists its versions, each with **Restore**, instead of a section at the bottom of the page; a reader's **⋮** has it too ([README](README.md#on-android)).
@@ -39,6 +39,7 @@ It covers kofrenot on Windows and on Android; versions before 0.9 ran on Windows
   - **Thumbnails in the lists**, as on Windows: an image dataset, or a node with an image field set, shows its thumbnail instead of its icon in the search, the pinned and recent nodes, the views and a node's links; read off the screen's thread and kept in memory ([README](README.md#on-android)).
   - **No node type under the names**: a row is its icon (or thumbnail) and its name, as on Windows; a second line only says what the icon does not: a recent node's activity, the field a search matched, how a link reads.
   - **Named as on Windows**: a dataset's *Open with…* is now **Open**, and *Save as…* **Export…**; an image field's *Open with…* is **Open**.
+  - **A node's page**: *Keep offline* is an icon of its top bar (in the accent while kept, where it stands under its type), and a field's action an icon right of its value (open, mail, map), its label on the line of its value.
 
 ### Fixed
 - **Windows**

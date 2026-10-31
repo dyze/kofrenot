@@ -298,7 +298,7 @@ public sealed partial class HomePage : UserControl, IPage
         }
     }
 
-    // ☰: the open vault and where its sync stands, the other vaults to open, and the list of vaults.
+    // ☰, as a drawer: the open vault and where its sync stands, the other vaults to open, the list of vaults, and Settings.
     private void Vault_Click(object? sender, RoutedEventArgs e)
     {
         var session = _shell.Services.Session;
@@ -316,9 +316,7 @@ public sealed partial class HomePage : UserControl, IPage
             new("Sync now", () => _shell.Run(_shell.Services.Sync.SyncNowAsync), VaultsPage.DotOf(status.Level)),
             .. others,
             new("Vaults…", () => _shell.Push(new VaultsPage(_shell))),
+            new("Settings", () => _shell.Push(new SettingsPage(_shell))),
         ]);
     }
-
-    private void More_Click(object? sender, RoutedEventArgs e) =>
-        _shell.ShowSheet(null, [new("Settings", () => _shell.Push(new SettingsPage(_shell)))]);
 }

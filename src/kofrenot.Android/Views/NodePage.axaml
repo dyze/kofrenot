@@ -6,10 +6,16 @@
     <views:TopBar DockPanel.Dock="Top">
       <TextBlock x:Name="Trail" Classes="caption" Margin="12,0" TextTrimming="CharacterEllipsis" />
       <views:TopBar.Actions>
-        <!-- Rename, colour, pin, fields, types, delete: a sheet (NodePage.Actions). -->
-        <Button x:Name="ActionsButton" Classes="icon" Click="Actions_Click">
-          <PathIcon Data="{StaticResource MoreIcon}" />
-        </Button>
+        <StackPanel Orientation="Horizontal">
+          <!-- Keep offline, in the accent while kept (NodePage.Offline). -->
+          <Button x:Name="OfflineButton" Classes="icon" IsVisible="False" Click="Offline_Click">
+            <PathIcon x:Name="OfflineIcon" Data="{StaticResource OfflineIcon}" />
+          </Button>
+          <!-- History, rename, colour, pin, fields, types, delete: a sheet (NodePage.Actions). -->
+          <Button x:Name="ActionsButton" Classes="icon" Click="Actions_Click">
+            <PathIcon Data="{StaticResource MoreIcon}" />
+          </Button>
+        </StackPanel>
       </views:TopBar.Actions>
     </views:TopBar>
     <ScrollViewer>
@@ -24,23 +30,32 @@
         <ItemsControl x:Name="Fields" IsVisible="False">
           <ItemsControl.ItemTemplate>
             <DataTemplate DataType="views:FieldLine">
-              <Grid ColumnDefinitions="120,*" Margin="0,2">
-                <TextBlock Classes="caption" Text="{Binding Label}" TextWrapping="Wrap" VerticalAlignment="Top" />
+              <!-- Its label on the line of its value; its action an icon on the right, as on Windows. -->
+              <Grid ColumnDefinitions="120,*,Auto" Margin="0,2">
+                <Border MinHeight="{StaticResource TouchTarget}" VerticalAlignment="Top">
+                  <TextBlock Classes="caption" Text="{Binding Label}" TextWrapping="Wrap" VerticalAlignment="Center" />
+                </Border>
                 <StackPanel Grid.Column="1" Spacing="{StaticResource GapS}">
                   <Button Classes="flat" Padding="0" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
                           Tag="{Binding}" Click="Field_Click">
                     <TextBlock Text="{Binding Value}" TextWrapping="Wrap" />
                   </Button>
                   <Image Source="{Binding Thumbnail}" MaxHeight="96" HorizontalAlignment="Left" IsVisible="{Binding HasThumbnail}" />
-                  <Button Content="Open" Tag="{Binding}" IsVisible="{Binding HasImage}" Click="OpenImage_Click" />
+                </StackPanel>
+                <StackPanel Grid.Column="2" VerticalAlignment="Top">
                   <!-- A web address opened, a mail written, an address shown on a map (NodePage.Fields). -->
-                  <Button Content="{Binding LinkLabel}" Tag="{Binding}" IsVisible="{Binding HasLink}" Click="OpenLink_Click" />
+                  <Button Classes="icon" Tag="{Binding}" IsVisible="{Binding HasLink}" Click="OpenLink_Click">
+                    <PathIcon Data="{Binding LinkIcon}" />
+                  </Button>
+                  <Button Classes="icon" Tag="{Binding}" IsVisible="{Binding HasImage}" Click="OpenImage_Click">
+                    <PathIcon Data="{StaticResource OpenIcon}" />
+                  </Button>
                 </StackPanel>
               </Grid>
             </DataTemplate>
           </ItemsControl.ItemTemplate>
         </ItemsControl>
-        <Button x:Name="OfflineButton" IsVisible="False" Click="Offline_Click" />
+        <TextBlock x:Name="OfflineText" Classes="caption" IsVisible="False" />
         <!-- A name, colour or value set on two devices: each offered to keep (NodePage.Fields). -->
         <StackPanel x:Name="Conflicts" Spacing="{StaticResource GapS}" IsVisible="False" />
         <Border x:Name="NoteBox" CornerRadius="8" Padding="12" IsVisible="False">

@@ -34,7 +34,7 @@
   </UserControl.Styles>
   <Grid>
     <DockPanel>
-      <!-- ☰: the vault and its sync, in a sheet (its dot: where the sync stands); the search box; ⋮: Settings. -->
+      <!-- ☰: the vault and its sync, the other vaults and Settings, in a sheet (its dot: where the sync stands); the search box. -->
       <views:TopBar DockPanel.Dock="Top">
         <Grid ColumnDefinitions="Auto,*">
           <Button Classes="icon" Click="Vault_Click">
@@ -57,11 +57,6 @@
                        Foreground="{StaticResource Secondary}" IsVisible="False" Tapped="Proposal_Tapped" />
           </Panel>
         </Grid>
-        <views:TopBar.Actions>
-          <Button Classes="icon" Click="More_Click">
-            <PathIcon Data="{StaticResource MoreIcon}" />
-          </Button>
-        </views:TopBar.Actions>
       </views:TopBar>
       <Border x:Name="ReadOnlyBanner" DockPanel.Dock="Top" Background="{StaticResource Banner}" Padding="16,6">
         <TextBlock x:Name="ReadOnlyText" Classes="caption" TextWrapping="Wrap" />
