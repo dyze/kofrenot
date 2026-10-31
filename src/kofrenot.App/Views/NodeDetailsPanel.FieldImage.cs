@@ -36,12 +36,12 @@ public partial class NodeDetailsPanel
 
         if (canEdit && SaveImage is not null)
         {
-            var choose = new Button { Margin = new Thickness(field.HasValue ? 8 : 0, 0, 0, 0), Padding = new Thickness(10, 2, 10, 2), Content = "Choose…", Focusable = false, VerticalAlignment = VerticalAlignment.Center };
+            var choose = new Button { Margin = new Thickness(field.HasValue ? 8 : 0, 0, 0, 0), Padding = new Thickness(10, 2, 10, 2), Content = "Choose…", VerticalAlignment = VerticalAlignment.Center };
             choose.Click += (_, _) => _ = ChooseImage(field);
             panel.Children.Add(choose);
             if (field.HasValue)
             {
-                panel.Children.Add(SmallButton("", "Remove this image", () => RemoveImage(field)));
+                panel.Children.Add(SmallButton("", "Remove this image", () => RemoveImage(field), focusable: true));
             }
         }
 
@@ -83,8 +83,7 @@ public partial class NodeDetailsPanel
         {
             var file = await Task.Run(() => DatasetFiles.Describe(path));
             var plan = new FieldPlanner(graph).SetImage(details.Node, field, file);
-            FieldStatus.Text = plan.Status;
-            FieldStatus.Visibility = plan.Status.Length > 0 ? Visibility.Visible : Visibility.Collapsed;
+            ShowStatus(plan.Status);
             if (plan.Changes is [FieldSet value] && await SaveImage(value, () => File.OpenRead(path)))
             {
                 Show();

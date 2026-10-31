@@ -24,6 +24,7 @@ It covers kofrenot on Windows and on Android; versions before 0.9 ran on Windows
 
 ### Changed
 - **Both**
+  - **A calendar for dates**: a date field has a calendar beside its box on Windows (typing still works), and opens one on Android instead of asking to type it ([README](README.md#node-types-and-fields)).
   - **A new icon**: a purple K of linked nodes, on Windows (the app, its tray, its windows, the installer) and on Android, where it is an adaptive icon: the K on a dark purple background, cut to the launcher's shape.
 - **Android**
   - **Touch targets of 48 dp**: every button, row, tab, field and link is at least 48 dp high, as Android asks; spacing, type sizes and colours are shared tokens (`App.axaml`) ([ANDROID-CONCEPT.md](docs/ANDROID-CONCEPT.md#layout)).
@@ -40,6 +41,10 @@ It covers kofrenot on Windows and on Android; versions before 0.9 ran on Windows
   - **Named as on Windows**: a dataset's *Open with…* is now **Open**, and *Save as…* **Export…**; an image field's *Open with…* is **Open**.
 
 ### Fixed
+- **Windows**
+  - **Add field…** asks before discarding a field half added when you go elsewhere, and no longer stays open on another node.
+  - **Tab** stops on an image field's **Choose…** and **×**, on a checkbox and on a choice, so **Space** uses them; a box reached with **Tab** has its caret at the end of its value.
+  - **What is wrong with a value** shows right under its field, no longer below all the fields.
 - **Android**
   - **Search box text** lines up with its labels and with the name proposed after it, no longer higher.
 

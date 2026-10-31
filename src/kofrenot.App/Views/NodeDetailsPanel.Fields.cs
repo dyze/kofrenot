@@ -21,10 +21,20 @@ public partial class NodeDetailsPanel
 {
     private const string ClearChoice = "—";
 
+    // The node Add field… was started on, while its form is shown.
+    private Guid? _ownFieldNode;
+
     private void ShowFields(NodeDetails details)
     {
         var typing = TypingKept(details.Node);
         _boxes.Clear();
+        _errors.Clear();
+        // Add field… belongs to the node it was started on (leaving it asked about it: LeaveFields).
+        if (OwnFieldForm.Visibility == Visibility.Visible && _ownFieldNode != details.Node.Id)
+        {
+            ResetOwnField();
+        }
+
         FieldGrid.Children.Clear();
         FieldGrid.RowDefinitions.Clear();
         var canEdit = WriteChanges is not null;
@@ -63,6 +73,11 @@ public partial class NodeDetailsPanel
         if (field.Value is { } value && FieldValue.LinkOf(field.Kind, value) is { } link)
         {
             actions.Children.Add(SmallButton("", OpenTipOf(field.Kind), () => OpenLink(link)));
+        }
+
+        if (canEdit && field.Kind == FieldKind.Date)
+        {
+            actions.Children.Add(SmallButton("", "Choose a date", () => ShowCalendar(field), focusable: true));
         }
 
         if (canEdit && fields.FirstOrDefault(other => other != field && other.IsOwn != field.IsOwn && NameKey.Of(other.Name) == NameKey.Of(field.Name)) is { } twin && !field.IsOwn)
@@ -119,11 +134,11 @@ public partial class NodeDetailsPanel
         switch (field.Kind)
         {
             case FieldKind.Checkbox:
-                var check = new CheckBox { Margin = margin, MinWidth = 0, IsChecked = FieldValue.IsChecked(field.Value), Focusable = false };
+                var check = new CheckBox { Margin = margin, MinWidth = 0, IsChecked = FieldValue.IsChecked(field.Value) };
                 check.Click += (_, _) => WriteFields(planner => planner.Check(Node, field, check.IsChecked == true), "Field set");
                 return check;
             case FieldKind.Choice:
-                var list = new ComboBox { Margin = margin, MinWidth = 140, HorizontalAlignment = HorizontalAlignment.Left, Focusable = false };
+                var list = new ComboBox { Margin = margin, MinWidth = 140, HorizontalAlignment = HorizontalAlignment.Left };
                 list.ItemsSource = field.Choices.Prepend(ClearChoice).Concat(field.Value is { } kept && !field.Choices.Contains(kept) ? [kept] : []).ToList();
                 list.SelectedItem = field.Value ?? ClearChoice;
                 list.SelectionChanged += (_, _) =>
@@ -161,12 +176,13 @@ public partial class NodeDetailsPanel
         }
     }
 
-    private Button SmallButton(string glyph, string tip, Action click)
+    // A glyph's button beside a field; reached with Tab only when it is the field's own way to set it (an image removed, a date chosen).
+    private Button SmallButton(string glyph, string tip, Action click, bool focusable = false)
     {
         var button = new Button
         {
             Padding = new Thickness(6, 2, 6, 2),
-            Focusable = false,
+            Focusable = focusable,
             Style = (Style)FindResource("FlatButton"),
             ToolTip = tip,
             Content = new TextBlock { FontFamily = new System.Windows.Media.FontFamily("Segoe Fluent Icons, Segoe MDL2 Assets"), FontSize = 12, Text = glyph },
@@ -175,8 +191,8 @@ public partial class NodeDetailsPanel
         return button;
     }
 
-    /// <summary>Writes a plan of the node's fields, or says why it cannot; false when nothing was written.</summary>
-    private bool WriteFields(Func<FieldPlanner, FieldPlan> plan, string action)
+    /// <summary>Writes a plan of the node's fields, or says why it cannot (under <paramref name="about"/> when given); false when nothing was written.</summary>
+    private bool WriteFields(Func<FieldPlanner, FieldPlan> plan, string action, NodeField? about = null)
     {
         if (Browser is not { Graph: { } graph, Details: not null } || WriteChanges is null)
         {
@@ -184,8 +200,7 @@ public partial class NodeDetailsPanel
         }
 
         var planned = plan(new FieldPlanner(graph));
-        FieldStatus.Text = planned.Status;
-        FieldStatus.Visibility = planned.Status.Length > 0 ? Visibility.Visible : Visibility.Collapsed;
+        ShowStatus(planned.Status, about);
         if (!planned.CanApply || !WriteChanges(planned.Changes, action))
         {
             return false;
@@ -215,6 +230,7 @@ public partial class NodeDetailsPanel
 
     private void AddField_Click(object sender, RoutedEventArgs e)
     {
+        _ownFieldNode = Node.Id;
         OwnFieldForm.Visibility = Visibility.Visible;
         AddFieldButton.Visibility = Visibility.Collapsed;
         OwnFieldName.Focus();
@@ -237,11 +253,17 @@ public partial class NodeDetailsPanel
 
     private void CloseOwnField()
     {
+        ResetOwnField();
+        Focus();
+    }
+
+    private void ResetOwnField()
+    {
+        _ownFieldNode = null;
         OwnFieldName.Clear();
         OwnFieldValue.Clear();
         OwnFieldForm.Visibility = Visibility.Collapsed;
         AddFieldButton.Visibility = WriteChanges is null ? Visibility.Collapsed : Visibility.Visible;
-        FieldStatus.Visibility = Visibility.Collapsed;
-        Focus();
+        HideStatus();
     }
 }

@@ -28,9 +28,16 @@ public sealed partial class Shell
         SheetScrim.IsVisible = true;
     }
 
+    /// <summary>A sheet showing <paramref name="content"/> (a calendar), then <paramref name="choices"/>; the content closes it itself (<see cref="CloseSheet"/>).</summary>
+    public void ShowSheet(string? title, Control content, IEnumerable<SheetChoice> choices)
+    {
+        ShowSheet(title, choices);
+        SheetChoices.Children.Insert(0, content);
+    }
+
     private bool IsSheetShown => SheetScrim.IsVisible;
 
-    private void CloseSheet() => SheetScrim.IsVisible = false;
+    public void CloseSheet() => SheetScrim.IsVisible = false;
 
     private Button ButtonOf(SheetChoice choice)
     {

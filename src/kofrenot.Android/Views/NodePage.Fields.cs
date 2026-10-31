@@ -1,5 +1,7 @@
+using System.Globalization;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
+using Avalonia.Layout;
 using Kofrenot.Core.Browse;
 using Kofrenot.Core.Fields;
 using Kofrenot.Core.Graph;
@@ -44,6 +46,9 @@ public sealed partial class NodePage
                     .Select(choice => new SheetChoice(choice, () => WriteField(planner.Set(node, field, choice), "Field value set"), IsCurrent: choice == field.Value))
                     .Append(new SheetChoice("None", () => WriteField(planner.Clear(node, field), "Field value cleared"), IsCurrent: !field.HasValue)));
                 break;
+            case FieldKind.Date:
+                ShowCalendar(planner, node, field);
+                break;
             default:
                 var typed = await _shell.AskText(field.Label, field.Value ?? string.Empty, "Save", text => planner.Set(node, field, text).Error, text => planner.Set(node, field, text).Problem != FieldProblem.Invalid);
                 if (typed is not null)
@@ -53,6 +58,22 @@ public sealed partial class NodePage
 
                 break;
         }
+    }
+
+    // A calendar instead of a date typed, as on Windows; None clears it. Written as typed ones are: 2026-10-27.
+    private void ShowCalendar(FieldPlanner planner, Node node, NodeField field)
+    {
+        var shown = DateTime.TryParseExact(field.Value, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var date) ? date : (DateTime?)null;
+        var calendar = new Avalonia.Controls.Calendar { SelectedDate = shown, DisplayDate = shown ?? DateTime.Today, HorizontalAlignment = HorizontalAlignment.Center };
+        calendar.SelectedDatesChanged += (_, _) =>
+        {
+            _shell.CloseSheet();
+            if (calendar.SelectedDate is { } chosen)
+            {
+                WriteField(planner.Set(node, field, chosen.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)), "Field value set");
+            }
+        };
+        _shell.ShowSheet(field.Label, calendar, [new SheetChoice("None", () => WriteField(planner.Clear(node, field), "Field value cleared"), IsCurrent: !field.HasValue)]);
     }
 
     private async Task AddFieldAsync()
