@@ -74,8 +74,15 @@ public sealed class FieldRow : Bindable
     public string Choices
     {
         get => _choices;
-        set => Update(ref _choices, value);
+        set
+        {
+            Update(ref _choices, value);
+            Changed(nameof(ShowsChoicesHint));
+        }
     }
+
+    /// <summary>A choice without options yet shows how to type them, in its box.</summary>
+    public bool ShowsChoicesHint => _choices.Length == 0;
 
     public FieldDraft Draft => new(Id, Name, Kind, Choices.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries));
 
@@ -98,6 +105,7 @@ public sealed class NodeTypeForm : Bindable
     private NodeColor _color;
     private string _status = string.Empty;
     private bool _canApply;
+    private readonly string _start;
 
     public NodeTypeForm(CustomNodeType? edited, Func<NodeTypeForm, NodeTypePlan?> plan)
     {
@@ -112,8 +120,16 @@ public sealed class NodeTypeForm : Bindable
             Fields.Add(new FieldRow(field, Refresh));
         }
 
+        _start = KeyOf(Draft);
         Refresh();
     }
+
+    /// <summary>Whether something was typed or chosen since the form opened: closing Settings asks before discarding it.</summary>
+    public bool IsChanged => KeyOf(Draft) != _start;
+
+    // What the form holds, as one text: equal for the same name, icon, colour and fields.
+    private static string KeyOf(NodeTypeDraft draft) =>
+        string.Join("001e", [draft.Name, draft.Icon, draft.Color.ToString(), .. draft.Fields.Select(field => string.Join("001f", [field.Id, field.Name, field.Kind.ToString(), .. field.Choices]))]);
 
     public static IReadOnlyList<NodeColor> Colors { get; } = Enum.GetValues<NodeColor>();
 

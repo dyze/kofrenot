@@ -42,6 +42,7 @@ It covers kofrenot on Windows and on Android; versions before 0.9 ran on Windows
 
 ### Fixed
 - **Windows**
+  - **Settings > Node types**: closing Settings with a type being changed or added asks before discarding it; **Save** and **Cancel** sit by the form's title, so a long list of fields no longer hides them; a choice's empty box shows how to type its options (*Options: Novel, Short story*).
   - **Add field…** asks before discarding a field half added when you go elsewhere, and no longer stays open on another node.
   - **Tab** stops on an image field's **Choose…** and **×**, on a checkbox and on a choice, so **Space** uses them; a box reached with **Tab** has its caret at the end of its value.
   - **What is wrong with a value** shows right under its field, no longer below all the fields.

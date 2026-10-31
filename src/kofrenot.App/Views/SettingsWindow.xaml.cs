@@ -94,6 +94,9 @@ public partial class SettingsWindow : Window
         Server.Connection = session.Server;
         LinkTypes.Session = session;
         NodeTypes.Session = session;
+        NodeTypes.Log = _log;
+        // A node type being changed is asked about before Settings closes.
+        Closing += (_, e) => e.Cancel = !NodeTypes.LeaveForm();
         session.Changed += ShowVault;
         Closed += (_, _) => session.Changed -= ShowVault;
 

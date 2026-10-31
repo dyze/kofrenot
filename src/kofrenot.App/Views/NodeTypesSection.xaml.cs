@@ -5,6 +5,7 @@ using System.Windows.Media;
 using Kofrenot.Core.Fields;
 using Kofrenot.Core.Graph;
 using Kofrenot.Core.Input;
+using Kofrenot.Core.Logging;
 using Kofrenot.Core.Session;
 using Kofrenot.Core.Settings;
 
@@ -54,6 +55,8 @@ public partial class NodeTypesSection : UserControl
     private IReadOnlyList<CopyLine>? _copies;
 
     public NodeTypesSection() => InitializeComponent();
+
+    public ILog Log { get; set; } = NullLog.Instance;
 
     /// <summary>The vault whose node types are shown; set by the Settings window.</summary>
     public VaultSession Session
@@ -203,6 +206,27 @@ public partial class NodeTypesSection : UserControl
         {
             _form?.RemoveField(row);
         }
+    }
+
+    /// <summary>Settings closing: a type being changed or added is discarded when the user agrees; false keeps Settings open on it.</summary>
+    public bool LeaveForm()
+    {
+        if (_form is not { IsChanged: true } form)
+        {
+            return true;
+        }
+
+        var name = form.Edited?.Type.Name ?? form.Name.Trim();
+        if (!MessageDialog.Confirm(Window.GetWindow(this)!, $"Discard your changes to the node type{(name.Length > 0 ? $" “{name}”" : string.Empty)}?", "Discard", "Keep editing"))
+        {
+            NameBox.Focus();
+            return false;
+        }
+
+        Log.Info("Action", "Node type changes discarded");
+        _form = null;
+        Show();
+        return true;
     }
 
     private void Save_Click(object sender, RoutedEventArgs e) => Save();
