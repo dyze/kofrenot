@@ -24,6 +24,8 @@ public sealed partial class Shell
             keyboard.StateChanged += Keyboard_Changed;
         }
 
+        // The window drawn edge to edge once Android applied it: its size changes then.
+        SizeChanged += Size_Changed;
         Pad(top);
     }
 
@@ -38,9 +40,13 @@ public sealed partial class Shell
         {
             keyboard.StateChanged -= Keyboard_Changed;
         }
+
+        SizeChanged -= Size_Changed;
     }
 
     private void Insets_Changed(object? sender, SafeAreaChangedArgs e) => Pad(TopLevel.GetTopLevel(this));
+
+    private void Size_Changed(object? sender, SizeChangedEventArgs e) => Pad(TopLevel.GetTopLevel(this));
 
     private void Keyboard_Changed(object? sender, InputPaneStateEventArgs e)
     {
@@ -52,10 +58,12 @@ public sealed partial class Shell
         }
     }
 
-    // The bars' insets; at the bottom, the keyboard's height when it covers more.
+    // The bars' insets, once the window draws behind them: until Android applies edge to edge (after the first
+    // screen is shown), the screens are below the bars already, and padding them too left an empty band at the top.
+    // At the bottom, the keyboard's height when it covers more.
     private void Pad(TopLevel? top)
     {
-        var safe = top?.InsetsManager?.SafeAreaPadding ?? default;
+        var safe = top?.InsetsManager is { DisplaysEdgeToEdge: true } insets ? insets.SafeAreaPadding : default;
         var keyboard = top?.InputPane is { State: InputPaneState.Open } pane ? pane.OccludedRect.Height : 0;
         Padding = new Thickness(safe.Left, safe.Top, safe.Right, Math.Max(safe.Bottom, keyboard));
     }

@@ -1,5 +1,5 @@
+using Avalonia.Controls.Primitives;
 using Avalonia.Interactivity;
-using Avalonia.Media;
 using Kofrenot.Core.Graph;
 using Kofrenot.Core.Storage;
 
@@ -17,7 +17,16 @@ public sealed partial class NodePage
         var session = _shell.Services.Session;
         var isKept = session.IsKeptOffline(node.Id);
         OfflineButton.IsVisible = session.CanKeepOffline;
-        OfflineIcon.Foreground = isKept ? PhoneTheme.Brush("Accent") : null;
+        // Not kept: the bar's own colour (a null brush would draw nothing).
+        if (isKept)
+        {
+            OfflineIcon.Foreground = PhoneTheme.Brush("Accent");
+        }
+        else
+        {
+            OfflineIcon.ClearValue(TemplatedControl.ForegroundProperty);
+        }
+
         OfflineText.IsVisible = session.CanKeepOffline && isKept;
         OfflineText.Text = isKept ? $"✓ {vault.OfflineLabel(node.Id)}" : null;
     }
