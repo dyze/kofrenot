@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
   <color name="background">#FFFFFF</color>
+  <!-- Behind the K of the launcher icon (mipmap-anydpi-v26/icon.xml), in light and dark. -->
+  <color name="icon_background">#2A1048</color>
 </resources>

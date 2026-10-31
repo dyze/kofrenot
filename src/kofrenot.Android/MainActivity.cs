@@ -12,7 +12,7 @@ namespace Kofrenot.Phone;
 [Activity(
     Label = "kofrenot",
     Theme = "@style/Kofrenot.Theme",
-    Icon = "@drawable/icon",
+    Icon = "@mipmap/icon",
     MainLauncher = true,
     LaunchMode = LaunchMode.SingleTask,
     ConfigurationChanges = ConfigChanges.Orientation | ConfigChanges.ScreenSize | ConfigChanges.UiMode)]

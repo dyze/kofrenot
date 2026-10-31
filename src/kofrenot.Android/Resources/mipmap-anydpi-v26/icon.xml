@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The launcher icon (Android 8 and later): the K over the background colour, each launcher cutting it to its shape.
+     The K stays within the centre 66 dp, so no shape cuts it; mipmap-xxxhdpi/icon.png is the icon of launchers without. -->
+<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+  <background android:drawable="@color/icon_background" />
+  <foreground android:drawable="@mipmap/icon_foreground" />
+</adaptive-icon>

@@ -17,6 +17,8 @@ It covers kofrenot on Windows and on Android; versions before 0.9 ran on Windows
   - **Add a node from ＋**: **＋** > *Add a node…* opens the creation screen with the name to type, on any tab, as a view's *New* on Windows: in a list view, of its type; in a tree view, under its root ([README](README.md#on-android)).
 
 ### Changed
+- **Both**
+  - **A new icon**: a purple K of linked nodes, on Windows (the app, its tray, its windows, the installer) and on Android, where it is an adaptive icon: the K on a dark purple background, cut to the launcher's shape.
 - **Android**
   - **Touch targets of 48 dp**: every button, row, tab, field and link is at least 48 dp high, as Android asks; spacing, type sizes and colours are shared tokens (`App.axaml`) ([ANDROID-CONCEPT.md](docs/ANDROID-CONCEPT.md#layout)).
   - **Edge to edge**: the app draws behind the status and navigation bars, as Android enforces from API 35, its screens kept clear of them and of the keyboard; the field typed in scrolls into view. Back previews the screen before (predictive back) ([ANDROID-CONCEPT.md](docs/ANDROID-CONCEPT.md#layout)).
