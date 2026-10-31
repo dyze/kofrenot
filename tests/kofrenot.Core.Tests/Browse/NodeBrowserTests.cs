@@ -324,6 +324,21 @@ public sealed class NodeBrowserTests
         Assert.Equal(arrakis, _browser.Details!.Node);
     }
 
+    [Fact]
+    public void ANodeRemoved_HasNoDetails_AndLeavesTheTrail()
+    {
+        var dune = Add("Dune");
+        var herbert = Add("Frank Herbert");
+        Link(dune, herbert);
+        _browser.Open(_graph, dune, from: null);
+        Assert.True(_browser.OpenLinked(herbert));
+
+        _graph.Apply(new ChangesRemoved(Guid.NewGuid(), Start.AddMinutes(5), [herbert.Id]));
+
+        Assert.Null(_browser.Details);
+        Assert.Equal(["Dune"], _browser.Trail);
+    }
+
     private Node Add(string name, string? type = null, int minutes = 0)
     {
         var node = new Node(Guid.NewGuid(), type ?? TypeCatalog.Generic.Id, name, Start.AddMinutes(minutes));

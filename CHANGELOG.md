@@ -48,6 +48,7 @@ It covers kofrenot on Windows and on Android; versions before 0.9 ran on Windows
   - **Tab** stops on an image field's **Choose…** and **×**, on a checkbox and on a choice, so **Space** uses them; a box reached with **Tab** has its caret at the end of its value.
   - **What is wrong with a value** shows right under its field, no longer below all the fields.
 - **Android**
+  - **Deleting a node** no longer says *Something went wrong* (a null reference): the page of a node deleted, here or on another device, goes back to the screen before.
   - **Search box text** lines up with its labels and with the name proposed after it, no longer higher.
 
 ## [0.12] - 2026-10-30

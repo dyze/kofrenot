@@ -50,10 +50,12 @@ public sealed partial class NodePage : UserControl, IPage
 {
     private readonly Shell _shell;
     private readonly NodeBrowser _browser = new();
+    private readonly Guid _nodeId;
 
     public NodePage(Shell shell, Node node)
     {
         _shell = shell;
+        _nodeId = node.Id;
         InitializeComponent();
         if (Vault is { } vault)
         {
@@ -78,13 +80,13 @@ public sealed partial class NodePage : UserControl, IPage
 
     public void Refresh()
     {
-        // The graph read again: a sync may have changed the node, or removed it (then the screen before).
-        if (Vault is not { } vault || _browser.Details?.Node is not { } open)
+        // The graph read again: a sync may have changed the node, or removed it, as a delete here does (then the screen before).
+        if (Vault is not { } vault)
         {
             return;
         }
 
-        if (vault.Graph.FindNode(open.Id) is null)
+        if (vault.Graph.FindNode(_nodeId) is not { } open)
         {
             if (_shell.IsShown(this))
             {

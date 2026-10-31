@@ -23,11 +23,11 @@ public sealed class NodeBrowser
     /// <summary>How many levels are open: 0 for the search.</summary>
     public int Depth => _trail.Count;
 
-    /// <summary>The labels of the open nodes, from level 1 to the current one.</summary>
-    public IReadOnlyList<string> Trail => Graph is null ? [] : _trail.Select(level => new PlanText(Graph).NodeLabel(Graph.FindNode(level.NodeId)!)).ToList();
+    /// <summary>The labels of the open nodes, from level 1 to the current one; one removed meanwhile is left out.</summary>
+    public IReadOnlyList<string> Trail => Graph is null ? [] : _trail.Select(level => Graph.FindNode(level.NodeId)).OfType<Node>().Select(new PlanText(Graph).NodeLabel).ToList();
 
-    /// <summary>The node of the current level, or null while closed.</summary>
-    public NodeDetails? Details => Graph is null || _trail.Count == 0 ? null : DetailsOf(Graph, _trail[^1]);
+    /// <summary>The node of the current level; null while closed, or once it is removed (deleted here or on another device).</summary>
+    public NodeDetails? Details => Graph is null || _trail.Count == 0 || Graph.FindNode(_trail[^1].NodeId) is null ? null : DetailsOf(Graph, _trail[^1]);
 
     /// <summary>
     /// Opens a node found by the search, as level 1. For a link row of the search, <paramref name="from"/>
