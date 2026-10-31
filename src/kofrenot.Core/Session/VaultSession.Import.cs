@@ -1,11 +1,13 @@
+using Kofrenot.Core.Browse;
 using Kofrenot.Core.Datasets;
 using Kofrenot.Core.Graph;
+using Kofrenot.Core.Input;
 using Kofrenot.Core.Logging;
 using Kofrenot.Core.Storage;
 
 namespace Kofrenot.Core.Session;
 
-/// <summary>Files imported as new datasets, once their preview is accepted (<see cref="FileImportPlanner"/>).</summary>
+/// <summary>Files imported: as new datasets, once their preview is accepted (<see cref="FileImportPlanner"/>); as a dataset's new version; as an image field's image.</summary>
 public sealed partial class VaultSession
 {
     /// <summary>
@@ -38,6 +40,51 @@ public sealed partial class VaultSession
         }
 
         return imported;
+    }
+
+    /// <summary>
+    /// Imports <paramref name="file"/> as the new version of <paramref name="dataset"/>'s file, as Import… does
+    /// on Windows, described off the UI thread. False when it cannot be read or saved (the user is
+    /// told), and when it is the latest file already (nothing to import: the user is told too).
+    /// </summary>
+    public async Task<bool> ImportVersion(ISessionQuestions ask, Node dataset, ImportFile file)
+    {
+        if (Current is not { } vault || await Describe(ask, file) is not { } described)
+        {
+            return false;
+        }
+
+        var planner = new DatasetPlanner(vault.Graph, _time);
+        if (planner.Import(dataset, described, planner.Load(dataset, _ => true)) is not { } version)
+        {
+            _log.Info("Action", "Dataset import: the same file, nothing imported");
+            ask.Tell("This file is the dataset's already: nothing imported.");
+            return false;
+        }
+
+        return await SaveDataset(ask, version, file.Open);
+    }
+
+    /// <summary>
+    /// Sets <paramref name="file"/> as the image of <paramref name="field"/>, as Choose… does on Windows,
+    /// described off the UI thread. False when it cannot be read or saved, or is not an image
+    /// kofrenot shows (the user is told why).
+    /// </summary>
+    public async Task<bool> SetImage(ISessionQuestions ask, Node node, NodeField field, ImportFile file)
+    {
+        if (Current is not { } vault || await Describe(ask, file) is not { } described)
+        {
+            return false;
+        }
+
+        var plan = new FieldPlanner(vault.Graph, _time).SetImage(node, field, described);
+        if (plan.Changes is not [FieldSet value])
+        {
+            ask.Tell(plan.Status);
+            return false;
+        }
+
+        return await SaveImage(ask, value, file.Open);
     }
 
     private async Task<DatasetFile?> Describe(ISessionQuestions ask, ImportFile file)
