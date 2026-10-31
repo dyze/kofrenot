@@ -307,6 +307,7 @@ One number for the whole vault, `VaultFormat.Current`, written in the header and
 | 6 | 0.7 | `keys/` and the key epoch in every file (`KFC2`, `KFN2`, `KFT2`, `KFD2`); a header without key: a 0.6 app cannot open the keys; `defineLinkType` (added before 0.7 was released, so the number did not change: owner's decision) |
 | 7 | 0.8 | `colorNode`: a 0.7 app cannot read it |
 | 8 | 0.11 | `defineNodeType`, `addNodeType`, `removeNodeType`, `setField` ([Types and fields](#types-and-fields)): a 0.10 app cannot read them |
+| 9 | 0.13 | the field kinds `email` and `address` ([Types and fields](#types-and-fields)): a 0.12 app would drop a node type with such a field, and its values |
 
 | Found | This kofrenot |
 | --- | --- |
@@ -476,7 +477,7 @@ removeNodeType ── takes out by the changes          owner "own", or a field 
 
 | Part | How |
 | --- | --- |
-| Field kinds (`FieldKind`, `FieldKinds`) | Small: text, number, date, url, checkbox, choice (metadata, in the change). Image: described in the change, its file and thumbnail stored as a dataset version's (`OfTypes`: what a type's field can be). Content: markdown, file, view (a note's, a dataset's, a view's own changes) |
+| Field kinds (`FieldKind`, `FieldKinds`) | Small: text, number, date, url, email, address, checkbox, choice (metadata, in the change); a url, an email and an address open their link (`FieldValue.LinkOf`: itself, `mailto:`, a Google Maps search). Image: described in the change, its file and thumbnail stored as a dataset version's (`OfTypes`: what a type's field can be). Content: markdown, file, view (a note's, a dataset's, a view's own changes) |
 | Values (`FieldValue`) | Text, written the same everywhere: number `1234.5`, date `2026-10-27`, url with its scheme, checkbox `true`/`false`, choice as its option. Typed numbers and dates are also read in the user's culture; a value read is checked against its kind, else the change is refused |
 | Built-in types (`TypeCatalog`) | *generic* (none), *note* (Body: markdown), *dataset* (File: file), *view* (Definition: view) |
 | User types (`CustomNodeTypes`) | `defineNodeType` (`NodeTypeDefined`), its id the first definition's; later ones replace it, two made apart are a conflict (latest shown); removed with all its definitions by `remove`. A definition of a built-in id is ignored |

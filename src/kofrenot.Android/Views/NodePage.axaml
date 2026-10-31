@@ -33,6 +33,8 @@
                   </Button>
                   <Image Source="{Binding Thumbnail}" MaxHeight="96" HorizontalAlignment="Left" IsVisible="{Binding HasThumbnail}" />
                   <Button Content="Open" Tag="{Binding}" IsVisible="{Binding HasImage}" Click="OpenImage_Click" />
+                  <!-- A web address opened, a mail written, an address shown on a map (NodePage.Fields). -->
+                  <Button Content="{Binding LinkLabel}" Tag="{Binding}" IsVisible="{Binding HasLink}" Click="OpenLink_Click" />
                 </StackPanel>
               </Grid>
             </DataTemplate>

@@ -94,6 +94,51 @@ public sealed class FieldValueTests
         Assert.Equal("Type an address, like https://example.com", FieldValue.Parse(FieldKind.Url, typed).Error);
     }
 
+    [Fact]
+    public void AnEmailTypedAsAWebAddress_IsRefused_WithWhereItGoes()
+    {
+        Assert.Equal("An email address goes in an email field: type a web address, like https://example.com", FieldValue.Parse(FieldKind.Url, "dyze@dlabs.eu").Error);
+    }
+
+    [Theory]
+    [InlineData("ann@example.com", "ann@example.com")]
+    [InlineData(" mailto:ann@example.com ", "ann@example.com")]
+    [InlineData("MAILTO:ann.lee@mail.example.org", "ann.lee@mail.example.org")]
+    public void AnEmail_IsWrittenWithoutMailto(string typed, string written)
+    {
+        Assert.Equal(written, Parsed(FieldKind.Email, typed));
+    }
+
+    [Theory]
+    [InlineData("ann")]
+    [InlineData("ann@example")]
+    [InlineData("@example.com")]
+    [InlineData("ann@.com")]
+    [InlineData("ann@example.")]
+    [InlineData("ann@@example.com")]
+    [InlineData("ann lee@example.com")]
+    [InlineData("https://ann@example.com")]
+    public void NotAnEmail_IsRefused(string typed)
+    {
+        Assert.Equal("Type an email address, like ann@example.com", FieldValue.Parse(FieldKind.Email, typed).Error);
+    }
+
+    [Fact]
+    public void AnAddress_IsWrittenAsTyped()
+    {
+        Assert.Equal("12 rue de la Paix, Vendôme", Parsed(FieldKind.Address, " 12 rue de la Paix, Vendôme "));
+    }
+
+    [Fact]
+    public void AValue_OpensItsLink_AWebAddress_AMail_OrAMap()
+    {
+        Assert.Equal(new Uri("https://example.com/dune"), FieldValue.LinkOf(FieldKind.Url, "https://example.com/dune"));
+        Assert.Equal(new Uri("mailto:ann@example.com"), FieldValue.LinkOf(FieldKind.Email, "ann@example.com"));
+        Assert.Equal("https://www.google.com/maps/search/?api=1&query=12%20rue%20de%20la%20Paix%2C%20Vend%C3%B4me", FieldValue.LinkOf(FieldKind.Address, "12 rue de la Paix, Vendôme")!.AbsoluteUri);
+        Assert.Null(FieldValue.LinkOf(FieldKind.Url, "not a link"));
+        Assert.Null(FieldValue.LinkOf(FieldKind.Text, "Dune"));
+    }
+
     [Theory]
     [InlineData("yes", "true")]
     [InlineData("TRUE", "true")]
@@ -154,6 +199,10 @@ public sealed class FieldValueTests
     [InlineData(FieldKind.Date, "27/10/2026", false)]
     [InlineData(FieldKind.Url, "https://example.com", true)]
     [InlineData(FieldKind.Url, "example.com", false)]
+    [InlineData(FieldKind.Email, "ann@example.com", true)]
+    [InlineData(FieldKind.Email, "mailto:ann@example.com", false)]
+    [InlineData(FieldKind.Address, "Vendôme", true)]
+    [InlineData(FieldKind.Address, "", false)]
     [InlineData(FieldKind.Checkbox, "true", true)]
     [InlineData(FieldKind.Checkbox, "yes", false)]
     [InlineData(FieldKind.Choice, "Removed option", true)]

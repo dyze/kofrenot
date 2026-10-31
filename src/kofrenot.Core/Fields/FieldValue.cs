@@ -42,6 +42,8 @@ public static class FieldValue
             FieldKind.Number => ParseNumber(typed, culture),
             FieldKind.Date => ParseDate(typed, culture),
             FieldKind.Url => ParseUrl(typed),
+            FieldKind.Email => ParseEmail(typed),
+            FieldKind.Address => FieldInput.Of(typed),
             FieldKind.Checkbox => ParseCheckbox(typed),
             FieldKind.Choice => ParseChoice(typed, choices ?? []),
             FieldKind.Image => FieldInput.Refused("An image is chosen, not typed in"),
@@ -61,12 +63,25 @@ public static class FieldValue
     /// </summary>
     public static bool IsValid(FieldKind kind, string value) => kind switch
     {
-        FieldKind.Text or FieldKind.Choice => value.Length > 0,
+        FieldKind.Text or FieldKind.Address or FieldKind.Choice => value.Length > 0,
         FieldKind.Number => ParseNumber(value, CultureInfo.InvariantCulture).Value == value,
         FieldKind.Date => DateOnly.TryParseExact(value, DateFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out _),
         FieldKind.Url => ParseUrl(value).Value == value,
+        FieldKind.Email => ParseEmail(value).Value == value,
         FieldKind.Checkbox => value is True or False,
         _ => false,
+    };
+
+    /// <summary>
+    /// What a value opens: a web address itself, an email address a new mail to it (<c>mailto:</c>), a
+    /// postal address its place on a map (a Google Maps search); null for the other kinds.
+    /// </summary>
+    public static Uri? LinkOf(FieldKind kind, string value) => kind switch
+    {
+        FieldKind.Url when Uri.TryCreate(value, UriKind.Absolute, out var url) => url,
+        FieldKind.Email => new Uri($"mailto:{value}"),
+        FieldKind.Address => new Uri($"https://www.google.com/maps/search/?api=1&query={Uri.EscapeDataString(value)}"),
+        _ => null,
     };
 
     /// <summary>How a value is shown, and searched: as written, a checkbox as "Yes" or "No".</summary>
@@ -96,14 +111,28 @@ public static class FieldValue
                 return FieldInput.Of(url.OriginalString);
             }
 
-            if (typed.Contains('.') && !typed.Contains(':') && Uri.TryCreate($"https://{typed}", UriKind.Absolute, out var web))
+            if (typed.Contains('.') && !typed.Contains(':') && !typed.Contains('@') && Uri.TryCreate($"https://{typed}", UriKind.Absolute, out var web))
             {
                 return FieldInput.Of(web.OriginalString);
             }
         }
 
-        return FieldInput.Refused("Type an address, like https://example.com");
+        return FieldInput.Refused(LooksLikeEmail(typed)
+            ? "An email address goes in an email field: type a web address, like https://example.com"
+            : "Type an address, like https://example.com");
     }
+
+    // An email address, as typed or after mailto: ("mailto:ann@example.com" is ann@example.com).
+    private static FieldInput ParseEmail(string typed)
+    {
+        var address = typed.StartsWith("mailto:", StringComparison.OrdinalIgnoreCase) ? typed["mailto:".Length..] : typed;
+        return LooksLikeEmail(address) ? FieldInput.Of(address) : FieldInput.Refused("Type an email address, like ann@example.com");
+    }
+
+    // One @, a name before it, a domain with a dot after it, no spaces.
+    private static bool LooksLikeEmail(string text) =>
+        text.Split('@') is [{ Length: > 0 } name, { Length: > 0 } domain] && !text.Any(char.IsWhiteSpace) && !name.Contains(':')
+        && domain.Contains('.') && !domain.StartsWith('.') && !domain.EndsWith('.');
 
     private static FieldInput ParseCheckbox(string typed) => typed.ToLowerInvariant() switch
     {

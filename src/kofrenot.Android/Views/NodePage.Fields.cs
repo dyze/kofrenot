@@ -91,6 +91,8 @@ public sealed partial class NodePage
     private static string KindLabel(FieldKind kind) => kind switch
     {
         FieldKind.Url => "Web address",
+        FieldKind.Email => "Email address",
+        FieldKind.Address => "Postal address",
         _ => kind.ToString(),
     };
 
@@ -195,6 +197,16 @@ public sealed partial class NodePage
         if (change is not null)
         {
             Write(answers => _shell.Services.Session.Write(answers, change, action));
+        }
+    }
+
+    // Handed to the app Android picks for it (a browser, a mail app, a map); the link is the user's, it is not logged.
+    private void OpenLink_Click(object? sender, RoutedEventArgs e)
+    {
+        if ((sender as Control)?.Tag is FieldLine { Link: { } link })
+        {
+            _shell.Services.Log.Info("Action", "Field link opened");
+            _shell.Services.Chooser.OpenLink(link);
         }
     }
 }

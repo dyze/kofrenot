@@ -60,9 +60,9 @@ public partial class NodeDetailsPanel
         Place(EditorOf(field, canEdit), row, 1);
 
         var actions = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(4, 4, 0, 0) };
-        if (field.Kind == FieldKind.Url && field.Value is { } url)
+        if (field.Value is { } value && FieldValue.LinkOf(field.Kind, value) is { } link)
         {
-            actions.Children.Add(SmallButton("", "Open this address", () => OpenAddress(url)));
+            actions.Children.Add(SmallButton("", OpenTipOf(field.Kind), () => OpenLink(link)));
         }
 
         if (canEdit && fields.FirstOrDefault(other => other != field && other.IsOwn != field.IsOwn && NameKey.Of(other.Name) == NameKey.Of(field.Name)) is { } twin && !field.IsOwn)
@@ -139,13 +139,20 @@ public partial class NodeDetailsPanel
         }
     }
 
-    // The address is the user's: it is not logged.
-    private void OpenAddress(string url)
+    private static string OpenTipOf(FieldKind kind) => kind switch
+    {
+        FieldKind.Email => "Write a mail to this address",
+        FieldKind.Address => "Show this address on a map",
+        _ => "Open this address",
+    };
+
+    // A web address, a mail to write or a map: the link is the user's, it is not logged.
+    private void OpenLink(Uri link)
     {
         try
         {
-            Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
-            Log.Info("Action", "Field address opened");
+            Process.Start(new ProcessStartInfo(link.AbsoluteUri) { UseShellExecute = true });
+            Log.Info("Action", "Field link opened");
         }
         catch (Exception ex) when (ex is System.ComponentModel.Win32Exception or IOException)
         {

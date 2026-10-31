@@ -23,6 +23,10 @@ public sealed class AppChooser(Context context)
         Choose(new Intent(Intent.ActionView).SetDataAndType(uri, type), "Open with");
     }
 
+    /// <summary>Opens a link with the app Android picks for it: a browser, a mail app, a map.</summary>
+    public void OpenLink(Uri link) =>
+        context.StartActivity(new Intent(Intent.ActionView, Android.Net.Uri.Parse(link.AbsoluteUri)).AddFlags(ActivityFlags.NewTask));
+
     /// <summary>Shows Android's share sheet for the file at <paramref name="path"/>.</summary>
     public void Share(string path)
     {

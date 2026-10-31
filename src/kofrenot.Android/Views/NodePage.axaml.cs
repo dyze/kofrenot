@@ -5,6 +5,7 @@ using Avalonia.Media.Imaging;
 using Avalonia.Platform.Storage;
 using Kofrenot.Core.Browse;
 using Kofrenot.Core.Datasets;
+using Kofrenot.Core.Fields;
 using Kofrenot.Core.Graph;
 using Kofrenot.Core.Logging;
 using Kofrenot.Core.Notes;
@@ -20,6 +21,19 @@ public sealed record FileRow(DatasetEdited Version, string Name, string Size);
 /// <summary>A field shown on a node's page: its label, its value as shown, an image field's image and thumbnail, and the field it shows.</summary>
 public sealed record FieldLine(string Label, string Value, DatasetEdited? Image = null, Bitmap? Thumbnail = null, NodeField? Field = null)
 {
+    /// <summary>What its value opens: a web address, a mail to write, a map (<see cref="FieldValue.LinkOf"/>); null for the other kinds.</summary>
+    public Uri? Link => Field is { Value: { } value } shown ? FieldValue.LinkOf(shown.Kind, value) : null;
+
+    public bool HasLink => Link is not null;
+
+    /// <summary>Its button's name, as its tooltip on Windows says what it does.</summary>
+    public string LinkLabel => Field?.Kind switch
+    {
+        FieldKind.Email => "Write",
+        FieldKind.Address => "Map",
+        _ => "Open",
+    };
+
     public bool HasImage => Image is not null;
 
     public bool HasThumbnail => Thumbnail is not null;

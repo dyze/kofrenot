@@ -52,13 +52,13 @@ public sealed class CompositionCodecTests
     }
 
     [Fact]
-    public void ANodeType_IsWrittenInFormat8_WithLowerCaseKinds()
+    public void ANodeType_IsWrittenInTheCurrentFormat_WithLowerCaseKinds()
     {
         var change = new NodeTypeDefined(Guid.NewGuid(), At, "person", "Person", null, null, [new FieldDefinition("born", "Born", FieldKind.Date)], []);
 
         var json = Encoding.UTF8.GetString(new KeyedBox(KeyRing.Of(Key)).Open(SealKind.Change, _codec.Encode(change), change.Id.ToByteArray()));
 
-        Assert.Contains("\"format\":8", json);
+        Assert.Contains($"\"format\":{VaultFormat.Current}", json);
         Assert.Contains("\"op\":\"defineNodeType\"", json);
         Assert.Contains("{\"id\":\"born\",\"name\":\"Born\",\"kind\":\"date\"}", json);
     }
@@ -126,6 +126,8 @@ public sealed class CompositionCodecTests
     [Theory]
     [InlineData(FieldKind.Date, "1920-10-08")]
     [InlineData(FieldKind.Checkbox, "true")]
+    [InlineData(FieldKind.Email, "ann@example.com")]
+    [InlineData(FieldKind.Address, "12 rue de la Paix, Vendôme")]
     [InlineData(FieldKind.Text, null)]
     public void AFieldValue_RoundTrips(FieldKind kind, string? value)
     {
@@ -154,8 +156,8 @@ public sealed class CompositionCodecTests
     }
 
     [Fact]
-    public void AChangeOfFormat9_AsksForANewerKofrenot()
+    public void AChangeOfANewerFormat_AsksForANewerKofrenot()
     {
-        Assert.Throws<NewerVaultFormatException>(() => Decode("{\"format\":9,\"at\":\"2026-10-16T09:12:00Z\",\"op\":\"setField\"}"));
+        Assert.Throws<NewerVaultFormatException>(() => Decode("{\"format\":10,\"at\":\"2026-10-16T09:12:00Z\",\"op\":\"setField\"}"));
     }
 }
