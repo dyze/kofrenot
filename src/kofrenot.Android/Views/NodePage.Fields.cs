@@ -12,8 +12,8 @@ namespace Kofrenot.Phone.Views;
 
 /// <summary>
 /// A node's fields and types on the phone: a tap on a field fills it (a text typed, a checkbox
-/// ticked, an option chosen from a sheet); ⋮ adds a field of its own, adds a type or takes one out (asked first).
-/// A name, colour or value set on two devices offers each to keep. An image is set on Windows.
+/// ticked, an option chosen from a sheet, an image chosen: NodePage.FieldImage); ⋮ adds a field of its own, adds a type or takes one out (asked first).
+/// A name, colour or value set on two devices offers each to keep.
 /// </summary>
 public sealed partial class NodePage
 {
@@ -36,7 +36,7 @@ public sealed partial class NodePage
         switch (field.Kind)
         {
             case FieldKind.Image:
-                _shell.Tell("An image is set in kofrenot on Windows.");
+                ShowImageChoices(planner, node, field);
                 break;
             case FieldKind.Checkbox:
                 WriteField(planner.Check(node, field, !FieldValue.IsChecked(field.Value)), "Field value set");

@@ -18,6 +18,7 @@ It covers kofrenot on Windows and on Android; versions before 0.9 ran on Windows
   - **Email and postal address fields**: two new kinds of field. An email opens a new mail to it, a postal address its place on Google Maps (**↗** on Windows; a mail or a map icon on Android), as a web address opens its page. An email typed in a web address field is refused, saying where it goes, no longer turned into `https://…` ([README](README.md#node-types-and-fields)).
   - **An image field is the node's picture**: a node with an image field set shows its thumbnail in every list (search, links, views, cards), as an image dataset does; the first in the order of its fields ([README](README.md#node-types-and-fields)).
 - **Android**
+  - **Set an image field on the phone**: a tap on it chooses an image with the phone's picker, takes a photo, or removes it (asked first), as **Choose…** and **×** do on Windows ([README](README.md#on-android)).
   - **Share a dataset's file**: **Share…** beside *Open* and *Export…* sends it through Android's share sheet: a message, a mail, a cloud ([README](README.md#on-android)).
   - **An image dataset shows its thumbnail** on its page, as its header does on Windows.
   - **Add a node from ＋**: **＋** > *Add a node…* opens the creation screen with the name to type, on any tab, as a view's *New* on Windows: in a list view, of its type; in a tree view, under its root ([README](README.md#on-android)).

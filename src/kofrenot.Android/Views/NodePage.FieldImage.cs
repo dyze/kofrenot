@@ -1,0 +1,60 @@
+using Kofrenot.Core.Browse;
+using Kofrenot.Core.Datasets;
+using Kofrenot.Core.Graph;
+using Kofrenot.Core.Input;
+using Kofrenot.Phone.Platform;
+
+namespace Kofrenot.Phone.Views;
+
+/// <summary>
+/// An image field set on the phone, as Choose… and × do on Windows: a tap on it gives a sheet to
+/// choose an image (the picker, images only), take a photo (with a camera app), or remove it (asked
+/// first). The image is read, described and saved off the screen's thread (<c>VaultSession.SetImage</c>).
+/// </summary>
+public sealed partial class NodePage
+{
+    private void ShowImageChoices(FieldPlanner planner, Node node, NodeField field) =>
+        _shell.ShowSheet(field.Label,
+        [
+            new("Choose an image…", () => _shell.Run(() => ChooseImageAsync(node, field)), Icon: "FileIcon"),
+            .. _shell.Services.Camera.IsAvailable
+                ? [new SheetChoice("Take a photo", () => _shell.Run(() => _shell.CaptureAsync(CaptureKind.Photo, file => SetImageAsync(node, field, file))), Icon: "CameraIcon")]
+                : Array.Empty<SheetChoice>(),
+            .. field.HasValue
+                ? [new SheetChoice("Remove image…", () => _shell.Run(() => RemoveImageAsync(planner, node, field)), Icon: "DeleteIcon")]
+                : Array.Empty<SheetChoice>(),
+        ]);
+
+    private async Task ChooseImageAsync(Node node, NodeField field)
+    {
+        if (await _shell.PickAsync($"The image of {field.Label}", images: true) is [var file])
+        {
+            await SetImageAsync(node, field, file);
+        }
+    }
+
+    // The busy bar while it is read and sealed; what went wrong told.
+    private async Task SetImageAsync(Node node, NodeField field, ImportFile file)
+    {
+        var answers = new PreparedAnswers();
+        Busy.IsVisible = true;
+        try
+        {
+            await _shell.Services.Session.SetImage(answers, node, field, file);
+        }
+        finally
+        {
+            Busy.IsVisible = false;
+            _shell.Tell(answers.Told);
+            Refresh();
+        }
+    }
+
+    private async Task RemoveImageAsync(FieldPlanner planner, Node node, NodeField field)
+    {
+        if (await _shell.Confirm($"Remove the image of {field.Label}?", "Remove"))
+        {
+            WriteField(planner.Clear(node, field), "Field image removed");
+        }
+    }
+}
