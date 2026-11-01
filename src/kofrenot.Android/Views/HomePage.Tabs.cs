@@ -12,7 +12,7 @@ namespace Kofrenot.Phone.Views;
 /// The tabs: the search, then the views opened on this phone, within the screen's width, the selected
 /// one kept in sight. ▾, always at their right, lists
 /// them all in a sheet, to reach one among dozens, then the views to open. A view tab has its bar under
-/// the tabs: how many nodes it shows, and ⋮ for its actions (Close tab).
+/// the tabs: how many nodes it shows, and ⋮ for its actions (Close view).
 /// </summary>
 public sealed partial class HomePage
 {
@@ -58,12 +58,12 @@ public sealed partial class HomePage
 
     private void ShowViewBar(int count) => ViewCount.Text = count == 1 ? "1 row" : $"{count} rows";
 
-    // ⋮ of a view tab: its actions, only Close tab for now.
+    // ⋮ of a view tab: its actions, only Close view for now.
     private void ViewActions_Click(object? sender, RoutedEventArgs e)
     {
         if (Vault is { } vault && _tab.View is { } view)
         {
-            _shell.ShowSheet(_tab.Name, [new("Close tab", () => CloseTab(vault, view), Icon: "CloseIcon")]);
+            _shell.ShowSheet(_tab.Name, [new("Close view", () => CloseTab(vault, view), Icon: "CloseIcon")]);
         }
     }
 
