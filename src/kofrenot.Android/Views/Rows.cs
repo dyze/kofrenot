@@ -15,6 +15,9 @@ public sealed record HeaderRow(string Text);
 /// </summary>
 public sealed record NodeRow(Node Node, string Name, string Detail, string Glyph, IBrush? Color, Guid? Thumbnail = null, int Depth = 0, Link? Link = null)
 {
+    /// <summary>False for a link to a node open on a screen before (<see cref="NodeBrowser.Before"/>).</summary>
+    public bool CanOpen { get; init; } = true;
+
     private const double IndentStep = 20;
 
     public bool HasColor => Color is not null;

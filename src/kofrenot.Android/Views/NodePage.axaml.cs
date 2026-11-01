@@ -101,8 +101,10 @@ public sealed partial class NodePage : UserControl, IPage
             _browser.Open(vault.Graph, open);
         }
 
+        var pages = _shell.PagesUpTo(this).ToList();
+        _browser.Before = pages.OfType<NodePage>().Where(page => page != this).Select(page => page._nodeId).ToHashSet();
         var details = _browser.Details!;
-        Trail.Text = string.Join(" › ", _shell.PagesUpTo(this).Select(LabelOf).OfType<string>());
+        Trail.Text = string.Join(" › ", pages.Select(LabelOf).OfType<string>());
         NodeName.Text = details.Name;
         NodeType.Text = details.Type;
         ColorDot.Fill = NodeLook.Brush(details.Color);
@@ -112,7 +114,7 @@ public sealed partial class NodePage : UserControl, IPage
         ShowFields(details);
         ShowConflicts(details);
         ShowContent(vault, details.Node, details.Color);
-        Links.ItemsSource = details.Links.Select(link => NodeRow.Of(vault.Graph, link.OtherNode, link.Type, link: link.Link)).ToList();
+        Links.ItemsSource = details.Links.Select(link => NodeRow.Of(vault.Graph, link.OtherNode, link.Type, link: link.Link) with { CanOpen = link.CanOpen }).ToList();
         LinksHeader.IsVisible = details.Links.Count > 0;
     }
 
@@ -185,7 +187,7 @@ public sealed partial class NodePage : UserControl, IPage
     // A screen of its own: this one stays as it is, a note being edited included, until Back comes to it.
     private void Link_Click(object? sender, RoutedEventArgs e)
     {
-        if ((sender as Control)?.Tag is NodeRow row)
+        if ((sender as Control)?.Tag is NodeRow { CanOpen: true } row)
         {
             _shell.Push(new NodePage(_shell, row.Node));
         }

@@ -125,7 +125,7 @@ Same vaults, same files, same encryption ([Encryption](ARCHITECTURE.md#encryptio
 | Topic | Decision |
 | --- | --- |
 | Material controls | Top bar, bottom sheets and FAB built in the app on the Fluent theme: no new package |
-| Node trail | Each node opened from a link is a screen of the one back stack; the trail at the top is the screens before (`Shell.PagesUpTo`); `NodeBrowser` keeps one level on the phone |
+| Node trail | Each node opened from a link is a screen of the one back stack; the trail at the top is the screens before (`Shell.PagesUpTo`); `NodeBrowser` keeps one level on the phone, and the nodes of the screens before (`NodeBrowser.Before`), not opened again from a link; no depth limit |
 
 ## Open questions
 | Topic | Question |

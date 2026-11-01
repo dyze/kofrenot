@@ -18,6 +18,9 @@ public sealed class NodeBrowser
     /// <summary>The graph browsed; null while closed.</summary>
     public KnowledgeGraph? Graph { get; private set; }
 
+    /// <summary>The nodes open on screens before this browser's (the phone's back stack): not opened again from a link.</summary>
+    public IReadOnlyCollection<Guid> Before { get; set; } = [];
+
     public bool IsOpen => _trail.Count > 0;
 
     /// <summary>How many levels are open: 0 for the search.</summary>
@@ -113,7 +116,7 @@ public sealed class NodeBrowser
 
     public void Close() => BackTo(0);
 
-    private bool CanOpen(Node node) => Depth < MaxDepth && _trail.All(level => level.NodeId != node.Id);
+    private bool CanOpen(Node node) => Depth < MaxDepth && _trail.All(level => level.NodeId != node.Id) && !Before.Contains(node.Id);
 
     private NodeDetails DetailsOf(KnowledgeGraph graph, Level level, Node node)
     {

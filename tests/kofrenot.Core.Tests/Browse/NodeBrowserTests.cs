@@ -339,6 +339,23 @@ public sealed class NodeBrowserTests
         Assert.Equal(["Dune"], _browser.Trail);
     }
 
+    [Fact]
+    public void ANodeOpenOnAScreenBefore_IsNotOpenedAgain()
+    {
+        var meltingPot = Add("Melting Pot");
+        var (dyze, other) = (Add("dyze"), Add("Other"));
+        Link(meltingPot, dyze, minutes: 1);
+        Link(meltingPot, other, minutes: 2);
+        _browser.Open(_graph, meltingPot);
+        Assert.All(_browser.Details!.Links, link => Assert.True(link.CanOpen));
+
+        _browser.Before = [dyze.Id];
+
+        Assert.Equal([false, true], _browser.Details!.Links.Select(link => link.CanOpen));
+        Assert.False(_browser.OpenLinked(dyze));
+        Assert.True(_browser.OpenLinked(other));
+    }
+
     private Node Add(string name, string? type = null, int minutes = 0)
     {
         var node = new Node(Guid.NewGuid(), type ?? TypeCatalog.Generic.Id, name, Start.AddMinutes(minutes));

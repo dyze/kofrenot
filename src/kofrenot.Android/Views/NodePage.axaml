@@ -2,6 +2,12 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:views="using:Kofrenot.Phone.Views"
              x:Class="Kofrenot.Phone.Views.NodePage">
+  <UserControl.Styles>
+    <!-- A link to a node open on a screen before: greyed, not opened again, as on Windows. -->
+    <Style Selector="Button.openBefore">
+      <Setter Property="Opacity" Value="0.45" />
+    </Style>
+  </UserControl.Styles>
   <DockPanel>
     <views:TopBar DockPanel.Dock="Top">
       <TextBlock x:Name="Trail" Classes="caption" Margin="12,0" TextTrimming="CharacterEllipsis" />
@@ -102,7 +108,7 @@
           <ItemsControl.ItemTemplate>
             <DataTemplate DataType="views:NodeRow">
               <!-- A long press: remove the link, from a sheet (NodePage.Actions). -->
-              <Button Classes="flat" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch"
+              <Button Classes="flat" Classes.openBefore="{Binding !CanOpen}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch"
                       Padding="0" Content="{Binding}" Tag="{Binding}" Click="Link_Click" ContextRequested="Link_ContextRequested" />
             </DataTemplate>
           </ItemsControl.ItemTemplate>
