@@ -22,8 +22,8 @@ public sealed record TrailChip(Control Page, string Label, bool IsFirst, bool Is
     public bool IsHome => Page is HomePage;
 }
 
-/// <summary>A version of a dataset's file: its name and size, to open with another app or save.</summary>
-public sealed record FileRow(DatasetEdited Version, string Name, string Size);
+/// <summary>A version of a dataset's file: its name and size, to open with another app or save; <paramref name="CanImport"/>: Import… in its row too (the only version, not read only).</summary>
+public sealed record FileRow(DatasetEdited Version, string Name, string Size, bool CanImport = false);
 
 /// <summary>A field shown on a node's page: its label, its value as shown, an image field's image and thumbnail, and the field it shows.</summary>
 public sealed record FieldLine(string Label, string Value, DatasetEdited? Image = null, Bitmap? Thumbnail = null, NodeField? Field = null)
@@ -160,9 +160,11 @@ public sealed partial class NodePage : UserControl, IPage
                 ShowText($"{datasets.Count} versions, in conflict: Import… one, or keep one in kofrenot on Windows.");
             }
 
-            Files.ItemsSource = datasets.Select(version => new FileRow(version, version.File.Name, ByteSize.Format(version.File.Size))).ToList();
+            // One version: Import… in its row, with its other actions; in conflict, under them all.
+            var importInRow = datasets.Count == 1 && !IsReadOnly;
+            Files.ItemsSource = datasets.Select(version => new FileRow(version, version.File.Name, ByteSize.Format(version.File.Size), importInRow)).ToList();
             Files.IsVisible = true;
-            ImportButton.IsVisible = !IsReadOnly;
+            ImportButton.IsVisible = datasets.Count > 1 && !IsReadOnly;
             ShowThumbnail(datasets[^1]);
         }
         else if (node.Type == TypeCatalog.Dataset.Id)

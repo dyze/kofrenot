@@ -16,6 +16,22 @@
       <Setter Property="IsHitTestVisible" Value="False" />
       <Setter Property="FontWeight" Value="SemiBold" />
     </Style>
+    <!-- An action's icon before its name: Open, Export…, Share…, Import…, Edit. -->
+    <Style Selector="StackPanel.iconLabel">
+      <Setter Property="Orientation" Value="Horizontal" />
+      <Setter Property="Spacing" Value="6" />
+    </Style>
+    <!-- A file's actions: narrow enough for one row on a phone, wrapped only when they do not fit. -->
+    <Style Selector="WrapPanel.actions > Button">
+      <Setter Property="Padding" Value="10,0" />
+    </Style>
+    <Style Selector="StackPanel.iconLabel > PathIcon">
+      <Setter Property="Width" Value="18" />
+      <Setter Property="Height" Value="18" />
+    </Style>
+    <Style Selector="StackPanel.iconLabel > TextBlock">
+      <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
     <Style Selector="Border.chip">
       <Setter Property="Padding" Value="8,2" />
       <Setter Property="CornerRadius" Value="4" />
@@ -112,7 +128,12 @@
             <views:TaskListEditor x:Name="TaskEditor" IsVisible="False" />
             <StackPanel Orientation="Horizontal" Spacing="{StaticResource Gap}" HorizontalAlignment="Right">
               <Button x:Name="CheckboxesButton" Content="Checkboxes" IsVisible="False" Click="Checkboxes_Click" />
-              <Button x:Name="EditNoteButton" Content="Edit" Click="EditNote_Click" />
+              <Button x:Name="EditNoteButton" Click="EditNote_Click">
+                <StackPanel Classes="iconLabel">
+                  <PathIcon Data="{StaticResource RenameIcon}" />
+                  <TextBlock Text="Edit" />
+                </StackPanel>
+              </Button>
               <Button x:Name="CancelNoteButton" Content="Cancel" IsVisible="False" Click="CancelNote_Click" />
               <Button x:Name="SaveNoteButton" Classes="accent" Content="Save" IsVisible="False" Click="SaveNote_Click" />
             </StackPanel>
@@ -129,20 +150,51 @@
               <StackPanel Spacing="{StaticResource GapS}" Margin="0,4">
                 <TextBlock Text="{Binding Name}" TextWrapping="Wrap" />
                 <TextBlock Classes="caption" Text="{Binding Size}" />
-                <!-- Named as on Windows: Open, Export…; Share… the phone's own. -->
-                <StackPanel Orientation="Horizontal" Spacing="{StaticResource Gap}">
-                  <Button Content="Open" Tag="{Binding}" Click="Open_Click" />
-                  <Button Content="Export…" Tag="{Binding}" Click="Export_Click" />
-                  <Button Content="Share…" Tag="{Binding}" Click="Share_Click" />
-                </StackPanel>
+                <!-- Named as on Windows: Open, Export…, Import…; Share… the phone's own. One row when they fit. -->
+                <WrapPanel Classes="actions" ItemSpacing="{StaticResource GapS}" LineSpacing="{StaticResource GapS}">
+                  <Button Tag="{Binding}" Click="Open_Click">
+                    <StackPanel Classes="iconLabel">
+                      <PathIcon Data="{StaticResource OpenIcon}" />
+                      <TextBlock Text="Open" />
+                    </StackPanel>
+                  </Button>
+                  <Button Tag="{Binding}" Click="Export_Click">
+                    <StackPanel Classes="iconLabel">
+                      <PathIcon Data="{StaticResource ExportIcon}" />
+                      <TextBlock Text="Export…" />
+                    </StackPanel>
+                  </Button>
+                  <Button Tag="{Binding}" Click="Share_Click">
+                    <StackPanel Classes="iconLabel">
+                      <PathIcon Data="{StaticResource ShareIcon}" />
+                      <TextBlock Text="Share…" />
+                    </StackPanel>
+                  </Button>
+                  <Button IsVisible="{Binding CanImport}" Click="Import_Click">
+                    <StackPanel Classes="iconLabel">
+                      <PathIcon Data="{StaticResource ImportIcon}" />
+                      <TextBlock Text="Import…" />
+                    </StackPanel>
+                  </Button>
+                </WrapPanel>
               </StackPanel>
             </DataTemplate>
           </ItemsControl.ItemTemplate>
         </ItemsControl>
         <!-- A new version of its file, as Import… on Windows (NodePage.Dataset). -->
-        <Button x:Name="ImportButton" Content="Import…" IsVisible="False" Click="Import_Click" />
+        <Button x:Name="ImportButton" IsVisible="False" Click="Import_Click">
+          <StackPanel Classes="iconLabel">
+            <PathIcon Data="{StaticResource ImportIcon}" />
+            <TextBlock Text="Import…" />
+          </StackPanel>
+        </Button>
         <ProgressBar x:Name="Busy" IsIndeterminate="True" IsVisible="False" />
-        <Button x:Name="OpenViewButton" Content="Open as a tab" IsVisible="False" Click="OpenView_Click" />
+        <Button x:Name="OpenViewButton" IsVisible="False" Click="OpenView_Click">
+          <StackPanel Classes="iconLabel">
+            <PathIcon Data="{StaticResource ListIcon}" />
+            <TextBlock Text="Open as a tab" />
+          </StackPanel>
+        </Button>
         <TextBlock x:Name="LinksHeader" Classes="caption" Text="Links" Margin="0,12,0,0" />
         <ItemsControl x:Name="Links">
           <ItemsControl.ItemTemplate>
