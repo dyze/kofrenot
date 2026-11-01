@@ -7,10 +7,50 @@
     <Style Selector="Button.openBefore">
       <Setter Property="Opacity" Value="0.45" />
     </Style>
+    <!-- A chip of the trail: a 48 dp target around a small chip; the current one bold, not tapped. -->
+    <Style Selector="Button.trail">
+      <Setter Property="Padding" Value="2,0" />
+      <Setter Property="MinWidth" Value="0" />
+    </Style>
+    <Style Selector="Button.trail.current">
+      <Setter Property="IsHitTestVisible" Value="False" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
+    <Style Selector="Border.chip">
+      <Setter Property="Padding" Value="8,2" />
+      <Setter Property="CornerRadius" Value="4" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="BorderBrush" Value="{StaticResource ChipStroke}" />
+      <Setter Property="Background" Value="{StaticResource ChipFill}" />
+    </Style>
   </UserControl.Styles>
   <DockPanel>
     <views:TopBar DockPanel.Dock="Top">
-      <TextBlock x:Name="Trail" Classes="caption" Margin="12,0" TextTrimming="CharacterEllipsis" />
+      <!-- The screens up to this one, as chips: a tap goes back to it, as the breadcrumb on Windows. -->
+      <ScrollViewer x:Name="TrailScroll" HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Disabled">
+        <ItemsControl x:Name="Trail">
+          <ItemsControl.ItemsPanel>
+            <ItemsPanelTemplate>
+              <StackPanel Orientation="Horizontal" />
+            </ItemsPanelTemplate>
+          </ItemsControl.ItemsPanel>
+          <ItemsControl.ItemTemplate>
+            <DataTemplate DataType="views:TrailChip">
+              <StackPanel Orientation="Horizontal">
+                <TextBlock Classes="caption" Text="›" Margin="2,0" VerticalAlignment="Center" IsVisible="{Binding !IsFirst}" />
+                <Button Classes="flat trail" Classes.current="{Binding IsCurrent}" Tag="{Binding}" Click="TrailChip_Click">
+                  <Border Classes="chip">
+                    <StackPanel Orientation="Horizontal" Spacing="{StaticResource GapS}">
+                      <PathIcon Data="{StaticResource HomeIcon}" Width="14" Height="14" IsVisible="{Binding IsHome}" />
+                      <TextBlock Classes="caption" Text="{Binding Label}" VerticalAlignment="Center" />
+                    </StackPanel>
+                  </Border>
+                </Button>
+              </StackPanel>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </ScrollViewer>
       <views:TopBar.Actions>
         <StackPanel Orientation="Horizontal">
           <!-- Keep offline, in the accent while kept (NodePage.Offline). -->

@@ -28,7 +28,7 @@ public sealed partial class NodePage
     /// Before leaving the note: when its text was changed and not saved, asks whether to discard
     /// it, then runs <paramref name="leave"/> on yes. True while it asks: the caller does not leave.
     /// </summary>
-    private bool AsksBeforeLeaving(Action leave)
+    public bool AsksBeforeLeaving(Action leave)
     {
         if (_editing is not { } editing)
         {

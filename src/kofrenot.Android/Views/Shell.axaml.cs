@@ -15,6 +15,12 @@ public interface IPage
 
     void Refresh();
 
+    /// <summary>
+    /// Leaving the screen loses something (a note not saved): asks, and calls <paramref name="leave"/>
+    /// once the user agrees. False when nothing is lost: the caller leaves itself.
+    /// </summary>
+    bool AsksBeforeLeaving(Action leave) => false;
+
     /// <summary>A sync ended (every 30 s): only where it stands is shown again, what it downloaded comes with <see cref="Refresh"/>.</summary>
     void SyncChanged();
 }
@@ -237,6 +243,32 @@ public sealed partial class Shell : UserControl
         ShowPage(_pages.Peek(), back: true);
         RefreshPage();
         return true;
+    }
+
+    /// <summary>
+    /// Goes back to <paramref name="page"/>, one of the screens before (a chip of the trail), closing
+    /// those after it. One that would lose something is shown and asks first; kept, the jump stops there.
+    /// </summary>
+    public void BackTo(Control page)
+    {
+        if (!_pages.Contains(page))
+        {
+            return;
+        }
+
+        while (_pages.Peek() != page)
+        {
+            if (_pages.Peek() is IPage closing && closing.AsksBeforeLeaving(() => BackTo(page)))
+            {
+                ShowPage(_pages.Peek(), back: true);
+                return;
+            }
+
+            _pages.Pop();
+        }
+
+        ShowPage(page, back: true);
+        RefreshPage();
     }
 
     // The vault may have changed: the thumbnails are those of the one open.

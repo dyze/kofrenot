@@ -3,6 +3,7 @@ using Avalonia.Interactivity;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform.Storage;
+using Avalonia.Threading;
 using Kofrenot.Core.Browse;
 using Kofrenot.Core.Datasets;
 using Kofrenot.Core.Fields;
@@ -14,6 +15,12 @@ using Kofrenot.Core.Views;
 using Kofrenot.Phone.Platform;
 
 namespace Kofrenot.Phone.Views;
+
+/// <summary>A screen of the trail at the top, as a chip, the home with its icon; a tap goes back to it, but not on the current one.</summary>
+public sealed record TrailChip(Control Page, string Label, bool IsFirst, bool IsCurrent)
+{
+    public bool IsHome => Page is HomePage;
+}
 
 /// <summary>A version of a dataset's file: its name and size, to open with another app or save.</summary>
 public sealed record FileRow(DatasetEdited Version, string Name, string Size);
@@ -104,7 +111,7 @@ public sealed partial class NodePage : UserControl, IPage
         var pages = _shell.PagesUpTo(this).ToList();
         _browser.Before = pages.OfType<NodePage>().Where(page => page != this).Select(page => page._nodeId).ToHashSet();
         var details = _browser.Details!;
-        Trail.Text = string.Join(" › ", pages.Select(LabelOf).OfType<string>());
+        ShowTrail(pages);
         NodeName.Text = details.Name;
         NodeType.Text = details.Type;
         ColorDot.Fill = NodeLook.Brush(details.Color);
@@ -176,6 +183,26 @@ public sealed partial class NodePage : UserControl, IPage
     }
 
     private void Opened(Vault vault, Node node) => _shell.Services.Recent.Opened(vault.Id, node.Id);
+
+    // The current chip in sight: the trail scrolled to its end once laid out.
+    private void ShowTrail(IReadOnlyList<Control> pages)
+    {
+        Trail.ItemsSource = pages
+            .Select(page => (Page: page, Label: LabelOf(page)))
+            .Where(shown => shown.Label is not null)
+            .Select((shown, index) => new TrailChip(shown.Page, shown.Label!, index == 0, shown.Page == this))
+            .ToList();
+        Dispatcher.UIThread.Post(TrailScroll.ScrollToEnd, DispatcherPriority.Background);
+    }
+
+    private void TrailChip_Click(object? sender, RoutedEventArgs e)
+    {
+        if ((sender as Control)?.Tag is TrailChip { IsCurrent: false } chip)
+        {
+            _shell.Services.Log.Info("Action", "Trail: back to a screen before");
+            _shell.BackTo(chip.Page);
+        }
+    }
 
     private static string? LabelOf(Control page) => page switch
     {
