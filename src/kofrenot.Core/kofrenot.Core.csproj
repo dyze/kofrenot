@@ -5,4 +5,9 @@
     <RootNamespace>Kofrenot.Core</RootNamespace>
   </PropertyGroup>
 
+  <ItemGroup>
+    <!-- The icons of both apps (IconPaths): 24×24, one filled path each. -->
+    <EmbeddedResource Include="Icons\*.svg" LogicalName="icons/%(Filename)%(Extension)" />
+  </ItemGroup>
+
 </Project>
