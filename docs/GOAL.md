@@ -39,7 +39,7 @@ a node's fields = the fields of each of its types  +  its own fields
 | Several types | A node has a set of types (Frank Herbert: *Person* and *Author*), each bringing its fields; added on two devices, both are kept, no conflict |
 | A node's own fields | Any node can have fields of its own, beside its types'. One exists only while it has a value; it is not a choice (a choice needs its options, from a type) |
 | Choice | One option, written as its text |
-| Icons | A fixed set, by name (Segoe Fluent Icons on Windows) |
+| Icons | A fixed set, by name, drawn by kofrenot (`src/kofrenot.Core/Icons`): the same on Windows and Android |
 | Search | Values match as names do (a word starting with the text), after the nodes found by name |
 | Field added to a type | Its nodes show it empty; nothing is written to them |
 | Field removed from a type | Its nodes with a value keep it, as their own field; the same on a retype |

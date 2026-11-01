@@ -36,9 +36,9 @@ public sealed record FieldLine(string Label, string Value, DatasetEdited? Image 
     /// <summary>Its button's icon, as Windows' tooltip says what it does: a mail to write, a place on a map, a page to open.</summary>
     public Geometry LinkIcon => PhoneTheme.Icon(Field?.Kind switch
     {
-        FieldKind.Email => "MailIcon",
-        FieldKind.Address => "PlaceIcon",
-        _ => "OpenIcon",
+        FieldKind.Email => "mail",
+        FieldKind.Address => "place",
+        _ => "open",
     });
 
     public bool HasImage => Image is not null;

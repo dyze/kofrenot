@@ -21,13 +21,11 @@ public partial class TaskListBox
     private readonly Dictionary<int, (Rectangle Above, Rectangle Below)> _dropLines = [];
     private (Point At, int Index)? _gripPressed;
 
-    private TextBlock GripOf(int index)
+    private Border GripOf(int index)
     {
-        var grip = new TextBlock
+        var grip = new Border
         {
-            Text = "",
-            FontFamily = new FontFamily("Segoe Fluent Icons, Segoe MDL2 Assets"),
-            FontSize = 14,
+            Child = new IconView { Kind = "drag", Size = 14 },
             Opacity = 0,
             Padding = new Thickness(2, 4, 2, 4),
             Background = Brushes.Transparent,

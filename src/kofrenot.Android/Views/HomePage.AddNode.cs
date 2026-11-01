@@ -24,7 +24,7 @@ public sealed partial class HomePage
         {
             _shell.Services.Log.Info("Action", "Creation screen shown for a new node");
             _shell.Push(new CreationPage(_shell, form, added: () => { }));
-        }, Icon: "AddIcon");
+        }, Icon: "add");
     }
 
     private CreationForm? FormOf(KnowledgeGraph graph)

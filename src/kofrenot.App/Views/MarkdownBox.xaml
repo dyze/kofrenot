@@ -23,10 +23,10 @@
         <Button Style="{StaticResource FlatButton}" Content="H" ToolTip="Heading" Click="Heading_Click" />
         <Button Style="{StaticResource FlatButton}" Content="•" ToolTip="List" Click="List_Click" />
         <Button Style="{StaticResource FlatButton}"
-                FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
-                Content="&#xE71B;"
                 ToolTip="Link"
-                Click="Link_Click" />
+                Click="Link_Click">
+          <local:IconView Size="14" Kind="link" />
+        </Button>
       </StackPanel>
       <Border Width="1" Margin="6,4" Background="{DynamicResource DividerStrokeColorDefaultBrush}" />
       <ToggleButton x:Name="ChecklistButton"
@@ -37,7 +37,7 @@
                     ToolTip="Show checkboxes: each line becomes an item of a task list"
                     Click="Checklist_Click">
         <StackPanel Orientation="Horizontal">
-          <TextBlock VerticalAlignment="Center" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="12" Text="&#xE9D5;" />
+          <local:IconView VerticalAlignment="Center" Size="12" Kind="task-list" />
           <TextBlock Margin="6,0,0,0" VerticalAlignment="Center" Text="Checkboxes" />
         </StackPanel>
       </ToggleButton>

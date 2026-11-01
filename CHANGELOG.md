@@ -11,10 +11,11 @@ It covers kofrenot on Windows and on Android; versions before 0.9 ran on Windows
 ### Added
 - **Windows**
   - **Delete a node outside a tree**: the trash can in its details' header (**Ctrl+Del**), **Del** or the right-click menu in a list, or a right-click on a search result deletes the node alone, with its links, asked first as on Android; the details show the node before it. A tree still deletes a subtree ([README](README.md#node-details)).
-  - **Remove a link**: its **×** in the details (on the row hovered or selected) or **Remove link…** in its right-click menu, asked first; the nodes stay ([README](README.md#node-details)).
+  - **Remove a link**: its broken-link button in the details (on the row hovered or selected) or **Remove link…** in its right-click menu, asked first; the nodes stay ([README](README.md#node-details)).
 
 ### Changed
 - **Both**
+  - **New icons, the same on Windows and Android**: one set of 72, for nodes, node types and actions, drawn by kofrenot instead of Windows' Segoe Fluent glyphs and the phone's text characters. A pinned node, or one kept offline, shows its icon filled in the accent; a link is removed with its own icon (a broken link) ([Architecture](docs/ARCHITECTURE.md#datasets)).
   - **Removing a link says when a node is left with no link**, so only the search finds it then ([README](README.md#windows-and-android)).
 
 ## [0.13] - 2026-11-01

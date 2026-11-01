@@ -1,5 +1,6 @@
 <ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:local="clr-namespace:Kofrenot.UI.Views"
                     xmlns:sys="clr-namespace:System;assembly=System.Runtime">
   <!-- Shared by every window, so the same kind of text has the same size everywhere.
 
@@ -81,9 +82,15 @@
   <!-- › at the end of a row: opens the details of its node. -->
   <Style x:Key="OpenRowButton" TargetType="Button" BasedOn="{StaticResource FlatButton}">
     <Setter Property="Padding" Value="8,4" />
-    <Setter Property="Content" Value="&#xE76C;" />
-    <Setter Property="FontFamily" Value="Segoe Fluent Icons, Segoe MDL2 Assets" />
-    <Setter Property="FontSize" Value="12" />
+    <!-- Some content, so the template shows: an element can be in one button only, a template in each. -->
+    <Setter Property="Content" Value="" />
+    <Setter Property="ContentTemplate">
+      <Setter.Value>
+        <DataTemplate>
+          <local:IconView Size="12" Kind="chevron-right" />
+        </DataTemplate>
+      </Setter.Value>
+    </Setter>
     <Setter Property="ToolTip" Value="Details" />
   </Style>
 </ResourceDictionary>

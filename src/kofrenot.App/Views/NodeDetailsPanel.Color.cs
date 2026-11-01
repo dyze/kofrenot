@@ -51,11 +51,10 @@ public partial class NodeDetailsPanel
         face.Children.Add(dot);
         if (isRinged)
         {
-            face.Children.Add(new TextBlock
+            face.Children.Add(new IconView
             {
-                Text = "",
-                FontFamily = new FontFamily("Segoe Fluent Icons, Segoe MDL2 Assets"),
-                FontSize = 12,
+                Kind = "check",
+                Size = 12,
                 HorizontalAlignment = HorizontalAlignment.Center,
                 VerticalAlignment = VerticalAlignment.Center,
             });

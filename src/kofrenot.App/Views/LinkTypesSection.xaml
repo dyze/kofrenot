@@ -19,8 +19,6 @@
         <Setter Property="Margin" Value="2,0,0,0" />
         <Setter Property="Padding" Value="6,2" />
         <Setter Property="VerticalAlignment" Value="Center" />
-        <Setter Property="FontFamily" Value="Segoe Fluent Icons, Segoe MDL2 Assets" />
-        <Setter Property="FontSize" Value="11" />
       </Style>
 
       <Style x:Key="EditorStatus" TargetType="TextBlock">
@@ -62,10 +60,10 @@
                       <TextBlock x:Name="Phrase" VerticalAlignment="Center" Text="{Binding Phrase}" />
                       <Button Style="{StaticResource LineButton}"
                               Padding="4,0"
-                              FontSize="10"
-                              Content="&#xE711;"
                               ToolTip="Remove this alias"
-                              Click="RemoveAlias_Click" />
+                              Click="RemoveAlias_Click">
+                        <local:IconView Size="10" Kind="remove" />
+                      </Button>
                     </StackPanel>
                   </Border>
                   <DataTemplate.Triggers>
@@ -92,8 +90,12 @@
                       Background="{DynamicResource SubtleFillColorSecondaryBrush}">
                 <TextBlock Text="yours" FontSize="{StaticResource CaptionFontSize}" Opacity="0.8" />
               </Border>
-              <Button Style="{StaticResource LineButton}" Content="&#xE70F;" ToolTip="Rename this link type" Click="RenameType_Click" />
-              <Button Style="{StaticResource LineButton}" Content="&#xE711;" ToolTip="Remove this link type" Click="RemoveType_Click" />
+              <Button Style="{StaticResource LineButton}" ToolTip="Rename this link type" Click="RenameType_Click">
+                <local:IconView Size="11" Kind="edit" />
+              </Button>
+              <Button Style="{StaticResource LineButton}" ToolTip="Remove this link type" Click="RemoveType_Click">
+                <local:IconView Size="11" Kind="remove" />
+              </Button>
             </StackPanel>
             <TextBlock Margin="8,0,0,0" VerticalAlignment="Center" Opacity="0.7" TextWrapping="Wrap" Text="{Binding Warning}" />
           </WrapPanel>

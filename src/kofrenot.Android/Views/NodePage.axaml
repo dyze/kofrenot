@@ -57,7 +57,7 @@
                 <Button Classes="flat trail" Classes.current="{Binding IsCurrent}" Tag="{Binding}" Click="TrailChip_Click">
                   <Border Classes="chip">
                     <StackPanel Orientation="Horizontal" Spacing="{StaticResource GapS}">
-                      <PathIcon Data="{StaticResource HomeIcon}" Width="14" Height="14" IsVisible="{Binding IsHome}" />
+                      <PathIcon Data="{DynamicResource icon.home}" Width="14" Height="14" IsVisible="{Binding IsHome}" />
                       <TextBlock Classes="caption" Text="{Binding Label}" VerticalAlignment="Center" />
                     </StackPanel>
                   </Border>
@@ -71,15 +71,15 @@
         <StackPanel Orientation="Horizontal">
           <!-- Its name searched on the web, by the phone's search app (NodePage.Actions). -->
           <Button Classes="icon" Click="WebSearch_Click">
-            <PathIcon Data="{StaticResource WebIcon}" />
+            <PathIcon Data="{DynamicResource icon.globe}" />
           </Button>
           <!-- Keep offline, in the accent while kept (NodePage.Offline). -->
           <Button x:Name="OfflineButton" Classes="icon" IsVisible="False" Click="Offline_Click">
-            <PathIcon x:Name="OfflineIcon" Data="{StaticResource OfflineIcon}" />
+            <PathIcon x:Name="OfflineIcon" Data="{DynamicResource icon.offline}" />
           </Button>
           <!-- History, rename, colour, pin, fields, types, delete: a sheet (NodePage.Actions). -->
           <Button x:Name="ActionsButton" Classes="icon" Click="Actions_Click">
-            <PathIcon Data="{StaticResource MoreIcon}" />
+            <PathIcon Data="{DynamicResource icon.more}" />
           </Button>
         </StackPanel>
       </views:TopBar.Actions>
@@ -115,7 +115,7 @@
                     <PathIcon Data="{Binding LinkIcon}" />
                   </Button>
                   <Button Classes="icon" Tag="{Binding}" IsVisible="{Binding HasImage}" Click="OpenImage_Click">
-                    <PathIcon Data="{StaticResource OpenIcon}" />
+                    <PathIcon Data="{DynamicResource icon.open}" />
                   </Button>
                 </StackPanel>
               </Grid>
@@ -134,7 +134,7 @@
               <Button x:Name="CheckboxesButton" Content="Checkboxes" IsVisible="False" Click="Checkboxes_Click" />
               <Button x:Name="EditNoteButton" Click="EditNote_Click">
                 <StackPanel Classes="iconLabel">
-                  <PathIcon Data="{StaticResource RenameIcon}" />
+                  <PathIcon Data="{DynamicResource icon.rename}" />
                   <TextBlock Text="Edit" />
                 </StackPanel>
               </Button>
@@ -158,25 +158,25 @@
                 <WrapPanel Classes="actions" ItemSpacing="{StaticResource GapS}" LineSpacing="{StaticResource GapS}">
                   <Button Tag="{Binding}" Click="Open_Click">
                     <StackPanel Classes="iconLabel">
-                      <PathIcon Data="{StaticResource OpenIcon}" />
+                      <PathIcon Data="{DynamicResource icon.open}" />
                       <TextBlock Text="Open" />
                     </StackPanel>
                   </Button>
                   <Button Tag="{Binding}" Click="Export_Click">
                     <StackPanel Classes="iconLabel">
-                      <PathIcon Data="{StaticResource ExportIcon}" />
+                      <PathIcon Data="{DynamicResource icon.export}" />
                       <TextBlock Text="Export…" />
                     </StackPanel>
                   </Button>
                   <Button Tag="{Binding}" Click="Share_Click">
                     <StackPanel Classes="iconLabel">
-                      <PathIcon Data="{StaticResource ShareIcon}" />
+                      <PathIcon Data="{DynamicResource icon.share}" />
                       <TextBlock Text="Share…" />
                     </StackPanel>
                   </Button>
                   <Button IsVisible="{Binding CanImport}" Click="Import_Click">
                     <StackPanel Classes="iconLabel">
-                      <PathIcon Data="{StaticResource ImportIcon}" />
+                      <PathIcon Data="{DynamicResource icon.import}" />
                       <TextBlock Text="Import…" />
                     </StackPanel>
                   </Button>
@@ -188,14 +188,14 @@
         <!-- A new version of its file, as Import… on Windows (NodePage.Dataset). -->
         <Button x:Name="ImportButton" IsVisible="False" Click="Import_Click">
           <StackPanel Classes="iconLabel">
-            <PathIcon Data="{StaticResource ImportIcon}" />
+            <PathIcon Data="{DynamicResource icon.import}" />
             <TextBlock Text="Import…" />
           </StackPanel>
         </Button>
         <ProgressBar x:Name="Busy" IsIndeterminate="True" IsVisible="False" />
         <Button x:Name="OpenViewButton" IsVisible="False" Click="OpenView_Click">
           <StackPanel Classes="iconLabel">
-            <PathIcon Data="{StaticResource ListIcon}" />
+            <PathIcon Data="{DynamicResource icon.view}" />
             <TextBlock Text="Open as a tab" />
           </StackPanel>
         </Button>

@@ -1,6 +1,7 @@
 <UserControl x:Class="Kofrenot.UI.Views.ViewPanel"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:Kofrenot.UI.Views">
   <!-- A view tab's content: its tree (children read when expanded; copy, cut, paste, delete) or its list. Enter or a
        double-click opens a node's details; Back returns here. -->
   <UserControl.Resources>
@@ -54,56 +55,56 @@
       <StackPanel Orientation="Horizontal">
         <Button x:Name="NewButton" Margin="0,0,4,0" Padding="8,4" Style="{StaticResource FlatButton}" ToolTip="Add a node (in a tree: under the node selected)" Click="New_Click">
           <StackPanel Orientation="Horizontal">
-            <TextBlock VerticalAlignment="Center" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="12" Text="&#xE710;" />
+            <local:IconView VerticalAlignment="Center" Size="12" Kind="add" />
             <TextBlock Margin="6,0,0,0" VerticalAlignment="Center" Text="New" />
           </StackPanel>
         </Button>
         <Button x:Name="EditButton" Margin="0,0,4,0" Padding="8,4" Style="{StaticResource FlatButton}" ToolTip="Open the node selected, to edit it (Enter)" Click="Edit_Click">
           <StackPanel Orientation="Horizontal">
-            <TextBlock VerticalAlignment="Center" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="12" Text="&#xE70F;" />
+            <local:IconView VerticalAlignment="Center" Size="12" Kind="edit" />
             <TextBlock Margin="6,0,0,0" VerticalAlignment="Center" Text="Edit" />
           </StackPanel>
         </Button>
         <Button x:Name="RenameButton" Margin="0,0,4,0" Padding="8,4" Style="{StaticResource FlatButton}" ToolTip="Rename the node selected, here (F2)" Click="Rename_Click">
           <StackPanel Orientation="Horizontal">
-            <TextBlock VerticalAlignment="Center" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="12" Text="&#xE8AC;" />
+            <local:IconView VerticalAlignment="Center" Size="12" Kind="rename" />
             <TextBlock Margin="6,0,0,0" VerticalAlignment="Center" Text="Rename" />
           </StackPanel>
         </Button>
         <Button x:Name="CutButton" Margin="0,0,4,0" Padding="8,4" Style="{StaticResource FlatButton}" ToolTip="Cut the node selected, to move it (Ctrl+X)" Click="Cut_Click">
           <StackPanel Orientation="Horizontal">
-            <TextBlock VerticalAlignment="Center" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="12" Text="&#xE8C6;" />
+            <local:IconView VerticalAlignment="Center" Size="12" Kind="cut" />
             <TextBlock Margin="6,0,0,0" VerticalAlignment="Center" Text="Cut" />
           </StackPanel>
         </Button>
         <Button x:Name="CopyButton" Margin="0,0,4,0" Padding="8,4" Style="{StaticResource FlatButton}" ToolTip="Copy the node selected, with everything under it (Ctrl+C)" Click="Copy_Click">
           <StackPanel Orientation="Horizontal">
-            <TextBlock VerticalAlignment="Center" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="12" Text="&#xE8C8;" />
+            <local:IconView VerticalAlignment="Center" Size="12" Kind="copy" />
             <TextBlock Margin="6,0,0,0" VerticalAlignment="Center" Text="Copy" />
           </StackPanel>
         </Button>
         <Button x:Name="PasteButton" Margin="0,0,4,0" Padding="8,4" Style="{StaticResource FlatButton}" ToolTip="Paste under the node selected: moved when cut, a copy otherwise (Ctrl+V)" Click="Paste_Click">
           <StackPanel Orientation="Horizontal">
-            <TextBlock VerticalAlignment="Center" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="12" Text="&#xE77F;" />
+            <local:IconView VerticalAlignment="Center" Size="12" Kind="paste" />
             <TextBlock Margin="6,0,0,0" VerticalAlignment="Center" Text="Paste" />
           </StackPanel>
         </Button>
         <Button x:Name="DeleteButton" Margin="0,0,4,0" Padding="8,4" Style="{StaticResource FlatButton}" Click="Delete_Click">
           <StackPanel Orientation="Horizontal">
-            <TextBlock VerticalAlignment="Center" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="12" Text="&#xE74D;" />
+            <local:IconView VerticalAlignment="Center" Size="12" Kind="delete" />
             <TextBlock Margin="6,0,0,0" VerticalAlignment="Center" Text="Delete" />
           </StackPanel>
         </Button>
         <ToggleButton x:Name="DetailsButton" Margin="8,0,4,0" Padding="8,4" ToolTip="Show the type, size and last change of each node" Click="Details_Click">
           <StackPanel Orientation="Horizontal">
-            <TextBlock VerticalAlignment="Center" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="12" Text="&#xE8FD;" />
+            <local:IconView VerticalAlignment="Center" Size="12" Kind="view-details" />
             <TextBlock Margin="6,0,0,0" VerticalAlignment="Center" Text="Details" />
           </StackPanel>
         </ToggleButton>
         <!-- A list: its nodes as cards (ViewPanel.Cards), not rows. -->
         <ToggleButton x:Name="CardsButton" Margin="8,0,4,0" Padding="8,4" ToolTip="Show the nodes as cards, with a preview of each" Click="Cards_Click">
           <StackPanel Orientation="Horizontal">
-            <TextBlock VerticalAlignment="Center" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="12" Text="&#xE8A9;" />
+            <local:IconView VerticalAlignment="Center" Size="12" Kind="view-cards" />
             <TextBlock Margin="6,0,0,0" VerticalAlignment="Center" Text="Cards" />
           </StackPanel>
         </ToggleButton>
@@ -128,12 +129,11 @@
                 Margin="4,0,0,0"
                 Padding="6,4"
                 Style="{StaticResource FlatButton}"
-                FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
-                FontSize="12"
-                Content="&#xE74B;"
                 ToolTip="The next node found (Enter)"
                 IsEnabled="False"
-                Click="SearchNext_Click" />
+                Click="SearchNext_Click">
+          <local:IconView Size="12" Kind="arrow-down" />
+        </Button>
       </StackPanel>
     </Grid>
 

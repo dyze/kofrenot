@@ -39,7 +39,7 @@
         <Grid ColumnDefinitions="Auto,*">
           <Button Classes="icon" Click="Vault_Click">
             <Panel>
-              <PathIcon Data="{StaticResource MenuIcon}" />
+              <PathIcon Data="{DynamicResource icon.menu}" />
               <Ellipse x:Name="SyncDot" Width="8" Height="8" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,-2,-4,0" />
             </Panel>
           </Button>
@@ -54,7 +54,7 @@
               <!-- Clears the labels and the text, while there are some. -->
               <TextBox.InnerRightContent>
                 <Button x:Name="ClearButton" Classes="icon" IsVisible="False" Click="ClearSearch_Click">
-                  <PathIcon Data="{StaticResource CloseIcon}" Width="16" Height="16" />
+                  <PathIcon Data="{DynamicResource icon.close}" Width="16" Height="16" />
                 </Button>
               </TextBox.InnerRightContent>
             </TextBox>
@@ -74,14 +74,14 @@
           <StackPanel x:Name="Tabs" Orientation="Horizontal" Spacing="{StaticResource GapS}" />
         </ScrollViewer>
         <Button Grid.Column="1" Classes="icon" Click="AllTabs_Click">
-          <PathIcon Data="{StaticResource ExpandIcon}" />
+          <PathIcon Data="{DynamicResource icon.chevron-down}" />
         </Button>
       </Grid>
       <!-- A view tab's bar: how many rows it shows, ⋮ its actions (HomePage.Tabs). -->
       <Grid x:Name="ViewBar" DockPanel.Dock="Top" ColumnDefinitions="*,Auto" Margin="16,0,4,0" IsVisible="False">
         <TextBlock x:Name="ViewCount" Classes="caption" VerticalAlignment="Center" />
         <Button Grid.Column="1" Classes="icon" Click="ViewActions_Click">
-          <PathIcon Data="{StaticResource MoreIcon}" />
+          <PathIcon Data="{DynamicResource icon.more}" />
         </Button>
       </Grid>
       <!-- What the text adds, as the input box on Windows: a tap shows the creation screen (CreationPage). -->
@@ -105,7 +105,7 @@
     </DockPanel>
     <!-- ＋: files from the phone, or a photo or video taken now, from a sheet (HomePage.AddFiles). -->
     <Button x:Name="AddFilesButton" Classes="accent fab" Click="AddFiles_Click">
-      <PathIcon Data="{StaticResource AddIcon}" />
+      <PathIcon Data="{DynamicResource icon.add}" />
     </Button>
   </Grid>
 </UserControl>

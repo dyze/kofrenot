@@ -20,9 +20,9 @@ public sealed partial class Shell
             && ImagePicker.FieldsOf(vault.Graph, node.Id).Count > 0 ? node : null;
         ShowSheet(image.Name,
         [
-            .. shown is null ? Array.Empty<SheetChoice>() : [new SheetChoice($"Set as the image of {shown.Name}", () => Run(() => SetSharedImageAsync(shown, image)), Icon: "CameraIcon")],
-            new(shown is null ? "Set as the image of a node…" : "Set as the image of another node…", () => PickImageTarget(image, shown), Icon: "ListIcon"),
-            new("Add as a dataset", () => Run(() => AddFilesAsync([image])), Icon: "FileIcon"),
+            .. shown is null ? Array.Empty<SheetChoice>() : [new SheetChoice($"Set as the image of {shown.Name}", () => Run(() => SetSharedImageAsync(shown, image)), Icon: "image")],
+            new(shown is null ? "Set as the image of a node…" : "Set as the image of another node…", () => PickImageTarget(image, shown), Icon: "image"),
+            new("Add as a dataset", () => Run(() => AddFilesAsync([image])), Icon: "file"),
         ]);
     }
 

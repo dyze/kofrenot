@@ -7,8 +7,8 @@ namespace Kofrenot.UI.Views;
 
 /// <summary>
 /// The pin (synced: listed while the input box is empty, on every device) and, in a server vault,
-/// Keep offline (this computer only: the content downloaded ahead). Each keeps one icon, in the
-/// accent colour and with a dot when on.
+/// Keep offline (this computer only: the content downloaded ahead). Each is filled, in the
+/// accent colour, when on.
 /// </summary>
 public partial class NodeDetailsPanel
 {
@@ -23,30 +23,29 @@ public partial class NodeDetailsPanel
 
     private void ShowPinAndOffline(NodeDetails details)
     {
-        ShowOn(PinGlyph, PinDot, details.IsPinned);
+        ShowOn(PinIcon, "pin", details.IsPinned);
         PinButton.ToolTip = details.IsPinned ? "Pinned: click to unpin" : "Pin: listed while the input box is empty, on every device";
 
         var canKeep = CanKeepOffline();
         OfflineButton.Visibility = canKeep ? Visibility.Visible : Visibility.Collapsed;
         var kept = canKeep && IsKeptOffline(details.Node.Id);
-        ShowOn(OfflineGlyph, OfflineDot, kept);
+        ShowOn(OfflineIcon, "offline", kept);
         OfflineButton.ToolTip = kept
             ? $"{OpenVault?.Invoke()?.OfflineLabel(details.Node.Id) ?? "Kept offline"} on this computer: click to stop"
             : "Keep offline: its content downloaded ahead, on this computer only";
     }
 
-    private void ShowOn(TextBlock glyph, UIElement dot, bool isOn)
+    private static void ShowOn(IconView icon, string kind, bool isOn)
     {
+        icon.Kind = isOn ? $"{kind}-filled" : kind;
         if (isOn)
         {
-            glyph.SetResourceReference(TextBlock.ForegroundProperty, "AccentTextFillColorPrimaryBrush");
+            icon.SetResourceReference(IconView.ForegroundProperty, "AccentTextFillColorPrimaryBrush");
         }
         else
         {
-            glyph.ClearValue(TextBlock.ForegroundProperty);
+            icon.ClearValue(IconView.ForegroundProperty);
         }
-
-        dot.Visibility = isOn ? Visibility.Visible : Visibility.Collapsed;
     }
 
     private void PinButton_Click(object sender, RoutedEventArgs e)

@@ -72,17 +72,17 @@ public partial class NodeDetailsPanel
         var actions = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(4, 4, 0, 0) };
         if (field.Value is { } value && FieldValue.LinkOf(field.Kind, value) is { } link)
         {
-            actions.Children.Add(SmallButton("", OpenTipOf(field.Kind), () => OpenLink(link)));
+            actions.Children.Add(SmallButton("open", OpenTipOf(field.Kind), () => OpenLink(link)));
         }
 
         if (canEdit && field.Kind == FieldKind.Date)
         {
-            actions.Children.Add(SmallButton("", "Choose a date", () => ShowCalendar(field), focusable: true));
+            actions.Children.Add(SmallButton("calendar", "Choose a date", () => ShowCalendar(field), focusable: true));
         }
 
         if (canEdit && fields.FirstOrDefault(other => other != field && other.IsOwn != field.IsOwn && NameKey.Of(other.Name) == NameKey.Of(field.Name)) is { } twin && !field.IsOwn)
         {
-            actions.Children.Add(SmallButton("", $"Merge {twin.Label} into {field.Label}", () => Merge(field, twin)));
+            actions.Children.Add(SmallButton("merge", $"Merge {twin.Label} into {field.Label}", () => Merge(field, twin)));
         }
 
         Place(actions, row, 2);
@@ -177,7 +177,7 @@ public partial class NodeDetailsPanel
     }
 
     // A glyph's button beside a field; reached with Tab only when it is the field's own way to set it (an image removed, a date chosen).
-    private Button SmallButton(string glyph, string tip, Action click, bool focusable = false)
+    private Button SmallButton(string icon, string tip, Action click, bool focusable = false)
     {
         var button = new Button
         {
@@ -185,7 +185,7 @@ public partial class NodeDetailsPanel
             Focusable = focusable,
             Style = (Style)FindResource("FlatButton"),
             ToolTip = tip,
-            Content = new TextBlock { FontFamily = new System.Windows.Media.FontFamily("Segoe Fluent Icons, Segoe MDL2 Assets"), FontSize = 12, Text = glyph },
+            Content = new IconView { Kind = icon, Size = 12 },
         };
         button.Click += (_, _) => click();
         return button;

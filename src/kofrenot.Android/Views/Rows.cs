@@ -9,11 +9,11 @@ namespace Kofrenot.Phone.Views;
 public sealed record HeaderRow(string Text);
 
 /// <summary>
-/// A node in a list: its picture (<see cref="NodePicture"/>: its thumbnail, else its glyph and colour), its name
+/// A node in a list: its picture (<see cref="NodePicture"/>: its thumbnail, else its icon and colour), its name
 /// and, as on Windows, a detail only where it says more than its icon (a recent node's activity, the field a search
 /// matched, how a link reads); on a node's page, the <see cref="Link"/> it is shown by.
 /// </summary>
-public sealed record NodeRow(Node Node, string Name, string Detail, string Glyph, IBrush? Color, Guid? Thumbnail = null, int Depth = 0, Link? Link = null)
+public sealed record NodeRow(Node Node, string Name, string Detail, string Icon, IBrush? Color, Guid? Thumbnail = null, int Depth = 0, Link? Link = null)
 {
     /// <summary>False for a link to a node open on a screen before (<see cref="NodeBrowser.Before"/>).</summary>
     public bool CanOpen { get; init; } = true;
@@ -30,11 +30,11 @@ public sealed record NodeRow(Node Node, string Name, string Detail, string Glyph
     public static NodeRow Of(KnowledgeGraph graph, Node node, string? detail = null, string? mark = null, int depth = 0, Link? link = null)
     {
         var visual = NodeVisual.Of(graph, node);
-        return new NodeRow(node, node.Name + mark, detail ?? string.Empty, NodeLook.GlyphOf(visual), NodeLook.Brush(visual.Color), visual.Thumbnail, depth, link);
+        return new NodeRow(node, node.Name + mark, detail ?? string.Empty, IconPaths.NameOf(visual), NodeLook.Brush(visual.Color), visual.Thumbnail, depth, link);
     }
 }
 
-/// <summary>How a node is pictured on the phone without its thumbnail: a glyph for its icon, a dot of its colour.</summary>
+/// <summary>How a node is pictured on the phone without its thumbnail: its icon (<see cref="IconPaths"/>), a dot of its colour.</summary>
 public static class NodeLook
 {
     private static readonly Dictionary<NodeColor, IBrush> Shades = new()
@@ -50,48 +50,4 @@ public static class NodeLook
 
     /// <summary>The colour's brush, as on Windows; null for none.</summary>
     public static IBrush? Brush(NodeColor color) => Shades.GetValueOrDefault(color);
-
-    private static readonly Dictionary<string, string> TypeGlyphs = new()
-    {
-        ["Contact"] = "☺",
-        ["People"] = "☻",
-        ["Book"] = "▥",
-        ["Home"] = "⌂",
-        ["Place"] = "⌖",
-        ["Calendar"] = "▦",
-        ["Flag"] = "⚑",
-        ["Tag"] = "#",
-        ["Heart"] = "♥",
-        ["Star"] = "★",
-        ["Idea"] = "✦",
-        ["Work"] = "▣",
-        ["Music"] = "♫",
-        ["Movie"] = "▶",
-        ["Shop"] = "¤",
-        ["Globe"] = "◍",
-        ["Airplane"] = "✈",
-        ["Game"] = "♟",
-        ["Code"] = "{}",
-    };
-
-    /// <summary>The glyph of a node type's icon (<see cref="TypeIcons"/>); the generic one for a name this version does not know.</summary>
-    public static string TypeGlyph(string icon) => TypeGlyphs.GetValueOrDefault(icon) ?? Glyph(NodeIcon.Generic);
-
-    /// <summary>The glyph a node shows: its type's icon, or else its own.</summary>
-    public static string GlyphOf(NodeVisual visual) => visual.TypeIcon is { } icon ? TypeGlyph(icon) : Glyph(visual.Icon);
-
-    public static string Glyph(NodeIcon icon) => icon switch
-    {
-        NodeIcon.Note => "≡",
-        NodeIcon.File => "▭",
-        NodeIcon.Image => "▨",
-        NodeIcon.Text => "¶",
-        NodeIcon.Code => "{}",
-        NodeIcon.Audio => "♪",
-        NodeIcon.Video => "▶",
-        NodeIcon.Archive => "▤",
-        NodeIcon.Pdf => "▯",
-        NodeIcon.View => "⊞",
-        _ => "●",
-    };
 }

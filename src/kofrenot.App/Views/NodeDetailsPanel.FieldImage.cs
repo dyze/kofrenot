@@ -45,7 +45,7 @@ public partial class NodeDetailsPanel
             panel.Children.Add(fromDataset);
             if (field.HasValue)
             {
-                panel.Children.Add(SmallButton("", "Remove this image", () => RemoveImage(field), focusable: true));
+                panel.Children.Add(SmallButton("remove", "Remove this image", () => RemoveImage(field), focusable: true));
             }
         }
 

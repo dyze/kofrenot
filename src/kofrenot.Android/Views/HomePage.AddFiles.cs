@@ -17,11 +17,11 @@ public sealed partial class HomePage
         _shell.ShowSheet("Add",
         [
             .. AddNodeChoice() is { } node ? [node] : Array.Empty<SheetChoice>(),
-            new("Files…", () => _shell.Run(AddFilesAsync), Icon: "FileIcon"),
+            new("Files…", () => _shell.Run(AddFilesAsync), Icon: "file"),
             .. camera ? new SheetChoice[]
             {
-                new("Take a photo", () => _shell.Run(() => _shell.CaptureAsync(CaptureKind.Photo, file => _shell.AddFilesAsync([file]))), Icon: "CameraIcon"),
-                new("Record a video", () => _shell.Run(() => _shell.CaptureAsync(CaptureKind.Video, file => _shell.AddFilesAsync([file]))), Icon: "VideoIcon"),
+                new("Take a photo", () => _shell.Run(() => _shell.CaptureAsync(CaptureKind.Photo, file => _shell.AddFilesAsync([file]))), Icon: "camera"),
+                new("Record a video", () => _shell.Run(() => _shell.CaptureAsync(CaptureKind.Video, file => _shell.AddFilesAsync([file]))), Icon: "video"),
             } : [],
         ]);
     }

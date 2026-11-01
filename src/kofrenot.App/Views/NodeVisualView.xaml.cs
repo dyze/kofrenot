@@ -5,7 +5,7 @@ using Kofrenot.Core.Graph;
 
 namespace Kofrenot.UI.Views;
 
-/// <summary>Shows a <see cref="NodeVisual"/>: the glyph of its icon, then its thumbnail from <see cref="ThumbnailCache.Shared"/>, and its colour's dot.</summary>
+/// <summary>Shows a <see cref="NodeVisual"/>: its icon, then its thumbnail from <see cref="ThumbnailCache.Shared"/>, and its colour's dot.</summary>
 public partial class NodeVisualView : UserControl
 {
     private const double MinDotSize = 7;
@@ -22,21 +22,6 @@ public partial class NodeVisualView : UserControl
         set => SetValue(VisualProperty, value);
     }
 
-    private static string GlyphOf(NodeIcon icon) => icon switch
-    {
-        NodeIcon.Note => "",
-        NodeIcon.File => "",
-        NodeIcon.Image => "",
-        NodeIcon.Text => "",
-        NodeIcon.Code => "",
-        NodeIcon.Audio => "",
-        NodeIcon.Video => "",
-        NodeIcon.Archive => "",
-        NodeIcon.Pdf => "",
-        NodeIcon.View => "",
-        _ => "",
-    };
-
     /// <summary>The colour's dot, sized with the picture.</summary>
     private void ShowColor(NodeColor color)
     {
@@ -48,9 +33,9 @@ public partial class NodeVisualView : UserControl
     private async void Show()
     {
         var visual = Visual;
-        Glyph.Text = visual is null ? string.Empty : visual.TypeIcon is { } icon ? TypeGlyphs.Of(icon) : GlyphOf(visual.Icon);
+        Picture.Kind = visual is null ? null : IconPaths.NameOf(visual);
         ShowColor(visual?.Color ?? NodeColor.None);
-        Glyph.Visibility = Visibility.Visible;
+        Picture.Visibility = Visibility.Visible;
         ThumbnailFrame.Visibility = Visibility.Collapsed;
         Thumbnail.Source = null;
         if (visual?.Thumbnail is not { } version)
@@ -65,7 +50,7 @@ public partial class NodeVisualView : UserControl
         {
             Thumbnail.Source = image;
             ThumbnailFrame.Visibility = Visibility.Visible;
-            Glyph.Visibility = Visibility.Collapsed;
+            Picture.Visibility = Visibility.Collapsed;
         }
     }
 }

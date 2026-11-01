@@ -17,13 +17,13 @@ public sealed partial class NodePage
     private void ShowImageChoices(FieldPlanner planner, Node node, NodeField field) =>
         _shell.ShowSheet(field.Label,
         [
-            new("Choose an image…", () => _shell.Run(() => ChooseImageAsync(node, field)), Icon: "FileIcon"),
+            new("Choose an image…", () => _shell.Run(() => ChooseImageAsync(node, field)), Icon: "file"),
             .. _shell.Services.Camera.IsAvailable
-                ? [new SheetChoice("Take a photo", () => _shell.Run(() => _shell.CaptureAsync(CaptureKind.Photo, file => SetImageAsync(node, field, file))), Icon: "CameraIcon")]
+                ? [new SheetChoice("Take a photo", () => _shell.Run(() => _shell.CaptureAsync(CaptureKind.Photo, file => SetImageAsync(node, field, file))), Icon: "camera")]
                 : Array.Empty<SheetChoice>(),
-            new("From a dataset…", () => PickImageDataset(planner, node, field), Icon: "ListIcon"),
+            new("From a dataset…", () => PickImageDataset(planner, node, field), Icon: "image"),
             .. field.HasValue
-                ? [new SheetChoice("Remove image…", () => _shell.Run(() => RemoveImageAsync(planner, node, field)), Icon: "DeleteIcon")]
+                ? [new SheetChoice("Remove image…", () => _shell.Run(() => RemoveImageAsync(planner, node, field)), Icon: "remove")]
                 : Array.Empty<SheetChoice>(),
         ]);
 

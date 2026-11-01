@@ -17,13 +17,11 @@
         <Setter Property="Margin" Value="2,0,0,0" />
         <Setter Property="Padding" Value="6,2" />
         <Setter Property="VerticalAlignment" Value="Center" />
-        <Setter Property="FontFamily" Value="Segoe Fluent Icons, Segoe MDL2 Assets" />
-        <Setter Property="FontSize" Value="11" />
       </Style>
 
       <DataTemplate x:Key="IconItem" DataType="{x:Type local:IconChoice}">
         <StackPanel Orientation="Horizontal">
-          <TextBlock Width="20" VerticalAlignment="Center" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" Text="{Binding Glyph}" />
+          <local:IconView Margin="0,0,6,0" VerticalAlignment="Center" Kind="{Binding Icon}" />
           <TextBlock VerticalAlignment="Center" Text="{Binding Label}" />
         </StackPanel>
       </DataTemplate>
@@ -54,7 +52,7 @@
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="Auto" />
               </Grid.ColumnDefinitions>
-              <TextBlock VerticalAlignment="Center" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" Text="{Binding Glyph}" />
+              <local:IconView VerticalAlignment="Center" Kind="{Binding Icon}" />
               <StackPanel Grid.Column="1" Margin="0,0,16,0" VerticalAlignment="Center" Orientation="Horizontal">
                 <TextBlock FontWeight="SemiBold" Text="{Binding Type.Type.Name}" />
                 <Ellipse Width="8" Height="8" Margin="6,1,0,0" Fill="{Binding Fill}" Visibility="{Binding HasColor, Converter={StaticResource VisibleWhen}}" />
@@ -67,8 +65,12 @@
                            Visibility="{Binding Type.IsConflict, Converter={StaticResource VisibleWhen}}" />
               </StackPanel>
               <StackPanel Grid.Column="3" Orientation="Horizontal">
-                <Button Style="{StaticResource LineButton}" Content="&#xE70F;" ToolTip="Change this node type" Click="EditType_Click" />
-                <Button Style="{StaticResource LineButton}" Content="&#xE711;" ToolTip="Remove this node type" Click="RemoveType_Click" />
+                <Button Style="{StaticResource LineButton}" ToolTip="Change this node type" Click="EditType_Click">
+                  <local:IconView Size="11" Kind="edit" />
+                </Button>
+                <Button Style="{StaticResource LineButton}" ToolTip="Remove this node type" Click="RemoveType_Click">
+                  <local:IconView Size="11" Kind="remove" />
+                </Button>
               </StackPanel>
             </Grid>
           </DataTemplate>
@@ -91,7 +93,7 @@
                 <ColumnDefinition Width="*" />
               </Grid.ColumnDefinitions>
               <CheckBox MinWidth="0" VerticalAlignment="Center" IsChecked="{Binding IsChecked}" IsEnabled="{Binding CanCopy}" />
-              <TextBlock Grid.Column="1" VerticalAlignment="Center" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" Text="{Binding Glyph}" />
+              <local:IconView Grid.Column="1" VerticalAlignment="Center" Kind="{Binding Icon}" />
               <TextBlock Grid.Column="2" Margin="0,0,16,0" VerticalAlignment="Center" FontWeight="SemiBold" Text="{Binding Copy.Type.Type.Name}" />
               <TextBlock Grid.Column="3" VerticalAlignment="Center" Opacity="0.7" TextWrapping="Wrap" Text="{Binding Copy.Status}" />
             </Grid>
@@ -163,7 +165,9 @@
                            Text="Options: Novel, Short story"
                            Visibility="{Binding ShowsChoicesHint, Converter={StaticResource VisibleWhen}}" />
               </Grid>
-              <Button Style="{StaticResource LineButton}" Content="&#xE711;" ToolTip="Take this field out" Click="RemoveField_Click" />
+              <Button Style="{StaticResource LineButton}" ToolTip="Take this field out" Click="RemoveField_Click">
+                <local:IconView Size="11" Kind="remove" />
+              </Button>
             </StackPanel>
           </DataTemplate>
         </ItemsControl.ItemTemplate>

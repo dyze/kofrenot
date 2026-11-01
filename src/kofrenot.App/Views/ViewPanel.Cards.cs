@@ -130,7 +130,7 @@ public partial class ViewPanel
         foreach (var item in preview.Items)
         {
             var row = new StackPanel { Orientation = Orientation.Horizontal };
-            row.Children.Add(new TextBlock { Text = "", FontFamily = new FontFamily("Segoe Fluent Icons, Segoe MDL2 Assets"), FontSize = 12, Margin = new Thickness(0, 0, 6, 0), VerticalAlignment = VerticalAlignment.Center });
+            row.Children.Add(new IconView { Kind = "checkbox", Size = 12, Margin = new Thickness(0, 0, 6, 0), VerticalAlignment = VerticalAlignment.Center });
             row.Children.Add(new TextBlock { Text = item, TextTrimming = TextTrimming.CharacterEllipsis });
             lines.Children.Add(row);
         }

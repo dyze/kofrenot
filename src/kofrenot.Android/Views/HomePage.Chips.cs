@@ -5,6 +5,7 @@ using Avalonia.Controls.Shapes;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Layout;
+using Avalonia.Media;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
 using Kofrenot.Core.Browse;
@@ -160,23 +161,17 @@ public sealed partial class HomePage
         }
     }
 
-    // A label as on Windows: a node's glyph and colour, or new (dashed, ＋); the link type in the accent.
+    // A label as on Windows: a node's icon and colour, or new (dashed, ＋); the link type in the accent.
     private Control ChipView(InputChip chip, bool isLast)
     {
         var content = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 4 };
         if (chip.IsNew)
         {
-            content.Children.Add(new TextBlock { Text = "＋", Foreground = NodeLook.Brush(NodeColor.Green), VerticalAlignment = VerticalAlignment.Center });
+            content.Children.Add(ChipIcon("add", NodeLook.Brush(NodeColor.Green)));
         }
         else if (chip.Visual is { } visual)
         {
-            var glyph = new TextBlock { Text = NodeLook.GlyphOf(visual), VerticalAlignment = VerticalAlignment.Center };
-            if (NodeLook.Brush(visual.Color) is { } color)
-            {
-                glyph.Foreground = color;
-            }
-
-            content.Children.Add(glyph);
+            content.Children.Add(ChipIcon(IconPaths.NameOf(visual), NodeLook.Brush(visual.Color)));
         }
 
         content.Children.Add(new TextBlock { Text = chip.Text, VerticalAlignment = VerticalAlignment.Center });
@@ -204,6 +199,18 @@ public sealed partial class HomePage
         }
 
         return view;
+    }
+
+    // A chip's icon, the size of its text, in a colour or the text's own.
+    private static PathIcon ChipIcon(string name, IBrush? color)
+    {
+        var icon = new PathIcon { Data = PhoneTheme.Icon(name), Width = 14, Height = 14, VerticalAlignment = VerticalAlignment.Center };
+        if (color is not null)
+        {
+            icon.Foreground = color;
+        }
+
+        return icon;
     }
 
     // Sets the text after the labels without reading it as typed, the caret at its end.

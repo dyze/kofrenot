@@ -7,7 +7,7 @@ using Kofrenot.Core.Input;
 namespace Kofrenot.UI.Views;
 
 /// <summary>A type shown in a node's details: its glyph, and whether × takes it out.</summary>
-public sealed record TypeChip(NodeType Type, string Glyph, bool CanRemove);
+public sealed record TypeChip(NodeType Type, string? Icon, bool CanRemove);
 
 /// <summary>
 /// A node's types, as chips: × takes one out, always asked first; Add type… adds one
@@ -24,7 +24,7 @@ public partial class NodeDetailsPanel
         var canChange = ChangeTypes is not null;
         TypesLabel.Text = details.Types.Count > 1 ? "Types" : "Type";
         TypeChips.ItemsSource = details.Types
-            .Select(type => new TypeChip(type, TypeGlyphs.Of(type.Icon), canChange && type != TypeCatalog.Generic))
+            .Select(type => new TypeChip(type, IconPaths.NameOfType(type.Icon), canChange && type != TypeCatalog.Generic))
             .ToList();
         AddTypeButton.Visibility = canChange ? Visibility.Visible : Visibility.Collapsed;
     }

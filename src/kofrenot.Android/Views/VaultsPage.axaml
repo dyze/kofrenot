@@ -6,7 +6,7 @@
     <views:TopBar x:Name="Bar" DockPanel.Dock="Top" Title="Vaults">
       <views:TopBar.Actions>
         <Button x:Name="SettingsButton" Classes="icon" Click="More_Click">
-          <PathIcon Data="{StaticResource MoreIcon}" />
+          <PathIcon Data="{DynamicResource icon.more}" />
         </Button>
       </views:TopBar.Actions>
     </views:TopBar>
@@ -26,7 +26,7 @@
               <TextBlock Classes="caption" Text="{Binding Detail}" TextTrimming="CharacterEllipsis" />
             </StackPanel>
             <Button Grid.Column="2" Classes="icon" Tag="{Binding}" Click="Remove_Click">
-              <PathIcon Data="{StaticResource CloseIcon}" />
+              <PathIcon Data="{DynamicResource icon.close}" />
             </Button>
           </Grid>
         </DataTemplate>

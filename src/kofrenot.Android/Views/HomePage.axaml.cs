@@ -262,8 +262,8 @@ public sealed partial class HomePage : UserControl, IPage
         [
             new("Sync now", () => _shell.Run(_shell.Services.Sync.SyncNowAsync), VaultsPage.DotOf(status.Level)),
             .. others,
-            new("Vaults…", () => _shell.Push(new VaultsPage(_shell)), Icon: "ListIcon"),
-            new("Settings", () => _shell.Push(new SettingsPage(_shell)), Icon: "SettingsIcon"),
+            new("Vaults…", () => _shell.Push(new VaultsPage(_shell)), Icon: "view-details"),
+            new("Settings", () => _shell.Push(new SettingsPage(_shell)), Icon: "settings"),
         ]);
     }
 }

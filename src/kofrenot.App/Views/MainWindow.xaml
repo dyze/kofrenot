@@ -67,12 +67,11 @@
                 Padding="8,4"
                 VerticalAlignment="Center"
                 Style="{StaticResource FlatButton}"
-                FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
-                FontSize="14"
-                Content="&#xE72E;"
                 ToolTip="Lock the vault (Ctrl+L): it stays locked, also after a restart, until Unlock, which asks its pass phrase"
                 Visibility="Collapsed"
-                Click="LockButton_Click" />
+                Click="LockButton_Click">
+          <local:IconView Size="14" Kind="lock" />
+        </Button>
 
         <!-- A vault shared with this account to read only: said here and in the window's title. -->
         <Border x:Name="ReadOnlyTag"
@@ -84,11 +83,9 @@
                 ToolTip="Shared with you to read only: you can see and search it, not change it"
                 Visibility="Collapsed">
           <StackPanel Orientation="Horizontal">
-            <TextBlock Margin="0,0,4,0"
-                       VerticalAlignment="Center"
-                       FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
-                       FontSize="11"
-                       Text="&#xE890;" />
+            <local:IconView Margin="0,0,4,0"
+                            VerticalAlignment="Center"
+                            Size="11" Kind="eye" />
             <TextBlock VerticalAlignment="Center" FontSize="{StaticResource CaptionFontSize}" Text="Read only" />
           </StackPanel>
         </Border>
@@ -117,11 +114,10 @@
                 Padding="0"
                 HorizontalAlignment="Right"
                 Style="{StaticResource FlatButton}"
-                Content="&#xE713;"
-                FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
-                FontSize="16"
                 ToolTip="Settings"
-                Click="SettingsButton_Click" />
+                Click="SettingsButton_Click">
+          <local:IconView Size="16" Kind="settings" />
+        </Button>
 
         <!-- A newer release is available (see Settings > About). Over the button's corner; clicks go through. -->
         <Ellipse x:Name="UpdateMark"
@@ -164,21 +160,19 @@
                             Margin="6,0,0,0"
                             Padding="4,2"
                             Style="{StaticResource FlatButton}"
-                            FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
-                            FontSize="10"
-                            Content="&#xE713;"
                             ToolTip="Edit what this view shows"
                             Visibility="Collapsed"
-                            Click="EditTab_Click" />
+                            Click="EditTab_Click">
+                      <local:IconView Size="10" Kind="settings" />
+                    </Button>
                     <Button x:Name="CloseButton"
                             Margin="6,0,0,0"
                             Padding="4,2"
                             Style="{StaticResource FlatButton}"
-                            FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
-                            FontSize="10"
-                            Content="&#xE711;"
                             ToolTip="Close this tab"
-                            Click="CloseTab_Click" />
+                            Click="CloseTab_Click">
+                      <local:IconView Size="10" Kind="close" />
+                    </Button>
                   </StackPanel>
                   <Border x:Name="Underline"
                           Height="3"
@@ -206,11 +200,10 @@
         <Button x:Name="AddTabButton"
                 Padding="8,4"
                 Style="{StaticResource FlatButton}"
-                FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
-                FontSize="12"
-                Content="&#xE710;"
                 ToolTip="Open a view in a tab"
-                Click="AddTab_Click" />
+                Click="AddTab_Click">
+          <local:IconView Size="12" Kind="add" />
+        </Button>
       </StackPanel>
 
       <!-- The drop zone: files dropped here become datasets, once their preview is accepted. -->
@@ -230,11 +223,9 @@
               DragLeave="DropZone_DragLeave"
               Drop="DropZone_Drop">
         <StackPanel Orientation="Horizontal">
-          <TextBlock Margin="0,0,6,0"
-                     VerticalAlignment="Center"
-                     FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
-                     FontSize="12"
-                     Text="&#xE896;" />
+          <local:IconView Margin="0,0,6,0"
+                          VerticalAlignment="Center"
+                          Size="12" Kind="import" />
           <TextBlock VerticalAlignment="Center" FontSize="{StaticResource CaptionFontSize}" Text="Drop files" />
         </StackPanel>
       </Border>
@@ -282,15 +273,13 @@
                         Background="{DynamicResource SubtleFillColorSecondaryBrush}">
                   <StackPanel Orientation="Horizontal">
                     <local:NodeVisualView x:Name="ChipVisual" Width="16" Height="16" Margin="0,0,4,0" Visual="{Binding Visual}" />
-                    <TextBlock x:Name="NewMark"
-                               Margin="0,0,4,0"
-                               VerticalAlignment="Center"
-                               FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
-                               FontSize="{StaticResource CaptionFontSize}"
-                               Foreground="{DynamicResource SystemFillColorSuccessBrush}"
-                               Text="&#xE710;"
-                               ToolTip="New node: added with Enter"
-                               Visibility="Collapsed" />
+                    <local:IconView x:Name="NewMark"
+                                    Margin="0,0,4,0"
+                                    VerticalAlignment="Center"
+                                    Size="{StaticResource CaptionFontSize}"
+                                    Foreground="{DynamicResource SystemFillColorSuccessBrush}"
+                                    ToolTip="New node: added with Enter"
+                                    Visibility="Collapsed" Kind="add" />
                     <TextBlock x:Name="ChipText" VerticalAlignment="Center" Text="{Binding Text}" />
                     <TextBlock x:Name="HomonymMark"
                                Margin="4,0,0,0"

@@ -97,11 +97,10 @@
                   Grid.Column="2"
                   Margin="4,0,0,0"
                   Style="{StaticResource FlatButton}"
-                  FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
-                  FontSize="12"
-                  Content="&#xE711;"
                   ToolTip="Take this file back"
-                  Click="RemoveFile_Click" />
+                  Click="RemoveFile_Click">
+            <local:IconView Size="12" Kind="remove" />
+          </Button>
         </Grid>
       </Border>
 

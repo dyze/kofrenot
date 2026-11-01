@@ -31,7 +31,7 @@ public sealed partial class NodePage
         // What a reader has too: the history, and keep offline (this phone only, never written to the vault).
         SheetChoice[] readers =
         [
-            new("History…", ShowHistory, Icon: "HistoryIcon"),
+            new("History…", ShowHistory, Icon: "history"),
             .. OfflineChoice(details.Node) is { } offline ? [offline] : Array.Empty<SheetChoice>(),
         ];
         if (IsReadOnly)
@@ -43,13 +43,13 @@ public sealed partial class NodePage
         _shell.ShowSheet(details.Name,
         [
             .. readers,
-            new("Rename…", () => _shell.Run(RenameAsync), Icon: "RenameIcon"),
-            new("Colour…", () => ShowColors(details.Color), Icon: "ColorIcon"),
-            new(details.IsPinned ? "Unpin" : "Pin", TogglePin, Icon: "PinIcon"),
-            new("Add field…", () => _shell.Run(AddFieldAsync), Icon: "AddIcon"),
+            new("Rename…", () => _shell.Run(RenameAsync), Icon: "rename"),
+            new("Colour…", () => ShowColors(details.Color), Icon: "colour"),
+            new(details.IsPinned ? "Unpin" : "Pin", TogglePin, Icon: "pin"),
+            new("Add field…", () => _shell.Run(AddFieldAsync), Icon: "add"),
             AddTypeChoice(vault.Graph, details),
             RemoveTypeChoice(vault.Graph, details),
-            new("Delete…", () => _shell.Run(DeleteAsync), Icon: "DeleteIcon"),
+            new("Delete…", () => _shell.Run(DeleteAsync), Icon: "delete"),
         ]);
     }
 
@@ -143,7 +143,7 @@ public sealed partial class NodePage
         if (!IsReadOnly && (sender as Control)?.Tag is NodeRow { Link: { } link } row)
         {
             e.Handled = true;
-            _shell.ShowSheet(row.Name, [new("Remove link…", () => _shell.Run(() => RemoveLinkAsync(link)), Icon: "DeleteIcon")]);
+            _shell.ShowSheet(row.Name, [new("Remove link…", () => _shell.Run(() => RemoveLinkAsync(link)), Icon: "unlink")]);
         }
     }
 

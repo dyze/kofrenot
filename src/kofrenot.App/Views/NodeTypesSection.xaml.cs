@@ -2,6 +2,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using Kofrenot.Core.Browse;
 using Kofrenot.Core.Fields;
 using Kofrenot.Core.Graph;
 using Kofrenot.Core.Input;
@@ -14,7 +15,7 @@ namespace Kofrenot.UI.Views;
 /// <summary>A node type of the user's on the node types screen: its glyph, its colour's dot and its fields.</summary>
 public sealed record TypeLine(CustomNodeType Type)
 {
-    public string Glyph => TypeGlyphs.Of(Type.Type.Icon);
+    public string? Icon => IconPaths.NameOfType(Type.Type.Icon);
 
     public Brush? Fill => NoteColors.Fill(Type.Type.Color);
 
@@ -32,7 +33,7 @@ public sealed class CopyLine(TypeCopy copy) : Bindable
 
     public TypeCopy Copy { get; } = copy;
 
-    public string Glyph => TypeGlyphs.Of(Copy.Type.Type.Icon);
+    public string? Icon => IconPaths.NameOfType(Copy.Type.Type.Icon);
 
     public bool CanCopy => Copy.Change is not null;
 

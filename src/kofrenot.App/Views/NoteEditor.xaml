@@ -52,11 +52,10 @@
         <Button x:Name="SaveButton"
                 Grid.Column="1"
                 Style="{StaticResource FlatButton}"
-                FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
-                FontSize="14"
-                Content="&#xE74E;"
                 ToolTip="Save (Ctrl+S)"
-                Click="Save_Click" />
+                Click="Save_Click">
+          <local:IconView Size="14" Kind="save" />
+        </Button>
       </Grid>
     </Grid>
   </Border>

@@ -101,7 +101,7 @@
                     ToolTip="Colour"
                     Click="ColorButton_Click">
               <Grid>
-                <TextBlock FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="14" Text="&#xE790;" />
+                <local:IconView Size="14" Kind="colour" />
                 <Ellipse x:Name="ColorDot"
                          Width="8"
                          Height="8"
@@ -138,24 +138,14 @@
               </Border>
             </Popup>
             <!-- Pinned nodes are listed while the input box is empty, on every device (NodeDetailsPanel.Offline).
-                 One pin shape: in the accent colour, with a dot, when pinned. -->
+                 Filled, in the accent colour, when pinned. -->
             <Button x:Name="PinButton"
                     Grid.Column="2"
                     Margin="2,0,0,0"
                     VerticalAlignment="Center"
                     Style="{StaticResource FlatButton}"
                     Click="PinButton_Click">
-              <Grid>
-                <TextBlock x:Name="PinGlyph" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="14" Text="&#xE718;" />
-                <Ellipse x:Name="PinDot"
-                         Width="6"
-                         Height="6"
-                         Margin="0,0,-3,-2"
-                         HorizontalAlignment="Right"
-                         VerticalAlignment="Bottom"
-                         Fill="{DynamicResource AccentFillColorDefaultBrush}"
-                         Visibility="Collapsed" />
-              </Grid>
+              <local:IconView x:Name="PinIcon" Size="14" Kind="pin" />
             </Button>
             <!-- Kept offline on this computer only (a server vault): its content downloaded ahead. Same look as the pin. -->
             <Button x:Name="OfflineButton"
@@ -165,17 +155,7 @@
                     Style="{StaticResource FlatButton}"
                     Visibility="Collapsed"
                     Click="OfflineButton_Click">
-              <Grid>
-                <TextBlock x:Name="OfflineGlyph" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="14" Text="&#xE896;" />
-                <Ellipse x:Name="OfflineDot"
-                         Width="6"
-                         Height="6"
-                         Margin="0,0,-3,-2"
-                         HorizontalAlignment="Right"
-                         VerticalAlignment="Bottom"
-                         Fill="{DynamicResource AccentFillColorDefaultBrush}"
-                         Visibility="Collapsed" />
-              </Grid>
+              <local:IconView x:Name="OfflineIcon" Size="14" Kind="offline" />
             </Button>
             <!-- Its versions, each to restore (NodeDetailsPanel.History). -->
             <Button Grid.Column="4"
@@ -184,7 +164,7 @@
                     Style="{StaticResource FlatButton}"
                     ToolTip="History: its versions, to restore one"
                     Click="HistoryButton_Click">
-              <TextBlock FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="14" Text="&#xE81C;" />
+              <local:IconView Size="14" Kind="history" />
             </Button>
             <!-- Its name searched on the web, in the default browser (NodeDetailsPanel.WebSearch). -->
             <Button x:Name="WebSearchButton"
@@ -193,7 +173,7 @@
                     VerticalAlignment="Center"
                     Style="{StaticResource FlatButton}"
                     Click="WebSearchButton_Click">
-              <TextBlock FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="14" Text="&#xE774;" />
+              <local:IconView Size="14" Kind="globe" />
             </Button>
             <!-- Deletes it with its links, asked first (NodeDetailsPanel.Delete). -->
             <Button x:Name="DeleteButton"
@@ -203,7 +183,7 @@
                     Style="{StaticResource FlatButton}"
                     ToolTip="Delete this node, with its links (Ctrl+Del)"
                     Click="DeleteButton_Click">
-              <TextBlock FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="14" Text="&#xE74D;" />
+              <local:IconView Size="14" Kind="delete" />
             </Button>
           </Grid>
           <TextBlock x:Name="RenameText" Margin="0,4,0,0" Opacity="0.8" TextWrapping="Wrap" Visibility="Collapsed" />
@@ -259,11 +239,7 @@
                           BorderThickness="1"
                           CornerRadius="10">
                     <StackPanel Orientation="Horizontal">
-                      <TextBlock Margin="0,0,0,1"
-                                 VerticalAlignment="Center"
-                                 FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
-                                 FontSize="12"
-                                 Text="{Binding Glyph}" />
+                      <local:IconView Margin="0,0,0,1" VerticalAlignment="Center" Size="12" Kind="{Binding Icon}" />
                       <TextBlock Margin="5,0,4,1" VerticalAlignment="Center" Text="{Binding Type.Name}" />
                       <Button Padding="3,0"
                               VerticalAlignment="Center"
@@ -272,7 +248,7 @@
                               ToolTip="Take this type out"
                               Visibility="{Binding CanRemove, Converter={StaticResource VisibleWhen}}"
                               Click="RemoveType_Click">
-                        <TextBlock FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="9" Text="&#xE711;" />
+                        <local:IconView Size="9" Kind="remove" />
                       </Button>
                     </StackPanel>
                   </Border>
@@ -395,12 +371,11 @@
                           Grid.Column="3"
                           Padding="8,4"
                           Style="{StaticResource FlatButton}"
-                          FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
-                          FontSize="10"
-                          Content="&#xE711;"
                           ToolTip="Remove this link"
                           Visibility="Hidden"
-                          Click="RemoveLink_Click" />
+                          Click="RemoveLink_Click">
+                    <local:IconView Size="10" Kind="unlink" />
+                  </Button>
                   <Button x:Name="Open" Grid.Column="4" Style="{StaticResource OpenRowButton}" Click="OpenLink_Click" />
                 </Grid>
               </Grid>

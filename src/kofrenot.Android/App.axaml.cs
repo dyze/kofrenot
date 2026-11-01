@@ -15,7 +15,11 @@ public sealed partial class App : Application
 
     public static new App? Current => Application.Current as App;
 
-    public override void Initialize() => AvaloniaXamlLoader.Load(this);
+    public override void Initialize()
+    {
+        AvaloniaXamlLoader.Load(this);
+        IconResources.AddTo(Resources);
+    }
 
     public override void OnFrameworkInitializationCompleted()
     {

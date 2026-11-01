@@ -19,7 +19,6 @@ Scope of each planned version. Implemented features move to [CHANGELOG.md](CHANG
 | 0.13    | Released  | Android navigation and layouts: edge to edge, top bar and sheets, one back stack; image fields; web search |
 
 ## 0.14
-1. Both · **New set of icons** for nodes and actions, the same on Windows and Android.
 
 
 ## Later

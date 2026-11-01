@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using Kofrenot.Core.Browse;
 using Kofrenot.Core.Fields;
 using Kofrenot.Core.Graph;
 using Kofrenot.Core.Input;
@@ -25,10 +26,10 @@ public abstract class Bindable : INotifyPropertyChanged
 }
 
 /// <summary>An icon offered for a node type: its name and glyph; none has an empty name.</summary>
-public sealed record IconChoice(string? Name, string Glyph, string Label)
+public sealed record IconChoice(string? Name, string? Icon, string Label)
 {
     public static IReadOnlyList<IconChoice> All { get; } =
-        [new(null, string.Empty, "No icon"), .. TypeIcons.All.Select(icon => new IconChoice(icon, TypeGlyphs.Of(icon), icon))];
+        [new(null, null, "No icon"), .. TypeIcons.All.Select(icon => new IconChoice(icon, IconPaths.NameOfType(icon), icon))];
 }
 
 /// <summary>A field typed in the node type form; <see cref="Choices"/> are a choice's options, separated by commas.</summary>
