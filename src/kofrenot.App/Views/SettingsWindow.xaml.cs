@@ -4,6 +4,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Threading;
 using Kofrenot.Core;
+using Kofrenot.Core.Browse;
 using Kofrenot.Core.Logging;
 using Kofrenot.Core.Session;
 using Kofrenot.Core.Settings;
@@ -35,6 +36,13 @@ public partial class SettingsWindow : Window
         new(MainWindowPosition.Centered, "Centered on the mouse's monitor"),
         new(MainWindowPosition.AtMouse, "At the mouse"),
         new(MainWindowPosition.LastPosition, "Where I left it"),
+    ];
+
+    private static readonly Option<WebSearchEngine>[] WebSearchOptions =
+    [
+        new(WebSearchEngine.Google, "Google"),
+        new(WebSearchEngine.DuckDuckGo, "DuckDuckGo"),
+        new(WebSearchEngine.Bing, "Bing"),
     ];
 
     private static readonly Option<ThemeChoice>[] ThemeOptions =
@@ -102,6 +110,7 @@ public partial class SettingsWindow : Window
 
         ThemeComboBox.ItemsSource = ThemeOptions;
         PositionComboBox.ItemsSource = PositionOptions;
+        WebSearchComboBox.ItemsSource = WebSearchOptions;
         ShowAbout(files);
 
         LoadValues();
@@ -285,6 +294,7 @@ public partial class SettingsWindow : Window
         HotkeyBox.Text = _settings.Hotkey.ToString();
         ThemeComboBox.SelectedItem = ThemeOptions.First(option => option.Value == _settings.Theme);
         PositionComboBox.SelectedItem = PositionOptions.First(option => option.Value == _settings.MainWindowPosition);
+        WebSearchComboBox.SelectedItem = WebSearchOptions.First(option => option.Value == _settings.WebSearch);
         ShowAutoStart();
         PrivacyScreenCheckBox.IsChecked = _settings.PrivacyScreen;
         _loading = false;
@@ -482,6 +492,25 @@ public partial class SettingsWindow : Window
         catch (Exception ex) when (ex is UnauthorizedAccessException or IOException)
         {
             _log.Error("Settings", "Cannot change the main window position", ex);
+            ShowMessage(ex.Message);
+        }
+    }
+
+    private void WebSearchComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (_loading || WebSearchComboBox.SelectedItem is not Option<WebSearchEngine> option || option.Value == _settings.WebSearch)
+        {
+            return;
+        }
+
+        try
+        {
+            _settings.SetWebSearch(option.Value);
+            _log.Info("Settings", $"Web search: {option.Value}");
+        }
+        catch (Exception ex) when (ex is UnauthorizedAccessException or IOException)
+        {
+            _log.Error("Settings", "Cannot change the web search engine", ex);
             ShowMessage(ex.Message);
         }
     }

@@ -27,6 +27,22 @@ public sealed class AppChooser(Context context)
     public void OpenLink(Uri link) =>
         context.StartActivity(new Intent(Intent.ActionView, Android.Net.Uri.Parse(link.AbsoluteUri)).AddFlags(ActivityFlags.NewTask));
 
+    /// <summary>
+    /// Searches <paramref name="words"/> with the phone's own search app (its default engine); without
+    /// one, opens <paramref name="fallback"/>, an engine's results, in the browser.
+    /// </summary>
+    public void SearchWeb(string words, Uri fallback)
+    {
+        try
+        {
+            context.StartActivity(new Intent(Intent.ActionWebSearch).PutExtra(Android.App.SearchManager.Query, words).AddFlags(ActivityFlags.NewTask));
+        }
+        catch (ActivityNotFoundException)
+        {
+            OpenLink(fallback);
+        }
+    }
+
     /// <summary>Shows Android's share sheet for the file at <paramref name="path"/>.</summary>
     public void Share(string path)
     {

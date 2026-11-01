@@ -46,6 +46,7 @@ Both apps share the same vaults and the same core; each shows its own set of fea
 | Node types and fields shown | ✔ | ✔ (an image's thumbnail, **Open**) |
 | Views: trees and lists, as tabs | ✔ rows, cards, details | ✔ rows; **▾** lists every tab, **⋮** of a view tab closes it |
 | Pin (synced: listed while the input box is empty) | ✔ | ✔ **⋮** on the node's page |
+| Search the node's name on the web (only then does it leave the device) | ✔ the globe in the details header, the engine of Settings > General (Google, DuckDuckGo or Bing) in the default browser | ✔ the globe in the top bar, the phone's own search app (else the browser) |
 | Keep offline (this device only: content downloaded ahead) | ✔ server vaults | ✔ |
 | **Change** | | |
 | Add nodes and links (input box, creation screen) | ✔ | ✔ the search box, then a creation screen, or **＋** > *Add a node…* (a view on Windows; a dataset with **＋**) |
@@ -148,6 +149,8 @@ Type in the box at the top of the main window; the line under it says what Enter
 ### Node details
 **Enter** or a double-click on a node opens its details: its name, types, colour, pin, fields and links. **F2** renames it; **+ Link** (**Ctrl+K**) links it to another; a link opens the node at its other end. **Esc** goes back.
 
+**The globe** (after History) searches the node's name on the web with the engine chosen in Settings > General (Google by default, or DuckDuckGo, Bing), in your default browser. The name leaves the computer only then.
+
 **History** (the clock beside the pin) lists its versions, newest first: its text, file or view definition, its names, colours and field values, each with when and what it held (a note's text is not shown). **Restore** makes one the current version again, after a confirmation: it is written as a new version, so the others stay in the history; restoring one of a conflict resolves it. A note's text or a dataset's file restored in a server vault is downloaded first. Its types and links have no versions, and a node deleted is not restored.
 
 ### Node types and fields
@@ -184,7 +187,7 @@ Gear button in the title bar, or tray menu > Settings. Changes are saved at once
 
 | Tab          | Description                                                                           |
 | ------------ | ------------------------------------------------------------------------------------- |
-| General      | The hotkey that shows kofrenot; where the main window appears; start with Windows; privacy screen |
+| General      | The hotkey that shows kofrenot; where the main window appears; the web search engine; start with Windows; privacy screen |
 | Key bindings | Every shortcut                                                                        |
 | Vault        | Your vaults: add, remove, order, rename, hotkey, pass phrase, members                 |
 | Server       | Your account on a Kofre server: sign up, sign in, password, the account's pass phrase |

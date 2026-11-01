@@ -266,6 +266,29 @@ public sealed class SettingsStoreTests : IDisposable
     }
 
     [Theory]
+    [InlineData(WebSearchEngine.DuckDuckGo)]
+    [InlineData(WebSearchEngine.Bing)]
+    [InlineData(WebSearchEngine.Google)]
+    public void WebSearch_IsPersisted(WebSearchEngine engine)
+    {
+        new SettingsStore(FilePath).SetWebSearch(engine);
+
+        Assert.Equal(engine, new SettingsStore(FilePath).WebSearch);
+    }
+
+    [Theory]
+    [InlineData("{\"WebSearch\":\"Altavista\"}")]
+    [InlineData("{\"WebSearch\":\"9\"}")]
+    [InlineData("{}")]
+    public void UnknownOrMissingWebSearch_IsGoogle(string json)
+    {
+        Directory.CreateDirectory(_directory);
+        File.WriteAllText(FilePath, json);
+
+        Assert.Equal(WebSearchEngine.Google, new SettingsStore(FilePath).WebSearch);
+    }
+
+    [Theory]
     [InlineData(MainWindowPosition.Centered)]
     [InlineData(MainWindowPosition.AtMouse)]
     [InlineData(MainWindowPosition.LastPosition)]

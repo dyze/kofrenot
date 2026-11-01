@@ -69,6 +69,10 @@
       </ScrollViewer>
       <views:TopBar.Actions>
         <StackPanel Orientation="Horizontal">
+          <!-- Its name searched on the web, by the phone's search app (NodePage.Actions). -->
+          <Button Classes="icon" Click="WebSearch_Click">
+            <PathIcon Data="{StaticResource WebIcon}" />
+          </Button>
           <!-- Keep offline, in the accent while kept (NodePage.Offline). -->
           <Button x:Name="OfflineButton" Classes="icon" IsVisible="False" Click="Offline_Click">
             <PathIcon x:Name="OfflineIcon" Data="{StaticResource OfflineIcon}" />

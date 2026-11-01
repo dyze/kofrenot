@@ -63,6 +63,16 @@ public sealed partial class NodePage
     }
 
     // A note changed and not saved: asked first, as a restore may change it.
+    // The globe: its name searched by the phone's search app, else with the engine of the settings in the browser; a reader too.
+    private void WebSearch_Click(object? sender, RoutedEventArgs e)
+    {
+        if (_browser.Details?.Node is { } node && WebSearch.UrlOf(_shell.Services.Settings.WebSearch, node.Name) is { } fallback)
+        {
+            _shell.Services.Log.Info("Action", "Name searched on the web");
+            _shell.Services.Chooser.SearchWeb(node.Name, fallback);
+        }
+    }
+
     private void ShowHistory()
     {
         if (_browser.Details?.Node is { } node && !AsksBeforeLeaving(ShowHistory))

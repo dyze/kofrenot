@@ -1,5 +1,6 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Kofrenot.Core.Browse;
 using Kofrenot.Core.Graph;
 
 namespace Kofrenot.Core.Settings;
@@ -26,7 +27,7 @@ public enum MainWindowPosition
 }
 
 /// <summary>
-/// User settings persisted as JSON: the theme, where the main window appears, whether the log
+/// User settings persisted as JSON: the theme, the web search engine, where the main window appears, whether the log
 /// records debug entries, whether to check for updates, whether a hidden window is covered, the registered vaults and the one selected,
 /// the hotkey, and the Settings tab shown last. A missing, corrupt or partial file means defaults for whatever cannot be read.
 /// </summary>
@@ -44,6 +45,9 @@ public sealed class SettingsStore
         Theme = Enum.TryParse<ThemeChoice>(data?.Theme, ignoreCase: true, out var theme) && Enum.IsDefined(theme)
             ? theme
             : ThemeChoice.System;
+        WebSearch = Enum.TryParse<WebSearchEngine>(data?.WebSearch, ignoreCase: true, out var engine) && Enum.IsDefined(engine)
+            ? engine
+            : WebSearchEngine.Google;
         CheckForUpdates = data?.CheckForUpdates ?? true;
         PrivacyScreen = data?.PrivacyScreen ?? true;
         MainWindowPosition = Enum.TryParse<MainWindowPosition>(data?.MainWindowPosition, ignoreCase: true, out var position) && Enum.IsDefined(position)
@@ -61,6 +65,9 @@ public sealed class SettingsStore
     public bool DebugLogging { get; private set; }
 
     public ThemeChoice Theme { get; private set; }
+
+    /// <summary>The engine a node's name is searched with on the web (<see cref="Browse.WebSearch"/>). Google by default.</summary>
+    public WebSearchEngine WebSearch { get; private set; }
 
     /// <summary>Where the main window appears when it is shown. In the middle of the mouse's monitor by default.</summary>
     public MainWindowPosition MainWindowPosition { get; private set; }
@@ -101,6 +108,12 @@ public sealed class SettingsStore
     public void SetTheme(ThemeChoice theme)
     {
         Theme = theme;
+        Save();
+    }
+
+    public void SetWebSearch(WebSearchEngine engine)
+    {
+        WebSearch = engine;
         Save();
     }
 
@@ -196,6 +209,7 @@ public sealed class SettingsStore
             Server = Server is { } server ? new ServerData(server.Server.ToString(), server.Email) : null,
             SettingsTab = SettingsTab,
             PrivacyScreen = PrivacyScreen,
+            WebSearch = WebSearch.ToString(),
         };
         File.WriteAllText(_path, JsonSerializer.Serialize(data));
     }
@@ -270,6 +284,8 @@ public sealed class SettingsStore
         public string? SettingsTab { get; init; }
 
         public bool? PrivacyScreen { get; init; }
+
+        public string? WebSearch { get; init; }
     }
 
     /// <param name="Folder">Missing in a damaged file: the entry is skipped.</param>

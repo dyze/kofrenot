@@ -69,6 +69,7 @@ public partial class NodeDetailsPanel : UserControl
             .Prepend(new BreadcrumbItem(HomeLabel, 0, IsCurrent: false))
             .ToList();
         NameText.Text = details.Name;
+        ShowWebSearch(details.Node.Name);
         TypeText.Text = details.Type;
         CreatedText.Text = DateOf(details.Node.Created);
         ModifiedText.Text = Browser.Graph is { } graph ? DateOf(NodeFacts.Of(graph, details.Node).Modified) : string.Empty;

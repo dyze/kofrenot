@@ -152,6 +152,16 @@
                       SelectionChanged="PositionComboBox_SelectionChanged" />
           </StackPanel>
 
+          <!-- Where a node's name is searched on the web, in the default browser (its globe in the details). -->
+          <StackPanel Tag="{x:Static settings:SettingsCatalog.WebSearchId}"
+                      Margin="0,10,0,0"
+                      Orientation="Horizontal">
+            <TextBlock Text="Search the web with" Width="190" VerticalAlignment="Center" />
+            <ComboBox x:Name="WebSearchComboBox"
+                      Width="260"
+                      SelectionChanged="WebSearchComboBox_SelectionChanged" />
+          </StackPanel>
+
           <!-- Ticked only when Windows starts this copy; the note names the other one. -->
           <StackPanel Tag="{x:Static settings:SettingsCatalog.AutoStartId}" Margin="0,10,0,0">
             <CheckBox x:Name="AutoStartCheckBox"

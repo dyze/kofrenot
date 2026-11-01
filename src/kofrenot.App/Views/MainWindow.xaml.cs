@@ -80,6 +80,7 @@ public partial class MainWindow : Window
         DetailsPanel.EditView = view => _session.EditView(Ask, view);
         DetailsPanel.ChangeTypes = plan => _session.ChangeTypes(Ask, plan);
         DetailsPanel.Restore = plan => _session.Restore(Ask, plan);
+        DetailsPanel.WebSearchEngine = () => _settings.WebSearch;
         DetailsPanel.WriteChanges = (changes, action) => _session.Write(Ask, changes, action);
         DetailsPanel.AddLink = (request, choices) => RecordRecent(_session.Create(Ask, request, choices)) is not null;
         ViewContent.Log = log;
