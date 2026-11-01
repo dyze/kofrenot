@@ -38,6 +38,7 @@ public sealed partial class NodePage
     {
         var answers = new PreparedAnswers();
         Busy.IsVisible = true;
+        Fields.IsEnabled = false;
         try
         {
             await _shell.Services.Session.SetImage(answers, node, field, file);
@@ -45,6 +46,7 @@ public sealed partial class NodePage
         finally
         {
             Busy.IsVisible = false;
+            Fields.IsEnabled = true;
             _shell.Tell(answers.Told);
             Refresh();
         }
