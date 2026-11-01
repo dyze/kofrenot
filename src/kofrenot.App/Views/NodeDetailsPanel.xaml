@@ -78,6 +78,7 @@
               <ColumnDefinition Width="Auto" />
               <ColumnDefinition Width="Auto" />
               <ColumnDefinition Width="Auto" />
+              <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
             <TextBlock x:Name="NameText"
                        VerticalAlignment="Center"
@@ -193,6 +194,16 @@
                     Style="{StaticResource FlatButton}"
                     Click="WebSearchButton_Click">
               <TextBlock FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="14" Text="&#xE774;" />
+            </Button>
+            <!-- Deletes it with its links, asked first (NodeDetailsPanel.Delete). -->
+            <Button x:Name="DeleteButton"
+                    Grid.Column="6"
+                    Margin="2,0,0,0"
+                    VerticalAlignment="Center"
+                    Style="{StaticResource FlatButton}"
+                    ToolTip="Delete this node, with its links (Ctrl+Del)"
+                    Click="DeleteButton_Click">
+              <TextBlock FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="14" Text="&#xE74D;" />
             </Button>
           </Grid>
           <TextBlock x:Name="RenameText" Margin="0,4,0,0" Opacity="0.8" TextWrapping="Wrap" Visibility="Collapsed" />
@@ -374,15 +385,36 @@
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
                   </Grid.ColumnDefinitions>
                   <TextBlock x:Name="Type" Margin="10,0,16,0" VerticalAlignment="Center" Opacity="0.75" Text="{Binding Type}" />
                   <local:NodeVisualView Grid.Column="1" Margin="0,1,10,1" Visual="{Binding Visual}" />
                   <TextBlock x:Name="Other" Grid.Column="2" VerticalAlignment="Center" Text="{Binding Other}" TextTrimming="CharacterEllipsis" />
-                  <Button x:Name="Open" Grid.Column="3" Style="{StaticResource OpenRowButton}" Click="OpenLink_Click" />
+                  <!-- Shown on the row hovered or selected; never in a vault read only (LinksList.Tag, NodeDetailsPanel.Delete). -->
+                  <Button x:Name="Remove"
+                          Grid.Column="3"
+                          Padding="8,4"
+                          Style="{StaticResource FlatButton}"
+                          FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
+                          FontSize="10"
+                          Content="&#xE711;"
+                          ToolTip="Remove this link"
+                          Visibility="Hidden"
+                          Click="RemoveLink_Click" />
+                  <Button x:Name="Open" Grid.Column="4" Style="{StaticResource OpenRowButton}" Click="OpenLink_Click" />
                 </Grid>
               </Grid>
             </Border>
             <DataTemplate.Triggers>
+              <Trigger SourceName="Frame" Property="IsMouseOver" Value="True">
+                <Setter TargetName="Remove" Property="Visibility" Value="Visible" />
+              </Trigger>
+              <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                <Setter TargetName="Remove" Property="Visibility" Value="Visible" />
+              </DataTrigger>
+              <DataTrigger Binding="{Binding Tag, RelativeSource={RelativeSource AncestorType=ItemsControl}}" Value="True">
+                <Setter TargetName="Remove" Property="Visibility" Value="Collapsed" />
+              </DataTrigger>
               <DataTrigger Binding="{Binding IsSelected}" Value="True">
                 <Setter TargetName="Frame" Property="Background" Value="{DynamicResource SubtleFillColorSecondaryBrush}" />
                 <Setter TargetName="SelectionBar" Property="Visibility" Value="Visible" />

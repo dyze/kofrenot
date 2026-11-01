@@ -82,6 +82,7 @@ public partial class MainWindow : Window
         DetailsPanel.Restore = plan => _session.Restore(Ask, plan);
         DetailsPanel.WebSearchEngine = () => _settings.WebSearch;
         DetailsPanel.WriteChanges = (changes, action) => _session.Write(Ask, changes, action);
+        DetailsPanel.IsReadOnly = () => _session.IsReadOnly;
         DetailsPanel.AddLink = (request, choices) => RecordRecent(_session.Create(Ask, request, choices)) is not null;
         ViewContent.Log = log;
         ViewContent.States = viewStates;
@@ -90,6 +91,7 @@ public partial class MainWindow : Window
         ViewContent.ImportFiles = ImportFiles;
         ViewContent.Rename = rename => _session.Rename(Ask, rename);
         ViewContent.Write = (changes, action) => _session.Write(Ask, changes, action);
+        ViewContent.IsReadOnly = () => _session.IsReadOnly;
         ViewContent.Copy = plan => _session.Copy(Ask, plan);
         ViewContent.ContentExists = version => _session.Current is { } vault && (vault.HasContent(version) || vault.FetchesContent);
         ViewContent.ReadNote = version => _session.Current?.ReadNote(version);
@@ -403,6 +405,12 @@ public partial class MainWindow : Window
         if (Keyboard.Modifiers == ModifierKeys.Control && e.Key == Key.K && DetailsShown && DetailsPanel.IsVisible)
         {
             DetailsPanel.StartLink();
+            e.Handled = true;
+            return;
+        }
+
+        if (Keyboard.Modifiers == ModifierKeys.Control && e.Key == Key.Delete && DetailsShown && DetailsPanel.IsVisible && DetailsPanel.HandleDeleteKey())
+        {
             e.Handled = true;
             return;
         }

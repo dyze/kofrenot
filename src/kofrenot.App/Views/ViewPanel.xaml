@@ -88,7 +88,7 @@
             <TextBlock Margin="6,0,0,0" VerticalAlignment="Center" Text="Paste" />
           </StackPanel>
         </Button>
-        <Button x:Name="DeleteButton" Margin="0,0,4,0" Padding="8,4" Style="{StaticResource FlatButton}" ToolTip="Delete the node selected, with everything under it (Del)" Click="Delete_Click">
+        <Button x:Name="DeleteButton" Margin="0,0,4,0" Padding="8,4" Style="{StaticResource FlatButton}" Click="Delete_Click">
           <StackPanel Orientation="Horizontal">
             <TextBlock VerticalAlignment="Center" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="12" Text="&#xE74D;" />
             <TextBlock Margin="6,0,0,0" VerticalAlignment="Center" Text="Delete" />

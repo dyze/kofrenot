@@ -11,7 +11,7 @@ namespace Kofrenot.UI.Views;
 /// The operations of a tree: copy or cut a node (Ctrl+C, Ctrl+X), paste it under the selected one
 /// (Ctrl+V: a copy, or a move), delete it with its subtree (Del); also in a right-click menu. A node
 /// cut is dimmed until pasted, or Esc. A copy and a deletion are shown first; the vault is written
-/// through the session.
+/// through the session. A list deletes its node alone (Del, or its menu).
 /// </summary>
 public partial class ViewPanel
 {
@@ -133,10 +133,23 @@ public partial class ViewPanel
         FocusContent();
     }
 
-    /// <summary>Deletes the selected node with its subtree, once the preview is confirmed.</summary>
+    /// <summary>True in a vault shared with the user to read only: nothing is deleted.</summary>
+    public Func<bool> IsReadOnly { get; set; } = () => false;
+
+    /// <summary>Del: in a tree, the selected node with its subtree, once the preview is confirmed; in a list, the node alone, with its links.</summary>
     private bool Delete()
     {
-        if (SelectedItem is not { } item || _graph is null || _definition is null)
+        if (IsReadOnly() || _graph is null)
+        {
+            return false;
+        }
+
+        if (_definition is null)
+        {
+            return DeleteListed();
+        }
+
+        if (SelectedItem is not { } item)
         {
             return false;
         }
@@ -153,6 +166,18 @@ public partial class ViewPanel
         }
 
         FocusContent();
+        return true;
+    }
+
+    private bool DeleteListed()
+    {
+        if (SelectedNode is not { } node || Write is null)
+        {
+            return false;
+        }
+
+        NodeDeleter.Delete(Owner, _graph!, node, (change, action) => Write([change], action), Log);
+        Refresh();
         return true;
     }
 
@@ -182,8 +207,16 @@ public partial class ViewPanel
         menu.Items.Add(MenuItemOf("Copy", "Ctrl+C", () => Take(isCut: false)));
         menu.Items.Add(MenuItemOf("Cut", "Ctrl+X", () => Take(isCut: true)));
         menu.Items.Add(MenuItemOf(_taken is { IsCut: true } ? "Move here" : "Paste a copy here", "Ctrl+V", () => Paste(), isEnabled: _taken is not null));
-        menu.Items.Add(new Separator());
-        menu.Items.Add(MenuItemOf("Delete…", "Del", () => Delete()));
+        AddDeleteItem(menu);
+    }
+
+    private void AddDeleteItem(ContextMenu menu)
+    {
+        if (!IsReadOnly())
+        {
+            menu.Items.Add(new Separator());
+            menu.Items.Add(MenuItemOf("Delete…", "Del", () => Delete(), isEnabled: SelectedNode is not null));
+        }
     }
 
     private static MenuItem MenuItemOf(string header, string keys, Action action, bool isEnabled = true)

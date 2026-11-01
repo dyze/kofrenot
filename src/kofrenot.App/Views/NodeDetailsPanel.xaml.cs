@@ -70,6 +70,7 @@ public partial class NodeDetailsPanel : UserControl
             .ToList();
         NameText.Text = details.Name;
         ShowWebSearch(details.Node.Name);
+        ShowDelete();
         TypeText.Text = details.Type;
         CreatedText.Text = DateOf(details.Node.Created);
         ModifiedText.Text = Browser.Graph is { } graph ? DateOf(NodeFacts.Of(graph, details.Node).Modified) : string.Empty;

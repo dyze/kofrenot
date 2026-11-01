@@ -235,6 +235,10 @@ public partial class ViewPanel : UserControl
         {
             e.Handled = HandleTreeKey(e.Key);
         }
+        else if (e.Key == Key.Delete && Keyboard.Modifiers == ModifierKeys.None)
+        {
+            e.Handled = Delete();
+        }
     }
 
     // In a name being edited, a double-click selects a word.

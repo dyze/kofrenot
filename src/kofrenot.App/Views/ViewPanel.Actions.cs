@@ -8,7 +8,7 @@ using Kofrenot.Core.Views;
 namespace Kofrenot.UI.Views;
 
 /// <summary>
-/// The action bar over a view: New, Edit and Rename, and in a tree Cut, Copy, Paste and Delete, as
+/// The action bar over a view: New, Edit, Rename and Delete, and in a tree Cut, Copy and Paste, as
 /// their keys do; New, Edit and Rename are also first in the right-click menus. New adds a node through the
 /// creation screen: in a tree under the node selected (the root when none), linked through the
 /// tree's link type; in a list, of the list's type. Edit opens the node's details, as Enter does.
@@ -27,10 +27,13 @@ public partial class ViewPanel
         var isTree = Tree.Visibility == Visibility.Visible;
         var isList = _definition is null && _listType is not null;
         ActionBar.Visibility = isTree || isList ? Visibility.Visible : Visibility.Collapsed;
-        foreach (var treeOnly in new UIElement[] { CutButton, CopyButton, PasteButton, DeleteButton })
+        foreach (var treeOnly in new UIElement[] { CutButton, CopyButton, PasteButton })
         {
             treeOnly.Visibility = isTree ? Visibility.Visible : Visibility.Collapsed;
         }
+
+        DeleteButton.Visibility = (isTree || isList) && !IsReadOnly() ? Visibility.Visible : Visibility.Collapsed;
+        DeleteButton.ToolTip = isTree ? "Delete the node selected, with everything under it (Del)" : "Delete the node selected, with its links (Del)";
 
         DetailsButton.Visibility = isTree || (isList && !ShowsCards) ? Visibility.Visible : Visibility.Collapsed;
         CardsButton.Visibility = isList ? Visibility.Visible : Visibility.Collapsed;
@@ -48,7 +51,7 @@ public partial class ViewPanel
         var hasSelection = SelectedItem is not null;
         CutButton.IsEnabled = hasSelection;
         CopyButton.IsEnabled = hasSelection;
-        DeleteButton.IsEnabled = hasSelection;
+        DeleteButton.IsEnabled = SelectedNode is not null;
         PasteButton.IsEnabled = hasSelection && _taken is not null;
     }
 
@@ -60,12 +63,13 @@ public partial class ViewPanel
 
     private void List_SelectionChanged(object sender, SelectionChangedEventArgs e) => UpdateActions();
 
-    /// <summary>The list's menu: New… and Edit.</summary>
+    /// <summary>The list's menu: New…, Edit and Rename, then Delete….</summary>
     private void List_ContextMenuOpening(object sender, ContextMenuEventArgs e)
     {
         var menu = List.ContextMenu!;
         menu.Items.Clear();
         AddNodeItems(menu);
+        AddDeleteItem(menu);
     }
 
     /// <summary>New…, Edit and Rename, first in a menu.</summary>

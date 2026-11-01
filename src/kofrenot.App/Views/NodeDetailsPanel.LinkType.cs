@@ -7,7 +7,10 @@ using Kofrenot.Core.Input;
 
 namespace Kofrenot.UI.Views;
 
-/// <summary>A link's right-click menu: Change link type, each way every link type reads, the current one checked.</summary>
+/// <summary>
+/// A link's right-click menu: Change link type, each way every link type reads, the current one checked;
+/// then Remove link… (<see cref="RemoveLink"/>).
+/// </summary>
 public partial class NodeDetailsPanel
 {
     /// <summary>Writes changes planned here (a link changed) in their order, logging the action given; false when it could not.</summary>
@@ -36,6 +39,13 @@ public partial class NodeDetailsPanel
 
         var menu = new ContextMenu { PlacementTarget = frame };
         menu.Items.Add(change);
+        if (!IsReadOnly())
+        {
+            var remove = new MenuItem { Header = "Remove link…" };
+            remove.Click += (_, _) => RemoveLink(row.Link);
+            menu.Items.Add(remove);
+        }
+
         menu.IsOpen = true;
         e.Handled = true;
     }

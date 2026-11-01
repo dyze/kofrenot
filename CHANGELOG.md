@@ -8,6 +8,15 @@ It covers kofrenot on Windows and on Android; versions before 0.9 ran on Windows
 
 ## [Unreleased]
 
+### Added
+- **Windows**
+  - **Delete a node outside a tree**: the trash can in its details' header (**Ctrl+Del**), **Del** or the right-click menu in a list, or a right-click on a search result deletes the node alone, with its links, asked first as on Android; the details show the node before it. A tree still deletes a subtree ([README](README.md#node-details)).
+  - **Remove a link**: its **×** in the details (on the row hovered or selected) or **Remove link…** in its right-click menu, asked first; the nodes stay ([README](README.md#node-details)).
+
+### Changed
+- **Both**
+  - **Removing a link says when a node is left with no link**, so only the search finds it then ([README](README.md#windows-and-android)).
+
 ## [0.13] - 2026-11-01
 
 > ⚠ **Vault format 9** (for the email and postal address fields). Consequences:
