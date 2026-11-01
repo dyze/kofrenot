@@ -87,6 +87,16 @@ public sealed class FieldPlanner(KnowledgeGraph graph, TimeProvider? clock = nul
         return WhyNotImage(file) is { } why ? FieldPlan.Refused(FieldProblem.Invalid, why) : Write(node, field, value: null, file);
     }
 
+    /// <summary>
+    /// An image dataset's file as an image field's: nothing copied, the field shows that version's
+    /// content (<see cref="FieldSet.Content"/>), kept as every version is.
+    /// </summary>
+    public FieldPlan SetImageFrom(Node node, NodeField field, DatasetEdited image)
+    {
+        var plan = SetImage(node, field, image.File);
+        return plan.Changes is [FieldSet value] ? plan with { Changes = [value with { Content = image.Id }] } : plan;
+    }
+
     /// <summary>Keeps one of the values of a conflict (<see cref="FieldVersions.Current"/>); an image keeps its file, written already.</summary>
     public FieldPlan Keep(Node node, NodeField field, FieldSet version) =>
         version.File is null
