@@ -17,7 +17,9 @@ It covers kofrenot on Windows and on Android; versions before 0.9 ran on Windows
 - **Both**
   - **Email and postal address fields**: two new kinds of field. An email opens a new mail to it, a postal address its place on Google Maps (**↗** on Windows; a mail or a map icon on Android), as a web address opens its page. An email typed in a web address field is refused, saying where it goes, no longer turned into `https://…` ([README](README.md#node-types-and-fields)).
   - **An image field is the node's picture**: a node with an image field set shows its thumbnail in every list (search, links, views, cards), as an image dataset does; the first in the order of its fields ([README](README.md#node-types-and-fields)).
+  - **× clears the search box**: its labels and text at once, shown while there are some; **Esc** still does on Windows ([README](README.md#windows-and-android)).
 - **Android**
+  - **Every tab in a sheet**: **▾** after the tabs lists them all, to reach one among dozens, then *Open a view…*; the selected tab stays in sight ([README](README.md#on-android)).
   - **Set an image field on the phone**: a tap on it chooses an image with the phone's picker, takes a photo, or removes it (asked first), as **Choose…** and **×** do on Windows ([README](README.md#on-android)).
   - **Import a new version of a dataset's file**: **Import…** on its page saves a file picked on the phone as its new version, as on Windows; the same file as the latest is not imported again; an empty dataset gets its first file this way ([README](README.md#on-android)).
   - **Share a dataset's file**: **Share…** beside *Open* and *Export…* sends it through Android's share sheet: a message, a mail, a cloud ([README](README.md#on-android)).
@@ -41,6 +43,7 @@ It covers kofrenot on Windows and on Android; versions before 0.9 ran on Windows
   - **Thumbnails in the lists**, as on Windows: an image dataset, or a node with an image field set, shows its thumbnail instead of its icon in the search, the pinned and recent nodes, the views and a node's links; read off the screen's thread and kept in memory ([README](README.md#on-android)).
   - **No node type under the names**: a row is its icon (or thumbnail) and its name, as on Windows; a second line only says what the icon does not: a recent node's activity, the field a search matched, how a link reads.
   - **Named as on Windows**: a dataset's *Open with…* is now **Open**, and *Save as…* **Export…**; an image field's *Open with…* is **Open**.
+  - **Closing a view tab** is in its bar under the tabs, **⋮** > *Close tab*, no longer a **×** beside it; the bar shows how many rows the view has.
   - **A node's page**: *Keep offline* is an icon of its top bar (in the accent while kept) and a choice of **⋮**; a tap on the name renames it, as on Windows; a field's action is an icon right of its value (open, mail, map), its label on the line of its value; every choice of a sheet has its icon.
 
 ### Fixed
@@ -52,6 +55,7 @@ It covers kofrenot on Windows and on Android; versions before 0.9 ran on Windows
 - **Android**
   - **Deleting a node** no longer says *Something went wrong* (a null reference): the page of a node deleted, here or on another device, goes back to the screen before.
   - **Search box text** lines up with its labels and with the name proposed after it, no longer higher.
+  - **The name proposed** in grey is the size and font of the text typed, no longer smaller.
 
 ## [0.12] - 2026-10-30
 

@@ -101,6 +101,14 @@ public partial class MainWindow
         ShowInput();
     }
 
+    // × in the box: as Esc, in one click, the box keeping the focus.
+    private void ClearInput_Click(object sender, RoutedEventArgs e)
+    {
+        _log.Info("Action", "Input cleared");
+        ClearInput();
+        InputBox.Focus();
+    }
+
     private void ShowChips(KnowledgeGraph graph)
     {
         InputChips.ItemsSource = _chips.Chips(graph, _input.Plan);

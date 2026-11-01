@@ -198,7 +198,7 @@ public partial class MainWindow : Window
             return;
         }
 
-        InputPlaceholder.Visibility = Visibility.Collapsed;
+        InputPlaceholder.Visibility = ClearInputButton.Visibility = Visibility.Collapsed;
         VaultText.Text = SelectedName;
         VaultText.ToolTip = _session.Folder;
         if (_session.Folder is null)
@@ -232,6 +232,7 @@ public partial class MainWindow : Window
         }
 
         InputPlaceholder.Visibility = _chips.IsEmpty ? Visibility.Visible : Visibility.Collapsed;
+        ClearInputButton.Visibility = _chips.IsEmpty ? Visibility.Collapsed : Visibility.Visible;
         _input.Recent = _recent.Of(vault.Id);
         _input.Update(vault.Graph, _chips.Text);
         ShowPresented();

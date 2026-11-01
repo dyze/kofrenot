@@ -95,38 +95,6 @@ public sealed partial class HomePage : UserControl, IPage
         }
     }
 
-    private void ShowTabs(Vault vault)
-    {
-        var tabs = new TabList(_shell.Services.ViewTabs).Of(vault.Graph, vault.Id);
-        if (!tabs.Contains(_tab))
-        {
-            _tab = Tab.Search;
-        }
-
-        Tabs.Children.Clear();
-        foreach (var tab in tabs)
-        {
-            var button = new Button { Content = tab.Name, Tag = tab, Classes = { "tab", tab == _tab ? "accent" : "flat" } };
-            button.Click += (_, _) => Select(tab);
-            Tabs.Children.Add(button);
-        }
-
-        if (!_tab.IsSearch)
-        {
-            var close = new Button { Content = new PathIcon { Data = PhoneTheme.Icon("CloseIcon") }, Classes = { "icon" } };
-            close.Click += (_, _) => CloseTab(vault);
-            Tabs.Children.Add(close);
-        }
-
-        // The views not open as a tab, from a sheet.
-        if (new TabList(_shell.Services.ViewTabs).Closed(vault.Graph, vault.Id) is { Count: > 0 } closed)
-        {
-            var open = new Button { Content = new PathIcon { Data = PhoneTheme.Icon("AddIcon") }, Classes = { "icon" } };
-            open.Click += (_, _) => _shell.ShowSheet("Open a view", closed.Select(view => new SheetChoice(view.Name, () => OpenTab(vault, view))));
-            Tabs.Children.Add(open);
-        }
-    }
-
     private void ShowList(Vault vault)
     {
         var graph = vault.Graph;
@@ -136,7 +104,9 @@ public sealed partial class HomePage : UserControl, IPage
         ShowChips(graph);
         if (_tab.View is { } view)
         {
-            List.ItemsSource = ViewRows(graph, view, text);
+            var viewRows = ViewRows(graph, view, text);
+            List.ItemsSource = viewRows;
+            ShowViewBar(viewRows.Count);
             return;
         }
 
@@ -219,29 +189,6 @@ public sealed partial class HomePage : UserControl, IPage
     {
         Message.Text = message;
         Message.IsVisible = message is not null;
-    }
-
-    private void Select(Tab tab)
-    {
-        _tab = tab;
-        ClearSearch();
-        Refresh();
-    }
-
-    private void OpenTab(Vault vault, Node view)
-    {
-        _shell.Services.ViewTabs.Open(vault.Id, view.Id);
-        Select(new Tab(view));
-    }
-
-    private void CloseTab(Vault vault)
-    {
-        if (_tab.View is { } view)
-        {
-            _shell.Services.ViewTabs.Close(vault.Id, view.Id);
-        }
-
-        Select(Tab.Search);
     }
 
     // The search tab's text read as the input box reads it: what it adds, offered under the box.

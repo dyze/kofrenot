@@ -246,7 +246,7 @@
            The labels (ChipInput) sit over the start of the box, whose text starts after them. -->
       <Grid x:Name="InputArea" Grid.Row="1" Margin="0,14,0,0">
         <TextBox x:Name="InputBox"
-                 Padding="8,6"
+                 Padding="8,6,32,6"
                  FontSize="{StaticResource BodyFontSize}"
                  TextChanged="InputBox_TextChanged"
                  SelectionChanged="InputBox_SelectionChanged"
@@ -336,6 +336,20 @@
                    IsHitTestVisible="False"
                    Opacity="0.5"
                    Text="Dune relates to Frank Herbert" />
+        <!-- Clears the labels and the text at once, as Esc does; shown while there are some. -->
+        <Button x:Name="ClearInputButton"
+                Style="{StaticResource FlatButton}"
+                Margin="0,0,4,0"
+                Padding="6,4"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Center"
+                Focusable="False"
+                FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
+                FontSize="10"
+                Content="&#xE711;"
+                ToolTip="Clear (Esc)"
+                Visibility="Collapsed"
+                Click="ClearInput_Click" />
       </Grid>
 
       <TextBlock x:Name="PreviewText"

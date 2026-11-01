@@ -28,7 +28,6 @@ public sealed partial class HomePage
     private void WatchSearchBox()
     {
         _placeholder = SearchBox.PlaceholderText;
-        ProposalText.FontSize = SearchBox.FontSize;
         SearchBox.AddHandler(KeyDownEvent, SearchBox_KeyDown, RoutingStrategies.Tunnel);
         SearchBox.PropertyChanged += (_, e) =>
         {
@@ -113,6 +112,20 @@ public sealed partial class HomePage
         SetSearchText(string.Empty);
     }
 
+    // × in the box: its labels and text gone at once, the box ready for another.
+    private void ClearSearch_Click(object? sender, RoutedEventArgs e)
+    {
+        if (Vault is not { } vault)
+        {
+            return;
+        }
+
+        _shell.Services.Log.Info("Action", "Search cleared");
+        ClearSearch();
+        ShowList(vault);
+        SearchBox.Focus();
+    }
+
     private void ShowChips(KnowledgeGraph graph)
     {
         var chips = _chips.Chips(graph, _adding?.Plan);
@@ -124,6 +137,7 @@ public sealed partial class HomePage
 
         Chips.IsVisible = chips.Count > 0;
         SearchBox.PlaceholderText = _chips.IsEmpty ? _placeholder : null;
+        ClearButton.IsVisible = !_chips.IsEmpty;
         ProposalText.Text = _chips.Proposal(graph)?.Rest;
         PlaceProposalLater();
     }
