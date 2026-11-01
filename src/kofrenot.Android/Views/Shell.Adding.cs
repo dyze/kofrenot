@@ -1,4 +1,5 @@
 using Kofrenot.Core.Datasets;
+using Kofrenot.Core.Input;
 using Kofrenot.Core.Logging;
 using Kofrenot.Core.Notes;
 using Kofrenot.Phone.Platform;
@@ -22,7 +23,18 @@ public sealed partial class Shell
             return;
         }
 
-        Run(() => shared.Text is { } text ? AddNoteAsync(text) : AddFilesAsync(shared.Files));
+        if (shared.Text is { } text)
+        {
+            Run(() => AddNoteAsync(text));
+        }
+        else if (shared.Files is [var image] && ImagePicker.CanBeImage(image) && !Services.Session.IsReadOnly)
+        {
+            OfferSharedImage(image);
+        }
+        else
+        {
+            Run(() => AddFilesAsync(shared.Files));
+        }
     }
 
     public async Task AddFilesAsync(IReadOnlyList<ImportFile> files)

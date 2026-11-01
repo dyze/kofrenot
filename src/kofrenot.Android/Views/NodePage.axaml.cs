@@ -75,6 +75,9 @@ public sealed partial class NodePage : UserControl, IPage
 
     private Vault? Vault => _shell.Services.Session.Current;
 
+    /// <summary>The node shown; null once removed.</summary>
+    public Node? Shown => _browser.Details?.Node;
+
     /// <summary>The node's name, told from its homonyms, for the trail.</summary>
     public string Label => _browser.Trail.FirstOrDefault() ?? string.Empty;
 

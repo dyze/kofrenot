@@ -1,0 +1,13 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:views="using:Kofrenot.Phone.Views"
+             x:Class="Kofrenot.Phone.Views.PickNodePage">
+  <!-- A node to pick, found by its name: the nodes an image is given to, or the image datasets it is taken from. -->
+  <DockPanel>
+    <views:TopBar x:Name="Bar" DockPanel.Dock="Top" />
+    <TextBox x:Name="SearchBox" DockPanel.Dock="Top" Margin="{StaticResource PageMargin}" PlaceholderText="Type a name"
+             TextChanged="Search_TextChanged" />
+    <TextBlock x:Name="Message" DockPanel.Dock="Top" Classes="caption" Margin="{StaticResource PageMargin}" TextWrapping="Wrap" IsVisible="False" />
+    <ListBox x:Name="List" SelectionChanged="List_SelectionChanged" />
+  </DockPanel>
+</UserControl>

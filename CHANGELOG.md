@@ -17,7 +17,9 @@ It covers kofrenot on Windows and on Android; versions before 0.9 ran on Windows
 - **Both**
   - **Email and postal address fields**: two new kinds of field. An email opens a new mail to it, a postal address its place on Google Maps (**↗** on Windows; a mail or a map icon on Android), as a web address opens its page. An email typed in a web address field is refused, saying where it goes, no longer turned into `https://…` ([README](README.md#node-types-and-fields)).
   - **An image field is the node's picture**: a node with an image field set shows its thumbnail in every list (search, links, views, cards), as an image dataset does; the first in the order of its fields ([README](README.md#node-types-and-fields)).
+  - **An image field from a dataset**: **From a dataset…** (beside **Choose…** on Windows, in the field's sheet on Android) takes an image dataset of the vault, found by its name; its file is not copied, and a newer version of the dataset leaves the field as it was ([README](README.md#node-types-and-fields)).
 - **Android**
+  - **A shared image as a field's image**: an image shared from another app (a browser's *Share image*) can be the image of a node's image field instead of a dataset: of the node shown, offered first, or of another found by its name; its page then shows it ([README](README.md#on-android)).
   - **Every tab in a sheet**: **▾**, always at the right of the tabs (they keep within the screen's width), lists them all, to reach one among dozens, then *Open a view…*; the selected tab stays in sight ([README](README.md#on-android)).
   - **× clears the search box**: its labels and text at once, shown while there are some ([README](README.md#windows-and-android)).
   - **Set an image field on the phone**: a tap on it chooses an image with the phone's picker, takes a photo, or removes it (asked first), as **Choose…** and **×** do on Windows ([README](README.md#on-android)).

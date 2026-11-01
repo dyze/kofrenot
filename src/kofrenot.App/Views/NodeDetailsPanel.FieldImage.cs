@@ -13,7 +13,8 @@ namespace Kofrenot.UI.Views;
 
 /// <summary>
 /// An image field: its thumbnail (a click shows the image, as a dataset's), Choose… to set another
-/// (<see cref="FieldPlanner.SetImage"/>, its file written as a dataset version's), × to remove it, asked first.
+/// (<see cref="FieldPlanner.SetImage"/>, its file written as a dataset version's), From a dataset… to
+/// take an image dataset's, not copied (<see cref="FieldPlanner.SetImageFrom"/>), × to remove it, asked first.
 /// </summary>
 public partial class NodeDetailsPanel
 {
@@ -39,6 +40,9 @@ public partial class NodeDetailsPanel
             var choose = new Button { Margin = new Thickness(field.HasValue ? 8 : 0, 0, 0, 0), Padding = new Thickness(10, 2, 10, 2), Content = "Choose…", VerticalAlignment = VerticalAlignment.Center };
             choose.Click += (_, _) => _ = ChooseImage(field);
             panel.Children.Add(choose);
+            var fromDataset = new Button { Margin = new Thickness(8, 0, 0, 0), Padding = new Thickness(10, 2, 10, 2), Content = "From a dataset…", VerticalAlignment = VerticalAlignment.Center };
+            fromDataset.Click += (_, _) => ChooseImageDataset(field);
+            panel.Children.Add(fromDataset);
             if (field.HasValue)
             {
                 panel.Children.Add(SmallButton("", "Remove this image", () => RemoveImage(field), focusable: true));
@@ -94,6 +98,15 @@ public partial class NodeDetailsPanel
             // The message names the file: shown, not logged.
             Log.Warn("Action", $"Cannot read the image chosen ({ex.GetType().Name})");
             MessageDialog.Inform(Window.GetWindow(this), $"Cannot read the image.\n\n{ex.Message}");
+        }
+    }
+
+    // An image dataset of the vault: its latest file, not copied (FieldPlanner.SetImageFrom).
+    private void ChooseImageDataset(NodeField field)
+    {
+        if (Browser?.Graph is { } graph && ImageDatasetDialog.Ask(Window.GetWindow(this), graph, field.Label) is { } choice)
+        {
+            WriteFields(planner => planner.SetImageFrom(Node, field, choice.Image), "Field image set from a dataset", field);
         }
     }
 

@@ -8,7 +8,8 @@ namespace Kofrenot.Phone.Views;
 
 /// <summary>
 /// An image field set on the phone, as Choose… and × do on Windows: a tap on it gives a sheet to
-/// choose an image (the picker, images only), take a photo (with a camera app), or remove it (asked
+/// choose an image (the picker, images only), take a photo (with a camera app), take an image dataset
+/// of the vault (From a dataset…, nothing copied), or remove it (asked
 /// first). The image is read, described and saved off the screen's thread (<c>VaultSession.SetImage</c>).
 /// </summary>
 public sealed partial class NodePage
@@ -20,6 +21,7 @@ public sealed partial class NodePage
             .. _shell.Services.Camera.IsAvailable
                 ? [new SheetChoice("Take a photo", () => _shell.Run(() => _shell.CaptureAsync(CaptureKind.Photo, file => SetImageAsync(node, field, file))), Icon: "CameraIcon")]
                 : Array.Empty<SheetChoice>(),
+            new("From a dataset…", () => PickImageDataset(planner, node, field), Icon: "ListIcon"),
             .. field.HasValue
                 ? [new SheetChoice("Remove image…", () => _shell.Run(() => RemoveImageAsync(planner, node, field)), Icon: "DeleteIcon")]
                 : Array.Empty<SheetChoice>(),
@@ -51,6 +53,23 @@ public sealed partial class NodePage
             Refresh();
         }
     }
+
+    // An image dataset of the vault, found by its name: its latest file, not copied.
+    private void PickImageDataset(FieldPlanner planner, Node node, NodeField field) =>
+        _shell.Push(new PickNodePage(
+            _shell,
+            $"The image of {field.Label}",
+            (graph, text) => ImagePicker.Images(graph, text).Select(choice => NodeRow.Of(graph, choice.Node, detail: choice.Image.File.Name)).ToList(),
+            "No image dataset of that name.",
+            dataset =>
+            {
+                if (Vault?.Graph.DatasetVersionsOf(dataset.Id) is [.., var image])
+                {
+                    WriteField(planner.SetImageFrom(node, field, image), "Field image set from a dataset");
+                }
+
+                return Task.CompletedTask;
+            }));
 
     private async Task RemoveImageAsync(FieldPlanner planner, Node node, NodeField field)
     {
