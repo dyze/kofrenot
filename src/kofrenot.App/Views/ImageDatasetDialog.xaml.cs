@@ -2,17 +2,15 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Interop;
+using Kofrenot.Core.Browse;
 using Kofrenot.Core.Graph;
 using Kofrenot.Core.Input;
 using Kofrenot.UI.Platform;
 
 namespace Kofrenot.UI.Views;
 
-/// <summary>A row of the list: an image dataset, and the name of its latest file.</summary>
-public sealed record ImageDatasetRow(ImageChoice Choice)
-{
-    public string Text => $"{Choice.Node.Name} · {Choice.Image.File.Name}";
-}
+/// <summary>A row of the list: an image dataset, its picture (its thumbnail), and the name of its latest file.</summary>
+public sealed record ImageDatasetRow(ImageChoice Choice, NodeVisual Visual);
 
 /// <summary>Chooses an image dataset of the vault for an image field (<see cref="ImagePicker.Images"/>).</summary>
 public partial class ImageDatasetDialog : Window
@@ -38,7 +36,7 @@ public partial class ImageDatasetDialog : Window
 
     private void ShowImages()
     {
-        var rows = ImagePicker.Images(_graph, SearchBox.Text).Select(choice => new ImageDatasetRow(choice)).ToList();
+        var rows = ImagePicker.Images(_graph, SearchBox.Text).Select(choice => new ImageDatasetRow(choice, NodeVisual.Of(_graph, choice.Node))).ToList();
         ImageList.ItemsSource = rows;
         ImageList.SelectedIndex = rows.Count > 0 ? 0 : -1;
         EmptyText.Visibility = rows.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
