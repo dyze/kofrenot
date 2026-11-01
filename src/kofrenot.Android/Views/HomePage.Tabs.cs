@@ -9,7 +9,8 @@ using Kofrenot.Core.Views;
 namespace Kofrenot.Phone.Views;
 
 /// <summary>
-/// The tabs: the search, then the views opened on this phone, the selected one kept in sight. ▾ lists
+/// The tabs: the search, then the views opened on this phone, within the screen's width, the selected
+/// one kept in sight. ▾, always at their right, lists
 /// them all in a sheet, to reach one among dozens, then the views to open. A view tab has its bar under
 /// the tabs: how many nodes it shows, and ⋮ for its actions (Close tab).
 /// </summary>
@@ -33,16 +34,19 @@ public sealed partial class HomePage
             selected = tab == _tab ? button : selected;
         }
 
-        var all = new Button { Content = new PathIcon { Data = PhoneTheme.Icon("ExpandIcon") }, Classes = { "icon" } };
-        all.Click += (_, _) => ShowAllTabs(vault, tabs);
-        Tabs.Children.Add(all);
         ViewBar.IsVisible = !_tab.IsSearch;
         Dispatcher.UIThread.Post(() => selected?.BringIntoView(), DispatcherPriority.Loaded);
     }
 
-    // Every tab open, the current one marked; then the views not open as a tab, from a second sheet.
-    private void ShowAllTabs(Vault vault, IReadOnlyList<Tab> tabs)
+    // ▾: every tab open, the current one marked; then the views not open as a tab, from a second sheet.
+    private void AllTabs_Click(object? sender, RoutedEventArgs e)
     {
+        if (Vault is not { } vault)
+        {
+            return;
+        }
+
+        var tabs = new TabList(_shell.Services.ViewTabs).Of(vault.Graph, vault.Id);
         var closed = new TabList(_shell.Services.ViewTabs).Closed(vault.Graph, vault.Id);
         _shell.ShowSheet("Tabs",
         [

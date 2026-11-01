@@ -17,9 +17,9 @@ It covers kofrenot on Windows and on Android; versions before 0.9 ran on Windows
 - **Both**
   - **Email and postal address fields**: two new kinds of field. An email opens a new mail to it, a postal address its place on Google Maps (**↗** on Windows; a mail or a map icon on Android), as a web address opens its page. An email typed in a web address field is refused, saying where it goes, no longer turned into `https://…` ([README](README.md#node-types-and-fields)).
   - **An image field is the node's picture**: a node with an image field set shows its thumbnail in every list (search, links, views, cards), as an image dataset does; the first in the order of its fields ([README](README.md#node-types-and-fields)).
-  - **× clears the search box**: its labels and text at once, shown while there are some; **Esc** still does on Windows ([README](README.md#windows-and-android)).
 - **Android**
-  - **Every tab in a sheet**: **▾** after the tabs lists them all, to reach one among dozens, then *Open a view…*; the selected tab stays in sight ([README](README.md#on-android)).
+  - **Every tab in a sheet**: **▾**, always at the right of the tabs (they keep within the screen's width), lists them all, to reach one among dozens, then *Open a view…*; the selected tab stays in sight ([README](README.md#on-android)).
+  - **× clears the search box**: its labels and text at once, shown while there are some ([README](README.md#windows-and-android)).
   - **Set an image field on the phone**: a tap on it chooses an image with the phone's picker, takes a photo, or removes it (asked first), as **Choose…** and **×** do on Windows ([README](README.md#on-android)).
   - **Import a new version of a dataset's file**: **Import…** on its page saves a file picked on the phone as its new version, as on Windows; the same file as the latest is not imported again; an empty dataset gets its first file this way ([README](README.md#on-android)).
   - **Share a dataset's file**: **Share…** beside *Open* and *Export…* sends it through Android's share sheet: a message, a mail, a cloud ([README](README.md#on-android)).
