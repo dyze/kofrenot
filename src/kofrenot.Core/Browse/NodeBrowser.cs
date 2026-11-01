@@ -27,7 +27,10 @@ public sealed class NodeBrowser
     public IReadOnlyList<string> Trail => Graph is null ? [] : _trail.Select(level => Graph.FindNode(level.NodeId)).OfType<Node>().Select(new PlanText(Graph).NodeLabel).ToList();
 
     /// <summary>The node of the current level; null while closed, or once it is removed (deleted here or on another device).</summary>
-    public NodeDetails? Details => Graph is null || _trail.Count == 0 || Graph.FindNode(_trail[^1].NodeId) is null ? null : DetailsOf(Graph, _trail[^1]);
+    public NodeDetails? Details =>
+        Graph is { } graph && _trail.Count > 0 && graph.FindNode(_trail[^1].NodeId) is { } node
+            ? DetailsOf(graph, _trail[^1], node)
+            : null;
 
     /// <summary>
     /// Opens a node found by the search, as level 1. For a link row of the search, <paramref name="from"/>
@@ -112,10 +115,9 @@ public sealed class NodeBrowser
 
     private bool CanOpen(Node node) => Depth < MaxDepth && _trail.All(level => level.NodeId != node.Id);
 
-    private NodeDetails DetailsOf(KnowledgeGraph graph, Level level)
+    private NodeDetails DetailsOf(KnowledgeGraph graph, Level level, Node node)
     {
         var text = new PlanText(graph);
-        var node = graph.FindNode(level.NodeId)!;
         var links = graph.LinksOf(node.Id);
         level.Selected = Math.Clamp(level.Selected, 0, Math.Max(0, links.Count - 1));
         var rows = links.Select((link, index) =>
