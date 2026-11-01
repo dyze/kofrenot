@@ -53,7 +53,34 @@ public sealed class DeletionPlannerTests
         var link = Link(_dune, _frank);
         var copy = Link(_dune, _frank);
 
-        Assert.Equal(new[] { link.Id, copy.Id }.Order(), _planner.Link(link).Removes.Order());
+        var removal = _planner.Link(link, _dune.Id);
+
+        Assert.Same(link, removal.Link);
+        Assert.Equal(new[] { link.Id, copy.Id }.Order(), removal.Change.Removes.Order());
+        Assert.Equal(_clock.Now, removal.Change.At);
+    }
+
+    [Fact]
+    public void ALinkRemoval_NamesTheLink_AsReadFromTheNodeShown()
+    {
+        var link = Link(_dune, _frank);
+        Link(_dune, new Node(Guid.NewGuid(), TypeCatalog.Generic.Id, "Arrakis", Start));
+        Link(_frank, new Node(Guid.NewGuid(), TypeCatalog.Generic.Id, "Children of Dune", Start));
+
+        Assert.Equal("Remove the link “Frank Herbert relates to Dune”?\n\nThe nodes stay.", _planner.Link(link, _frank.Id).Question);
+    }
+
+    [Fact]
+    public void ALinkRemoval_SaysWhichNodesItLeavesWithNoLink()
+    {
+        var link = Link(_dune, _frank);
+        Link(_dune, _frank);
+
+        Assert.EndsWith("The nodes stay.\n“Dune” then has no link left.\n“Frank Herbert” then has no link left.", _planner.Link(link, _dune.Id).Question, StringComparison.Ordinal);
+
+        Link(_dune, new Node(Guid.NewGuid(), TypeCatalog.Generic.Id, "Arrakis", Start));
+
+        Assert.EndsWith("The nodes stay.\n“Frank Herbert” then has no link left.", _planner.Link(link, _dune.Id).Question, StringComparison.Ordinal);
     }
 
     private Link Link(Node from, Node to)

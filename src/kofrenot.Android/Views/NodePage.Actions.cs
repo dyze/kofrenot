@@ -143,24 +143,25 @@ public sealed partial class NodePage
         if (!IsReadOnly && (sender as Control)?.Tag is NodeRow { Link: { } link } row)
         {
             e.Handled = true;
-            _shell.ShowSheet(row.Name, [new("Remove link…", () => _shell.Run(() => RemoveLinkAsync(link, row)), Icon: "DeleteIcon")]);
+            _shell.ShowSheet(row.Name, [new("Remove link…", () => _shell.Run(() => RemoveLinkAsync(link)), Icon: "DeleteIcon")]);
         }
     }
 
-    private async Task RemoveLinkAsync(Link link, NodeRow row)
+    private async Task RemoveLinkAsync(Link link)
     {
         if (Vault is not { } vault || _browser.Details is not { } details)
         {
             return;
         }
 
-        if (!await _shell.Confirm($"Remove the link “{details.Name} {row.Detail} {row.Name}”?\n\nThe nodes stay.", "Remove"))
+        var removal = new DeletionPlanner(vault.Graph).Link(link, details.Node.Id);
+        if (!await _shell.Confirm(removal.Question, "Remove"))
         {
             _shell.Services.Log.Info("Action", "Link removal cancelled");
             return;
         }
 
-        Write(answers => _shell.Services.Session.Write(answers, new DeletionPlanner(vault.Graph).Link(link), "Link removed"));
+        Write(answers => _shell.Services.Session.Write(answers, removal.Change, "Link removed"));
     }
 
     // Written, what went wrong told, the page shown again.
