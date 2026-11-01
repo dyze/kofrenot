@@ -68,7 +68,7 @@ public sealed class DatasetPlannerTests
         Assert.Equal([mine, theirs], conflict.Versions);
         Assert.Equal(theirs, conflict.Latest);
         Assert.Equal([new DatasetChoice(mine, true), new DatasetChoice(theirs, true)], conflict.Conflict);
-        Assert.NotNull(_planner.Import(_dataset, Results, conflict));
+        Assert.Equal([mine.Id, theirs.Id], _planner.Import(_dataset, Results, conflict)!.Replaces);
 
         var kept = _planner.Keep(_dataset, mine, conflict);
         _graph.Apply(kept);

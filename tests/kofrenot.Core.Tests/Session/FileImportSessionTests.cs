@@ -38,6 +38,23 @@ public sealed class FileImportSessionTests : IDisposable
     }
 
     [Fact]
+    public async Task AFilePicked_ResolvesAConflict_EvenTheSameFileAgain()
+    {
+        var survey = AddNode("Survey", TypeCatalog.Dataset.Id);
+        var picked = FileOf("survey.csv", "a,b");
+        Assert.True(await Session.ImportVersion(Ask, survey, picked));
+        var mine = Assert.Single(_device.Vault.Graph.DatasetVersionsOf(survey.Id));
+        var theirs = new DatasetEdited(Guid.NewGuid(), Start, survey.Id, new DatasetFile("theirs.csv", 1, new string('c', 64)), []);
+        Assert.True(Session.Write(Ask, theirs, "Dataset edited"));
+
+        Assert.True(await Session.ImportVersion(Ask, survey, picked));
+
+        var resolved = Assert.Single(_device.Vault.Graph.DatasetVersionsOf(survey.Id));
+        Assert.Equal(mine.File, resolved.File);
+        Assert.Equal(new HashSet<Guid> { mine.Id, theirs.Id }, resolved.Replaces.ToHashSet());
+    }
+
+    [Fact]
     public async Task AnImagePicked_IsTheFieldsImage()
     {
         var (bruce, portrait) = Person();
