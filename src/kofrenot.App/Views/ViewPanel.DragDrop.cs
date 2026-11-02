@@ -15,9 +15,10 @@ namespace Kofrenot.UI.Views;
 /// <summary>
 /// Drag and drop in a tree: a node dropped on another moves there (as Ctrl+X, Ctrl+V), or is copied
 /// there with Ctrl held (as Ctrl+C, Ctrl+V). The node under the pointer is highlighted, and the
-/// cursor says when a move is refused. A dataset dragged out of kofrenot (to a folder) gives its
-/// file, exported only then; a file dropped on a node from elsewhere becomes a new dataset under it
-/// (the creation screen), several files as many datasets (their preview first).
+/// cursor says when a move is refused. Leaving the window, the node goes on as files to other
+/// programs (a folder): a dataset its file, a node with children a folder of them; several nodes selected are dragged out together (<see cref="DragOut"/>).
+/// A file dropped on a node from elsewhere becomes a new dataset under it (the creation screen),
+/// several files or folders as many nodes (their preview first).
 /// </summary>
 public partial class ViewPanel
 {
@@ -31,76 +32,48 @@ public partial class ViewPanel
 
     private Point? _dragStart;
     private TreeItem? _dragged;
-    private Panel? _dropHeader;
+    private TreeViewItem? _dropTarget;
 
     private void Tree_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
         // In a name being edited, the mouse selects text: no drag.
-        _dragStart = IsRenaming ? null : e.GetPosition(Tree);
-        _dragged = IsRenaming ? null : TreeViewItemAt(e.OriginalSource)?.Tag as TreeItem;
+        var row = IsRenaming || IsOnExpander(e.OriginalSource) ? null : TreeViewItemAt(e.OriginalSource);
+        if (row is { Tag: TreeItem } && MarkOnClick(row))
+        {
+            _dragStart = null;
+            e.Handled = true;
+            return;
+        }
+
+        _dragStart = row is null ? null : e.GetPosition(Tree);
+        _dragged = row?.Tag as TreeItem;
+        e.Handled = row is not null && KeepSeveralOnPress(row);
     }
 
     /// <summary>Starts the drag once the mouse has moved far enough, the button held.</summary>
     private void Tree_PreviewMouseMove(object sender, MouseEventArgs e)
     {
-        if (e.LeftButton != MouseButtonState.Pressed || _dragStart is not { } start || _dragged is not { } dragged)
-        {
-            return;
-        }
-
-        var moved = e.GetPosition(Tree) - start;
-        if (Math.Abs(moved.X) < SystemParameters.MinimumHorizontalDragDistance && Math.Abs(moved.Y) < SystemParameters.MinimumVerticalDragDistance)
+        if (e.LeftButton != MouseButtonState.Pressed || _dragStart is not { } start || _dragged is not { } dragged || !HasMovedToDrag(e, Tree, start))
         {
             return;
         }
 
         _dragStart = null;
-        Log.Debug("View", "Node dragged");
-        if (_graph?.DatasetVersionsOf(dragged.Node.Id) is [.., var latest] && DatasetFiles?.Invoke() is { } files && files.Exists(latest.Id))
+        if (_pressedInSelection is not null)
         {
-            DragWithFile(dragged, latest, files);
-        }
-        else
-        {
-            DragDrop.DoDragDrop(Tree, new DataObject(DragFormat, dragged), DragDropEffects.Move | DragDropEffects.Copy);
+            _pressedInSelection = null;
+            DragOut(SelectedNodes);
+            return;
         }
 
+        Log.Debug("View", "Node dragged");
+        DragNode(dragged);
         ShowDropTarget(null);
     }
 
-    /// <summary>A dataset: the same drag, its file offered to other programs, exported only when one asks for it.</summary>
-    private void DragWithFile(TreeItem dragged, DatasetEdited latest, DatasetFiles files)
-    {
-        Exception? failure = null;
-        var (_, draggedOut) = DragExport.Drag(Tree, DragFormat, dragged, latest.File.SafeName, path =>
-        {
-            // Asked by another program during the drag: an error is told once the drag is over.
-            Mouse.OverrideCursor = Cursors.Wait;
-            try
-            {
-                files.Export(latest.Id, path);
-            }
-            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidDataException)
-            {
-                failure = ex;
-                throw;
-            }
-            finally
-            {
-                Mouse.OverrideCursor = null;
-            }
-        }, DragDropEffects.Move | DragDropEffects.Copy);
-
-        if (failure is not null)
-        {
-            Log.Warn("Action", $"Cannot drag the dataset's file out ({failure.GetType().Name})");
-            MessageDialog.Inform(Window.GetWindow(this), $"Cannot export the file.\n\n{failure.Message}");
-        }
-        else if (draggedOut)
-        {
-            Log.Info("Action", $"Dataset dragged out of a view ({latest.File.Size} bytes)");
-        }
-    }
+    /// <summary>The tree row dragged inside kofrenot (its key carried as text), or null: several nodes, or data from elsewhere.</summary>
+    private TreeItem? DraggedItem(DragEventArgs e) =>
+        e.Data.GetData(DragFormat) is string key && _dragged is { } dragged && dragged.Key == key ? dragged : null;
 
     private void Tree_DragOver(object sender, DragEventArgs e)
     {
@@ -168,8 +141,10 @@ public partial class ViewPanel
             return;
         }
 
+        // Ours, even when it does nothing (several nodes): not dragged out.
+        _droppedInside = true;
         var effect = EffectOf(e, target);
-        if (effect == DragDropEffects.None || e.Data.GetData(DragFormat) is not TreeItem dragged || target?.Tag is not TreeItem onto)
+        if (effect == DragDropEffects.None || DraggedItem(e) is not { } dragged || target?.Tag is not TreeItem onto)
         {
             return;
         }
@@ -189,7 +164,7 @@ public partial class ViewPanel
     /// <summary>Copy with Ctrl held; otherwise a move, when it is allowed. None off a node, or for data from elsewhere.</summary>
     private DragDropEffects EffectOf(DragEventArgs e, TreeViewItem? target)
     {
-        if (e.Data.GetData(DragFormat) is not TreeItem dragged || target?.Tag is not TreeItem onto || _graph is null || _definition is null)
+        if (DraggedItem(e) is not { } dragged || target?.Tag is not TreeItem onto || _graph is null || _definition is null)
         {
             return DragDropEffects.None;
         }
@@ -206,15 +181,39 @@ public partial class ViewPanel
 
     private void ShowDropTarget(TreeViewItem? target)
     {
-        var header = target?.Header as Panel;
-        if (header == _dropHeader)
+        if (target == _dropTarget)
         {
             return;
         }
 
-        _dropHeader?.ClearValue(Panel.BackgroundProperty);
-        header?.SetResourceReference(Panel.BackgroundProperty, "SubtleFillColorTertiaryBrush");
-        _dropHeader = header;
+        var previous = _dropTarget;
+        _dropTarget = target;
+        if (previous is not null)
+        {
+            Paint(previous);
+        }
+
+        (target?.Header as Panel)?.SetResourceReference(Panel.BackgroundProperty, "SubtleFillColorTertiaryBrush");
+    }
+
+    private static bool HasMovedToDrag(MouseEventArgs e, IInputElement from, Point start)
+    {
+        var moved = e.GetPosition(from) - start;
+        return Math.Abs(moved.X) >= SystemParameters.MinimumHorizontalDragDistance || Math.Abs(moved.Y) >= SystemParameters.MinimumVerticalDragDistance;
+    }
+
+    /// <summary>Whether an event comes from a row's arrow, which expands it: not a click on the node.</summary>
+    private static bool IsOnExpander(object source)
+    {
+        for (var element = source as DependencyObject; element is not null and not TreeViewItem; element = element is Visual ? VisualTreeHelper.GetParent(element) : LogicalTreeHelper.GetParent(element))
+        {
+            if (element is System.Windows.Controls.Primitives.ToggleButton)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /// <summary>The tree item an event comes from (its header, text, icon...), or null off the items.</summary>

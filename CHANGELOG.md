@@ -12,12 +12,17 @@ It covers kofrenot on Windows and on Android; versions before 0.9 ran on Windows
 - **Windows**
   - **Delete a node outside a tree**: the trash can in its details' header (**Ctrl+Del**), **Del** or the right-click menu in a list, or a right-click on a search result deletes the node alone, with its links, asked first as on Android; the details show the node before it. A tree still deletes a subtree ([README](README.md#node-details)).
   - **Drop folders**: folders dropped on a tree node or on *Drop files* are imported whole, as a hierarchy: each folder becomes a node, its files datasets under it, sub-folders included; the preview shows them indented. Dropped again on the same node, they update what is there instead of adding it twice: a file becomes its dataset's new version (asked first), a folder's content is merged into its node ([README](README.md#views)).
+  - **Select several nodes and drag them out**: Ctrl+click and Shift+click select several nodes in a tree or a list; dragged to a folder, datasets become their files and nodes with nodes under them folders, the tree kept. One node of a tree, dragged out of the window, does the same. Notes, empty nodes and files not downloaded are left out, and said so ([README](README.md#views)).
   - **Remove a link**: its broken-link button in the details (on the row hovered or selected) or **Remove link…** in its right-click menu, asked first; the nodes stay ([README](README.md#node-details)).
 
 ### Changed
 - **Both**
   - **New icons, the same on Windows and Android**: one set of 72, for nodes, node types and actions, drawn by kofrenot instead of Windows' Segoe Fluent glyphs and the phone's text characters. A pinned node, or one kept offline, shows its icon filled in the accent; a link is removed with its own icon (a broken link) ([Architecture](docs/ARCHITECTURE.md#datasets)).
   - **Removing a link says when a node is left with no link**, so only the search finds it then ([README](README.md#windows-and-android)).
+
+### Fixed
+- **Windows**
+  - **Dragging a dataset out of a tree closed the Explorer window dropped on** (Explorer crashed). Its file is now exported when the pointer leaves kofrenot's window, then deleted; a move inside kofrenot decrypts nothing ([Architecture](docs/ARCHITECTURE.md#datasets)).
 
 ## [0.13] - 2026-11-01
 

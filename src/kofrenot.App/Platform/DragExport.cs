@@ -4,10 +4,14 @@ using System.Windows;
 namespace Kofrenot.UI.Platform;
 
 /// <summary>
-/// Drags a dataset's file out of kofrenot: Windows only takes a file on disk, so it is exported
-/// into a folder of its own under <c>%TEMP%\kofrenot</c>, dropped, then deleted. Folders left by an
-/// earlier drag (kofrenot stopped meanwhile) are deleted first.
+/// Drags files out of kofrenot: Windows only takes files on disk, so they are exported first into a
+/// folder of its own under <c>%TEMP%\kofrenot</c>, dragged with a standard <see cref="DataObject"/>,
+/// then deleted. Folders left by an earlier drag (kofrenot stopped meanwhile) are deleted first.
 /// </summary>
+/// <remarks>
+/// Not lazily, when another program asks: a hand-made <see cref="IDataObject"/>, wrapped by WPF,
+/// crashes Explorer on the drop. The standard one does not.
+/// </remarks>
 internal static class DragExport
 {
     private static string Root => Path.Combine(Path.GetTempPath(), "kofrenot");
@@ -15,53 +19,39 @@ internal static class DragExport
     /// <param name="export">Writes the file to the path given.</param>
     /// <returns>True when the file was dropped somewhere.</returns>
     /// <exception cref="IOException">The file cannot be exported.</exception>
-    public static bool Drag(DependencyObject source, string fileName, Action<string> export)
+    public static bool Drag(DependencyObject source, string fileName, Action<string> export) =>
+        Drag(source, folder =>
+        {
+            var path = Path.Combine(folder, fileName);
+            export(path);
+            return [path];
+        }, DragDropEffects.Copy) != DragDropEffects.None;
+
+    /// <summary>
+    /// Drags files and folders, also carrying <paramref name="ownData"/> in <paramref name="ownFormat"/>
+    /// when given, for a drop inside kofrenot: a text, so no .NET object is handed to other programs.
+    /// </summary>
+    /// <param name="export">Writes the files and folders into the folder given; their paths.</param>
+    /// <returns>The effect of the drop.</returns>
+    /// <exception cref="IOException">A file cannot be exported.</exception>
+    public static DragDropEffects Drag(DependencyObject source, Func<string, string[]> export, DragDropEffects allowed, string? ownFormat = null, string? ownData = null)
     {
         DeleteLeftovers();
         var folder = Path.Combine(Root, Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(folder);
         try
         {
-            var path = Path.Combine(folder, fileName);
-            export(path);
-            var data = new DataObject(DataFormats.FileDrop, new[] { path });
-            return DragDrop.DoDragDrop(source, data, DragDropEffects.Copy) != DragDropEffects.None;
+            var data = new DataObject(DataFormats.FileDrop, export(folder));
+            if (ownFormat is not null && ownData is not null)
+            {
+                data.SetData(ownFormat, ownData);
+            }
+
+            return DragDrop.DoDragDrop(source, data, allowed);
         }
         finally
         {
             TryDelete(folder);
-        }
-    }
-
-    /// <summary>
-    /// Drags data of kofrenot's own (<paramref name="format"/>, <paramref name="data"/>) that also
-    /// offers a file, exported only if another program asks for it (<see cref="LazyFileDrop"/>).
-    /// </summary>
-    /// <param name="export">Writes the file to the path given.</param>
-    /// <returns>The effect of the drop, and whether the file was exported (dragged out).</returns>
-    /// <exception cref="IOException">The file cannot be exported.</exception>
-    public static (DragDropEffects Effect, bool DraggedOut) Drag(DependencyObject source, string format, object data, string fileName, Action<string> export, DragDropEffects allowed)
-    {
-        DeleteLeftovers();
-        var folder = Path.Combine(Root, Guid.NewGuid().ToString("N"));
-        var lazy = new LazyFileDrop(format, data, () =>
-        {
-            Directory.CreateDirectory(folder);
-            var path = Path.Combine(folder, fileName);
-            export(path);
-            return path;
-        });
-        try
-        {
-            var effect = DragDrop.DoDragDrop(source, new DataObject(lazy), allowed);
-            return (effect, lazy.WasMade);
-        }
-        finally
-        {
-            if (Directory.Exists(folder))
-            {
-                TryDelete(folder);
-            }
         }
     }
 

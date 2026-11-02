@@ -15,12 +15,12 @@ public sealed record DatasetFile(string Name, long Size, string Sha256)
     /// The name to export the file under on Windows: invalid characters replaced by '_', and no
     /// trailing dot or space.
     /// </summary>
-    public string SafeName
+    public string SafeName => SafeNameOf(Name);
+
+    /// <summary>A file or folder name made safe for Windows, as <see cref="SafeName"/>.</summary>
+    public static string SafeNameOf(string name)
     {
-        get
-        {
-            var safe = new string(Name.Select(c => c < ' ' || Invalid.Contains(c) ? '_' : c).ToArray()).TrimEnd('.', ' ');
-            return safe.Length == 0 ? Fallback : safe;
-        }
+        var safe = new string(name.Select(c => c < ' ' || Invalid.Contains(c) ? '_' : c).ToArray()).TrimEnd('.', ' ');
+        return safe.Length == 0 ? Fallback : safe;
     }
 }

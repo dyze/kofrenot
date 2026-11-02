@@ -64,7 +64,7 @@ Both apps share the same vaults and the same core; each shows its own set of fea
 | Add what another app shares (files as datasets, text as a note, an image as an image field's) | — (drop files instead) | ✔ the share sheet, with a preview; an image to the node shown first |
 | Datasets: new version of a file, resolve a conflict | ✔ | ✔ **Import…** (a conflict resolved by importing; keeping one of its versions on Windows) |
 | Datasets: view images and texts | ✔ | an image's thumbnail |
-| Datasets: open in another app, export, share | ✔ **Open**, **Export…**, drag out | ✔ **Open**, **Export…**, **Share…** (Android's share sheet) |
+| Datasets: open in another app, export, share | ✔ **Open**, **Export…**, drag out (several at once, with their tree as folders) | ✔ **Open**, **Export…**, **Share…** (Android's share sheet) |
 | Views: create, edit | ✔ | — |
 | **Share** | | |
 | Members, roles, share, leave | ✔ | ✔ share, change a role, leave (Settings > Vault > **Members…**); a member removed on Windows |
@@ -179,6 +179,7 @@ A dataset holds one file: drop it on the creation screen or on the dataset. Text
 A view shows your vault another way, in a tab: **a tree** from a node, following a link type (*contains* by default), or **a list** of every node of a type. **+** in the tab bar opens or creates one.
 
 - In a tree: **Ctrl+C**, **Ctrl+X**, **Ctrl+V** and **Del** copy, move and delete, or drag a node onto another. A copy has its original's types, colour and field values, images included. Drop a file on a node to add it under it (the creation screen); several files, or folders, are previewed first, as with **Drop files**, then added under it, a folder's content under the folder's node by the tree's link type. What is already there is updated, not added again: a file whose dataset of the same name is under the same node becomes its new version (*update*, asked once more before), and a folder whose node is there gets its content merged (*existing*). Same names under different nodes are not homonyms; two files of one folder whose names would be the same (`report.pdf`, `report.docx`) keep their extension.
+- **Several nodes**: **Ctrl+click** adds or takes out a node, **Shift+click** selects the rows from the last one clicked, in a tree as in a list. Drag them to a folder (Explorer, the desktop) to export them: a dataset gives its latest file, a node with nodes under it in the tree a folder of them, sub-folders included; the same name twice in a folder becomes `name (2).ext`. They are decrypted into a temporary folder when the drag starts (the cursor waits a moment for large files), deleted once dropped. Notes, empty nodes and files not downloaded yet are left out, and said so after the drop. With several selected, Edit, Rename, Cut, Copy, Paste and Delete are off. One node of a tree goes out the same way once dragged out of kofrenot's window; until then, it is moved or copied inside kofrenot.
 - **Cards** on a list's bar shows its nodes as cards, with a preview. **Details** shows type, size and last change in columns.
 - **Ctrl+F** finds a node in the view.
 

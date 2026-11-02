@@ -181,7 +181,9 @@
                 SelectedItemChanged="Tree_SelectedItemChanged"
                 PreviewMouseRightButtonDown="Tree_PreviewMouseRightButtonDown"
                 PreviewMouseLeftButtonDown="Tree_PreviewMouseLeftButtonDown"
+                PreviewMouseLeftButtonUp="Tree_PreviewMouseLeftButtonUp"
                 PreviewMouseMove="Tree_PreviewMouseMove"
+                QueryContinueDrag="Tree_QueryContinueDrag"
                 AllowDrop="True"
                 DragOver="Tree_DragOver"
                 DragLeave="Tree_DragLeave"
@@ -201,8 +203,12 @@
                BorderThickness="0"
                FontSize="{StaticResource BodyFontSize}"
                Visibility="Collapsed"
+               SelectionMode="Extended"
                KeyDown="Content_KeyDown"
                MouseDoubleClick="Content_MouseDoubleClick"
+               PreviewMouseLeftButtonDown="List_PreviewMouseLeftButtonDown"
+               PreviewMouseLeftButtonUp="List_PreviewMouseLeftButtonUp"
+               PreviewMouseMove="List_PreviewMouseMove"
                SelectionChanged="List_SelectionChanged"
                ContextMenuOpening="List_ContextMenuOpening">
         <!-- Filled when it opens: New…, Edit, Rename (ViewPanel.Actions). -->

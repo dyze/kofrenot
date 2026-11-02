@@ -53,6 +53,7 @@ public partial class ViewPanel : UserControl
         {
             _selectedPath = null;
             _selectedNode = null;
+            _marked.Clear();
             ClearSearch();
         }
 
@@ -67,8 +68,11 @@ public partial class ViewPanel : UserControl
             case TreeDefinition definition when new CoreTreeView(graph, definition) is { Root: { } root } tree:
                 _tree = tree;
                 _definition = definition;
+                // Built again, the nodes marked stay marked.
+                _marking = true;
                 Tree.Items.Clear();
                 Tree.Items.Add(ItemOf(root));
+                _marking = false;
                 ShowOnly(Tree);
                 break;
             case TreeDefinition:
@@ -138,8 +142,13 @@ public partial class ViewPanel : UserControl
 
         if (path == _selectedPath)
         {
+            var wasMarking = _marking;
+            _marking = true;
             view.IsSelected = true;
+            _marking = wasMarking;
         }
+
+        Paint(view);
 
         if (item.CanExpand && IsExpanded(path))
         {
@@ -207,6 +216,7 @@ public partial class ViewPanel : UserControl
             _selectedPath = item.Key;
         }
 
+        UnmarkUnlessMarking();
         UpdateActions();
     }
 
@@ -215,6 +225,12 @@ public partial class ViewPanel : UserControl
         // While renaming, the keys are the box's.
         if (IsRenaming)
         {
+            return;
+        }
+
+        if (HasSeveralSelected && IsOneNodeKey(e.Key))
+        {
+            e.Handled = true;
             return;
         }
 

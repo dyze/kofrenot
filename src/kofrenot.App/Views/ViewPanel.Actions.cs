@@ -43,16 +43,17 @@ public partial class ViewPanel
         UpdateActions();
     }
 
-    /// <summary>The operations need a node selected; Paste, a node cut or copied too.</summary>
+    /// <summary>The operations need one node selected (not several); Paste, a node cut or copied too.</summary>
     private void UpdateActions()
     {
-        EditButton.IsEnabled = SelectedNode is not null;
-        RenameButton.IsEnabled = SelectedNode is not null;
-        var hasSelection = SelectedItem is not null;
-        CutButton.IsEnabled = hasSelection;
-        CopyButton.IsEnabled = hasSelection;
-        DeleteButton.IsEnabled = SelectedNode is not null;
-        PasteButton.IsEnabled = hasSelection && _taken is not null;
+        var hasNode = SelectedNode is not null && !HasSeveralSelected;
+        var hasItem = SelectedItem is not null && !HasSeveralSelected;
+        EditButton.IsEnabled = hasNode;
+        RenameButton.IsEnabled = hasNode;
+        CutButton.IsEnabled = hasItem;
+        CopyButton.IsEnabled = hasItem;
+        DeleteButton.IsEnabled = hasNode;
+        PasteButton.IsEnabled = hasItem && _taken is not null;
     }
 
     private void New_Click(object sender, RoutedEventArgs e) => AddNode();
@@ -63,9 +64,15 @@ public partial class ViewPanel
 
     private void List_SelectionChanged(object sender, SelectionChangedEventArgs e) => UpdateActions();
 
-    /// <summary>The list's menu: New…, Edit and Rename, then Delete….</summary>
+    /// <summary>The list's menu: New…, Edit and Rename, then Delete…; none with several rows selected.</summary>
     private void List_ContextMenuOpening(object sender, ContextMenuEventArgs e)
     {
+        if (HasSeveralSelected)
+        {
+            e.Handled = true;
+            return;
+        }
+
         var menu = List.ContextMenu!;
         menu.Items.Clear();
         AddNodeItems(menu);
