@@ -60,7 +60,7 @@ Both apps share the same vaults and the same core; each shows its own set of fea
 | History: a node's versions (text, file, view, names, colours, field values) | ✔ listed, restored | ✔ listed, restored |
 | Notes: edit | ✔ editor with a Markdown toolbar and a task list editor | ✔ Markdown text, task list editor (no reordering); tap a checkbox |
 | Notes: resolve a conflict | ✔ keep one, or merge by hand | ✔ keep one |
-| Datasets: add files | ✔ creation screen, drop zone, drop on a tree | ✔ **＋**, with a preview; a photo or video taken |
+| Datasets: add files | ✔ creation screen, drop zone, drop on a tree; folders as a hierarchy | ✔ **＋**, with a preview; a photo or video taken |
 | Add what another app shares (files as datasets, text as a note, an image as an image field's) | — (drop files instead) | ✔ the share sheet, with a preview; an image to the node shown first |
 | Datasets: new version of a file, resolve a conflict | ✔ | ✔ **Import…** (a conflict resolved by importing; keeping one of its versions on Windows) |
 | Datasets: view images and texts | ✔ | an image's thumbnail |
@@ -173,12 +173,12 @@ A note is Markdown text, saved as a new version each time (**Ctrl+S**, or by lea
 ### Datasets
 A dataset holds one file: drop it on the creation screen or on the dataset. Texts and images are shown in kofrenot (decrypted in memory only), others are exported (**Export…**, or drag the file out). **Open** (Ctrl+O, or a double-click on a file that is not an image) opens the file with the app Windows associates with it: a decrypted copy, deleted at kofrenot's next start. Each import is a new version.
 
-**Drop files** (beside the tabs) secures files quickly: drop one or several there, and each becomes a dataset named after its file. A preview first lists them, with their number and total size, the names already taken (*homonym*) and what is skipped (folders); nothing is added before **Add**.
+**Drop files** (beside the tabs) secures files quickly: drop one or several there, and each becomes a dataset named after its file. A folder becomes a node named after it, that *contains* what it holds, sub-folders included (hidden and system files left out). A preview first lists them, indented under their folders, with their number and total size, the names already taken (*homonym*) and what is skipped (unreadable, folder links); nothing is added before **Add**.
 
 ### Views
 A view shows your vault another way, in a tab: **a tree** from a node, following a link type (*contains* by default), or **a list** of every node of a type. **+** in the tab bar opens or creates one.
 
-- In a tree: **Ctrl+C**, **Ctrl+X**, **Ctrl+V** and **Del** copy, move and delete, or drag a node onto another. A copy has its original's types, colour and field values, images included. Drop a file on a node to add it under it (the creation screen); several files are previewed first, as with **Drop files**, then added under it.
+- In a tree: **Ctrl+C**, **Ctrl+X**, **Ctrl+V** and **Del** copy, move and delete, or drag a node onto another. A copy has its original's types, colour and field values, images included. Drop a file on a node to add it under it (the creation screen); several files, or folders, are previewed first, as with **Drop files**, then added under it, a folder's content under the folder's node by the tree's link type. What is already there is updated, not added again: a file whose dataset of the same name is under the same node becomes its new version (*update*, asked once more before), and a folder whose node is there gets its content merged (*existing*). Same names under different nodes are not homonyms; two files of one folder whose names would be the same (`report.pdf`, `report.docx`) keep their extension.
 - **Cards** on a list's bar shows its nodes as cards, with a preview. **Details** shows type, size and last change in columns.
 - **Ctrl+F** finds a node in the view.
 

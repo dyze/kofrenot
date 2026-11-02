@@ -46,7 +46,7 @@ public sealed partial class Shell
 
         var preview = new FileImportPlanner(vault.Graph).Preview(files);
         var rows = preview.Rows.Select(row =>
-            $"+ {row.NodeName} ({row.Type.Name}, {ByteSize.Format(row.File.Size)}){(row.IsHomonym ? ", a homonym" : string.Empty)}");
+            $"+ {row.NodeName} ({row.TypeName}, {ByteSize.Format(row.Size)}){(row.IsHomonym ? ", a homonym" : string.Empty)}");
         if (!await Confirm($"{preview.Heading} to {VaultName}\n\n{string.Join("\n", rows)}", "Add"))
         {
             Services.Log.Info("Action", "Import of files cancelled");

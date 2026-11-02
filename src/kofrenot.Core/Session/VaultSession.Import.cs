@@ -11,9 +11,10 @@ namespace Kofrenot.Core.Session;
 public sealed partial class VaultSession
 {
     /// <summary>
-    /// Adds the datasets of <paramref name="preview"/>: the nodes and their links at once, then
-    /// each file in turn, described and sealed off the UI thread. A file that cannot be read leaves
-    /// its dataset empty (the user is told). The datasets whose file was imported.
+    /// Writes <paramref name="preview"/>: its new datasets and folder nodes with their links at once,
+    /// then each file in turn, described and sealed off the UI thread: a new dataset's first version,
+    /// an existing one's new version (none when it is its latest file already). A file that cannot be
+    /// read leaves its dataset as it was (the user is told). The datasets whose file was imported.
     /// </summary>
     public async Task<IReadOnlyList<Node>> ImportFiles(ISessionQuestions ask, ImportPreview preview)
     {
@@ -24,7 +25,8 @@ public sealed partial class VaultSession
 
         var plan = new FileImportPlanner(vault.Graph, _time).Plan(preview);
         var under = preview.Under is null ? string.Empty : ", in a tree";
-        if (!Append(ask, vault, plan.Changes, $"Files imported as datasets ({preview.Count} files, {preview.TotalSize} bytes{under})"))
+        var counts = $"{preview.FileCount} files, {preview.FolderCount} folders, {preview.UpdateCount} updates, {preview.TotalSize} bytes{under}";
+        if (!Append(ask, vault, plan.Changes, $"Files imported as datasets ({counts})"))
         {
             return [];
         }
@@ -37,6 +39,30 @@ public sealed partial class VaultSession
             {
                 imported.Add(file.Node);
             }
+        }
+
+        var unchanged = 0;
+        var planner = new DatasetPlanner(vault.Graph, _time);
+        foreach (var update in plan.Updates)
+        {
+            if (await Describe(ask, update.File) is not { } described)
+            {
+                continue;
+            }
+
+            if (planner.Import(update.Node, described, planner.Load(update.Node, _ => true)) is not { } version)
+            {
+                unchanged++;
+            }
+            else if (await SaveDataset(ask, version, update.File.Open))
+            {
+                imported.Add(update.Node);
+            }
+        }
+
+        if (unchanged > 0)
+        {
+            _log.Info("Action", $"Dataset import: {unchanged} files the same as their dataset's, nothing imported for them");
         }
 
         return imported;

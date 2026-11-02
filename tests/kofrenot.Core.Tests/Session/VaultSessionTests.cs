@@ -576,7 +576,38 @@ public sealed class VaultSessionTests : IDisposable
         var datasets = graph.LinksOf(folder.Id).Select(link => graph.FindNode(link.To)!).ToList();
         Assert.Equal(["a", "b"], datasets.Select(node => node.Name).Order());
         Assert.All(datasets, node => Assert.True(_device.Vault.Datasets.Exists(graph.DatasetVersionsOf(node.Id).Single().Id)));
-        Assert.Contains(_device.Log.Entries, entry => entry.Message == "Files imported as datasets (2 files, 3 bytes, in a tree)");
+        Assert.Contains(_device.Log.Entries, entry => entry.Message == "Files imported as datasets (2 files, 0 folders, 0 updates, 3 bytes, in a tree)");
+    }
+
+    [Fact]
+    public async Task AFileImported_AgainUnderTheSameParent_IsANewVersion_UnlessItIsTheSame()
+    {
+        _device.CreateFolderVault();
+        var folder = AddNode("Folder", TypeCatalog.Generic.Id);
+        var under = new ParentLink(folder, TypeCatalog.Contains.Id);
+        File.WriteAllText(_device.Folder("a.csv"), "a");
+        ImportPreview Preview() => new FileImportPlanner(_device.Vault.Graph).Preview([_device.Folder("a.csv")], under);
+        var dataset = Assert.Single(await Session.ImportFiles(Ask, Preview()));
+
+        Assert.Empty(await Session.ImportFiles(Ask, Preview()));
+        Assert.Contains(_device.Log.Entries, entry => entry.Message == "Dataset import: 1 files the same as their dataset's, nothing imported for them");
+
+        File.WriteAllText(_device.Folder("a.csv"), "a,b");
+        Assert.Equal([dataset], await Session.ImportFiles(Ask, Preview()));
+        Assert.Equal(1, _device.Vault.Graph.Nodes.Count(node => node.Name == "a"));
+        Assert.Equal(3, _device.Vault.Graph.DatasetVersionsOf(dataset.Id).Single().File.Size);
+    }
+
+    [Fact]
+    public async Task AnUpdatedFile_ThatCannotBeRead_LeavesItsDatasetAsItWas()
+    {
+        _device.CreateFolderVault();
+        var folder = AddNode("Folder", TypeCatalog.Generic.Id);
+        var dataset = AddNode("a", TypeCatalog.Dataset.Id);
+        var preview = new ImportPreview([new ImportRow(new ImportFile("a.csv", 3, () => throw new IOException("Locked")), "a", false, Existing: dataset)], [], new ParentLink(folder, TypeCatalog.Contains.Id));
+
+        Assert.Empty(await Session.ImportFiles(Ask, preview));
+        Assert.Empty(_device.Vault.Graph.DatasetVersionsOf(dataset.Id));
     }
 
     [Fact]

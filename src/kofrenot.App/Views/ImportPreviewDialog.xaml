@@ -10,8 +10,8 @@
         ShowInTaskbar="False"
         WindowStartupLocation="CenterOwner"
         SourceInitialized="Window_SourceInitialized">
-  <!-- What dropped files will add, before anything is: a dataset per file, the files skipped,
-       the node they go under. Enter: Add. Esc: Cancel. -->
+  <!-- What dropped files and folders will add, before anything is: a dataset per file, a node per
+       folder (its content indented under it), the items skipped, the node they go under. Enter: Add. Esc: Cancel. -->
   <Window.Resources>
     <ResourceDictionary Source="SharedStyles.xaml" />
   </Window.Resources>
@@ -38,13 +38,13 @@
                 <ColumnDefinition Width="90" />
                 <ColumnDefinition Width="80" />
               </Grid.ColumnDefinitions>
-              <StackPanel Orientation="Horizontal">
+              <StackPanel Margin="{Binding Indent}" Orientation="Horizontal">
                 <TextBlock Margin="0,0,6,0" Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}" Text="+" />
                 <TextBlock Text="{Binding Name}" TextTrimming="CharacterEllipsis" />
                 <TextBlock Margin="8,0,0,0"
                            Foreground="{DynamicResource SystemFillColorCautionBrush}"
-                           Text="{Binding Homonym}"
-                           ToolTip="A node already has this name: another one is added" />
+                           Text="{Binding Tag}"
+                           ToolTip="{Binding TagTip}" />
               </StackPanel>
               <TextBlock Grid.Column="1" Style="{StaticResource SecondaryText}" Text="{Binding Type}" />
               <TextBlock Grid.Column="2" HorizontalAlignment="Right" Style="{StaticResource SecondaryText}" Text="{Binding Size}" />

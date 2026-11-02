@@ -21,13 +21,22 @@ public partial class MainWindow
         }
 
         var preview = new FileImportPlanner(vault.Graph).Preview(paths, under);
-        if (!ImportPreviewDialog.Ask(this, preview))
+        if (!ImportPreviewDialog.Ask(this, preview) || !ConfirmUpdates(preview))
         {
             _log.Info("Action", "Import of files cancelled");
             return;
         }
 
         await _session.ImportFiles(Ask, preview);
+    }
+
+    /// <summary>Asks before existing datasets get a new version, naming them; true when there are none.</summary>
+    private bool ConfirmUpdates(ImportPreview preview)
+    {
+        var updated = preview.Rows.Where(row => row.IsUpdate).Select(row => row.NodeName).ToList();
+        var datasets = updated.Count == 1 ? "1 existing dataset" : $"{updated.Count} existing datasets";
+        return updated.Count == 0
+            || MessageDialog.Confirm(this, $"Update {datasets} with a new version? Their earlier versions are kept.", "Update", lines: updated);
     }
 
     private static string[]? DroppedFiles(DragEventArgs e) =>

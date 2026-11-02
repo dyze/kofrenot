@@ -11,6 +11,7 @@ It covers kofrenot on Windows and on Android; versions before 0.9 ran on Windows
 ### Added
 - **Windows**
   - **Delete a node outside a tree**: the trash can in its details' header (**Ctrl+Del**), **Del** or the right-click menu in a list, or a right-click on a search result deletes the node alone, with its links, asked first as on Android; the details show the node before it. A tree still deletes a subtree ([README](README.md#node-details)).
+  - **Drop folders**: folders dropped on a tree node or on *Drop files* are imported whole, as a hierarchy: each folder becomes a node, its files datasets under it, sub-folders included; the preview shows them indented. Dropped again on the same node, they update what is there instead of adding it twice: a file becomes its dataset's new version (asked first), a folder's content is merged into its node ([README](README.md#views)).
   - **Remove a link**: its broken-link button in the details (on the row hovered or selected) or **Remove link…** in its right-click menu, asked first; the nodes stay ([README](README.md#node-details)).
 
 ### Changed
