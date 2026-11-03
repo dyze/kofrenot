@@ -123,4 +123,46 @@ public sealed class GraphViewTests
 
     private void Set(Node node, string field, string value) =>
         _family.Graph.Apply(new FieldSet(Guid.NewGuid(), TreeGraph.Start, node.Id, FieldSet.Own, field.ToLowerInvariant(), field, FieldKind.Text, value, []));
+    [Fact]
+    public void AnEdge_HasItsTypesColour_ItsDirection_AndItsName_AsReadFromItsFirstNode()
+    {
+        var (me, mother, father) = (_family.Add("Me"), _family.Add("Mother"), _family.Add("Father"));
+        _family.ParentOf(mother, me);
+        _family.Married(mother, father);
+
+        var edges = _family.Read(_family.Definition(me)).Edges;
+
+        var parent = edges.Single(edge => edge.Link.Type == FamilyGraph.Parent);
+        var spouse = edges.Single(edge => edge.Link.Type == FamilyGraph.Spouse);
+        Assert.Equal((0, true, "parent of"), (parent.Color, parent.IsDirected, parent.Name));
+        Assert.Equal((1, false, "married to"), (spouse.Color, spouse.IsDirected, spouse.Name));
+    }
+
+    [Fact]
+    public void TheLegend_NamesEachLinkTypeOnce_InTheViewsOrder_WithItsRole()
+    {
+        var me = _family.Add("Me");
+        var view = new GraphView(_family.Graph, _family.Definition(me, links: [new("unknown", GraphRole.Free), new(FamilyGraph.Parent, GraphRole.Up), new(FamilyGraph.Parent, GraphRole.Down), new(FamilyGraph.Spouse, GraphRole.Down)]));
+
+        Assert.Equal(
+            [new GraphLegendItem("unknown", "unknown", GraphRole.Free, 0), new GraphLegendItem(FamilyGraph.Parent, "parent of", GraphRole.Up, 1), new GraphLegendItem(FamilyGraph.Spouse, "married to", GraphRole.Free, 2)],
+            view.Legend);
+        Assert.Same(view.Legend, view.Legend);
+    }
+
+    [Fact]
+    public void Find_GivesTheShownNodesWhoseNameMatches_InTheOrderShown()
+    {
+        var (me, anne, annette, bob, outside) = (_family.Add("Me"), _family.Add("Anne"), _family.Add("Annette Smith"), _family.Add("Bob"), _family.Add("Anna"));
+        _family.ParentOf(me, annette);
+        _family.ParentOf(me, anne);
+        _family.ParentOf(me, bob);
+
+        var content = _family.Read(_family.Definition(me));
+
+        Assert.Equal([anne, annette], content.Find("ann"));
+        Assert.Equal([annette], content.Find("smi"));
+        Assert.Empty(content.Find("zzz"));
+        Assert.DoesNotContain(outside, content.Find("ann"));
+    }
 }

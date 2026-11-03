@@ -1,10 +1,18 @@
 using Kofrenot.Core.Browse;
 using Kofrenot.Core.Graph;
+using Kofrenot.Core.Input;
 
 namespace Kofrenot.Core.Views;
 
-/// <summary>A link a graph view draws, with the role its type has in the view.</summary>
-public sealed record GraphEdge(Link Link, GraphRole Role);
+/// <summary>
+/// A link a graph view draws, with the role its type has in the view, the colour of its type
+/// (<see cref="GraphLegendItem.Color"/>), whether it has a direction (not for a symmetric type), and
+/// its name as read from its <see cref="Link.From"/> node.
+/// </summary>
+public sealed record GraphEdge(Link Link, GraphRole Role, int Color, bool IsDirected, string Name);
+
+/// <summary>A link type a graph view follows, as its legend shows it: its name, its role, and its colour, the type's place among the view's link types.</summary>
+public sealed record GraphLegendItem(string LinkType, string Name, GraphRole Role, int Color);
 
 /// <summary>
 /// What a graph view shows: its nodes, the root first, then in the order they were reached, and the
@@ -13,6 +21,13 @@ public sealed record GraphEdge(Link Link, GraphRole Role);
 public sealed record GraphContent(IReadOnlyList<Node> Nodes, IReadOnlyList<GraphEdge> Edges, bool IsCut)
 {
     public Node Root => Nodes[0];
+
+    /// <summary>The nodes whose name matches <paramref name="text"/> (<see cref="GraphSearch.MatcherOf"/>), in the order shown.</summary>
+    public IReadOnlyList<Node> Find(string text)
+    {
+        var matches = GraphSearch.MatcherOf(text);
+        return Nodes.Where(node => matches(node.Name)).ToList();
+    }
 }
 
 /// <summary>
@@ -31,6 +46,15 @@ public sealed class GraphView(KnowledgeGraph graph, GraphDefinition definition)
         .ToDictionary(
             links => links.Key,
             links => links.First().Role is GraphRole.Down or GraphRole.Up && graph.Types.FindLinkType(links.Key)?.IsSymmetric == true ? GraphRole.Free : links.First().Role);
+
+    private IReadOnlyList<GraphLegendItem>? _legend;
+
+    /// <summary>The view's link types, each once, in the view's order: the colours of its lines.</summary>
+    public IReadOnlyList<GraphLegendItem> Legend => _legend ??= definition.Links
+        .Select(link => link.LinkType)
+        .Distinct()
+        .Select((type, index) => new GraphLegendItem(type, graph.Types.FindLinkType(type)?.Forward.Name ?? type, _roles[type], index))
+        .ToList();
 
     /// <summary>Null when the root node is unknown (removed, or not synced yet).</summary>
     public GraphContent? Read()
@@ -92,13 +116,15 @@ public sealed class GraphView(KnowledgeGraph graph, GraphDefinition definition)
 
     private bool IsShown(Node node) => definition.NodeTypes.Count == 0 || definition.NodeTypes.Any(type => graph.HasType(node.Id, type));
 
+    private int ColorOf(string linkType) => Legend.First(item => item.LinkType == linkType).Color;
+
     private List<GraphEdge> EdgesBetween(IEnumerable<Node> nodes, HashSet<Guid> shown)
     {
         var drawn = new HashSet<Guid>();
         return nodes
             .SelectMany(node => LinksOf(node.Id))
             .Where(link => shown.Contains(link.From) && shown.Contains(link.To) && drawn.Add(link.Id))
-            .Select(link => new GraphEdge(link, _roles[link.Type]))
+            .Select(link => new GraphEdge(link, _roles[link.Type], ColorOf(link.Type), graph.Types.FindLinkType(link.Type)?.IsSymmetric == false, graph.Types.LinkName(link, link.From)))
             .ToList();
     }
 }

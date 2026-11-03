@@ -3,7 +3,7 @@ using Kofrenot.Core.Views;
 
 namespace Kofrenot.Core.Browse;
 
-/// <summary>How a view was left on this device: the nodes expanded in its tree, whether it shows details, and a list's cards.</summary>
+/// <summary>How a view was left on this device: the nodes expanded in its tree, whether it shows details, a list's cards, a graph's link names.</summary>
 public sealed class ViewState
 {
     /// <summary>The <see cref="TreeItem.Key"/> of each node expanded.</summary>
@@ -17,6 +17,9 @@ public sealed class ViewState
 
     /// <summary>A tree shows the unlinked nodes beside it (<see cref="UnlinkedNodes"/>), to put them in it.</summary>
     public bool ShowsUnlinked { get; set; }
+
+    /// <summary>A graph writes the name of each link on its line.</summary>
+    public bool ShowsLinkNames { get; set; }
 }
 
 /// <summary>
@@ -65,6 +68,16 @@ public sealed class ViewStates(string path, ILog? log = null)
     {
         var changed = state.ShowsUnlinked != showsUnlinked;
         state.ShowsUnlinked = showsUnlinked;
+        return changed;
+    });
+
+    /// <summary>Whether a graph view writes the name of each link on its line (off by default: in a tooltip).</summary>
+    public bool ShowsLinkNames(Guid vault, Guid view) => Find(vault, view)?.ShowsLinkNames ?? false;
+
+    public void SetShowsLinkNames(Guid vault, Guid view, bool showsLinkNames) => Change(vault, view, state =>
+    {
+        var changed = state.ShowsLinkNames != showsLinkNames;
+        state.ShowsLinkNames = showsLinkNames;
         return changed;
     });
 

@@ -2,6 +2,14 @@ using Kofrenot.Core.Graph;
 
 namespace Kofrenot.Core.Views;
 
+/// <summary>The rectangle cards cover, their whole size included, in the view's units.</summary>
+public sealed record GraphBounds(double Left, double Top, double Right, double Bottom)
+{
+    public double Width => Right - Left;
+
+    public double Height => Bottom - Top;
+}
+
 /// <summary>
 /// Where a graph view's cards go: the nodes moved by hand where they were left, the others placed by
 /// the view's layout (<see cref="LayeredLayout"/>, <see cref="NetworkLayout"/>), then pushed right
@@ -27,6 +35,29 @@ public static class GraphLayout
         var placed = kind == GraphLayoutKind.Layered ? LayeredLayout.Place(content) : NetworkLayout.Place(content, fixedPositions);
         return WithoutOverlaps(content.Nodes, placed, fixedPositions);
     }
+
+    /// <summary>What the cards cover; null when there is none.</summary>
+    public static GraphBounds? BoundsOf(IEnumerable<NodePosition> cards)
+    {
+        var all = cards.ToList();
+        return all.Count == 0 ? null : new GraphBounds(
+            all.Min(card => card.X) - (CardWidth / 2),
+            all.Min(card => card.Y) - (CardHeight / 2),
+            all.Max(card => card.X) + (CardWidth / 2),
+            all.Max(card => card.Y) + (CardHeight / 2));
+    }
+
+    /// <summary>Where the line from a card's centre towards a point leaves the card: an arrow ends there. The centre for a point inside.</summary>
+    public static (double X, double Y) BorderPoint(NodePosition card, double towardsX, double towardsY)
+    {
+        var (dx, dy) = (towardsX - card.X, towardsY - card.Y);
+        var scale = Math.Max(Math.Abs(dx) / (CardWidth / 2), Math.Abs(dy) / (CardHeight / 2));
+        return scale <= 1 ? (card.X, card.Y) : (card.X + (dx / scale), card.Y + (dy / scale));
+    }
+
+    /// <summary>The node whose card is at a point, the last placed first (it is drawn over the others); null over none.</summary>
+    public static Guid? CardAt(IEnumerable<NodePosition> cards, double x, double y) =>
+        cards.LastOrDefault(card => Math.Abs(card.X - x) <= CardWidth / 2 && Math.Abs(card.Y - y) <= CardHeight / 2)?.Node;
 
     /// <summary>Whether two cards, by their centres, cover one another (their gaps included).</summary>
     internal static bool Overlap(NodePosition first, NodePosition second) =>

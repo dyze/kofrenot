@@ -113,8 +113,33 @@ public sealed class CreationNewNodeTests
         var added = Assert.Single(form.Plan.NewNodes);
         var link = Assert.Single(form.LinksToSave()).Link;
 
-        Assert.Equal("Add a node under “Projects”", form.Title);
+        Assert.Equal("Add a node: “Projects” contains …", form.Title);
         Assert.Equal((TypeCatalog.Contains.Id, projects.Id, added.Id), (link.Type, link.From, link.To));
+    }
+
+    [Fact]
+    public void ANodeLinkedReversed_IsLinkedToTheNodeGiven_AndTheTitleReadsTheLinkFromIt()
+    {
+        var dune = new Node(Guid.NewGuid(), TypeCatalog.Generic.Id, "Dune", _clock.Now);
+        _graph.Add(dune);
+        var form = CreationForm.NewNode(_graph, under: new ParentLink(dune, TypeCatalog.Contains.Id, IsReverse: true), clock: _clock);
+        form.Name = "Books";
+
+        var added = Assert.Single(form.Plan.NewNodes);
+        var link = Assert.Single(form.LinksToSave()).Link;
+
+        Assert.Equal($"Add a node: “Dune” {TypeCatalog.Contains.Reverse!.Name} …", form.Title);
+        Assert.Equal((added.Id, dune.Id), (link.From, link.To));
+    }
+
+    [Fact]
+    public void ALinkOfATypeNotKnown_OrReversedWithoutAReverseName_SaysUnder()
+    {
+        var dune = new Node(Guid.NewGuid(), TypeCatalog.Generic.Id, "Dune", _clock.Now);
+        _graph.Add(dune);
+
+        Assert.Equal("Add a node under “Dune”", CreationForm.NewNode(_graph, under: new ParentLink(dune, "unknown"), clock: _clock).Title);
+        Assert.Equal("Add a node under “Dune”", CreationForm.NewNode(_graph, under: new ParentLink(dune, TypeCatalog.RelatesTo.Id, IsReverse: true), clock: _clock).Title);
     }
 
     [Fact]

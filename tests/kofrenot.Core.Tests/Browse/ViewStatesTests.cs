@@ -130,6 +130,21 @@ public sealed class ViewStatesTests : IDisposable
         Assert.False(States().ShowsUnlinked(_vault, _view));
     }
 
+    [Fact]
+    public void LinkNames_AreOffByDefault_AndKeptPerView()
+    {
+        var states = States();
+        Assert.False(states.ShowsLinkNames(_vault, _view));
+
+        states.SetShowsLinkNames(_vault, _view, showsLinkNames: true);
+
+        Assert.True(States().ShowsLinkNames(_vault, _view));
+        Assert.False(States().ShowsLinkNames(_vault, Guid.NewGuid()));
+
+        states.SetShowsLinkNames(_vault, _view, showsLinkNames: false);
+        Assert.False(States().ShowsLinkNames(_vault, _view));
+    }
+
     public void Dispose() => _temp.Dispose();
 
     private ViewStates States() => new(FilePath, _log);

@@ -164,6 +164,39 @@ public sealed class GraphLayoutTests
         Assert.Single(Layout(root, kind: GraphLayoutKind.Network));
     }
 
+    [Fact]
+    public void TheBounds_CoverEveryCard_WholeCardsIncluded()
+    {
+        Assert.Null(GraphLayout.BoundsOf([]));
+
+        var bounds = GraphLayout.BoundsOf([new(Guid.NewGuid(), 0, 0), new(Guid.NewGuid(), 300, -100)])!;
+
+        Assert.Equal(new GraphBounds(-GraphLayout.CardWidth / 2, -100 - (GraphLayout.CardHeight / 2), 300 + (GraphLayout.CardWidth / 2), GraphLayout.CardHeight / 2), bounds);
+        Assert.Equal(300 + GraphLayout.CardWidth, bounds.Width);
+        Assert.Equal(100 + GraphLayout.CardHeight, bounds.Height);
+    }
+
+    [Fact]
+    public void ALine_LeavesACard_OnItsBorder()
+    {
+        var card = new NodePosition(Guid.NewGuid(), 100, 100);
+
+        Assert.Equal((100 + (GraphLayout.CardWidth / 2), 100), GraphLayout.BorderPoint(card, 1000, 100));
+        Assert.Equal((100, 100 - (GraphLayout.CardHeight / 2)), GraphLayout.BorderPoint(card, 100, -500));
+        Assert.Equal((100 + (GraphLayout.CardHeight / 2), 100 + (GraphLayout.CardHeight / 2)), GraphLayout.BorderPoint(card, 200, 200));
+        Assert.Equal((100, 100), GraphLayout.BorderPoint(card, 110, 105));
+    }
+
+    [Fact]
+    public void TheCardAtAPoint_IsTheLastOneCoveringIt()
+    {
+        var (below, above) = (new NodePosition(Guid.NewGuid(), 0, 0), new NodePosition(Guid.NewGuid(), 50, 0));
+
+        Assert.Equal(below.Node, GraphLayout.CardAt([below, above], -GraphLayout.CardWidth / 2, 0));
+        Assert.Equal(above.Node, GraphLayout.CardAt([below, above], 10, GraphLayout.CardHeight / 2));
+        Assert.Null(GraphLayout.CardAt([below, above], 0, GraphLayout.CardHeight));
+    }
+
     private IReadOnlyDictionary<Guid, NodePosition> Layout(Node root, IReadOnlyList<GraphLink>? links = null, GraphLayoutKind kind = GraphLayoutKind.Layered) =>
         GraphLayout.Of(_family.Read(_family.Definition(root, layout: kind, links: links)), kind, new Dictionary<Guid, NodePosition>());
 
