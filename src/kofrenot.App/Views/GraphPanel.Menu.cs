@@ -11,7 +11,8 @@ namespace Kofrenot.UI.Views;
 
 /// <summary>
 /// The right-click menus of a graph view. On a card: Open, and New node, linked to it through one
-/// of the view's link types, either way, of the view's node type when it keeps only one. On a line:
+/// of the view's link types, either way, of the view's node type when it keeps only one. On the background: New node,
+/// with no link, kept in the view where it was asked (a placement). On a line:
 /// Remove link, once confirmed (<see cref="DeletionPlanner.Link"/>). Nothing is changed in a vault read only.
 /// </summary>
 public partial class GraphPanel
@@ -29,6 +30,46 @@ public partial class GraphPanel
             ShowMenu(LineMenu(edge));
             e.Handled = true;
         }
+        else
+        {
+            ShowMenu(BackgroundMenu(OnBoard(e.GetPosition(Surface))));
+            e.Handled = true;
+        }
+    }
+
+    private ContextMenu BackgroundMenu(Point at)
+    {
+        var menu = new ContextMenu();
+        menu.Items.Add(MenuItems.Of("New node…", string.Empty, () => AddNodeAt(at), isEnabled: !IsReadOnly() && CreateNode is not null));
+        return menu;
+    }
+
+    /// <summary>A node added on the creation screen with no link, kept in the view where the menu was opened (a placement); then selected.</summary>
+    private void AddNodeAt(Point at)
+    {
+        if (_graph is null || _view is null || _definition is null || CreateNode is null)
+        {
+            return;
+        }
+
+        Log.Info("Action", "New unlinked node from a graph view");
+        var view = _view;
+        var type = _definition.NodeTypes is [var only] ? _graph.Types.FindNodeType(only) : null;
+        if (CreateNode(type, null)?.NewNodes is not [var added, ..])
+        {
+            return;
+        }
+
+        if (_definition.NodeTypes.Count > 0 && !_definition.NodeTypes.Any(kept => _graph.HasType(added.Id, kept)))
+        {
+            MessageDialog.Inform(Window.GetWindow(this), $"“{added.Name}” is added, but this graph does not show it: its type is not one the view keeps.");
+            return;
+        }
+
+        if (new GraphPlacer(_graph).Move(view.Id, [new NodePosition(added.Id, at.X, at.Y)]) is { } placed && Write?.Invoke([placed], "Node placed in a graph view") == true && _cards.ContainsKey(added.Id))
+        {
+            Select(added.Id);
+        }
     }
 
     private ContextMenu CardMenu(Node card)
@@ -44,7 +85,6 @@ public partial class GraphPanel
 
         newNode.IsEnabled &= newNode.Items.Count > 0;
         menu.Items.Add(newNode);
-        menu.Closed += (_, _) => FocusContent();
         return menu;
     }
 
@@ -52,7 +92,6 @@ public partial class GraphPanel
     {
         var menu = new ContextMenu();
         menu.Items.Add(MenuItems.Of("Remove link…", string.Empty, () => RemoveLink(edge.Link), isEnabled: !IsReadOnly()));
-        menu.Closed += (_, _) => FocusContent();
         return menu;
     }
 

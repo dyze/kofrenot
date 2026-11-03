@@ -193,13 +193,13 @@ A view shows your vault another way, in a tab: **a tree** from a node, following
   | In ranks | A family tree, an org chart | Ranks from the *down* and *up* links, couples side by side, fewer crossings |
   | Network | The relations around a node | Linked nodes close, the others apart |
 
-  Drag a card to move it: its place is kept in the vault, for every device (moved on two, the newest move wins); the others go around it. **Reset layout** gives the moved cards back to the layout, asked first. The wheel zooms, dragging the background pans, **Fit** (**Home**) shows it whole, and the minimap in the corner (when it does not fit) goes where you click; a double-click or **Enter** opens a node. At most 500 nodes are drawn: lower the steps to see the others.
+  Drag a card to move it: its place is kept in the vault, for every device (moved on two, the newest move wins); the others go around it. A right-click on the background adds a node with no link (**New node…**), kept where you clicked: a node placed in a graph stays in it, linked or not. **Reset layout** gives the moved cards back to the layout, and takes out those no link brings, asked first. The wheel zooms, dragging the background pans, **Fit** (**Home**) shows it whole, and the minimap in the corner (when it does not fit) goes where you click; a double-click or **Enter** opens a node. At most 500 nodes are drawn: lower the steps to see the others.
 
   Each link type has its colour, listed in the legend when there are several; a link with a direction and no rank to show it has an arrow. Hover a line for its name (*Anne parent of Bob*), or **Link names** writes them all on the lines.
 
   | To | Do |
   | --- | --- |
-  | Link two cards | Drag the round handle of the card selected onto the other one; choose the link type and its way when the view has several |
+  | Link two cards | Drag the round handle of the card selected (on its edge nearest to the mouse) onto the other one, which shows the link before you let go; choose the link type and its way when the view has several |
   | Add a node next to a card | Right-click it > **New node** > the link, e.g. *Anne parent of …* (of the view's node type when it keeps only one) |
   | Remove a link | Right-click its line > **Remove link…**, asked first; the nodes stay |
 - **Ctrl+F** finds a node in a tree, a list or a graph.

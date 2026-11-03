@@ -61,8 +61,8 @@ public partial class GraphPanel : UserControl
     /// <summary>Writes changes (a move, a reset of the layout, a link), logging the action; false when it could not.</summary>
     public Func<IReadOnlyList<Change>, string, bool>? Write { get; set; }
 
-    /// <summary>Adds a node on the creation screen, of its type when given, linked to a card; the plan added, or null.</summary>
-    public Func<NodeType?, ParentLink, AddPlan?>? CreateNode { get; set; }
+    /// <summary>Adds a node on the creation screen, of its type when given, linked to a card or to none; the plan added, or null.</summary>
+    public Func<NodeType?, ParentLink?, AddPlan?>? CreateNode { get; set; }
 
     public Func<bool> IsReadOnly { get; set; } = () => false;
 
@@ -74,7 +74,7 @@ public partial class GraphPanel : UserControl
     /// <summary>Shows the graph, the name of each link written on its line when <paramref name="showsLinkNames"/>; false when its root is not there (removed, or not synced yet).</summary>
     public bool Show(KnowledgeGraph graph, Node view, GraphDefinition definition, bool showsLinkNames)
     {
-        var shown = new GraphView(graph, definition);
+        var shown = new GraphView(graph, definition, view.Id);
         if (shown.Read() is not { } content)
         {
             return false;

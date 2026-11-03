@@ -165,4 +165,56 @@ public sealed class GraphViewTests
         Assert.Empty(content.Find("zzz"));
         Assert.DoesNotContain(outside, content.Find("ann"));
     }
+
+    [Fact]
+    public void NodesPlacedInTheView_AreShown_UnlinkedOrNot_AfterThoseReached_ByName_WithTheirLinks()
+    {
+        var (me, child, zoe, alice, bob, elsewhere) = (_family.Add("Me"), _family.Add("Child"), _family.Add("Zoe"), _family.Add("Alice"), _family.Add("Bob"), _family.Add("Elsewhere"));
+        _family.ParentOf(me, child);
+        var marriage = _family.Married(alice, bob);
+        var (view, other) = (Guid.NewGuid(), Guid.NewGuid());
+        Place(view, child, zoe, alice, bob);
+        Place(other, elsewhere);
+
+        var content = new GraphView(_family.Graph, _family.Definition(me), view).Read()!;
+
+        Assert.Equal([me, child, alice, bob, zoe], content.Nodes);
+        Assert.Contains(content.Edges, edge => edge.Link == marriage);
+        Assert.Equal([me, child], _family.Read(_family.Definition(me)).Nodes);
+    }
+
+    [Fact]
+    public void NodesPlacedInTheView_AreKeptByItsNodeTypes_AndGoneWhenRemoved()
+    {
+        var (me, note, gone) = (_family.Add("Me"), _family.Add("Letters", TypeCatalog.Note.Id), _family.Add("Gone"));
+        var view = Guid.NewGuid();
+        Place(view, note, gone);
+        _family.Graph.Apply(new ChangesRemoved(Guid.NewGuid(), TreeGraph.Start, [gone.Id]));
+
+        var content = new GraphView(_family.Graph, _family.Definition(me, nodeTypes: [TypeCatalog.Generic.Id]), view).Read()!;
+
+        Assert.Equal([me], content.Nodes);
+    }
+
+    [Fact]
+    public void NodesPlacedInTheView_CountInTheMostNodes()
+    {
+        var root = _family.Add("Root");
+        var view = Guid.NewGuid();
+        for (var index = 0; index < GraphView.MaxNodes - 2; index++)
+        {
+            _family.ParentOf(root, _family.Add($"Child {index}"));
+        }
+
+        Place(view, _family.Add("Placed A"), _family.Add("Placed B"));
+
+        var content = new GraphView(_family.Graph, _family.Definition(root), view).Read()!;
+
+        Assert.True(content.IsCut);
+        Assert.Equal(GraphView.MaxNodes, content.Nodes.Count);
+        Assert.Equal("Placed A", content.Nodes[^1].Name);
+    }
+
+    private void Place(Guid view, params Node[] nodes) =>
+        _family.Graph.Apply(new NodesPlaced(Guid.NewGuid(), TreeGraph.Start, view, [.. nodes.Select(node => new NodePosition(node.Id, 0, 0))]));
 }

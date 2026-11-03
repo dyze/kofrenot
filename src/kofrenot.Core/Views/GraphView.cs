@@ -32,10 +32,12 @@ public sealed record GraphContent(IReadOnlyList<Node> Nodes, IReadOnlyList<Graph
 
 /// <summary>
 /// A graph view: from its root, the nodes reached within the view's depth through its link types,
-/// either way, and kept by its node types; then every link of those types between them. Read from
-/// the graph each time, so it shows changes.
+/// either way, and kept by its node types; then the nodes placed by hand in <paramref name="view"/>
+/// that none of those reaches (added there unlinked, or unlinked since), kept by its node types too;
+/// then every link of those types between them. Read from the graph each time, so it shows changes.
 /// </summary>
-public sealed class GraphView(KnowledgeGraph graph, GraphDefinition definition)
+/// <param name="view">The view node, whose placements (<see cref="KnowledgeGraph.PositionsIn"/>) keep nodes in it; null for none.</param>
+public sealed class GraphView(KnowledgeGraph graph, GraphDefinition definition, Guid? view = null)
 {
     /// <summary>The most nodes shown: a graph is drawn whole, and laid out at each change.</summary>
     public const int MaxNodes = 500;
@@ -89,8 +91,25 @@ public sealed class GraphView(KnowledgeGraph graph, GraphDefinition definition)
             }
         }
 
+        foreach (var placed in PlacedNotReached(reached))
+        {
+            if (nodes.Count == MaxNodes)
+            {
+                isCut = true;
+                break;
+            }
+
+            reached.Add(placed.Id);
+            nodes.Add(placed);
+        }
+
         return new GraphContent(nodes, EdgesBetween(nodes, reached), isCut);
     }
+
+    // The nodes placed in the view that the links do not reach, of the view's node types, by name.
+    private IReadOnlyList<Node> PlacedNotReached(HashSet<Guid> reached) => view is { } shownIn
+        ? NodeOrder.ByName(graph.PositionsIn(shownIn).Keys.Where(node => !reached.Contains(node)).Select(graph.FindNode).OfType<Node>().Where(IsShown))
+        : [];
 
     /// <summary>
     /// A node's values of the fields the view names, in the view's order, as "Born: 8 Oct 1920";

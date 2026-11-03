@@ -142,7 +142,7 @@ What each version contains: [ROADMAP.md](../ROADMAP.md).
 | Types and fields | Composition: a type is a list of fields, a node has several types and fields of its own (since 0.11, format 8: [Composition](#composition-types-made-of-fields)) |
 | History | A node's versions (its text, file or view definition, names, colours and field values) are listed, newest first; restoring one writes it again as a new version, so nothing is lost. One version at a time, not the node at a point in time; deleted nodes are not restored. Listed on Android, restored on Windows (since 0.12) |
 | Views | A node type holding a definition (a tree from a root node through a link type, a list of the nodes of a type, or a graph from a root node through link types each with a role, since 0.14), in versions kept in its changes: views work offline (since 0.4) |
-| Graph positions | A node moved by hand in a graph view keeps its place in the vault, per view; moved on two devices, the newest move wins, with no conflict shown: a place matters less than a name (since 0.14, format 10) |
+| Graph positions | A node moved by hand in a graph view keeps its place in the vault, per view; moved on two devices, the newest move wins, with no conflict shown: a place matters less than a name. A node placed in a view stays in it, even with no link (since 0.14, format 10) |
 
 ## Open questions
 Decisions to take with the owner before the matching features:

@@ -20,16 +20,25 @@ public partial class GraphPanel
 
     private readonly Ellipse _linkHandle = CreateLinkHandle();
 
-    // The card a link is dragged from, and the point of its edge, while it is.
+    // Where a link dragged would end, on the card under the mouse: shown only.
+    private readonly Ellipse _targetHandle = CreateLinkHandle(isShownOnly: true);
+
+    // The card a link is dragged from, the point of its edge, and the card it would go to, while it is.
     private Guid? _linkFrom;
     private Point _linkStart;
+    private Guid? _linkTarget;
 
     // The mouse on the board, once it has moved there: the handle is on the edge nearest to it.
     private Point? _mouseOnBoard;
 
-    private static Ellipse CreateLinkHandle()
+    // The right-click menu shown last, while it is open.
+    private ContextMenu? _openMenu;
+
+    private static Ellipse CreateLinkHandle(bool isShownOnly = false)
     {
-        var handle = new Ellipse { Width = HandleSize, Height = HandleSize, StrokeThickness = 2, Cursor = Cursors.Cross, ToolTip = "Drag to another card to link them" };
+        var handle = isShownOnly
+            ? new Ellipse { Width = HandleSize, Height = HandleSize, StrokeThickness = 2, IsHitTestVisible = false }
+            : new Ellipse { Width = HandleSize, Height = HandleSize, StrokeThickness = 2, Cursor = Cursors.Cross, ToolTip = "Drag to another card to link them" };
         handle.SetResourceReference(Shape.FillProperty, "CardBackgroundFillColorDefaultBrush");
         handle.SetResourceReference(Shape.StrokeProperty, "AccentFillColorDefaultBrush");
         return handle;
@@ -37,11 +46,11 @@ public partial class GraphPanel
 
     private bool IsLinkHandle(object source) => ReferenceEquals(source, _linkHandle);
 
-    /// <summary>On the edge of the card selected nearest to the mouse, over the cards; none when no link can be added.</summary>
+    /// <summary>On the edge of the card selected nearest to the mouse, over the cards; none while a card is moved, nor when no link can be added.</summary>
     private void ShowLinkHandle()
     {
         Cards.Children.Remove(_linkHandle);
-        if (_selected is not { } selected || !_positions.TryGetValue(selected, out var at) || !CanLink)
+        if (_isDragging || _selected is not { } selected || !_positions.TryGetValue(selected, out var at) || !CanLink)
         {
             return;
         }
@@ -64,8 +73,7 @@ public partial class GraphPanel
     private void PlaceLinkHandle(NodePosition card)
     {
         var (x, y) = _mouseOnBoard is { } mouse ? GraphLayout.NearestBorderPoint(card, mouse.X, mouse.Y) : (card.X + (GraphLayout.CardWidth / 2), card.Y);
-        Canvas.SetLeft(_linkHandle, x - (HandleSize / 2));
-        Canvas.SetTop(_linkHandle, y - (HandleSize / 2));
+        PlaceHandle(_linkHandle, new Point(x, y));
     }
 
     private bool CanLink => !IsReadOnly() && _graph is not null && _definition is not null && new GraphLinkPlanner(_graph).Verbs(_definition).Count > 0;
@@ -79,12 +87,68 @@ public partial class GraphPanel
         DragLink(_linkStart);
     }
 
-    private void DragLink(Point to) => LinkBand.Data = new LineGeometry(_linkStart, to);
+    /// <summary>
+    /// Over another card, the link as it will be: that card marked, a handle on its border, the line from border to
+    /// border, as straight lines are drawn (a rank's bend comes once the link type is known). Elsewhere, to the mouse.
+    /// </summary>
+    private void DragLink(Point to)
+    {
+        var target = GraphLayout.CardAt(CardsInOrder, to.X, to.Y) is { } over && over != _linkFrom ? over : (Guid?)null;
+        MarkLinkTarget(target);
+        if (target is not { } card)
+        {
+            Cards.Children.Remove(_targetHandle);
+            PlaceHandle(_linkHandle, _linkStart);
+            LinkBand.Data = new LineGeometry(_linkStart, to);
+            return;
+        }
+
+        var (from, onto) = (_positions[_linkFrom!.Value], _positions[card]);
+        var start = GraphLayout.BorderPoint(from, onto.X, onto.Y);
+        var end = GraphLayout.BorderPoint(onto, from.X, from.Y);
+        PlaceHandle(_linkHandle, new Point(start.X, start.Y));
+        PlaceHandle(_targetHandle, new Point(end.X, end.Y));
+        if (!Cards.Children.Contains(_targetHandle))
+        {
+            Cards.Children.Add(_targetHandle);
+        }
+
+        LinkBand.Data = new LineGeometry(new Point(start.X, start.Y), new Point(end.X, end.Y));
+    }
+
+    // The card a link would go to, ringed as the selected one is.
+    private void MarkLinkTarget(Guid? target)
+    {
+        if (_linkTarget == target)
+        {
+            return;
+        }
+
+        if (_linkTarget is { } previous && previous != _selected && _cards.TryGetValue(previous, out var was))
+        {
+            GraphCard.Mark(was, isSelected: false);
+        }
+
+        _linkTarget = target;
+        if (target is { } marked && _cards.TryGetValue(marked, out var card))
+        {
+            GraphCard.Mark(card, isSelected: true);
+        }
+    }
+
+    private static void PlaceHandle(Ellipse handle, Point centre)
+    {
+        Canvas.SetLeft(handle, centre.X - (HandleSize / 2));
+        Canvas.SetTop(handle, centre.Y - (HandleSize / 2));
+    }
 
     private void StopLink()
     {
+        MarkLinkTarget(null);
+        Cards.Children.Remove(_targetHandle);
         _linkFrom = null;
         LinkBand.Visibility = Visibility.Collapsed;
+        ShowLinkHandle();
     }
 
     /// <summary>Dropped on a card: links them, the only way the view offers, else the way chosen in a menu.</summary>
@@ -123,7 +187,6 @@ public partial class GraphPanel
             menu.Items.Add(item);
         }
 
-        menu.Closed += (_, _) => FocusContent();
         ShowMenu(menu);
     }
 
@@ -135,9 +198,19 @@ public partial class GraphPanel
         }
     }
 
-    // A menu at the mouse.
+    // A menu at the mouse. Closed, it gives the keyboard back to the graph, unless another menu is open by then:
+    // a right-click elsewhere closes one and opens the next, and the first one's Closed comes after.
     private void ShowMenu(ContextMenu menu)
     {
+        _openMenu = menu;
+        menu.Closed += (_, _) =>
+        {
+            if (ReferenceEquals(_openMenu, menu))
+            {
+                _openMenu = null;
+                FocusContent();
+            }
+        };
         menu.PlacementTarget = Surface;
         menu.Placement = System.Windows.Controls.Primitives.PlacementMode.MousePoint;
         menu.IsOpen = true;
