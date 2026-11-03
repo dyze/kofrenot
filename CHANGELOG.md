@@ -8,7 +8,14 @@ It covers kofrenot on Windows and on Android; versions before 0.9 ran on Windows
 
 ## [Unreleased]
 
+> ⚠ **Vault format 10** (for graph views and the places of their nodes). Consequences:
+> - Each vault asks once, when it opens, to be upgraded; until you agree, this kofrenot does not use it.
+> - Once upgraded, **kofrenot 0.13 and older no longer open it, on Windows and Android**: update kofrenot on all your devices, and ask the members of a shared vault to update theirs, before upgrading.
+> - There is no way back to format 9 ([Format](docs/ARCHITECTURE.md#format)).
+
 ### Added
+- **Windows**
+  - **Graph views**: a view can show a graph from a node, for a family tree, an org chart or the relations around a node. It follows the link types you choose, each with its role (*down*: the other node a rank below, *up*: above, *beside*: on the same rank, *free*), up to 10 steps away, keeps only the node types you check (any by default), and its cards show the fields you name (*Born, Died*). Laid out in ranks or as a network; drag a card to move it, kept in the vault for every device (the newest move wins), *Reset layout* gives them back to the layout (asked first). The wheel zooms, dragging the background pans, *Fit* (**Home**) shows it whole, a double-click or **Enter** opens a node. At most 500 nodes are drawn. Android says it is shown on Windows ([README](README.md#views)).
 - **Both**
   - **Import destination**: files dropped on *Drop files* (Windows), added with **＋** or shared from another app, text shared included (Android), go under a node of a tree view you choose, linked by its link type, instead of being left with no link: the last one chosen in a vault is offered first (kept on the device), another one is picked by browsing a tree view, or none. A file whose dataset is already under that node becomes its new version, as on a drop on a tree ([README](README.md#datasets)).
   - **Unlinked nodes**: the nodes no link leads to, the newest first, at most 100 with a filter, to put them into a tree: on Windows **Unlinked** on a tree's bar shows them beside it, dragged (several at once) onto a node; on Android **⋮** of a tree tab > *Unlinked nodes…*, a tap moving one under the node reached ([README](README.md#views)).

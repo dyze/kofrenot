@@ -45,6 +45,7 @@ Both apps share the same vaults and the same core; each shows its own set of fea
 | Node details, links | ✔ | ✔ |
 | Node types and fields shown | ✔ | ✔ (an image's thumbnail, **Open**) |
 | Views: trees and lists, as tabs | ✔ rows, cards, details | ✔ rows; **▾** lists every tab, **⋮** of a view tab closes it |
+| Views: graphs (family tree, network), nodes moved by hand | ✔ | — (says it is shown on Windows) |
 | Unlinked nodes (no link leads to them), put into a tree | ✔ **Unlinked** beside a tree, dragged onto a node | ✔ **⋮** of a tree tab > *Unlinked nodes…*, one at a time |
 | Pin (synced: listed while the input box is empty) | ✔ | ✔ **⋮** on the node's page |
 | Search the node's name on the web (only then does it leave the device) | ✔ the globe in the details header, the engine of Settings > General (Google, DuckDuckGo or Bing) in the default browser | ✔ the globe in the top bar, the phone's own search app (else the browser) |
@@ -179,13 +180,21 @@ A dataset holds one file: drop it on the creation screen or on the dataset. Text
 **Drop files** (beside the tabs) secures files quickly: drop one or several there, and each becomes a dataset named after its file. A folder becomes a node named after it, that *contains* what it holds, sub-folders included (hidden and system files left out). A preview first lists them, indented under their folders, with their number and total size, the names already taken (*homonym*) and what is skipped (unreadable, folder links); nothing is added before **Add**. **Into** says where they go: under the node last chosen in this vault (on this device), **Change…** picks a tree view, then a node of its tree, **None** adds them with no parent (then listed as **Unlinked** beside a tree). The choice is kept for the next drop.
 
 ### Views
-A view shows your vault another way, in a tab: **a tree** from a node, following a link type (*contains* by default), or **a list** of every node of a type. **+** in the tab bar opens or creates one.
+A view shows your vault another way, in a tab: **a tree** from a node, following a link type (*contains* by default), **a list** of every node of a type, or **a graph** from a node (Windows). **+** in the tab bar opens or creates one.
 
 - In a tree: **Ctrl+C**, **Ctrl+X**, **Ctrl+V** and **Del** copy, move and delete, or drag a node onto another. A copy has its original's types, colour and field values, images included. Drop a file on a node to add it under it (the creation screen); several files, or folders, are previewed first, as with **Drop files**, then added under it, a folder's content under the folder's node by the tree's link type. What is already there is updated, not added again: a file whose dataset of the same name is under the same node becomes its new version (*update*, asked once more before), and a folder whose node is there gets its content merged (*existing*). Same names under different nodes are not homonyms; two files of one folder whose names would be the same (`report.pdf`, `report.docx`) keep their extension.
 - **Several nodes**: **Ctrl+click** adds or takes out a node, **Shift+click** selects the rows from the last one clicked, in a tree as in a list. Drag them to a folder (Explorer, the desktop) to export them: a dataset gives its latest file, a node with nodes under it in the tree a folder of them, sub-folders included; the same name twice in a folder becomes `name (2).ext`. They are decrypted into a temporary folder when the drag starts (the cursor waits a moment for large files), deleted once dropped. Notes, empty nodes and files not downloaded yet are left out, and said so after the drop. With several selected, Edit, Rename, Cut, Copy, Paste and Delete are off. One node of a tree goes out the same way once dragged out of kofrenot's window; until then, it is moved or copied inside kofrenot.
 - **Unlinked** on a tree's bar shows, beside it, the nodes no link leads to (a symmetric link such as *relates to* aside), views and the roots of trees left out: the newest first, at most 100, with a filter to find the others. Drag them (several with **Ctrl**/**Shift**) onto a node of the tree to put them under it, by the tree's link type; a double-click opens one.
 - **Cards** on a list's bar shows its nodes as cards, with a preview. **Details** shows type, size and last change in columns.
-- **Ctrl+F** finds a node in the view.
+- **A graph** follows the link types you choose, either way, up to 10 steps from its node, each type with a role: *down* puts the other node a rank below (*parent of*), *up* a rank above (*child of*), *beside* on the same rank (*married to*), *free* anywhere. It can keep only some node types, and its cards show the fields you name (*Born, Died*).
+
+  | Layout | For | Places |
+  | --- | --- | --- |
+  | In ranks | A family tree, an org chart | Ranks from the *down* and *up* links, couples side by side, fewer crossings |
+  | Network | The relations around a node | Linked nodes close, the others apart |
+
+  Drag a card to move it: its place is kept in the vault, for every device (moved on two, the newest move wins); the others go around it. **Reset layout** gives the moved cards back to the layout, asked first. The wheel zooms, dragging the background pans, **Fit** (**Home**) shows it whole; a double-click or **Enter** opens a node. At most 500 nodes are drawn: lower the steps to see the others.
+- **Ctrl+F** finds a node in a tree or a list.
 
 Every shortcut is listed in Settings > **Key bindings**.
 

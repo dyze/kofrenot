@@ -130,7 +130,7 @@ What each version contains: [ROADMAP.md](../ROADMAP.md).
 | --- | --- |
 | Local storage | A folder of encrypted change files, read into memory ([ARCHITECTURE.md](ARCHITECTURE.md#vault)) |
 | Sync | Folder vaults: outside kofrenot, by copying files. Server vaults: kofrenot mirrors them in a local folder (since 0.6: [ARCHITECTURE.md](ARCHITECTURE.md#server-vaults)) |
-| Conflicts | Concurrent duplicates, renames and note edits are flagged, not merged |
+| Conflicts | Concurrent duplicates, renames and note edits are flagged, not merged; graph positions are the exception: the newest wins |
 | Security | AES-256-GCM, random master key wrapped by a pass-phrase key (PBKDF2-SHA256); optionally remembered by Windows (DPAPI) |
 | Notes | A node type; content in Markdown, each save a new version (since 0.2); task lists as Markdown task lines (`- [ ]`), shown as checkboxes (since 0.8) |
 | Content on demand | Content files are in the vault folder on every device (the sync tool copies them); kofrenot reads one only when needed: a note shown, a dataset exported (since 0.3). A server vault downloads notes' and datasets' files when first needed, thumbnails with the sync (since 0.8) |
@@ -141,7 +141,8 @@ What each version contains: [ROADMAP.md](../ROADMAP.md).
 | Clients | Windows (WPF); Android for server vaults only, with Avalonia: read only in 0.9, notes and files edited since 0.10, its nodes changed since 0.12, what defines a vault left to Windows ([ANDROID-CONCEPT.md](ANDROID-CONCEPT.md#what-the-phone-changes)) |
 | Types and fields | Composition: a type is a list of fields, a node has several types and fields of its own (since 0.11, format 8: [Composition](#composition-types-made-of-fields)) |
 | History | A node's versions (its text, file or view definition, names, colours and field values) are listed, newest first; restoring one writes it again as a new version, so nothing is lost. One version at a time, not the node at a point in time; deleted nodes are not restored. Listed on Android, restored on Windows (since 0.12) |
-| Views | A node type holding a definition (a tree from a root node through a link type, or a list of the nodes of a type), in versions kept in its changes: views work offline (since 0.4) |
+| Views | A node type holding a definition (a tree from a root node through a link type, a list of the nodes of a type, or a graph from a root node through link types each with a role, since 0.14), in versions kept in its changes: views work offline (since 0.4) |
+| Graph positions | A node moved by hand in a graph view keeps its place in the vault, per view; moved on two devices, the newest move wins, with no conflict shown: a place matters less than a name (since 0.14, format 10) |
 
 ## Open questions
 Decisions to take with the owner before the matching features:

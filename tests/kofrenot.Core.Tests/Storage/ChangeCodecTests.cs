@@ -259,7 +259,84 @@ public sealed class ChangeCodecTests
         Assert.Throws<InvalidDataException>(() => _codec.Decode(id, data));
     }
 
-    public static TheoryData<ViewDefinition> ViewDefinitions => [new TreeDefinition(Guid.NewGuid(), "contains"), new FlatDefinition("note")];
+    public static TheoryData<ViewDefinition> ViewDefinitions =>
+    [
+        new TreeDefinition(Guid.NewGuid(), "contains"),
+        new FlatDefinition("note"),
+        new GraphDefinition(Guid.NewGuid(), 3, GraphLayoutKind.Network, [new("parent", GraphRole.Down), new("spouse", GraphRole.Beside), new("child", GraphRole.Up), new("friend", GraphRole.Free)], ["person"], ["Born"]),
+        new GraphDefinition(Guid.NewGuid(), 1, GraphLayoutKind.Layered, [new("contains", GraphRole.Down)], [], []),
+    ];
+
+    [Fact]
+    public void AGraphView_HasTheDocumentedShape()
+    {
+        var root = Guid.NewGuid();
+        var definition = new GraphDefinition(root, 2, GraphLayoutKind.Layered, [new("parent", GraphRole.Down)], ["person"], ["Born"]);
+        var change = new ViewEdited(Guid.NewGuid(), At, Guid.NewGuid(), definition, []);
+
+        var json = Encoding.UTF8.GetString(_keyed.Open(SealKind.Change, _codec.Encode(change), change.Id.ToByteArray()));
+
+        Assert.Contains(
+            $"\"display\":\"graph\",\"query\":{{\"root\":\"{root}\",\"depth\":2,\"layout\":\"layered\",\"links\":[{{\"type\":\"parent\",\"role\":\"down\"}}],\"nodeTypes\":[\"person\"],\"fields\":[\"Born\"]}}",
+            json);
+    }
+
+    private const string GraphQuery = "\"root\":\"" + Node + "\",\"depth\":2,\"layout\":\"layered\"";
+
+    [Theory]
+    [InlineData("{" + GraphQuery + "}")]
+    [InlineData("{" + GraphQuery + ",\"links\":[]}")]
+    [InlineData("{\"depth\":2,\"layout\":\"layered\",\"links\":[{\"type\":\"parent\",\"role\":\"down\"}]}")]
+    [InlineData("{\"root\":\"00000000-0000-0000-0000-000000000000\",\"depth\":2,\"layout\":\"layered\",\"links\":[{\"type\":\"parent\",\"role\":\"down\"}]}")]
+    [InlineData("{\"root\":\"" + Node + "\",\"layout\":\"layered\",\"links\":[{\"type\":\"parent\",\"role\":\"down\"}]}")]
+    [InlineData("{\"root\":\"" + Node + "\",\"depth\":0,\"layout\":\"layered\",\"links\":[{\"type\":\"parent\",\"role\":\"down\"}]}")]
+    [InlineData("{\"root\":\"" + Node + "\",\"depth\":11,\"layout\":\"layered\",\"links\":[{\"type\":\"parent\",\"role\":\"down\"}]}")]
+    [InlineData("{\"root\":\"" + Node + "\",\"depth\":2,\"links\":[{\"type\":\"parent\",\"role\":\"down\"}]}")]
+    [InlineData("{\"root\":\"" + Node + "\",\"depth\":2,\"layout\":\"circle\",\"links\":[{\"type\":\"parent\",\"role\":\"down\"}]}")]
+    [InlineData("{\"root\":\"" + Node + "\",\"depth\":2,\"layout\":\"1\",\"links\":[{\"type\":\"parent\",\"role\":\"down\"}]}")]
+    [InlineData("{" + GraphQuery + ",\"links\":[{\"type\":\"\",\"role\":\"down\"}]}")]
+    [InlineData("{" + GraphQuery + ",\"links\":[{\"type\":\"parent\",\"role\":\"sideways\"}]}")]
+    [InlineData("{" + GraphQuery + ",\"links\":[{\"type\":\"parent\"}]}")]
+    [InlineData("{" + GraphQuery + ",\"links\":[null]}")]
+    [InlineData("{" + GraphQuery + ",\"links\":[{\"type\":\"parent\",\"role\":\"down\"}],\"nodeTypes\":[\"\"]}")]
+    [InlineData("{" + GraphQuery + ",\"links\":[{\"type\":\"parent\",\"role\":\"down\"}],\"fields\":[\" \"]}")]
+    public void AnIncompleteGraphView_IsRefused(string query) =>
+        AnIncompleteViewVersion_IsRefused("{\"node\":\"" + Node + "\",\"display\":\"graph\",\"query\":" + query + ",\"replaces\":[]}");
+
+    [Fact]
+    public void APlacement_RoundTrips()
+    {
+        var change = new NodesPlaced(Guid.NewGuid(), At, Guid.NewGuid(), [new NodePosition(Guid.NewGuid(), 120, -40.5), new NodePosition(Guid.NewGuid(), 0, 0)]);
+
+        Assert.Equal(change, _codec.Decode(change.Id, _codec.Encode(change)));
+    }
+
+    [Fact]
+    public void APlacement_HasTheDocumentedShape()
+    {
+        var (view, node) = (Guid.NewGuid(), Guid.NewGuid());
+        var change = new NodesPlaced(Guid.NewGuid(), At, view, [new NodePosition(node, 120, -40)]);
+
+        var json = Encoding.UTF8.GetString(_keyed.Open(SealKind.Change, _codec.Encode(change), change.Id.ToByteArray()));
+
+        Assert.Contains($"\"op\":\"placeNodes\",", json);
+        Assert.Contains($"\"place\":{{\"view\":\"{view}\",\"positions\":[{{\"node\":\"{node}\",\"x\":120,\"y\":-40}}]}}", json);
+    }
+
+    [Theory]
+    [InlineData("{\"positions\":[{\"node\":\"" + Node + "\",\"x\":1,\"y\":2}]}")]
+    [InlineData("{\"view\":\"" + Node + "\"}")]
+    [InlineData("{\"view\":\"" + Node + "\",\"positions\":[]}")]
+    [InlineData("{\"view\":\"" + Node + "\",\"positions\":[null]}")]
+    [InlineData("{\"view\":\"" + Node + "\",\"positions\":[{\"x\":1,\"y\":2}]}")]
+    public void AnIncompletePlacement_IsRefused(string place)
+    {
+        var id = Guid.NewGuid();
+        var json = "{\"format\":10,\"op\":\"placeNodes\",\"at\":\"2026-10-16T09:12:00Z\",\"place\":" + place + "}";
+        var data = _box.Seal("KFC1"u8, Encoding.UTF8.GetBytes(json), id.ToByteArray());
+
+        Assert.Throws<InvalidDataException>(() => _codec.Decode(id, data));
+    }
 
     [Theory]
     [MemberData(nameof(ViewDefinitions))]

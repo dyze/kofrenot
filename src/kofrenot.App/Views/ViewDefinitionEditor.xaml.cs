@@ -13,7 +13,8 @@ public sealed record RootChoice(Node Node, string Label, NodeVisual Visual);
 
 /// <summary>
 /// Edits a <see cref="ViewDraft"/>: a tree from a node found by name (Up/Down in the name choose
-/// among the nodes found, the first one by default), through a link type; or a list of a node type.
+/// among the nodes found, the first one by default), through a link type; a list of a node type; or a
+/// graph from such a node (its settings: ViewDefinitionEditor.Graph).
 /// </summary>
 public partial class ViewDefinitionEditor : UserControl
 {
@@ -35,22 +36,24 @@ public partial class ViewDefinitionEditor : UserControl
         _findRoots = findRoots;
         LinkTypeBox.ItemsSource = types.LinkTypes;
         NodeTypeBox.ItemsSource = types.NodeTypes;
+        SetupGraph(types);
     }
 
-    /// <summary>Shows a draft to edit, its root's name in the box.</summary>
+    /// <summary>Shows a draft to edit, its root's name in the box, a graph's fields in theirs.</summary>
     public void Load(ViewDraft draft)
     {
         Draft = draft;
         _showing = true;
         RootBox.Text = draft.Root?.Name ?? string.Empty;
+        FieldsBox.Text = string.Join(", ", draft.Graph.Fields);
         _showing = false;
         ShowDraft();
     }
 
-    /// <summary>Gives the keyboard to the first field to fill: the name of the root for a tree.</summary>
+    /// <summary>Gives the keyboard to the first field to fill: the name of the root for a tree or a graph.</summary>
     public void FocusFirst()
     {
-        if (Draft.Display == ViewDisplay.Tree)
+        if (Draft.Display != ViewDisplay.Flat)
         {
             RootBox.Focus();
             RootBox.SelectAll();
@@ -67,13 +70,12 @@ public partial class ViewDefinitionEditor : UserControl
     {
         _showing = true;
         var tree = Draft.Display == ViewDisplay.Tree;
-        DisplayBox.SelectedIndex = tree ? 0 : 1;
-        foreach (var element in new UIElement[] { RootLabel, RootPanel, ThroughLabel, LinkTypeBox })
-        {
-            element.Visibility = tree ? Visibility.Visible : Visibility.Collapsed;
-        }
-
-        NodeTypeLabel.Visibility = NodeTypeBox.Visibility = tree ? Visibility.Collapsed : Visibility.Visible;
+        var flat = Draft.Display == ViewDisplay.Flat;
+        DisplayBox.SelectedIndex = (int)Draft.Display;
+        RootLabel.Visibility = RootPanel.Visibility = flat ? Visibility.Collapsed : Visibility.Visible;
+        ThroughLabel.Visibility = LinkTypeBox.Visibility = tree ? Visibility.Visible : Visibility.Collapsed;
+        NodeTypeLabel.Visibility = NodeTypeBox.Visibility = flat ? Visibility.Visible : Visibility.Collapsed;
+        ShowGraph(Draft.Display == ViewDisplay.Graph);
         LinkTypeBox.SelectedItem = Draft.LinkType;
         NodeTypeBox.SelectedItem = Draft.NodeType;
         RootList.SelectedItem = RootChoices.FirstOrDefault(choice => choice.Node.Id == Draft.Root?.Id);
@@ -116,7 +118,7 @@ public partial class ViewDefinitionEditor : UserControl
         Change(view => view with { Root = (RootList.SelectedItem as RootChoice)?.Node });
 
     private void DisplayBox_SelectionChanged(object sender, SelectionChangedEventArgs e) =>
-        Change(view => view with { Display = DisplayBox.SelectedIndex == 1 ? ViewDisplay.Flat : ViewDisplay.Tree });
+        Change(view => view with { Display = (ViewDisplay)Math.Max(DisplayBox.SelectedIndex, 0) });
 
     private void LinkTypeBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {

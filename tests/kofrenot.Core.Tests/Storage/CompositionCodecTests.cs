@@ -158,6 +158,6 @@ public sealed class CompositionCodecTests
     [Fact]
     public void AChangeOfANewerFormat_AsksForANewerKofrenot()
     {
-        Assert.Throws<NewerVaultFormatException>(() => Decode("{\"format\":10,\"at\":\"2026-10-16T09:12:00Z\",\"op\":\"setField\"}"));
+        Assert.Throws<NewerVaultFormatException>(() => Decode($"{{\"format\":{VaultFormat.Current + 1},\"at\":\"2026-10-16T09:12:00Z\",\"op\":\"setField\"}}"));
     }
 }

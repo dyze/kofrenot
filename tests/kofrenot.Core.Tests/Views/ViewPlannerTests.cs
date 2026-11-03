@@ -45,4 +45,20 @@ public sealed class ViewPlannerTests
         Assert.Null(_planner.Save(files, new FlatDefinition(TypeCatalog.Note.Id), state));
         Assert.NotNull(_planner.Save(files, new FlatDefinition(TypeCatalog.Dataset.Id), state));
     }
+
+    [Fact]
+    public void TheSameGraph_InOtherLists_SavesNothing()
+    {
+        var family = _tree.Add("Family", TypeCatalog.View.Id);
+        var root = Guid.NewGuid();
+        GraphDefinition Graph(int depth) => new(root, depth, GraphLayoutKind.Layered, [new("parent", GraphRole.Down)], ["person"], ["Born"]);
+        _tree.Apply([new ViewEdited(Guid.NewGuid(), TreeGraph.Start, family.Id, Graph(2), [])]);
+        var state = _planner.Load(family);
+
+        Assert.Null(_planner.Save(family, Graph(2), state));
+        Assert.Equal(Graph(2).GetHashCode(), state.Definition!.GetHashCode());
+        Assert.NotNull(_planner.Save(family, Graph(3), state));
+        Assert.NotNull(_planner.Save(family, Graph(2) with { Fields = ["Died"] }, state));
+        Assert.False(Graph(2).Equals(null));
+    }
 }

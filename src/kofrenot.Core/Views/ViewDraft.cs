@@ -7,11 +7,14 @@ public enum ViewDisplay
 {
     Tree,
     Flat,
+    Graph,
 }
 
 /// <summary>
 /// A view's definition as edited (on the creation screen, or later): a tree (from <see cref="Root"/>,
-/// through <see cref="LinkType"/>), or a list (of <see cref="NodeType"/>). A tree needs its root.
+/// through <see cref="LinkType"/>), a list (of <see cref="NodeType"/>), or a graph (from
+/// <see cref="Root"/>, as <see cref="Graph"/> says). A tree and a graph need their root; a graph,
+/// a link type too.
 /// </summary>
 public sealed record ViewDraft(ViewDisplay Display, Node? Root, LinkType LinkType, NodeType NodeType)
 {
@@ -19,10 +22,14 @@ public sealed record ViewDraft(ViewDisplay Display, Node? Root, LinkType LinkTyp
 
     public static ViewDraft Default { get; } = new(ViewDisplay.Tree, Root: null, TypeCatalog.Contains, TypeCatalog.Note);
 
-    /// <summary>The definition, or null while a tree has no root.</summary>
+    /// <summary>What a graph follows and shows, kept while another display is chosen.</summary>
+    public GraphDraft Graph { get; init; } = GraphDraft.Default;
+
+    /// <summary>The definition, or null while a tree or a graph has no root, or a graph no link type.</summary>
     public ViewDefinition? Definition => Display switch
     {
         ViewDisplay.Tree => Root is null ? null : new TreeDefinition(Root.Id, LinkType.Id),
+        ViewDisplay.Graph => Root is null || Graph.Links.Count == 0 ? null : new GraphDefinition(Root.Id, Graph.Depth, Graph.Layout, Graph.Links, Graph.NodeTypes, Graph.Fields),
         _ => new FlatDefinition(NodeType.Id),
     };
 
@@ -42,6 +49,12 @@ public sealed record ViewDraft(ViewDisplay Display, Node? Root, LinkType LinkTyp
             Display = ViewDisplay.Flat,
             NodeType = graph.Types.FindNodeType(flat.NodeType) ?? new NodeType(flat.NodeType, flat.NodeType),
         },
+        GraphDefinition shown => Default with
+        {
+            Display = ViewDisplay.Graph,
+            Root = graph.FindNode(shown.Root),
+            Graph = new GraphDraft(shown.Depth, shown.Layout, shown.Links, shown.NodeTypes, shown.Fields),
+        },
         _ => Default,
     };
 
@@ -52,9 +65,61 @@ public sealed record ViewDraft(ViewDisplay Display, Node? Root, LinkType LinkTyp
     public static string Describe(ViewDefinition? definition, KnowledgeGraph graph) => definition switch
     {
         TreeDefinition tree => graph.FindNode(tree.Root) is { } root
-            ? $"A tree from “{root.Name}” through “{graph.Types.FindLinkType(tree.LinkType)?.Name ?? tree.LinkType}”"
+            ? $"A tree from “{root.Name}” through “{LinkTypeName(graph, tree.LinkType)}”"
             : "A tree from a node not here: removed, or not synced yet",
         FlatDefinition flat => $"A list of every {graph.Types.NodeTypeName(flat.NodeType)}",
+        GraphDefinition shown => graph.FindNode(shown.Root) is { } root
+            ? $"A graph from “{root.Name}” through {string.Join(", ", shown.Links.Select(link => $"“{LinkTypeName(graph, link.LinkType)}”"))}, {shown.Depth} {(shown.Depth == 1 ? "step" : "steps")} away"
+            : "A graph from a node not here: removed, or not synced yet",
         _ => "No definition yet",
     };
+
+    private static string LinkTypeName(KnowledgeGraph graph, string linkType) => graph.Types.FindLinkType(linkType)?.Name ?? linkType;
+}
+
+/// <summary>
+/// A graph's settings as edited: how far it goes, how it is laid out, the link types it follows
+/// (each with its role), the node types it keeps (any when none) and the fields its cards show.
+/// </summary>
+public sealed record GraphDraft(int Depth, GraphLayoutKind Layout, IReadOnlyList<GraphLink> Links, IReadOnlyList<string> NodeTypes, IReadOnlyList<string> Fields)
+{
+    public const int DefaultDepth = 3;
+
+    public static GraphDraft Default { get; } = new(DefaultDepth, GraphLayoutKind.Layered, [], [], []);
+
+    /// <summary>The role a link type has, or null when the graph does not follow it.</summary>
+    public GraphRole? RoleOf(string linkType) => Links.FirstOrDefault(link => link.LinkType == linkType)?.Role;
+
+    /// <summary>Follows a link type with a role, in place of the one it had; or no longer follows it when null.</summary>
+    public GraphDraft WithRole(string linkType, GraphRole? role)
+    {
+        var links = Links.ToList();
+        var index = links.FindIndex(link => link.LinkType == linkType);
+        if (index >= 0)
+        {
+            links.RemoveAt(index);
+        }
+
+        if (role is { } kept)
+        {
+            links.Insert(index >= 0 ? index : links.Count, new GraphLink(linkType, kept));
+        }
+
+        return this with { Links = links };
+    }
+
+    /// <summary>Keeps a node type, or no longer keeps it.</summary>
+    public GraphDraft WithNodeType(string nodeType, bool isKept) => this with
+    {
+        NodeTypes = isKept ? [.. NodeTypes.Where(type => type != nodeType), nodeType] : [.. NodeTypes.Where(type => type != nodeType)],
+    };
+
+    /// <summary>The fields named in a text, separated by commas: "Born, Died".</summary>
+    public GraphDraft WithFields(string text) => this with
+    {
+        Fields = [.. text.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries).Distinct(StringComparer.OrdinalIgnoreCase)],
+    };
+
+    /// <summary>The depth, kept between <see cref="GraphDefinition.MinDepth"/> and <see cref="GraphDefinition.MaxDepth"/>.</summary>
+    public GraphDraft WithDepth(int depth) => this with { Depth = Math.Clamp(depth, GraphDefinition.MinDepth, GraphDefinition.MaxDepth) };
 }

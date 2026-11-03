@@ -12,6 +12,7 @@ public class VaultFormatTests
         Assert.Equal("0.8", VaultFormat.Since(7));
         Assert.Equal("0.11", VaultFormat.Since(8));
         Assert.Equal("0.13", VaultFormat.Since(9));
+        Assert.Equal("0.14", VaultFormat.Since(10));
         Assert.NotEmpty(VaultFormat.Since(VaultFormat.Current));
     }
 

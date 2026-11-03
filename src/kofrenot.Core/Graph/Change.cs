@@ -114,7 +114,7 @@ public sealed record LinkTypeDefined(Guid Id, DateTimeOffset At, string LinkType
     : Change(Id, At), IReplacing;
 
 /// <summary>
-/// Removes earlier changes that can be removed (nodes, links, aliases, link types, pins), by id. Files are never deleted:
+/// Removes earlier changes that can be removed (nodes, links, aliases, link types, pins, placements), by id. Files are never deleted:
 /// a removal is a change of its own, and what is added again later has a new id.
 /// </summary>
 public sealed record ChangesRemoved(Guid Id, DateTimeOffset At, IReadOnlyList<Guid> Removes) : Change(Id, At);
@@ -159,3 +159,21 @@ public sealed record MemberRemoved(Guid Id, DateTimeOffset At, Guid Account, byt
 /// colours replacing the same one, neither knowing the other, make a conflict.
 /// </summary>
 public sealed record NodeColored(Guid Id, DateTimeOffset At, Guid Node, string? Color, IReadOnlyList<Guid> Replaces) : Change(Id, At), INodeVersion;
+
+/// <summary>
+/// Where nodes were moved by hand in the graph view <see cref="View"/>: each node's position, in the
+/// view's units. For each node the newest placement wins (<see cref="Change.At"/>, then the id), with
+/// no conflict: a position matters less than a name. Taken back, so the layout places them again,
+/// by a <see cref="ChangesRemoved"/>.
+/// </summary>
+public sealed record NodesPlaced(Guid Id, DateTimeOffset At, Guid View, IReadOnlyList<NodePosition> Positions) : Change(Id, At)
+{
+    // By value, positions included.
+    public bool Equals(NodesPlaced? other) =>
+        other is not null && (Id, At, View) == (other.Id, other.At, other.View) && Positions.SequenceEqual(other.Positions);
+
+    public override int GetHashCode() => HashCode.Combine(Id, At, View, Positions.Count);
+}
+
+/// <summary>A node's position in a graph view: the centre of its card.</summary>
+public sealed record NodePosition(Guid Node, double X, double Y);

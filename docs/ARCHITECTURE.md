@@ -308,6 +308,7 @@ One number for the whole vault, `VaultFormat.Current`, written in the header and
 | 7 | 0.8 | `colorNode`: a 0.7 app cannot read it |
 | 8 | 0.11 | `defineNodeType`, `addNodeType`, `removeNodeType`, `setField` ([Types and fields](#types-and-fields)): a 0.10 app cannot read them |
 | 9 | 0.13 | the field kinds `email` and `address` ([Types and fields](#types-and-fields)): a 0.12 app would drop a node type with such a field, and its values |
+| 10 | 0.14 | `editView` with `"display": "graph"` and `placeNodes` ([Views](#views)): a 0.13 app cannot read them |
 
 | Found | This kofrenot |
 | --- | --- |
@@ -417,7 +418,12 @@ UTF-8 JSON before encryption:
   "dataset": { "node": "<node id>", "file": { "name": "survey.csv", "size": 52430, "sha256": "9f86…08" }, "replaces": ["<version id>", "…"] } }
 { "format": 4, "at": "…", "op": "editView",
   "view": { "node": "<node id>", "display": "tree", "query": { "root": "<node id>", "linkType": "contains" }, "replaces": ["<version id>", "…"] } }
-{ "format": 4, "at": "…", "op": "remove", "removes": ["<node, link, alias, link or node type definition, or pin id>", "…"] }
+{ "format": 10, "at": "…", "op": "editView",
+  "view": { "node": "<node id>", "display": "graph",
+            "query": { "root": "<node id>", "depth": 3, "layout": "layered", "links": [{ "type": "<link type id>", "role": "down" }],
+                       "nodeTypes": ["<node type id>"], "fields": ["Born"] }, "replaces": ["…"] } }
+{ "format": 10, "at": "…", "op": "placeNodes", "place": { "view": "<view node id>", "positions": [{ "node": "<node id>", "x": 120, "y": -40 }] } }
+{ "format": 4, "at": "…", "op": "remove", "removes": ["<node, link, alias, link or node type definition, pin or placement id>", "…"] }
 ```
 
 `renameNode` was added to format 1 before 0.1 was released, so the format number did not change (owner's decision).
@@ -508,7 +514,7 @@ ColorPlanner: the colour chosen replaces every current one ⇒ conflict resolved
 - `NoteColors` (App) draws each colour in one mid shade, seen on both themes, for dots and swatches, and see-through (25 %) as a background, so it stays pale on the light theme and dark on the dark one.
 
 ### Aliases and removals
-What the user can take back (nodes, links, aliases, link types, pins) is added by one change and removed by another, `remove`, listing the ids it removes. Nothing is deleted from the vault.
+What the user can take back (nodes, links, aliases, link types, pins, placements) is added by one change and removed by another, `remove`, listing the ids it removes. Nothing is deleted from the vault.
 
 ```
 a1 addAlias "is in" → contained by      device A
@@ -630,6 +636,7 @@ A view is a node of type `view`. Its definition is in `editView` versions, as a 
 | --- | --- | --- |
 | `TreeDefinition(root, linkType)` | `tree` | `TreeView`: `Root`, then `ChildrenOf(item)`, read when asked |
 | `FlatDefinition(nodeType)` | `flat` | `FlatView.Nodes` |
+| `GraphDefinition(root, depth, layout, links, nodeTypes, fields)` | `graph` | `GraphView.Read`: the whole graph at once, laid out by `GraphLayout` ([Graphs](#graphs)) |
 
 ```
 Projects ─contains─► Alpha ─contains─► Shared      TreeItem(node, path, canExpand)
@@ -681,6 +688,27 @@ MainWindow ── TabStrip (TabRow) ── Search: input box, results, details
 - Drag and drop (`ViewPanel.DragDrop`): the drag starts past the system's minimum distance, carrying the `TreeItem` (format `kofrenot.TreeItem`, inside kofrenot only). Over a node, `MovePlanner.CanMove` gives the cursor (move, or none when refused); Ctrl held is a copy. The drop runs the same move or copy as Ctrl+V.
 - Several nodes (`ViewPanel.Selection`): a tree's are kept by key (`_marked`, painted on their header), as WPF's `TreeView` selects one; a list is a `ListBox` in `Extended` mode. A plain press on one of several waits for the release before selecting it alone, so they can be dragged together. With several, the one-node actions and their keys are off.
 - Drag out (`ViewPanel.DragOut`): several nodes in a tree, or any in a list, through `FolderExportPlanner` (Core): a dataset's latest file, a node with children in the tree a folder of them (`TreeLinks`), names made safe (`DatasetFile.SafeNameOf`) and numbered when taken, a node met twice (selected with its parent, a cycle) written once; files not on the device and nodes with no file nor children counted, told after the drop. They are written first (`FolderExport.WriteTo`, through `DragExport`, the cursor waiting), then dragged; the drag carries `*` in format `kofrenot.TreeItem`, never a row's key, so a drop on a node inside kofrenot does nothing.
+
+#### Graphs
+A graph is read whole at each `Show` (at most `GraphView.MaxNodes`, 500), then laid out in Core, so another client can draw the same.
+
+```
+GraphDefinition ─► GraphView.Read ─► GraphContent(nodes, edges, isCut) ─► GraphLayout.Of(content, layout, PositionsIn(view))
+  root, depth       breadth first from the root, either way,                  LayeredLayout or NetworkLayout, then
+  links (type,role) through its link types, of its node types;                the moved nodes put back, the others
+  nodeTypes, fields every link of those types between them                    pushed right off them
+```
+
+| Role | Layered | Drawn (`GraphLines`) |
+| --- | --- | --- |
+| `down` / `up` | the lower node a rank below the upper one; a symmetric type is free | from the upper card's bottom to the lower one's top, bent halfway |
+| `beside` | one group, side by side on one rank (union-find) | thick line |
+| `free` | no rank: a node with no other link takes its neighbour's | dashed line |
+
+- **Layered** (`LayeredLayout`): groups ranked by longest path from the top, a cycle cut where it closes; a group with no parent goes just above its highest child (a spouse's parents sit over the spouse); rows ordered by barycentres (8 sweeps), then each group centred over its parents, or its children going up (4 sweeps), each row shifted as a whole.
+- **Network** (`NetworkLayout`): Fruchterman–Reingold, 150 rounds, from a golden-angle spiral in the order reached: the same graph gives the same places. Moved nodes stay, and pull or push the others.
+- **Placements**: a drop writes one `placeNodes` (`GraphPlacer.Move`, rounded to whole units, nothing when unmoved). `NodePlacements` keeps, per view and node, the newest one not removed (`at`, then id): no conflict, a place matters less than a name. **Reset layout** writes one `remove` of every placement of the view (`GraphPlacer.Reset`), confirmed first. A placement is kept per view: one node can sit apart in two graphs.
+- In the app, `GraphPanel` (in `ViewPanel`, which hides its own bar) draws a `GraphCard` per node on a `Canvas`, zoomed and panned by one `MatrixTransform`, kept while the same view is shown again and fitted for another one. A press on a card selects it, past 4 pixels drags it (not in a vault only read). Android shows a message: graphs are drawn on Windows only.
 
 ### History
 Behavior for the user: [README.md](../README.md#node-details). Nothing in a vault is overwritten (each version names those it [replaces](#renames)), so a node's history is read from the graph, offline; no format change.

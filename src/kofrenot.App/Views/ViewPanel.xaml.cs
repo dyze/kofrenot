@@ -10,7 +10,7 @@ namespace Kofrenot.UI.Views;
 
 /// <summary>
 /// A view tab's content, read from the graph at each <see cref="Show"/>: a tree, whose children
-/// are read when a node is expanded, or a list. The nodes expanded are kept on this device
+/// are read when a node is expanded, a list, or a graph (<see cref="GraphPanel"/>). The nodes expanded are kept on this device
 /// (<see cref="ViewStates"/>); a refresh also keeps the one selected, by its path.
 /// </summary>
 public partial class ViewPanel : UserControl
@@ -36,6 +36,9 @@ public partial class ViewPanel : UserControl
         Tree.AddHandler(TreeViewItem.CollapsedEvent, new RoutedEventHandler(Tree_Collapsed));
         List.AddHandler(ScrollViewer.ScrollChangedEvent, new ScrollChangedEventHandler((_, _) => ReadCardsInView()));
         Unlinked.OpenNode += node => OpenNode?.Invoke(node);
+        GraphBoard.OpenNode += node => OpenNode?.Invoke(node);
+        GraphBoard.Write = (changes, action) => Write?.Invoke(changes, action) == true;
+        GraphBoard.IsReadOnly = () => IsReadOnly();
     }
 
     /// <summary>Asks to open a node's details.</summary>
@@ -96,6 +99,12 @@ public partial class ViewPanel : UserControl
                 }
 
                 break;
+            case GraphDefinition definition when GraphBoard.Show(graph, view, definition):
+                ShowOnly(GraphBoard);
+                break;
+            case GraphDefinition:
+                ShowMessage("The node this graph starts from is not there: removed, or not synced yet.");
+                break;
             default:
                 ShowMessage("This view has no definition yet: ⚙ on its tab says what it shows.");
                 break;
@@ -129,6 +138,10 @@ public partial class ViewPanel : UserControl
             List.SelectedIndex = Math.Max(List.SelectedIndex, 0);
             List.UpdateLayout();
             (List.SelectedItem as ListBoxItem)?.Focus();
+        }
+        else if (GraphBoard.Visibility == Visibility.Visible)
+        {
+            GraphBoard.FocusContent();
         }
     }
 
@@ -284,6 +297,7 @@ public partial class ViewPanel : UserControl
         MessageText.Visibility = Visibility.Collapsed;
         Tree.Visibility = content == Tree ? Visibility.Visible : Visibility.Collapsed;
         List.Visibility = content == List ? Visibility.Visible : Visibility.Collapsed;
+        GraphBoard.Visibility = content == GraphBoard ? Visibility.Visible : Visibility.Collapsed;
     }
 
     private void ShowMessage(string message)

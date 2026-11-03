@@ -29,6 +29,7 @@ public sealed class KnowledgeGraph
     private readonly NodeVersions<DatasetEdited> _datasets = new();
     private readonly NodeVersions<ViewEdited> _views = new();
     private readonly NodeVersions<NodeColored> _colors = new();
+    private readonly NodePlacements _placements;
     private readonly Dictionary<Guid, VaultNamed> _vaultNames = [];
     private readonly Dictionary<Guid, Change> _memberChanges = [];
 
@@ -40,6 +41,7 @@ public sealed class KnowledgeGraph
         Aliases = new LinkAliases(() => LinkTypes.Catalog, _removed);
         _links = new LinkIndex(() => LinkTypes.Catalog, _removed);
         _pins = new RemovableChanges<NodePinned>(_removed);
+        _placements = new NodePlacements(_removed);
     }
 
     /// <summary>The node types and the link types, the user's included, with the user's aliases: what the input box reads.</summary>
@@ -92,6 +94,7 @@ public sealed class KnowledgeGraph
         DatasetEdited version => _datasets.Add(version),
         ViewEdited version => _views.Add(version),
         NodeColored color => _colors.Add(color),
+        NodesPlaced placed => _placements.Add(placed),
         VaultNamed name => _vaultNames.TryAdd(name.Id, name),
         MemberAdded or MemberRemoved => _memberChanges.TryAdd(change.Id, change),
         _ => throw new ArgumentOutOfRangeException(nameof(change), change.GetType().Name, "Unknown change"),
@@ -133,6 +136,12 @@ public sealed class KnowledgeGraph
     /// members are the ones its owner signed (<c>VaultSharing.Members</c>).
     /// </summary>
     public IReadOnlyCollection<Change> MemberChanges => _memberChanges.Values;
+
+    /// <summary>Where nodes were moved by hand in a graph view: each node's newest position. A node never moved has none.</summary>
+    public IReadOnlyDictionary<Guid, NodePosition> PositionsIn(Guid view) => _placements.PositionsIn(view);
+
+    /// <summary>The placements of a graph view, oldest first: what removing takes back, so the layout places its nodes again.</summary>
+    public IReadOnlyList<NodesPlaced> PlacementsOf(Guid view) => _placements.Of(view);
 
     /// <summary>The pins of a node: several when it was pinned on two devices. Unpinning removes them all.</summary>
     public IReadOnlyList<Guid> PinsOf(Guid node) =>
@@ -287,7 +296,7 @@ public sealed class KnowledgeGraph
         return true;
     }
 
-    /// <summary>Takes back nodes, links, aliases, link types or pins. False when this removal is already there.</summary>
+    /// <summary>Takes back nodes, links, aliases, link types, pins or placements. False when this removal is already there.</summary>
     public bool Remove(ChangesRemoved removal)
     {
         if (!_removals.Add(removal.Id))

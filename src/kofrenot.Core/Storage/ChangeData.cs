@@ -30,7 +30,8 @@ internal sealed record ChangeData(
     ChangeData.NodeTypeData? NodeType = null,
     ChangeData.AddTypeData? AddType = null,
     ChangeData.RemoveTypeData? RemoveType = null,
-    ChangeData.FieldData? Field = null)
+    ChangeData.FieldData? Field = null,
+    ChangeData.PlaceData? Place = null)
 {
     private const string NodeAddedOp = "addNode";
     private const string LinkAddedOp = "addLink";
@@ -51,6 +52,7 @@ internal sealed record ChangeData(
     private const string NodeTypeAddedOp = "addNodeType";
     private const string NodeTypeRemovedOp = "removeNodeType";
     private const string FieldSetOp = "setField";
+    private const string NodesPlacedOp = "placeNodes";
 
     public static ChangeData From(Change change) => change switch
     {
@@ -73,6 +75,7 @@ internal sealed record ChangeData(
         NodeTypeAdded added => new(VaultFormat.Current, NodeTypeAddedOp, added.At, AddType: new AddTypeData(added.Node, added.Type)),
         NodeTypeRemoved removed => new(VaultFormat.Current, NodeTypeRemovedOp, removed.At, RemoveType: new RemoveTypeData(removed.Node, [.. removed.Removes])),
         FieldSet field => new(VaultFormat.Current, FieldSetOp, field.At, Field: FieldData.From(field)),
+        NodesPlaced placed => new(VaultFormat.Current, NodesPlacedOp, placed.At, Place: PlaceData.From(placed)),
         _ => throw new ArgumentOutOfRangeException(nameof(change), change.GetType().Name, "Unknown change"),
     };
 
@@ -117,6 +120,7 @@ internal sealed record ChangeData(
             NodeTypeRemovedOp when RemoveType is { Removes: { Count: > 0 } removes } && RemoveType.Node != Guid.Empty
                 => new NodeTypeRemoved(id, At, RemoveType.Node, removes),
             FieldSetOp when Field?.ToChange(id, At) is { } field => field,
+            NodesPlacedOp when Place?.ToChange(id, At) is { } placed => placed,
             _ => throw new InvalidDataException($"Unknown or incomplete change '{Op}'"),
         };
     }
@@ -160,17 +164,19 @@ internal sealed record ChangeData(
 
     /// <summary>
     /// <c>"view": { "node": "…", "display": "tree", "query": { "root": "…", "linkType": "contains" }, "replaces": ["…"] }</c>,
-    /// or <c>"display": "flat", "query": { "nodeType": "note" }</c>.
+    /// or <c>"display": "flat", "query": { "nodeType": "note" }</c>, or <c>"display": "graph"</c> (<see cref="GraphQueryData"/>).
     /// </summary>
     internal sealed record ViewData(Guid Node, string? Display, QueryData? Query, List<Guid>? Replaces)
     {
         private const string Tree = "tree";
         private const string Flat = "flat";
+        private const string Graph = "graph";
 
         public static ViewData From(ViewEdited view) => view.Definition switch
         {
             TreeDefinition tree => new(view.Node, Tree, new QueryData(tree.Root, tree.LinkType), [.. view.Replaces]),
             FlatDefinition flat => new(view.Node, Flat, new QueryData(NodeType: flat.NodeType), [.. view.Replaces]),
+            GraphDefinition graph => new(view.Node, Graph, GraphQueryData.From(graph), [.. view.Replaces]),
             _ => throw new ArgumentOutOfRangeException(nameof(view), view.Definition.GetType().Name, "Unknown view definition"),
         };
 
@@ -179,9 +185,63 @@ internal sealed record ChangeData(
         {
             (Tree, { Root: { } root, LinkType: { } linkType }) when root != Guid.Empty && linkType.Length > 0 => new TreeDefinition(root, linkType),
             (Flat, { NodeType: { } nodeType }) when nodeType.Length > 0 => new FlatDefinition(nodeType),
+            (Graph, { } query) => GraphQueryData.ToDefinition(query),
             _ => null,
         };
     }
+
+    /// <summary>
+    /// A graph's query: <c>{ "root": "…", "depth": 3, "layout": "layered", "links": [{ "type": "parent-of", "role": "down" }],
+    /// "nodeTypes": ["…"], "fields": ["Born"] }</c>; no node type for any.
+    /// </summary>
+    internal static class GraphQueryData
+    {
+        public static QueryData From(GraphDefinition graph) => new(
+            graph.Root,
+            Depth: graph.Depth,
+            Layout: graph.Layout.ToString().ToLowerInvariant(),
+            Links: [.. graph.Links.Select(link => new GraphLinkData(link.LinkType, link.Role.ToString().ToLowerInvariant()))],
+            NodeTypes: [.. graph.NodeTypes],
+            Fields: [.. graph.Fields]);
+
+        /// <summary>The definition, or null when incomplete: no root, a depth out of range, no link, or a link incomplete.</summary>
+        public static GraphDefinition? ToDefinition(QueryData query)
+        {
+            if (query is not { Root: { } root, Depth: { } depth, Links: { Count: > 0 } links } || root == Guid.Empty
+                || depth is < GraphDefinition.MinDepth or > GraphDefinition.MaxDepth
+                || !TryParse(query.Layout, out GraphLayoutKind layout)
+                || (query.NodeTypes ?? []).Any(string.IsNullOrEmpty) || (query.Fields ?? []).Any(string.IsNullOrWhiteSpace))
+            {
+                return null;
+            }
+
+            var parsed = links.Select(link => link is { Type: { Length: > 0 } type } && TryParse(link.Role, out GraphRole role) ? new GraphLink(type, role) : null).ToList();
+            return parsed.Any(link => link is null) ? null : new GraphDefinition(root, depth, layout, parsed!, query.NodeTypes ?? [], query.Fields ?? []);
+        }
+
+        private static bool TryParse<T>(string? text, out T value)
+            where T : struct, Enum =>
+            Enum.TryParse(text, ignoreCase: true, out value) && Enum.IsDefined(value) && !char.IsDigit(text![0]);
+    }
+
+    /// <summary><c>{ "type": "parent-of", "role": "down" }</c>: <c>down</c>, <c>up</c>, <c>beside</c> or <c>free</c>.</summary>
+    internal sealed record GraphLinkData(string? Type, string? Role);
+
+    /// <summary><c>"place": { "view": "…", "positions": [{ "node": "…", "x": 120, "y": -40 }] }</c></summary>
+    internal sealed record PlaceData(Guid View, List<PositionData?>? Positions)
+    {
+        public static PlaceData From(NodesPlaced placed) =>
+            new(placed.View, [.. placed.Positions.Select(position => new PositionData(position.Node, position.X, position.Y))]);
+
+        /// <summary>The change, or null when incomplete: no view, no position, or a position with no node.</summary>
+        public NodesPlaced? ToChange(Guid id, DateTimeOffset at) =>
+            View != Guid.Empty && Positions is { Count: > 0 } positions && positions.All(position => position is not null && position.Node != Guid.Empty)
+                ? new NodesPlaced(id, at, View, [.. positions.Select(position => new NodePosition(position!.Node, position.X, position.Y))])
+                : null;
+    }
+
+    /// <summary><c>{ "node": "…", "x": 120, "y": -40 }</c></summary>
+    internal sealed record PositionData(Guid Node, double X, double Y);
 
     /// <summary><c>"retype": { "node": "…", "type": "note", "replaces": ["…"] }</c></summary>
     internal sealed record RetypeData(Guid Node, string? Type, List<Guid>? Replaces);
@@ -281,8 +341,16 @@ internal sealed record ChangeData(
                 : null;
     }
 
-    /// <summary><c>"query": { "root": "…", "linkType": "contains" }</c> or <c>"query": { "nodeType": "note" }</c></summary>
-    internal sealed record QueryData(Guid? Root = null, string? LinkType = null, string? NodeType = null);
+    /// <summary><c>"query": { "root": "…", "linkType": "contains" }</c> or <c>"query": { "nodeType": "note" }</c>, or a graph's (<see cref="GraphQueryData"/>).</summary>
+    internal sealed record QueryData(
+        Guid? Root = null,
+        string? LinkType = null,
+        string? NodeType = null,
+        int? Depth = null,
+        string? Layout = null,
+        List<GraphLinkData>? Links = null,
+        List<string>? NodeTypes = null,
+        List<string>? Fields = null);
 
     /// <summary><c>"file": { "name": "survey.csv", "size": 52430, "sha256": "9f86…08" }</c></summary>
     internal sealed record FileData(string? Name, long Size, string? Sha256)

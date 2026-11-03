@@ -161,6 +161,9 @@ public sealed partial class HomePage : UserControl, IPage
             case TreeDefinition:
                 ShowMessage("The node this tree starts from is not there: removed, or not synced yet.");
                 return [];
+            case GraphDefinition:
+                ShowMessage("A graph is shown in kofrenot on Windows.");
+                return [];
             default:
                 ShowMessage("This view has no definition yet: it is set in kofrenot on Windows.");
                 return [];
