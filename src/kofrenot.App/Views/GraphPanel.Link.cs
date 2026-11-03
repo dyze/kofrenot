@@ -3,13 +3,14 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Shapes;
+using Kofrenot.Core.Graph;
 using Kofrenot.Core.Logging;
 using Kofrenot.Core.Views;
 
 namespace Kofrenot.UI.Views;
 
 /// <summary>
-/// A link drawn by hand: the card selected shows a handle on its right; dragged to another card, it
+/// A link drawn by hand: the card selected shows a handle on its edge nearest to the mouse; dragged to another card, it
 /// links them through one of the view's link types (<see cref="GraphLinkPlanner"/>), the only one
 /// offered, else the one chosen in a menu. Not in a vault read only, nor in a view without a link type known.
 /// </summary>
@@ -19,8 +20,12 @@ public partial class GraphPanel
 
     private readonly Ellipse _linkHandle = CreateLinkHandle();
 
-    // The card a link is dragged from, while it is.
+    // The card a link is dragged from, and the point of its edge, while it is.
     private Guid? _linkFrom;
+    private Point _linkStart;
+
+    // The mouse on the board, once it has moved there: the handle is on the edge nearest to it.
+    private Point? _mouseOnBoard;
 
     private static Ellipse CreateLinkHandle()
     {
@@ -32,7 +37,7 @@ public partial class GraphPanel
 
     private bool IsLinkHandle(object source) => ReferenceEquals(source, _linkHandle);
 
-    /// <summary>On the right edge of the card selected, over the cards; none when no link can be added.</summary>
+    /// <summary>On the edge of the card selected nearest to the mouse, over the cards; none when no link can be added.</summary>
     private void ShowLinkHandle()
     {
         Cards.Children.Remove(_linkHandle);
@@ -41,25 +46,40 @@ public partial class GraphPanel
             return;
         }
 
-        Canvas.SetLeft(_linkHandle, at.X + (GraphLayout.CardWidth / 2) - (HandleSize / 2));
-        Canvas.SetTop(_linkHandle, at.Y - (HandleSize / 2));
+        PlaceLinkHandle(at);
         Cards.Children.Add(_linkHandle);
+    }
+
+    /// <summary>The mouse moved over the board, no button pressed: the handle follows it along the card's edge.</summary>
+    private void FollowMouse(Point onBoard)
+    {
+        _mouseOnBoard = onBoard;
+        if (_selected is { } selected && Cards.Children.Contains(_linkHandle) && _positions.TryGetValue(selected, out var at))
+        {
+            PlaceLinkHandle(at);
+        }
+    }
+
+    // On the right edge until the mouse is seen.
+    private void PlaceLinkHandle(NodePosition card)
+    {
+        var (x, y) = _mouseOnBoard is { } mouse ? GraphLayout.NearestBorderPoint(card, mouse.X, mouse.Y) : (card.X + (GraphLayout.CardWidth / 2), card.Y);
+        Canvas.SetLeft(_linkHandle, x - (HandleSize / 2));
+        Canvas.SetTop(_linkHandle, y - (HandleSize / 2));
     }
 
     private bool CanLink => !IsReadOnly() && _graph is not null && _definition is not null && new GraphLinkPlanner(_graph).Verbs(_definition).Count > 0;
 
+    // From where the handle is.
     private void StartLink(Guid from)
     {
         _linkFrom = from;
+        _linkStart = new Point(Canvas.GetLeft(_linkHandle) + (HandleSize / 2), Canvas.GetTop(_linkHandle) + (HandleSize / 2));
         LinkBand.Visibility = Visibility.Visible;
-        DragLink(new Point(_positions[from].X, _positions[from].Y));
+        DragLink(_linkStart);
     }
 
-    private void DragLink(Point to)
-    {
-        var from = _positions[_linkFrom!.Value];
-        LinkBand.Data = new LineGeometry(new Point(from.X, from.Y), to);
-    }
+    private void DragLink(Point to) => LinkBand.Data = new LineGeometry(_linkStart, to);
 
     private void StopLink()
     {

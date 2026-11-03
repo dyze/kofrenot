@@ -319,6 +319,7 @@ public partial class GraphPanel : UserControl
     {
         if (e.LeftButton != MouseButtonState.Pressed)
         {
+            FollowMouse(OnBoard(e.GetPosition(Surface)));
             return;
         }
 

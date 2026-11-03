@@ -55,6 +55,27 @@ public static class GraphLayout
         return scale <= 1 ? (card.X, card.Y) : (card.X + (dx / scale), card.Y + (dy / scale));
     }
 
+    /// <summary>The point of a card's border closest to a point, inside the card or out: where its link handle goes.</summary>
+    public static (double X, double Y) NearestBorderPoint(NodePosition card, double x, double y)
+    {
+        var (halfWidth, halfHeight) = (CardWidth / 2, CardHeight / 2);
+        var (dx, dy) = (Math.Clamp(x - card.X, -halfWidth, halfWidth), Math.Clamp(y - card.Y, -halfHeight, halfHeight));
+        // Inside, the nearest side wins; outside, the clamped point is on the border already.
+        if (Math.Abs(dx) < halfWidth && Math.Abs(dy) < halfHeight)
+        {
+            if (halfWidth - Math.Abs(dx) < halfHeight - Math.Abs(dy))
+            {
+                dx = dx < 0 ? -halfWidth : halfWidth;
+            }
+            else
+            {
+                dy = dy < 0 ? -halfHeight : halfHeight;
+            }
+        }
+
+        return (card.X + dx, card.Y + dy);
+    }
+
     /// <summary>The node whose card is at a point, the last placed first (it is drawn over the others); null over none.</summary>
     public static Guid? CardAt(IEnumerable<NodePosition> cards, double x, double y) =>
         cards.LastOrDefault(card => Math.Abs(card.X - x) <= CardWidth / 2 && Math.Abs(card.Y - y) <= CardHeight / 2)?.Node;

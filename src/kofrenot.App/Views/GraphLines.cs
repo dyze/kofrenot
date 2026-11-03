@@ -102,13 +102,23 @@ internal sealed class GraphLines(Canvas canvas)
         var (bottom, top) = (upper.Y + (GraphLayout.CardHeight / 2), lower.Y - (GraphLayout.CardHeight / 2));
         if (edge.Role is not (GraphRole.Down or GraphRole.Up) || bottom >= top)
         {
-            return (new LineGeometry(new Point(from.X, from.Y), new Point(to.X, to.Y)), new Point((from.X + to.X) / 2, (from.Y + to.Y) / 2));
+            return BetweenBorders(from, to);
         }
 
         var bend = (bottom + top) / 2;
         var figure = new PathFigure { StartPoint = new Point(upper.X, bottom) };
         figure.Segments.Add(new PolyLineSegment([new Point(upper.X, bend), new Point(lower.X, bend), new Point(lower.X, top)], isStroked: true));
         return (new PathGeometry([figure]), new Point((upper.X + lower.X) / 2, bend));
+    }
+
+    // A straight line from border to border, so it never crosses a card; none when the cards cover one another.
+    private static (Geometry Geometry, Point Middle) BetweenBorders(NodePosition from, NodePosition to)
+    {
+        var start = GraphLayout.BorderPoint(from, to.X, to.Y);
+        var end = GraphLayout.BorderPoint(to, from.X, from.Y);
+        var middle = new Point((start.X + end.X) / 2, (start.Y + end.Y) / 2);
+        var coversOther = start == (from.X, from.Y) || end == (to.X, to.Y) || GraphLayout.CardAt([to], start.X, start.Y) is not null;
+        return (coversOther ? Geometry.Empty : new LineGeometry(new Point(start.X, start.Y), new Point(end.X, end.Y)), middle);
     }
 
     // A triangle whose tip touches the card the link leads to.

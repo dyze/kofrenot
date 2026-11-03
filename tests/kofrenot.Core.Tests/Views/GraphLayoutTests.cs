@@ -188,6 +188,20 @@ public sealed class GraphLayoutTests
     }
 
     [Fact]
+    public void TheBorderPointNearestToAPoint_IsOnTheClosestSide()
+    {
+        var card = new NodePosition(Guid.NewGuid(), 0, 0);
+        var (right, bottom) = (GraphLayout.CardWidth / 2, GraphLayout.CardHeight / 2);
+
+        Assert.Equal((right, 10), GraphLayout.NearestBorderPoint(card, 500, 10));
+        Assert.Equal((60, -bottom), GraphLayout.NearestBorderPoint(card, 60, -300));
+        Assert.Equal((-right, bottom), GraphLayout.NearestBorderPoint(card, -900, 900));
+        Assert.Equal((right - 5, -bottom), GraphLayout.NearestBorderPoint(card, right - 5, -bottom + 2));
+        Assert.Equal((-right, 3), GraphLayout.NearestBorderPoint(card, -right + 2, 3));
+        Assert.Equal((10, bottom), GraphLayout.NearestBorderPoint(card, 10, 1));
+    }
+
+    [Fact]
     public void TheCardAtAPoint_IsTheLastOneCoveringIt()
     {
         var (below, above) = (new NodePosition(Guid.NewGuid(), 0, 0), new NodePosition(Guid.NewGuid(), 50, 0));
