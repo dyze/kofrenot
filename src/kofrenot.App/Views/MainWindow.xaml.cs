@@ -214,12 +214,12 @@ public partial class MainWindow : Window
         }
         else if (_session.NewerFormat is { } format)
         {
-            StateText.Text = $"This vault was written by a newer kofrenot (vault format {format}; this one reads up to format {VaultFormat.Current}). Install the latest kofrenot to open it.";
+            StateText.Text = VaultFormat.NewerMessage(format);
             StateButton.Content = "Get the latest kofrenot";
         }
         else if (_session.OlderFormat is { } older)
         {
-            StateText.Text = $"This vault is in format {older}: this kofrenot uses it once upgraded to format {VaultFormat.Current}, which kofrenot older than {VaultFormat.Since(VaultFormat.Current)} no longer opens.";
+            StateText.Text = VaultFormat.OlderMessage(older);
             StateButton.Content = "Upgrade and open…";
         }
         else

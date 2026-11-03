@@ -31,4 +31,22 @@ public class VaultFormatTests
         Assert.Contains($"writes format {VaultFormat.Current}", question);
         Assert.Contains($"kofrenot older than {VaultFormat.Since(VaultFormat.Current)} no longer opens it", question);
     }
+
+    [Fact]
+    public void TheNewerMessage_NamesBothFormats()
+    {
+        var message = VaultFormat.NewerMessage(VaultFormat.Current + 1);
+
+        Assert.Contains($"vault format {VaultFormat.Current + 1}; this one reads up to format {VaultFormat.Current}", message);
+        Assert.Contains("Install the latest kofrenot", message);
+    }
+
+    [Fact]
+    public void TheOlderMessage_SaysWhichKofrenotNoLongerOpensTheUpgradedVault()
+    {
+        var message = VaultFormat.OlderMessage(9);
+
+        Assert.Contains($"format 9: this kofrenot uses it once upgraded to format {VaultFormat.Current}", message);
+        Assert.Contains($"kofrenot older than {VaultFormat.Since(VaultFormat.Current)} no longer opens", message);
+    }
 }

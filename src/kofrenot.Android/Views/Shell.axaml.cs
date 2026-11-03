@@ -1,8 +1,10 @@
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
+using Kofrenot.Core;
 using Kofrenot.Core.Logging;
 using Kofrenot.Core.Settings;
+using Kofrenot.Core.Storage;
 using Kofrenot.Phone.Platform;
 
 namespace Kofrenot.Phone.Views;
@@ -96,7 +98,21 @@ public sealed partial class Shell : UserControl
         }
         else
         {
+            TellWhyNotOpened();
             Show(new VaultsPage(this));
+        }
+    }
+
+    // The phone does not upgrade a vault: Windows does (docs/ANDROID-CONCEPT.md).
+    private void TellWhyNotOpened()
+    {
+        if (Services.Session.NewerFormat is { } newer)
+        {
+            Tell($"{VaultFormat.NewerMessage(newer)}\n\n{ProjectLinks.Releases}");
+        }
+        else if (Services.Session.OlderFormat is { } older)
+        {
+            Tell($"{VaultFormat.OlderMessage(older)}\n\nOpen it once in kofrenot on Windows first: it asks to upgrade it.");
         }
     }
 

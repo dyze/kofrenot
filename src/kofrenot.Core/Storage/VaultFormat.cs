@@ -24,6 +24,14 @@ public static class VaultFormat
         + "\n\nUpdate kofrenot on your other devices first."
         + "\n\nUpgrade the vault and open it? Until then, this kofrenot does not use it.";
 
+    /// <summary>Why a vault of <paramref name="format"/>, newer than <see cref="Current"/>, is not opened.</summary>
+    public static string NewerMessage(int format) =>
+        $"This vault was written by a newer kofrenot (vault format {format}; this one reads up to format {Current}). Install the latest kofrenot to open it.";
+
+    /// <summary>Why a vault of <paramref name="format"/>, its upgrade not agreed, is not used.</summary>
+    public static string OlderMessage(int format) =>
+        $"This vault is in format {format}: this kofrenot uses it once upgraded to format {Current}, which kofrenot older than {Since(Current)} no longer opens.";
+
     /// <exception cref="NewerVaultFormatException"><paramref name="format"/> is newer than <see cref="Current"/>.</exception>
     public static void EnsureSupported(int format)
     {
