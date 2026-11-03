@@ -278,8 +278,9 @@ public partial class ViewPanel : UserControl
         }
     }
 
-    // In a name being edited, a double-click selects a word.
-    private void Content_MouseDoubleClick(object sender, MouseButtonEventArgs e) => e.Handled = !IsRenaming && OpenSelected();
+    // In a name being edited, a double-click selects a word; on a tree's arrow, it only expands or collapses.
+    private void Content_MouseDoubleClick(object sender, MouseButtonEventArgs e) =>
+        e.Handled = !IsRenaming && !IsOnExpander(e.OriginalSource) && OpenSelected();
 
     /// <summary>The node selected in the tree or the list, or null.</summary>
     private Node? SelectedNode => Tree.Visibility == Visibility.Visible

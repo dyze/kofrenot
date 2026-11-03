@@ -127,7 +127,16 @@ public partial class ViewPanel
         });
     }
 
-    private void Tree_DragLeave(object sender, DragEventArgs e) => ShowDropTarget(null);
+    // Raised too when the pointer goes from one part of a row to another (its name, its icon): the target is
+    // cleared only once the pointer is out of the tree, or it would flash.
+    private void Tree_DragLeave(object sender, DragEventArgs e)
+    {
+        var at = e.GetPosition(Tree);
+        if (at.X < 0 || at.Y < 0 || at.X >= Tree.ActualWidth || at.Y >= Tree.ActualHeight)
+        {
+            ShowDropTarget(null);
+        }
+    }
 
     private void Tree_Drop(object sender, DragEventArgs e)
     {

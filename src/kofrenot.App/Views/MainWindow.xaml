@@ -163,7 +163,7 @@
                             ToolTip="Edit what this view shows"
                             Visibility="Collapsed"
                             Click="EditTab_Click">
-                      <local:IconView Size="10" Kind="settings" />
+                      <local:IconView Size="14" Kind="settings" />
                     </Button>
                     <Button x:Name="CloseButton"
                             Margin="6,0,0,0"

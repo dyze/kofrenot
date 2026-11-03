@@ -36,6 +36,8 @@ It covers kofrenot on Windows and on Android; versions before 0.9 ran on Windows
 
 ### Fixed
 - **Windows**
+  - **The node under a drag flashed** in a tree, as the pointer crossed its name and its icon: it stays highlighted until the pointer leaves it.
+  - **A double-click on a tree's arrow opened the node**: it now only expands or collapses it.
   - **A node with many fields hid its links**: the details could not scroll past its fields. They now scroll in their own area, leaving room for the links or the note below.
   - **Dragging a dataset out of a tree closed the Explorer window dropped on** (Explorer crashed). Its file is now exported when the pointer leaves kofrenot's window, then deleted; a move inside kofrenot decrypts nothing ([Architecture](docs/ARCHITECTURE.md#datasets)).
 - **Android**
