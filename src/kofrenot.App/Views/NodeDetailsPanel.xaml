@@ -66,6 +66,9 @@
         <ColumnDefinition x:Name="ContentColumn" Width="0" />
       </Grid.ColumnDefinitions>
 
+      <!-- Scrolls alone when the fields are too many: its height is capped (NodeDetailsPanel.FitPropertiesRow) so the links keep room;
+           the wheel scrolls it even over a field's box. -->
+      <ScrollViewer x:Name="PropertiesScroll" VerticalScrollBarVisibility="Auto" Focusable="False" PreviewMouseWheel="PropertiesScroll_PreviewMouseWheel">
       <StackPanel VerticalAlignment="Top">
         <!-- The name: a click or F2 edits it in place (Enter or leaving it renames, Esc cancels). Under it, a conflict
              between names given on two devices, each name offered to keep. -->
@@ -314,13 +317,14 @@
           </StackPanel>
         </StackPanel>
       </StackPanel>
+      </ScrollViewer>
 
       <local:DatasetPanel x:Name="DatasetBox" Grid.Column="1" Margin="16,0,0,0" Visibility="Collapsed" />
     </Grid>
 
     <local:NoteEditor x:Name="NoteBox" Grid.Row="2" Visibility="Collapsed" />
 
-    <StackPanel Grid.Row="3" Margin="0,18,0,4">
+    <StackPanel x:Name="LinksBar" Grid.Row="3" Margin="0,18,0,4">
       <StackPanel Orientation="Horizontal">
         <TextBlock x:Name="LinksHeader" Margin="2,0,0,0" VerticalAlignment="Center" FontWeight="SemiBold" />
         <Button Margin="10,0,0,0"

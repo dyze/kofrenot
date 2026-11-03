@@ -17,6 +17,10 @@ public sealed record BreadcrumbItem(string Label, int Depth, bool IsCurrent);
 /// </summary>
 public partial class NodeDetailsPanel : UserControl
 {
+    // Under the fields, the room kept for the links or the note; the fields scroll when they need more.
+    private const double RoomBelowFields = 200;
+    private const double MinFieldsHeight = 120;
+
     /// <summary>The first item of the breadcrumb: where Back returns to (the search, or a view).</summary>
     public string HomeLabel { get; set; } = "⌂ Search";
 
@@ -24,6 +28,26 @@ public partial class NodeDetailsPanel : UserControl
     {
         InitializeComponent();
         DatasetBox.ViewChanged += FitDatasetRow;
+        SizeChanged += (_, _) => FitPropertiesRow();
+        Breadcrumb.SizeChanged += (_, _) => FitPropertiesRow();
+        LinksBar.SizeChanged += (_, _) => FitPropertiesRow();
+    }
+
+    /// <summary>
+    /// Caps the properties' height, so many fields scroll in their own area instead of pushing the links out of the
+    /// window. On the scroll viewer, not its row: an automatic row measures it unbounded, so it would only be cut.
+    /// </summary>
+    private void FitPropertiesRow()
+    {
+        var below = LinksRow.Height.IsStar || NoteRow.Height.IsStar ? RoomBelowFields : 0;
+        PropertiesScroll.MaxHeight = Math.Max(MinFieldsHeight, ActualHeight - Breadcrumb.ActualHeight - LinksBar.ActualHeight - LinksBar.Margin.Top - LinksBar.Margin.Bottom - below);
+    }
+
+    // A field's box would take the wheel for itself, though it has nothing to scroll.
+    private void PropertiesScroll_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
+    {
+        PropertiesScroll.ScrollToVerticalOffset(PropertiesScroll.VerticalOffset - (e.Delta / 3.0));
+        e.Handled = true;
     }
 
     /// <summary>Raised when the user goes back to the search (Esc at level 1, or ⌂ Search).</summary>
@@ -77,6 +101,7 @@ public partial class NodeDetailsPanel : UserControl
         LinksHeader.Text = details.Links.Count == 0 ? "No links" : $"Links ({details.Links.Count})";
         LinksList.ItemsSource = details.Links;
         LinksRow.Height = details.Links.Count == 0 ? GridLength.Auto : new GridLength(1, GridUnitType.Star);
+        FitPropertiesRow();
         ConflictNames.ItemsSource = details.NameConflict;
         ShowPinAndOffline(details);
         ConflictPanel.Visibility = details.NameConflict.Count > 0 && !_editing ? Visibility.Visible : Visibility.Collapsed;

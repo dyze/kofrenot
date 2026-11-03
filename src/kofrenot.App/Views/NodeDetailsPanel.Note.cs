@@ -36,6 +36,7 @@ public partial class NodeDetailsPanel
         var isNote = details.Node.Type == TypeCatalog.Note.Id && ContentShown;
         NoteBox.Visibility = isNote ? Visibility.Visible : Visibility.Collapsed;
         NoteRow.Height = isNote ? new GridLength(2, GridUnitType.Star) : GridLength.Auto;
+        FitPropertiesRow();
         if (!isNote)
         {
             CloseNote();
