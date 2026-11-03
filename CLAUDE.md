@@ -44,7 +44,7 @@ Only those listed in `docs/ARCHITECTURE.md#stack`. Ask before adding one.
 - **Docs.** One home per fact:
   - user-facing behavior → `README.md`
   - version scope → `ROADMAP.md` (planned features)
-  - changes → `CHANGELOG.md`, following [Keep a Changelog](https://keepachangelog.com/en/1.1.0/): when a feature is implemented, it moves from ROADMAP to `[Unreleased]`, under Added, Changed, Deprecated, Removed, Fixed or Security; at release, `[Unreleased]` becomes `[<version>] - <date>`, most recent version first, with its compare link at the bottom
+  - changes → `CHANGELOG.md`, following [Keep a Changelog](https://keepachangelog.com/en/1.1.0/): when a feature is implemented, it moves from ROADMAP to `[Unreleased]`, under Added, Changed, Deprecated, Removed, Fixed or Security; at release, `[Unreleased]` becomes `[<version>] - <date>`, most recent version first, with its compare link at the bottom, and opens with the version's theme: one line in italics (`*Datasets: files stored in the vault, read on demand.*`), before its vault format quote
   - design and internals → `docs/ARCHITECTURE.md`
   - goal and principles → `docs/GOAL.md`
   - what each app (Windows, Android) supports → the feature matrix, `README.md#windows-and-android`; why the apps differ → `docs/ANDROID-CONCEPT.md`
@@ -60,7 +60,7 @@ Only those listed in `docs/ARCHITECTURE.md#stack`. Ask before adding one.
 * Avoid redundancies in explanations, try to update existing docs instead of creating new ones.
 * Ask clarifying questions before making architectural changes.
 * Every delete or remove asks for confirmation first (`MessageDialog.Confirm`), naming what goes.
-* Mark in documents what is implemented and what is not. In `ROADMAP.md`, only the version table holds a status: no "Done" or "Not implemented" on features.
+* Mark in documents what is implemented and what is not. `ROADMAP.md` holds no status: what it lists is planned, what is released is in `CHANGELOG.md` (no "Done" or "Not implemented" on features).
 
 ## Coding rules
 

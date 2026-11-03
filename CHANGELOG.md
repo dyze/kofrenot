@@ -42,6 +42,8 @@ It covers kofrenot on Windows and on Android; versions before 0.9 ran on Windows
 
 ## [0.13] - 2026-11-01
 
+*Android navigation and layouts: edge to edge, top bar and sheets, one back stack; image fields; web search.*
+
 > ⚠ **Vault format 9** (for the email and postal address fields). Consequences:
 > - Each vault asks once, when it opens, to be upgraded; until you agree, this kofrenot does not use it.
 > - Once upgraded, **kofrenot 0.12 and older no longer open it, on Windows and Android**: update kofrenot on all your devices, and ask the members of a shared vault to update theirs, before upgrading.
@@ -96,6 +98,8 @@ It covers kofrenot on Windows and on Android; versions before 0.9 ran on Windows
 
 ## [0.12] - 2026-10-30
 
+*History: versions restored; the phone adds and changes nodes, links, fields and members.*
+
 ### Added
 - **Both**
   - **History**: a node's versions, newest first: its text, file or view definition, its names, colours and field values, each with when and what it held, read offline. On Windows, the clock beside the pin lists them and **Restore** writes one again as the current version, after a confirmation; restoring a version of a conflict resolves it, and nothing is lost: the others stay in the history. On Android, the node's page lists them under *History*, each with **Restore** ([README](README.md#node-details)).
@@ -118,6 +122,8 @@ It covers kofrenot on Windows and on Android; versions before 0.9 ran on Windows
   - **Settings grouped by topic**, under the names of the Windows Settings tabs: Vault (the open vault, **Members…**, its remembered pass phrase), Server (the account, sign out), Logging and About ([README](README.md#on-android)).
 
 ## [0.11] - 2026-10-28
+
+*Composition: node types made of fields, several per node; fields of a node's own.*
 
 > ⚠ **Vault format 8** (for node types and fields). Consequences:
 > - Each vault asks once, when it opens, to be upgraded; until you agree, this kofrenot does not use it.
@@ -149,6 +155,8 @@ It covers kofrenot on Windows and on Android; versions before 0.9 ran on Windows
 
 ## [0.10] - 2026-10-27
 
+*Offline pins, file drops; notes and files added on Android.*
+
 ### Added
 - **Android**
   - **Add files from the phone**: **＋** picks one or several files; a preview lists them, with their number and total size, then each becomes a dataset named after its file, uploaded at the next sync. Images get their thumbnail on the phone ([README](README.md#on-android)).
@@ -173,6 +181,8 @@ It covers kofrenot on Windows and on Android; versions before 0.9 ran on Windows
 
 ## [0.9] - 2026-10-26
 
+*Android: server vaults read and searched offline on the phone.*
+
 ### Added
 - **Android**
   - **kofrenot for Android**, read only: your server vaults, own and shared, read and searched on the phone, also offline; it syncs downloads only and never writes to a vault. What it does: [features](README.md#windows-and-android); how to install and use it: [README](README.md#on-android). Android 8.0 or later, an APK on the releases.
@@ -180,6 +190,8 @@ It covers kofrenot on Windows and on Android; versions before 0.9 ran on Windows
   - **Start with Windows** ([README](README.md#install)): a setup task, ticked by default, and a box in Settings > General. At sign-in kofrenot starts in the notification area (`kofrenot.exe --hidden`) and opens the vault only when its window is first shown. No administrator rights; uninstalling removes it.
 
 ## [0.8] - 2026-10-25
+
+*Notes as in Keep; content on demand; session in Core for Android.*
 
 ### Added
 - **Notes and views**
@@ -212,6 +224,8 @@ It covers kofrenot on Windows and on Android; versions before 0.9 ran on Windows
   - **The main window no longer moves when a tab is selected**: kofrenot pulled it back inside one monitor at each tab, as if the screen scaling had changed.
 
 ## [0.7] - 2026-10-24
+
+*Sharing: identities, recovery key, vaults shared with other users.*
 
 ### Added
 - **Sharing**
@@ -246,6 +260,8 @@ It covers kofrenot on Windows and on Android; versions before 0.9 ran on Windows
 
 ## [0.6] - 2026-10-21
 
+*Server: own vaults stored on a web server, synced across devices.*
+
 ### Added
 - **Server**
   - **Kofre server** support: a server, in its own repository ([kofreserver](https://github.com/dyze/kofreserver)), keeps the files of server vaults, encrypted as they are, for accounts its admin approves.
@@ -258,6 +274,8 @@ It covers kofrenot on Windows and on Android; versions before 0.9 ran on Windows
   - **Name asked on creation**, for a folder vault (its folder's name offered) as for a server vault, so every device shows it at once.
 
 ## [0.5] - 2026-10-20
+
+*Vaults: several vaults, a hot key per vault; change types, link nodes.*
 
 ### Added
 - **Settings**
@@ -284,6 +302,8 @@ It covers kofrenot on Windows and on Android; versions before 0.9 ran on Windows
   - A vault opened before whose folder is missing (a file share offline) is said to be out of reach, instead of offering to create a new vault there.
 
 ## [0.4] - 2026-10-19
+
+*Views: flat and tree views over the graph, shown as tabs.*
 
 ### Added
 - **Views**
@@ -313,6 +333,8 @@ It covers kofrenot on Windows and on Android; versions before 0.9 ran on Windows
 
 ## [0.3] - 2026-10-18
 
+*Datasets: files stored in the vault, read on demand.*
+
 ### Added
 - **Datasets**: a node type holding one file of any kind and size, encrypted in the vault. Chosen on its creation step (or dropped there), then imported again from its details (**Import…**, Ctrl+I, or a file dropped on it) and exported (**Export…**, Ctrl+E, or dragged out). Each import is a new version; files imported on two computers before they synced show a conflict, to keep one version. The file's name, size and date are shown offline; the file itself is read only when viewed or exported. An import shows its progress in percent.
 - **Dataset type and viewer**: a dataset's type is its file's extension (*PNG file*, *JSON file*, ...). Texts (txt, md, csv, json, xml, html, yaml, code, ...) are shown in its details, images (png, jpg, gif, bmp, tif, ico) in their own resizable window (**View image**, or a double-click on the file), fitted then zoomed with the mouse wheel or +/- (0 fits again) and moved by dragging, decrypted in memory only: nothing decrypted is written to disk. A long text shows its beginning, and can wrap its lines; other types are exported to be opened.
@@ -326,6 +348,8 @@ It covers kofrenot on Windows and on Android; versions before 0.9 ran on Windows
 - **Vault format 3.** kofrenot 0.2 does not open a vault written by this version, and offers the update. Vaults of formats 1 and 2 are read as they are.
 
 ## [0.2] - 2026-10-18
+
+*Notes: link types, notes with content, pinned and recent nodes.*
 
 ### Added
 - **Directed link types** with a reverse: *contains* / *contained by*, *is a* (alias *is an*) / *has instance*. A link can be typed either way and reads from the node it is seen from.
@@ -343,6 +367,8 @@ It covers kofrenot on Windows and on Android; versions before 0.9 ran on Windows
 - The local snapshot keeps the changes themselves (snapshot format 3): every change is read again once after the update.
 
 ## [0.1] - 2026-10-17
+
+*Application shell; nodes and links typed in one box, stored in an encrypted folder.*
 
 ### Added
 - **Application shell**, taken from coursee: a main window that hides on close, a tray icon (Show, Settings, Log window, Quit), and a single running copy.

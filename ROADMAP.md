@@ -1,22 +1,6 @@
 # kofrenot: roadmap
 
-Scope of each planned version. Implemented features move to [CHANGELOG.md](CHANGELOG.md). The goal, principles, non-goals and open questions are in [GOAL.md](docs/GOAL.md). The features are sorted by priority, each tagged with the app that gets it: Windows, Android or Both (what each supports today: [README](README.md#windows-and-android)).
-
-| Version | Status    | Theme                                                                              |
-| ------- | --------- | ---------------------------------------------------------------------------------- |
-| 0.1     | Released  | Application shell; nodes and links typed in one box, stored in an encrypted folder |
-| 0.2     | Released  | Notes: link types, notes with content, pinned and recent nodes                     |
-| 0.3     | Released  | Datasets: files stored in the vault, read on demand                                |
-| 0.4     | Released  | Views: flat and tree views over the graph, shown as tabs                           |
-| 0.5     | Released  | Vaults: several vaults, a hot key per vault; change types, link nodes              |
-| 0.6     | Released  | Server: own vaults stored on a web server, synced across devices                   |
-| 0.7     | Released  | Sharing: identities, recovery key, vaults shared with other users                  |
-| 0.8     | Released  | Notes as in Keep; content on demand; session in Core for Android                   |
-| 0.9     | Released  | Android: server vaults read and searched offline on the phone                      |
-| 0.10    | Released  | Offline pins, file drops; notes and files added on Android                         |
-| 0.11    | Released  | Composition: node types made of fields, several per node; fields of a node's own   |
-| 0.12    | Released  | History: versions restored; the phone adds and changes nodes, links, fields and members |
-| 0.13    | Released  | Android navigation and layouts: edge to edge, top bar and sheets, one back stack; image fields; web search |
+Scope of each planned version. Implemented features move to [CHANGELOG.md](CHANGELOG.md), where each released version opens with its theme. The goal, principles, non-goals and open questions are in [GOAL.md](docs/GOAL.md). The features are sorted by priority, each tagged with the app that gets it: Windows, Android or Both (what each supports today: [README](README.md#windows-and-android)).
 
 ## 0.14
 
