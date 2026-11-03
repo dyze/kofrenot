@@ -17,6 +17,7 @@ namespace Kofrenot.UI.Views;
 /// there with Ctrl held (as Ctrl+C, Ctrl+V). The node under the pointer is highlighted, and the
 /// cursor says when a move is refused. Leaving the window, the node goes on as files to other
 /// programs (a folder): a dataset its file, a node with children a folder of them; several nodes selected are dragged out together (<see cref="DragOut"/>).
+/// Unlinked nodes dropped on a node go under it (<see cref="DropUnlinked"/>).
 /// A file dropped on a node from elsewhere becomes a new dataset under it (the creation screen),
 /// several files or folders as many nodes (their preview first).
 /// </summary>
@@ -78,7 +79,9 @@ public partial class ViewPanel
     private void Tree_DragOver(object sender, DragEventArgs e)
     {
         var target = TreeViewItemAt(e.OriginalSource);
-        e.Effects = e.Data.GetDataPresent(DragFormat) ? EffectOf(e, target) : FileEffectOf(e, target);
+        e.Effects = e.Data.GetDataPresent(DragFormat) ? EffectOf(e, target)
+            : e.Data.GetDataPresent(UnlinkedPane.DragFormat) ? UnlinkedEffectOf(e, target)
+            : FileEffectOf(e, target);
         ShowDropTarget(e.Effects == DragDropEffects.None ? null : target);
         e.Handled = true;
     }
@@ -131,6 +134,12 @@ public partial class ViewPanel
         var target = TreeViewItemAt(e.OriginalSource);
         ShowDropTarget(null);
         e.Handled = true;
+        if (e.Data.GetDataPresent(UnlinkedPane.DragFormat))
+        {
+            DropUnlinked(e, target);
+            return;
+        }
+
         if (!e.Data.GetDataPresent(DragFormat))
         {
             if (FileEffectOf(e, target) != DragDropEffects.None && target?.Tag is TreeItem item && DroppedFiles(e) is { } paths)

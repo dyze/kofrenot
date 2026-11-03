@@ -14,6 +14,9 @@ public sealed class ViewState
 
     /// <summary>A list shows its nodes as cards, not rows.</summary>
     public bool ShowsCards { get; set; }
+
+    /// <summary>A tree shows the unlinked nodes beside it (<see cref="UnlinkedNodes"/>), to put them in it.</summary>
+    public bool ShowsUnlinked { get; set; }
 }
 
 /// <summary>
@@ -52,6 +55,16 @@ public sealed class ViewStates(string path, ILog? log = null)
     {
         var changed = state.ShowsCards != showsCards;
         state.ShowsCards = showsCards;
+        return changed;
+    });
+
+    /// <summary>Whether a tree view shows the unlinked nodes beside it (off by default).</summary>
+    public bool ShowsUnlinked(Guid vault, Guid view) => Find(vault, view)?.ShowsUnlinked ?? false;
+
+    public void SetShowsUnlinked(Guid vault, Guid view, bool showsUnlinked) => Change(vault, view, state =>
+    {
+        var changed = state.ShowsUnlinked != showsUnlinked;
+        state.ShowsUnlinked = showsUnlinked;
         return changed;
     });
 

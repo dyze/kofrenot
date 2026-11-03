@@ -35,6 +35,7 @@ public partial class ViewPanel
         DeleteButton.Visibility = (isTree || isList) && !IsReadOnly() ? Visibility.Visible : Visibility.Collapsed;
         DeleteButton.ToolTip = isTree ? "Delete the node selected, with everything under it (Del)" : "Delete the node selected, with its links (Del)";
 
+        UnlinkedButton.Visibility = isTree ? Visibility.Visible : Visibility.Collapsed;
         DetailsButton.Visibility = isTree || (isList && !ShowsCards) ? Visibility.Visible : Visibility.Collapsed;
         CardsButton.Visibility = isList ? Visibility.Visible : Visibility.Collapsed;
         CardsButton.IsChecked = ShowsCards;

@@ -115,6 +115,21 @@ public sealed class ViewStatesTests : IDisposable
         Assert.DoesNotContain(_log.Entries, entry => entry.Message.Contains("cannot be saved"));
     }
 
+    [Fact]
+    public void Unlinked_IsOffByDefault_AndKeptPerView()
+    {
+        var states = States();
+        Assert.False(states.ShowsUnlinked(_vault, _view));
+
+        states.SetShowsUnlinked(_vault, _view, showsUnlinked: true);
+
+        Assert.True(States().ShowsUnlinked(_vault, _view));
+        Assert.False(States().ShowsUnlinked(_vault, Guid.NewGuid()));
+
+        states.SetShowsUnlinked(_vault, _view, showsUnlinked: false);
+        Assert.False(States().ShowsUnlinked(_vault, _view));
+    }
+
     public void Dispose() => _temp.Dispose();
 
     private ViewStates States() => new(FilePath, _log);

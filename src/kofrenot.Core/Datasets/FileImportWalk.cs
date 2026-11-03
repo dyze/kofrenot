@@ -25,9 +25,14 @@ internal sealed class FileImportWalk(KnowledgeGraph graph, ParentLink? under)
     public List<string> Skipped { get; } = [];
 
     /// <summary>Adds the rows of <paramref name="paths"/>, the items of <paramref name="folder"/> (null at the top).</summary>
-    public void Add(IEnumerable<string> paths, ImportRow? folder)
+    public void Add(IEnumerable<string> paths, ImportRow? folder) => Add(paths.Select(Read).OfType<Item>().ToList(), folder);
+
+    /// <summary>Adds the rows of <paramref name="files"/>, at the top: files given, not read from a folder (a share).</summary>
+    public void Add(IEnumerable<ImportFile> files) =>
+        Add(files.Select(file => new Item(FileImportPlanner.NodeNameOf(file.Name), file, null)).ToList(), folder: null);
+
+    private void Add(List<Item> items, ImportRow? folder)
     {
-        var items = paths.Select(Read).OfType<Item>().ToList();
         var stems = items.GroupBy(item => NameKey.Of(item.Name)).Where(same => same.Count() > 1).Select(same => same.Key).ToHashSet();
         var parent = folder is null ? under?.Parent : folder.Existing;
         var children = parent is null ? [] : _tree.ChildrenOf(parent.Id).OrderBy(child => child.Created).ToList();

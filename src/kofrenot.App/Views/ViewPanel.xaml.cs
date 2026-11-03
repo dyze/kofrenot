@@ -35,6 +35,7 @@ public partial class ViewPanel : UserControl
         Tree.AddHandler(TreeViewItem.ExpandedEvent, new RoutedEventHandler(Tree_Expanded));
         Tree.AddHandler(TreeViewItem.CollapsedEvent, new RoutedEventHandler(Tree_Collapsed));
         List.AddHandler(ScrollViewer.ScrollChangedEvent, new ScrollChangedEventHandler((_, _) => ReadCardsInView()));
+        Unlinked.OpenNode += node => OpenNode?.Invoke(node);
     }
 
     /// <summary>Asks to open a node's details.</summary>
@@ -101,6 +102,7 @@ public partial class ViewPanel : UserControl
         }
 
         ShowActions();
+        ShowUnlinked();
         RefreshFound();
     }
 

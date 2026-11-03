@@ -101,6 +101,13 @@
             <TextBlock Margin="6,0,0,0" VerticalAlignment="Center" Text="Details" />
           </StackPanel>
         </ToggleButton>
+        <!-- A tree: the unlinked nodes beside it (ViewPanel.Unlinked), to drag into it. -->
+        <ToggleButton x:Name="UnlinkedButton" Margin="8,0,4,0" Padding="8,4" ToolTip="Show the nodes without a parent beside the tree, to drag them into it" Click="Unlinked_Click">
+          <StackPanel Orientation="Horizontal">
+            <local:IconView VerticalAlignment="Center" Size="12" Kind="unlink" />
+            <TextBlock Margin="6,0,0,0" VerticalAlignment="Center" Text="Unlinked" />
+          </StackPanel>
+        </ToggleButton>
         <!-- A list: its nodes as cards (ViewPanel.Cards), not rows. -->
         <ToggleButton x:Name="CardsButton" Margin="8,0,4,0" Padding="8,4" ToolTip="Show the nodes as cards, with a preview of each" Click="Cards_Click">
           <StackPanel Orientation="Horizontal">
@@ -137,7 +144,18 @@
       </StackPanel>
     </Grid>
 
-    <Grid Grid.Row="1" Background="Transparent">
+    <!-- The tree or the list, and beside a tree, on demand, the unlinked nodes to drag into it (ViewPanel.Unlinked). -->
+    <Grid Grid.Row="1">
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="*" />
+        <ColumnDefinition x:Name="UnlinkedColumn" Width="0" />
+      </Grid.ColumnDefinitions>
+      <local:UnlinkedPane x:Name="Unlinked"
+                          Grid.Column="1"
+                          Margin="16,0,0,0"
+                          Visibility="Collapsed" />
+
+    <Grid Background="Transparent">
       <Grid.RowDefinitions>
         <RowDefinition Height="Auto" />
         <RowDefinition Height="*" />
@@ -217,6 +235,7 @@
         </ListBox.ContextMenu>
         <!-- Its rows are built in code (ViewPanel.RowOf), as the tree's, or its cards (ViewPanel.CardOf). -->
       </ListBox>
+    </Grid>
     </Grid>
   </Grid>
 </UserControl>

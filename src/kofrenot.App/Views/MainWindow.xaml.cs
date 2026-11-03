@@ -29,6 +29,7 @@ public partial class MainWindow : Window
     private readonly VaultSession _session;
     private readonly RecentNodes _recent;
     private readonly ViewTabs _tabs;
+    private readonly ImportDestinations _destinations;
     private readonly OpenedFiles _opened;
     private readonly TabList _tabList;
     private readonly Func<SettingsWindow> _createSettings;
@@ -41,9 +42,10 @@ public partial class MainWindow : Window
     /// <param name="session">The vault the input box works on.</param>
     /// <param name="recent">The nodes last opened on this device, listed while the input box is empty.</param>
     /// <param name="tabs">The views open as tabs on this device.</param>
+    /// <param name="destinations">Where the last import went, per vault, on this device.</param>
     /// <param name="createSettings">Creates the Settings window, shown as a dialog over this one.</param>
     /// <param name="opened">Where datasets' files opened in their app are decrypted.</param>
-    public MainWindow(SettingsStore settings, ILog log, UpdateChecker updates, VaultSession session, RecentNodes recent, ViewTabs tabs, ViewStates viewStates, OpenedFiles opened, Func<SettingsWindow> createSettings, Func<ImageWindow> createImageWindow)
+    public MainWindow(SettingsStore settings, ILog log, UpdateChecker updates, VaultSession session, RecentNodes recent, ViewTabs tabs, ViewStates viewStates, ImportDestinations destinations, OpenedFiles opened, Func<SettingsWindow> createSettings, Func<ImageWindow> createImageWindow)
     {
         _settings = settings;
         _opened = opened;
@@ -52,6 +54,7 @@ public partial class MainWindow : Window
         _session = session;
         _recent = recent;
         _tabs = tabs;
+        _destinations = destinations;
         _tabList = new TabList(tabs);
         _createSettings = createSettings;
         _createImageWindow = createImageWindow;

@@ -9,6 +9,9 @@ It covers kofrenot on Windows and on Android; versions before 0.9 ran on Windows
 ## [Unreleased]
 
 ### Added
+- **Both**
+  - **Import destination**: files dropped on *Drop files* (Windows), added with **＋** or shared from another app, text shared included (Android), go under a node of a tree view you choose, linked by its link type, instead of being left with no link: the last one chosen in a vault is offered first (kept on the device), another one is picked by browsing a tree view, or none. A file whose dataset is already under that node becomes its new version, as on a drop on a tree ([README](README.md#datasets)).
+  - **Unlinked nodes**: the nodes no link leads to, the newest first, at most 100 with a filter, to put them into a tree: on Windows **Unlinked** on a tree's bar shows them beside it, dragged (several at once) onto a node; on Android **⋮** of a tree tab > *Unlinked nodes…*, a tap moving one under the node reached ([README](README.md#views)).
 - **Windows**
   - **Delete a node outside a tree**: the trash can in its details' header (**Ctrl+Del**), **Del** or the right-click menu in a list, or a right-click on a search result deletes the node alone, with its links, asked first as on Android; the details show the node before it. A tree still deletes a subtree ([README](README.md#node-details)).
   - **Drop folders**: folders dropped on a tree node or on *Drop files* are imported whole, as a hierarchy: each folder becomes a node, its files datasets under it, sub-folders included; the preview shows them indented. Dropped again on the same node, they update what is there instead of adding it twice: a file becomes its dataset's new version (asked first), a folder's content is merged into its node ([README](README.md#views)).
@@ -19,6 +22,8 @@ It covers kofrenot on Windows and on Android; versions before 0.9 ran on Windows
 - **Both**
   - **New icons, the same on Windows and Android**: one set of 72, for nodes, node types and actions, drawn by kofrenot instead of Windows' Segoe Fluent glyphs and the phone's text characters. A pinned node, or one kept offline, shows its icon filled in the accent; a link is removed with its own icon (a broken link) ([Architecture](docs/ARCHITECTURE.md#datasets)).
   - **Removing a link says when a node is left with no link**, so only the search finds it then ([README](README.md#windows-and-android)).
+- **Android**
+  - **Files added together keep their extension when their names would be the same** (`report.pdf`, `report.docx`), as dropped files do on Windows, instead of becoming homonyms.
 
 ### Fixed
 - **Windows**

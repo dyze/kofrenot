@@ -11,7 +11,7 @@
         WindowStartupLocation="CenterOwner"
         SourceInitialized="Window_SourceInitialized">
   <!-- What dropped files and folders will add, before anything is: a dataset per file, a node per
-       folder (its content indented under it), the items skipped, the node they go under. Enter: Add. Esc: Cancel. -->
+       folder (its content indented under it), the items skipped, the node they go under (or their destination, to change). Enter: Add. Esc: Cancel. -->
   <Window.Resources>
     <ResourceDictionary Source="SharedStyles.xaml" />
   </Window.Resources>
@@ -27,6 +27,12 @@
 
     <TextBlock x:Name="HeadingText" Style="{StaticResource HeadingText}" />
     <TextBlock x:Name="UnderText" Grid.Row="1" Margin="0,6,0,0" TextWrapping="Wrap" Visibility="Collapsed" />
+    <!-- Where the items go when they were not dropped on a node: the last destination of this vault, or none. -->
+    <DockPanel x:Name="DestinationBar" Grid.Row="1" Margin="0,8,0,0" Visibility="Collapsed">
+      <Button x:Name="NoDestinationButton" Margin="4,0,0,0" Padding="8,2" Content="None" DockPanel.Dock="Right" Style="{StaticResource FlatButton}" ToolTip="Import without a parent: the items are then listed beside a tree, as unlinked" Click="NoDestination_Click" />
+      <Button Margin="8,0,0,0" Padding="8,2" Content="Change…" DockPanel.Dock="Right" Style="{StaticResource FlatButton}" ToolTip="Choose a tree view, then the node the items go under" Click="ChangeDestination_Click" />
+      <TextBlock x:Name="DestinationText" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+    </DockPanel>
 
     <ScrollViewer Grid.Row="2" Margin="0,12,0,0" VerticalScrollBarVisibility="Auto" Focusable="False">
       <ItemsControl x:Name="RowsList" Focusable="False">

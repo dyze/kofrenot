@@ -96,6 +96,7 @@ public partial class App : Application
             new RecentNodes(files.RecentNodes, log),
             new ViewTabs(files.ViewTabs, log),
             new ViewStates(files.ViewStates, log),
+            new ImportDestinations(files.ImportDestinations, log),
             opened,
             createSettings: () =>
             {

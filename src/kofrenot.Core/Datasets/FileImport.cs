@@ -94,9 +94,9 @@ public sealed record ImportPlan(IReadOnlyList<Change> Changes, IReadOnlyList<Imp
 /// Turns dropped or chosen files and folders into nodes, without asking anything: a dataset per
 /// file, named after it without the extension; a generic node per folder, named after it. Inside a
 /// folder, each item is linked under the folder's node by the tree's link type (<c>contains</c>
-/// without a tree); the top items have no link unless dropped on a tree. Under a node already
-/// there, an item of the same name updates it (<see cref="ImportRow.Existing"/>). The preview says
-/// what will be written; nothing is before <see cref="Plan"/>.
+/// without a tree); the top items have no link unless given a parent (a tree node, an import
+/// destination). Under a node already there, an item of the same name updates it
+/// (<see cref="ImportRow.Existing"/>). The preview says what will be written; nothing is before <see cref="Plan"/>.
 /// </summary>
 public sealed class FileImportPlanner(KnowledgeGraph graph, TimeProvider? clock = null)
 {
@@ -113,16 +113,12 @@ public sealed class FileImportPlanner(KnowledgeGraph graph, TimeProvider? clock 
         return new ImportPreview(walk.Rows, walk.Skipped, under);
     }
 
-    /// <summary>The preview of importing <paramref name="files"/>, each a new dataset.</summary>
+    /// <summary>The preview of importing <paramref name="files"/> (shared, picked, taken), matched as dropped files are.</summary>
     public ImportPreview Preview(IReadOnlyList<ImportFile> files, ParentLink? under = null)
     {
-        var names = new HashSet<string>(StringComparer.Ordinal);
-        var rows = files.Select(file =>
-        {
-            var name = NodeNameOf(file.Name);
-            return new ImportRow(file, name, graph.NodesNamed(name).Count > 0 || !names.Add(NameKey.Of(name)));
-        }).ToList();
-        return new ImportPreview(rows, [], under);
+        var walk = new FileImportWalk(graph, under);
+        walk.Add(files);
+        return new ImportPreview(walk.Rows, [], under);
     }
 
     /// <summary>The changes adding the preview's new nodes and links (new ids at each call: call it once, when accepted).</summary>

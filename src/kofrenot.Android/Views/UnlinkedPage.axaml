@@ -1,0 +1,13 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:views="using:Kofrenot.Phone.Views"
+             x:Class="Kofrenot.Phone.Views.UnlinkedPage">
+  <!-- The nodes without a parent, the newest first, at most 100, filtered by name; a tap opens or moves one into the tree. -->
+  <DockPanel>
+    <views:TopBar x:Name="Bar" DockPanel.Dock="Top" />
+    <TextBox x:Name="SearchBox" DockPanel.Dock="Top" Margin="{StaticResource PageMargin}" PlaceholderText="Filter"
+             TextChanged="Search_TextChanged" />
+    <TextBlock x:Name="Message" DockPanel.Dock="Top" Classes="caption" Margin="{StaticResource PageMargin}" TextWrapping="Wrap" />
+    <ListBox x:Name="List" SelectionChanged="List_SelectionChanged" />
+  </DockPanel>
+</UserControl>

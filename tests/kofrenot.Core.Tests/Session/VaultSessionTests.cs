@@ -580,6 +580,21 @@ public sealed class VaultSessionTests : IDisposable
     }
 
     [Fact]
+    public void SharedText_UnderADestination_IsANoteLinkedUnderIt()
+    {
+        _device.CreateFolderVault();
+        var inbox = AddNode("Inbox", TypeCatalog.Generic.Id);
+        var note = new SharedNotePlanner(_device.Vault.Graph).Preview("Buy spice", new ParentLink(inbox, TypeCatalog.Contains.Id));
+
+        var node = Session.AddNote(Ask, note);
+
+        Assert.NotNull(node);
+        var link = Assert.Single(_device.Vault.Graph.LinksOf(inbox.Id));
+        Assert.Equal(node.Id, link.To);
+        Assert.Contains(_device.Log.Entries, entry => entry.Message == "Note added from shared text, in a tree");
+    }
+
+    [Fact]
     public async Task AFileImported_AgainUnderTheSameParent_IsANewVersion_UnlessItIsTheSame()
     {
         _device.CreateFolderVault();

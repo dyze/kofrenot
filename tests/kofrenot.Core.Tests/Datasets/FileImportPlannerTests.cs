@@ -151,12 +151,36 @@ public sealed class FileImportPlannerTests : IDisposable
     }
 
     [Fact]
-    public void FilesGiven_OfTheSameName_AreHomonyms()
+    public void FilesGiven_OfTheSameName_KeepTheirExtension()
     {
-        var preview = _planner.Preview([new ImportFile("a.txt", 1, () => Stream.Null), new ImportFile("A.csv", 1, () => Stream.Null)]);
+        var preview = _planner.Preview([Given("a.txt"), Given("A.csv")]);
+
+        Assert.Equal(["a.txt", "A.csv"], preview.Rows.Select(row => row.NodeName));
+        Assert.All(preview.Rows, row => Assert.False(row.IsHomonym));
+    }
+
+    [Fact]
+    public void FilesGiven_TheSameTwice_AreHomonyms()
+    {
+        var preview = _planner.Preview([Given("a.txt"), Given("a.txt")]);
 
         Assert.Equal([false, true], preview.Rows.Select(row => row.IsHomonym));
     }
+
+    [Fact]
+    public void FilesGiven_UnderATreeNode_UpdateTheirDataset()
+    {
+        var parent = AddNode("Projects", TypeCatalog.Generic.Id);
+        var dataset = AddUnder(parent, AddNode("a", TypeCatalog.Dataset.Id));
+        AddNode("b", TypeCatalog.Generic.Id);
+
+        var preview = _planner.Preview([Given("a.txt"), Given("b.txt")], new ParentLink(parent, TypeCatalog.Contains.Id));
+
+        Assert.Equal([dataset, null], preview.Rows.Select(row => row.Existing));
+        Assert.All(preview.Rows, row => Assert.False(row.IsHomonym));
+    }
+
+    private static ImportFile Given(string name) => new(name, 1, () => Stream.Null);
 
     [Fact]
     public void UnderATreeNode_OnlyANameTakenUnderIt_IsAHomonym()

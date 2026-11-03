@@ -40,8 +40,44 @@ public sealed class SharedNotePlannerTests
     {
         var plan = new SharedNotePlanner(_graph, _clock).Plan(new SharedNote("Dune", "Dune\ntext", false));
 
-        Assert.Equal(("Dune", TypeCatalog.Note.Id, _clock.Now), (plan.Node.Node.Name, plan.Node.Node.Type, plan.Node.Node.Created));
-        Assert.Equal((plan.Node.Node.Id, "Dune\ntext"), (plan.Note.Version.Node, plan.Note.Content));
+        var added = Assert.IsType<NodeAdded>(Assert.Single(plan.Changes)).Node;
+        Assert.Equal(plan.Node, added);
+        Assert.Equal(("Dune", TypeCatalog.Note.Id, _clock.Now), (added.Name, added.Type, added.Created));
+        Assert.Equal((added.Id, "Dune\ntext"), (plan.Note.Version.Node, plan.Note.Content));
         Assert.Empty(plan.Note.Version.Replaces);
+    }
+
+    [Fact]
+    public void UnderADestination_OnlyANameTakenUnderIt_IsAHomonym()
+    {
+        var parent = Add("Inbox");
+        Add("Arrakis");
+        var dune = Add("dune");
+        _graph.Apply(new LinkAdded(Guid.NewGuid(), _clock.Now, new Link(Guid.NewGuid(), TypeCatalog.Contains.Id, parent.Id, dune.Id, _clock.Now)));
+        var planner = new SharedNotePlanner(_graph, _clock);
+        var under = new ParentLink(parent, TypeCatalog.Contains.Id);
+
+        Assert.True(planner.Preview("Dune", under).IsHomonym);
+        Assert.False(planner.Preview("Arrakis", under).IsHomonym);
+        Assert.Equal(under, planner.Preview("Arrakis", under).Under);
+    }
+
+    [Fact]
+    public void UnderADestination_ThePlanLinksTheNoteUnderIt_ByItsLinkType()
+    {
+        var parent = Add("Inbox");
+        var planner = new SharedNotePlanner(_graph, _clock);
+
+        var plan = planner.Plan(planner.Preview("Dune", new ParentLink(parent, TypeCatalog.IsA.Id)));
+
+        var link = Assert.Single(plan.Changes.OfType<LinkAdded>()).Link;
+        Assert.Equal((TypeCatalog.IsA.Id, parent.Id, plan.Node.Id), (link.Type, link.From, link.To));
+    }
+
+    private Node Add(string name)
+    {
+        var node = new Node(Guid.NewGuid(), TypeCatalog.Generic.Id, name, _clock.Now);
+        _graph.Add(node);
+        return node;
     }
 }

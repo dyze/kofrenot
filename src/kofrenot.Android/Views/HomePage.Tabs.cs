@@ -1,6 +1,7 @@
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Threading;
+using Kofrenot.Core.Browse;
 using Kofrenot.Core.Graph;
 using Kofrenot.Core.Logging;
 using Kofrenot.Core.Storage;
@@ -12,7 +13,7 @@ namespace Kofrenot.Phone.Views;
 /// The tabs: the search, then the views opened on this phone, within the screen's width, the selected
 /// one kept in sight. ▾, always at their right, lists
 /// them all in a sheet, to reach one among dozens, then the views to open. A view tab has its bar under
-/// the tabs: how many nodes it shows, and ⋮ for its actions (Close view).
+/// the tabs: how many nodes it shows, and ⋮ for its actions (a tree's unlinked nodes, Close view).
 /// </summary>
 public sealed partial class HomePage
 {
@@ -58,13 +59,24 @@ public sealed partial class HomePage
 
     private void ShowViewBar(int count) => ViewCount.Text = count == 1 ? "1 row" : $"{count} rows";
 
-    // ⋮ of a view tab: its actions, only Close view for now.
+    // ⋮ of a view tab: its actions: a tree's unlinked nodes, to move into it; Close view.
     private void ViewActions_Click(object? sender, RoutedEventArgs e)
     {
         if (Vault is { } vault && _tab.View is { } view)
         {
-            _shell.ShowSheet(_tab.Name, [new("Close view", () => CloseTab(vault, view), Icon: "close")]);
+            var isTree = ImportDestinations.TreeOf(vault.Graph, view) is not null;
+            _shell.ShowSheet(_tab.Name,
+            [
+                .. isTree ? [new SheetChoice("Unlinked nodes…", () => ShowUnlinked(view), Icon: "unlink")] : Array.Empty<SheetChoice>(),
+                new("Close view", () => CloseTab(vault, view), Icon: "close"),
+            ]);
         }
+    }
+
+    private void ShowUnlinked(Node view)
+    {
+        _shell.Services.Log.Info("Action", "Unlinked nodes shown");
+        _shell.Push(new UnlinkedPage(_shell, view));
     }
 
     private void Select(Tab tab)

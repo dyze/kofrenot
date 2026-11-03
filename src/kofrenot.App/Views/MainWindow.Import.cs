@@ -1,5 +1,6 @@
 using System.Windows;
 using System.Windows.Media;
+using Kofrenot.Core.Browse;
 using Kofrenot.Core.Datasets;
 using Kofrenot.Core.Input;
 using Kofrenot.Core.Logging;
@@ -12,7 +13,11 @@ namespace Kofrenot.UI.Views;
 /// </summary>
 public partial class MainWindow
 {
-    /// <summary>Shows the preview of importing <paramref name="paths"/>, then imports them when accepted.</summary>
+    /// <summary>
+    /// Shows the preview of importing <paramref name="paths"/>, then imports them when accepted:
+    /// under <paramref name="under"/> when dropped on a node, else to this vault's last destination
+    /// (<see cref="ImportDestinations"/>), which the preview can change, and which is kept for the next one.
+    /// </summary>
     private async Task ImportFiles(IReadOnlyList<string> paths, ParentLink? under)
     {
         if (_session.Current is not { } vault)
@@ -20,14 +25,22 @@ public partial class MainWindow
             return;
         }
 
-        var preview = new FileImportPlanner(vault.Graph).Preview(paths, under);
-        if (!ImportPreviewDialog.Ask(this, preview) || !ConfirmUpdates(preview))
+        var planner = new FileImportPlanner(vault.Graph);
+        var choice = under is null
+            ? ImportPreviewDialog.Ask(this, vault.Graph, _destinations.Of(vault.Id), parent => planner.Preview(paths, parent))
+            : ImportPreviewDialog.Ask(this, planner.Preview(paths, under));
+        if (choice is null || !ConfirmUpdates(choice.Preview))
         {
             _log.Info("Action", "Import of files cancelled");
             return;
         }
 
-        await _session.ImportFiles(Ask, preview);
+        if (under is null)
+        {
+            _destinations.Set(vault.Id, choice.Destination);
+        }
+
+        await _session.ImportFiles(Ask, choice.Preview);
     }
 
     /// <summary>Asks before existing datasets get a new version, naming them; true when there are none.</summary>
