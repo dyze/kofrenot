@@ -12,7 +12,7 @@ internal sealed record Occurrence(string Key, Node Node, TreeItem? Item);
 
 /// <summary>
 /// The search of a view, at the right of its bar: it goes to the nodes whose name matches, in the
-/// whole tree (expanding the nodes above), and hides none. While typing it stays on the node gone
+/// whole tree (expanding the nodes above), the list, or the graph, and hides none. While typing it stays on the node gone
 /// to if it still matches, else goes to the first one; Enter (or ↓) goes to the next, Shift+Enter
 /// to the previous, wrapping around. The text is never logged.
 /// </summary>
@@ -130,9 +130,10 @@ public partial class ViewPanel
     private IReadOnlyList<Occurrence> Find(string text) =>
         _definition is not null && _tree is not null ? _tree.Find(text).Select(item => new Occurrence(item.Key, item.Node, item)).ToList()
         : _list is not null ? _list.Find(text).Select(node => new Occurrence(node.Id.ToString(), node, null)).ToList()
+        : GraphBoard.Visibility == Visibility.Visible ? GraphBoard.Find(text).Select(node => new Occurrence(node.Id.ToString(), node, null)).ToList()
         : [];
 
-    /// <summary>Shows a node found, selected: in a tree, the nodes above it expanded; scrolled to.</summary>
+    /// <summary>Shows a node found, selected: in a tree, the nodes above it expanded; scrolled to, or centred in a graph.</summary>
     private void Reveal(Occurrence occurrence)
     {
         if (occurrence.Item is { } item)
@@ -146,6 +147,10 @@ public partial class ViewPanel
             Show(_vault, _graph!, _view!);
             Tree.UpdateLayout();
             (Tree.SelectedItem as TreeViewItem)?.BringIntoView();
+        }
+        else if (GraphBoard.Visibility == Visibility.Visible)
+        {
+            GraphBoard.Reveal(occurrence.Node.Id);
         }
         else if (List.Items.OfType<ListBoxItem>().FirstOrDefault(row => NodeOf(row)?.Id == occurrence.Node.Id) is { } row)
         {

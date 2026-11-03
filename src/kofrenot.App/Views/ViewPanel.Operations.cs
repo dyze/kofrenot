@@ -17,7 +17,11 @@ public partial class ViewPanel
 {
     private (TreeItem Item, bool IsCut)? _taken;
 
-    public ILog Log { get; set; } = NullLog.Instance;
+    public ILog Log
+    {
+        get => GraphBoard.Log;
+        set => GraphBoard.Log = value;
+    }
 
     /// <summary>Writes changes, logging the action: false when they are not written (the user is told).</summary>
     public Func<IReadOnlyList<Change>, string, bool>? Write { get; set; }
@@ -204,9 +208,9 @@ public partial class ViewPanel
 
         AddNodeItems(menu);
         menu.Items.Add(new Separator());
-        menu.Items.Add(MenuItemOf("Copy", "Ctrl+C", () => Take(isCut: false)));
-        menu.Items.Add(MenuItemOf("Cut", "Ctrl+X", () => Take(isCut: true)));
-        menu.Items.Add(MenuItemOf(_taken is { IsCut: true } ? "Move here" : "Paste a copy here", "Ctrl+V", () => Paste(), isEnabled: _taken is not null));
+        menu.Items.Add(MenuItems.Of("Copy", "Ctrl+C", () => Take(isCut: false)));
+        menu.Items.Add(MenuItems.Of("Cut", "Ctrl+X", () => Take(isCut: true)));
+        menu.Items.Add(MenuItems.Of(_taken is { IsCut: true } ? "Move here" : "Paste a copy here", "Ctrl+V", () => Paste(), isEnabled: _taken is not null));
         AddDeleteItem(menu);
     }
 
@@ -215,14 +219,7 @@ public partial class ViewPanel
         if (!IsReadOnly())
         {
             menu.Items.Add(new Separator());
-            menu.Items.Add(MenuItemOf("Delete…", "Del", () => Delete(), isEnabled: SelectedNode is not null));
+            menu.Items.Add(MenuItems.Of("Delete…", "Del", () => Delete(), isEnabled: SelectedNode is not null));
         }
-    }
-
-    private static MenuItem MenuItemOf(string header, string keys, Action action, bool isEnabled = true)
-    {
-        var item = new MenuItem { Header = header, InputGestureText = keys, IsEnabled = isEnabled };
-        item.Click += (_, _) => action();
-        return item;
     }
 }

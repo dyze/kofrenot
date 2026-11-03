@@ -3,36 +3,16 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:local="clr-namespace:Kofrenot.UI.Views">
   <!-- A graph view's content: cards joined by lines, laid out by Core (GraphLayout). Drag a card to move it (kept in
-       the vault), drag the background to pan, the wheel zooms; a double-click or Enter opens a node's details. -->
+       the vault), drag the handle of the card selected to another card to link them, drag the background to pan, the
+       wheel zooms; a double-click or Enter opens a node's details; a right-click on a card or a line offers its actions.
+       Its buttons (Fit, Reset layout, Link names) and its search are on the view's bar (ViewPanel). -->
   <UserControl.Resources>
     <ResourceDictionary Source="SharedStyles.xaml" />
   </UserControl.Resources>
 
   <Grid>
-    <Grid.RowDefinitions>
-      <RowDefinition Height="Auto" />
-      <RowDefinition Height="*" />
-    </Grid.RowDefinitions>
-
-    <StackPanel Margin="0,0,0,8" Orientation="Horizontal">
-      <Button Margin="0,0,4,0" Padding="8,4" Style="{StaticResource FlatButton}" ToolTip="Show the whole graph (Home)" Click="Fit_Click">
-        <StackPanel Orientation="Horizontal">
-          <local:IconView VerticalAlignment="Center" Size="12" Kind="eye" />
-          <TextBlock Margin="6,0,0,0" VerticalAlignment="Center" Text="Fit" />
-        </StackPanel>
-      </Button>
-      <Button x:Name="ResetButton" Margin="0,0,4,0" Padding="8,4" Style="{StaticResource FlatButton}" ToolTip="Give the nodes moved by hand back to the layout" Click="Reset_Click">
-        <StackPanel Orientation="Horizontal">
-          <local:IconView VerticalAlignment="Center" Size="12" Kind="sync" />
-          <TextBlock Margin="6,0,0,0" VerticalAlignment="Center" Text="Reset layout" />
-        </StackPanel>
-      </Button>
-      <TextBlock x:Name="CutNote" Margin="8,0,0,0" VerticalAlignment="Center" Style="{StaticResource SecondaryText}" Visibility="Collapsed" />
-    </StackPanel>
-
     <!-- The surface takes the mouse and the keys; the board under it is moved and zoomed as a whole. -->
     <Border x:Name="Surface"
-            Grid.Row="1"
             Background="Transparent"
             ClipToBounds="True"
             Focusable="True"
@@ -40,6 +20,7 @@
             MouseLeftButtonDown="Surface_MouseLeftButtonDown"
             MouseMove="Surface_MouseMove"
             MouseLeftButtonUp="Surface_MouseLeftButtonUp"
+            MouseRightButtonUp="Surface_MouseRightButtonUp"
             LostMouseCapture="Surface_LostMouseCapture"
             MouseWheel="Surface_MouseWheel"
             KeyDown="Surface_KeyDown"
@@ -47,7 +28,28 @@
       <Canvas x:Name="Board">
         <Canvas x:Name="Lines" />
         <Canvas x:Name="Cards" />
+        <!-- While a link is dragged from the handle of the card selected (GraphPanel.Link). -->
+        <Path x:Name="LinkBand" IsHitTestVisible="False" StrokeThickness="2" StrokeDashArray="4 3" Stroke="{DynamicResource AccentFillColorDefaultBrush}" Visibility="Collapsed" />
       </Canvas>
     </Border>
+
+    <TextBlock x:Name="CutNote" Margin="8,4,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" Style="{StaticResource SecondaryText}" IsHitTestVisible="False" Visibility="Collapsed" />
+
+    <!-- The link types and their colours, when there are several. -->
+    <Border x:Name="Legend"
+            Margin="8"
+            Padding="8,6"
+            HorizontalAlignment="Left"
+            VerticalAlignment="Bottom"
+            Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+            BorderBrush="{DynamicResource ControlStrongStrokeColorDefaultBrush}"
+            BorderThickness="1"
+            CornerRadius="6"
+            IsHitTestVisible="False"
+            Visibility="Collapsed">
+      <StackPanel x:Name="LegendRows" />
+    </Border>
+
+    <local:GraphMinimap x:Name="Minimap" Margin="8" HorizontalAlignment="Right" VerticalAlignment="Bottom" Visibility="Collapsed" />
   </Grid>
 </UserControl>

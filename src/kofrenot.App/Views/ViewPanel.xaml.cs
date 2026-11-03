@@ -39,6 +39,12 @@ public partial class ViewPanel : UserControl
         GraphBoard.OpenNode += node => OpenNode?.Invoke(node);
         GraphBoard.Write = (changes, action) => Write?.Invoke(changes, action) == true;
         GraphBoard.IsReadOnly = () => IsReadOnly();
+        GraphBoard.CreateNode = (type, linkedTo) =>
+        {
+            var added = CreateNode?.Invoke(type, linkedTo, null);
+            Refresh();
+            return added;
+        };
     }
 
     /// <summary>Asks to open a node's details.</summary>
@@ -99,7 +105,7 @@ public partial class ViewPanel : UserControl
                 }
 
                 break;
-            case GraphDefinition definition when GraphBoard.Show(graph, view, definition):
+            case GraphDefinition definition when GraphBoard.Show(graph, view, definition, ShowsLinkNames):
                 ShowOnly(GraphBoard);
                 break;
             case GraphDefinition:

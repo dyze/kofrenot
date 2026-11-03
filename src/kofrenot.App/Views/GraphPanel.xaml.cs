@@ -2,17 +2,22 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Shapes;
 using Kofrenot.Core.Browse;
 using Kofrenot.Core.Graph;
+using Kofrenot.Core.Input;
+using Kofrenot.Core.Logging;
 using Kofrenot.Core.Views;
 
 namespace Kofrenot.UI.Views;
 
 /// <summary>
 /// A graph view's content, read from the graph at each <see cref="Show"/> and laid out by
-/// <see cref="GraphLayout"/>: a card per node, a line per link (<see cref="GraphLines"/>). A card dropped
-/// elsewhere is kept there (<see cref="GraphPlacer"/>); the zoom and the pan stay while the same
-/// view is shown again, and fit the graph when another one is.
+/// <see cref="GraphLayout"/>: a card per node, a line per link (<see cref="GraphLines"/>), a legend of
+/// the link types, a minimap (<see cref="GraphMinimap"/>). A card dropped elsewhere is kept there
+/// (<see cref="GraphPlacer"/>); the zoom and the pan stay while the same view is shown again, and fit
+/// the graph when another one is. Its right-click menus are in GraphPanel.Menu, its links drawn by
+/// hand in GraphPanel.Link.
 /// </summary>
 public partial class GraphPanel : UserControl
 {
@@ -28,6 +33,8 @@ public partial class GraphPanel : UserControl
     private readonly GraphLines _lines;
     private KnowledgeGraph? _graph;
     private Node? _view;
+    private GraphDefinition? _definition;
+    private GraphContent? _content;
     private Guid? _laidOut;
     private Dictionary<Guid, NodePosition> _positions = [];
     private Guid? _selected;
@@ -45,18 +52,27 @@ public partial class GraphPanel : UserControl
     {
         InitializeComponent();
         _lines = new GraphLines(Lines);
+        Minimap.CentreOn += CentreOn;
     }
 
     /// <summary>Asks to open a node's details.</summary>
     public event Action<Node>? OpenNode;
 
-    /// <summary>Writes changes (a move, a reset of the layout), logging the action; false when it could not.</summary>
+    /// <summary>Writes changes (a move, a reset of the layout, a link), logging the action; false when it could not.</summary>
     public Func<IReadOnlyList<Change>, string, bool>? Write { get; set; }
+
+    /// <summary>Adds a node on the creation screen, of its type when given, linked to a card; the plan added, or null.</summary>
+    public Func<NodeType?, ParentLink, AddPlan?>? CreateNode { get; set; }
 
     public Func<bool> IsReadOnly { get; set; } = () => false;
 
-    /// <summary>Shows the graph; false when its root is not there (removed, or not synced yet).</summary>
-    public bool Show(KnowledgeGraph graph, Node view, GraphDefinition definition)
+    public ILog Log { get; set; } = NullLog.Instance;
+
+    /// <summary>Some nodes were moved by hand: <see cref="ResetLayout"/> has something to give back.</summary>
+    public bool CanResetLayout { get; private set; }
+
+    /// <summary>Shows the graph, the name of each link written on its line when <paramref name="showsLinkNames"/>; false when its root is not there (removed, or not synced yet).</summary>
+    public bool Show(KnowledgeGraph graph, Node view, GraphDefinition definition, bool showsLinkNames)
     {
         var shown = new GraphView(graph, definition);
         if (shown.Read() is not { } content)
@@ -66,6 +82,8 @@ public partial class GraphPanel : UserControl
 
         _graph = graph;
         _view = view;
+        _definition = definition;
+        _content = content;
         _positions = new Dictionary<Guid, NodePosition>(GraphLayout.Of(content, definition.Layout, graph.PositionsIn(view.Id)));
         _needsFit |= _laidOut != view.Id;
         _laidOut = view.Id;
@@ -84,22 +102,86 @@ public partial class GraphPanel : UserControl
             Place(node.Id);
         }
 
-        _lines.Draw(content.Edges, _positions);
+        ShowLinkHandle();
+        var names = content.Nodes.ToDictionary(node => node.Id, node => node.Name);
+        _lines.Draw(content.Edges, _positions, id => names[id], showsLinkNames);
+        ShowLegend(shown.Legend);
+        Minimap.Draw(CardsInOrder);
         CutNote.Text = $"The first {GraphView.MaxNodes} nodes reached: lower the depth to see the others.";
         CutNote.Visibility = content.IsCut ? Visibility.Visible : Visibility.Collapsed;
-        ResetButton.IsEnabled = !IsReadOnly() && new GraphPlacer(graph).MovedCount(view.Id) > 0;
+        CanResetLayout = !IsReadOnly() && new GraphPlacer(graph).MovedCount(view.Id) > 0;
         FitIfNeeded();
+        Transform(_matrix);
         return true;
     }
 
     /// <summary>Gives the keyboard to the graph.</summary>
     public void FocusContent() => Surface.Focus();
 
+    /// <summary>The nodes shown whose name matches, in the order shown (<see cref="GraphContent.Find"/>).</summary>
+    public IReadOnlyList<Node> Find(string text) => _content?.Find(text) ?? [];
+
+    /// <summary>Selects a node shown, and centres the view on it.</summary>
+    public void Reveal(Guid node)
+    {
+        if (_positions.TryGetValue(node, out var position))
+        {
+            Select(node);
+            CentreOn(new Point(position.X, position.Y));
+        }
+    }
+
+    /// <summary>Zooms to show every card (never above 1), centred.</summary>
+    public void Fit()
+    {
+        _needsFit = false;
+        if (GraphLayout.BoundsOf(_positions.Values) is not { } bounds)
+        {
+            return;
+        }
+
+        var zoom = Math.Clamp(Math.Min((Surface.ActualWidth - (2 * FitMargin)) / bounds.Width, (Surface.ActualHeight - (2 * FitMargin)) / bounds.Height), MinZoom, 1);
+        var fitted = Matrix.Identity;
+        fitted.Scale(zoom, zoom);
+        fitted.Translate((Surface.ActualWidth / 2) - ((bounds.Left + bounds.Right) / 2 * zoom), (Surface.ActualHeight / 2) - ((bounds.Top + bounds.Bottom) / 2 * zoom));
+        Transform(fitted);
+    }
+
+    /// <summary>Gives the nodes moved by hand back to the layout, once confirmed.</summary>
+    public void ResetLayout()
+    {
+        if (_graph is null || _view is null)
+        {
+            return;
+        }
+
+        var placer = new GraphPlacer(_graph);
+        var count = placer.MovedCount(_view.Id);
+        if (placer.Reset(_view.Id) is { } reset
+            && MessageDialog.Confirm(
+                Window.GetWindow(this),
+                $"Reset the layout of “{_view.Name}”?",
+                "Reset",
+                lines: [$"The places of {count} {(count == 1 ? "node" : "nodes")} moved by hand go: the layout places {(count == 1 ? "it" : "them")} again."]))
+        {
+            Write?.Invoke([reset], $"Graph layout reset ({count} nodes)");
+        }
+
+        FocusContent();
+    }
+
+    // In the order drawn: the last one is over the others.
+    private IReadOnlyCollection<NodePosition> CardsInOrder => _cards.Keys.Select(node => _positions[node]).ToList();
+
     private void Place(Guid node)
     {
         var position = _positions[node];
         Canvas.SetLeft(_cards[node], position.X - (GraphLayout.CardWidth / 2));
         Canvas.SetTop(_cards[node], position.Y - (GraphLayout.CardHeight / 2));
+        if (node == _selected)
+        {
+            ShowLinkHandle();
+        }
     }
 
     private void Select(Guid? node)
@@ -114,6 +196,8 @@ public partial class GraphPanel : UserControl
         {
             GraphCard.Mark(card, isSelected: true);
         }
+
+        ShowLinkHandle();
     }
 
     private void Open(Guid node)
@@ -124,10 +208,25 @@ public partial class GraphPanel : UserControl
         }
     }
 
-    private void Fit_Click(object sender, RoutedEventArgs e)
+    // The link types and their colours; only when there are several to tell apart.
+    private void ShowLegend(IReadOnlyList<GraphLegendItem> legend)
     {
-        Fit();
-        FocusContent();
+        LegendRows.Children.Clear();
+        foreach (var item in legend)
+        {
+            var row = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 1, 0, 1) };
+            var swatch = new Line { X2 = 18, StrokeThickness = item.Role == GraphRole.Beside ? 3 : 2, Stroke = GraphPalette.Of(item.Color), VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(0, 0, 6, 0) };
+            if (item.Role == GraphRole.Free)
+            {
+                swatch.StrokeDashArray = [3, 2];
+            }
+
+            row.Children.Add(swatch);
+            row.Children.Add(new TextBlock { Text = item.Name, FontSize = 12 });
+            LegendRows.Children.Add(row);
+        }
+
+        Legend.Visibility = legend.Count > 1 ? Visibility.Visible : Visibility.Collapsed;
     }
 
     private void FitIfNeeded()
@@ -138,24 +237,40 @@ public partial class GraphPanel : UserControl
         }
     }
 
-    private void Surface_SizeChanged(object sender, SizeChangedEventArgs e) => FitIfNeeded();
-
-    /// <summary>Zooms to show every card (never above 1), centred.</summary>
-    private void Fit()
+    private void Surface_SizeChanged(object sender, SizeChangedEventArgs e)
     {
-        _needsFit = false;
-        if (_positions.Count == 0)
-        {
-            return;
-        }
+        FitIfNeeded();
+        Transform(_matrix);
+    }
 
-        var (left, right) = (_positions.Values.Min(at => at.X) - (GraphLayout.CardWidth / 2), _positions.Values.Max(at => at.X) + (GraphLayout.CardWidth / 2));
-        var (top, bottom) = (_positions.Values.Min(at => at.Y) - (GraphLayout.CardHeight / 2), _positions.Values.Max(at => at.Y) + (GraphLayout.CardHeight / 2));
-        var zoom = Math.Clamp(Math.Min((Surface.ActualWidth - (2 * FitMargin)) / (right - left), (Surface.ActualHeight - (2 * FitMargin)) / (bottom - top)), MinZoom, 1);
-        _matrix = Matrix.Identity;
-        _matrix.Scale(zoom, zoom);
-        _matrix.Translate((Surface.ActualWidth / 2) - ((left + right) / 2 * zoom), (Surface.ActualHeight / 2) - ((top + bottom) / 2 * zoom));
+    /// <summary>Moves and zooms the board, and frames on the minimap the part now shown.</summary>
+    private void Transform(Matrix matrix)
+    {
+        _matrix = matrix;
         Board.RenderTransform = new MatrixTransform(_matrix);
+        if (_matrix.HasInverse)
+        {
+            var inverse = _matrix;
+            inverse.Invert();
+            Minimap.Frame(Rect.Transform(new Rect(0, 0, Surface.ActualWidth, Surface.ActualHeight), inverse));
+        }
+    }
+
+    // A point of the graph, in the view's units, moved to the middle of the surface.
+    private void CentreOn(Point point)
+    {
+        var at = _matrix.Transform(point);
+        var centred = _matrix;
+        centred.Translate((Surface.ActualWidth / 2) - at.X, (Surface.ActualHeight / 2) - at.Y);
+        Transform(centred);
+    }
+
+    // A point of the surface, in the view's units.
+    private Point OnBoard(Point onSurface)
+    {
+        var inverse = _matrix;
+        inverse.Invert();
+        return inverse.Transform(onSurface);
     }
 
     private void Surface_MouseWheel(object sender, MouseWheelEventArgs e)
@@ -163,8 +278,9 @@ public partial class GraphPanel : UserControl
         var factor = e.Delta > 0 ? ZoomStep : 1 / ZoomStep;
         var zoom = Math.Clamp(_matrix.M11 * factor, MinZoom, MaxZoom);
         var around = e.GetPosition(Surface);
-        _matrix.ScaleAt(zoom / _matrix.M11, zoom / _matrix.M11, around.X, around.Y);
-        Board.RenderTransform = new MatrixTransform(_matrix);
+        var zoomed = _matrix;
+        zoomed.ScaleAt(zoom / _matrix.M11, zoom / _matrix.M11, around.X, around.Y);
+        Transform(zoomed);
         e.Handled = true;
     }
 
@@ -172,7 +288,11 @@ public partial class GraphPanel : UserControl
     {
         Surface.Focus();
         _pressedAt = e.GetPosition(Surface);
-        if (CardUnder(e.OriginalSource) is { } node)
+        if (IsLinkHandle(e.OriginalSource) && _selected is { } linked)
+        {
+            StartLink(linked);
+        }
+        else if (CardUnder(e.OriginalSource) is { } node)
         {
             Select(node);
             if (e.ClickCount == 2)
@@ -203,11 +323,15 @@ public partial class GraphPanel : UserControl
         }
 
         var offset = e.GetPosition(Surface) - _pressedAt;
-        if (_panFrom is { } from)
+        if (_linkFrom is not null)
         {
-            _matrix = from;
-            _matrix.Translate(offset.X, offset.Y);
-            Board.RenderTransform = new MatrixTransform(_matrix);
+            DragLink(OnBoard(e.GetPosition(Surface)));
+        }
+        else if (_panFrom is { } from)
+        {
+            var panned = from;
+            panned.Translate(offset.X, offset.Y);
+            Transform(panned);
         }
         else if (_pressedCard is { } node && _pressedPosition is { } start && !IsReadOnly())
         {
@@ -224,10 +348,15 @@ public partial class GraphPanel : UserControl
     private void Surface_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
     {
         var moved = _isDragging && _pressedCard is { } node ? _positions[node] : null;
+        var linked = _linkFrom is { } from ? (From: from, To: CardAt(e.GetPosition(Surface))) : ((Guid From, Guid? To)?)null;
         Surface.ReleaseMouseCapture();
         if (moved is not null)
         {
             Keep(moved);
+        }
+        else if (linked is { To: { } to } link)
+        {
+            EndLink(link.From, to);
         }
     }
 
@@ -237,6 +366,7 @@ public partial class GraphPanel : UserControl
         _pressedPosition = null;
         _isDragging = false;
         _panFrom = null;
+        StopLink();
     }
 
     /// <summary>Writes where a card was dropped; the vault's change shows the graph again.</summary>
@@ -248,28 +378,6 @@ public partial class GraphPanel : UserControl
         }
 
         Write?.Invoke([placed], "Node placed in a graph view");
-    }
-
-    private void Reset_Click(object sender, RoutedEventArgs e)
-    {
-        if (_graph is null || _view is null)
-        {
-            return;
-        }
-
-        var placer = new GraphPlacer(_graph);
-        var count = placer.MovedCount(_view.Id);
-        if (placer.Reset(_view.Id) is { } reset
-            && MessageDialog.Confirm(
-                Window.GetWindow(this),
-                $"Reset the layout of “{_view.Name}”?",
-                "Reset",
-                lines: [$"The places of {count} {(count == 1 ? "node" : "nodes")} moved by hand go: the layout places {(count == 1 ? "it" : "them")} again."]))
-        {
-            Write?.Invoke([reset], $"Graph layout reset ({count} nodes)");
-        }
-
-        FocusContent();
     }
 
     private void Surface_KeyDown(object sender, KeyEventArgs e)
@@ -298,5 +406,12 @@ public partial class GraphPanel : UserControl
         }
 
         return null;
+    }
+
+    // The node of the card at a point of the surface, while the mouse is captured (no source to walk up from).
+    private Guid? CardAt(Point onSurface)
+    {
+        var at = OnBoard(onSurface);
+        return GraphLayout.CardAt(CardsInOrder, at.X, at.Y);
     }
 }

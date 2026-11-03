@@ -45,7 +45,7 @@
       <RowDefinition Height="*" />
     </Grid.RowDefinitions>
 
-    <!-- The actions on the view (ViewPanel.Actions): New, and in a tree the operations on the node selected;
+    <!-- The actions on the view (ViewPanel.Actions): New, and in a tree the operations on the node selected; a graph's own (ViewPanel.Graph);
          at the right, the search (ViewPanel.Search): it goes to the nodes found, it hides none. -->
     <Grid x:Name="ActionBar" Margin="0,0,0,8" Visibility="Collapsed">
       <Grid.ColumnDefinitions>
@@ -113,6 +113,25 @@
           <StackPanel Orientation="Horizontal">
             <local:IconView VerticalAlignment="Center" Size="12" Kind="view-cards" />
             <TextBlock Margin="6,0,0,0" VerticalAlignment="Center" Text="Cards" />
+          </StackPanel>
+        </ToggleButton>
+        <!-- A graph (GraphPanel): fit it, give the nodes moved by hand back to the layout, write the link names on the lines. -->
+        <Button x:Name="FitButton" Margin="0,0,4,0" Padding="8,4" Style="{StaticResource FlatButton}" ToolTip="Show the whole graph (Home)" Click="Fit_Click">
+          <StackPanel Orientation="Horizontal">
+            <local:IconView VerticalAlignment="Center" Size="12" Kind="eye" />
+            <TextBlock Margin="6,0,0,0" VerticalAlignment="Center" Text="Fit" />
+          </StackPanel>
+        </Button>
+        <Button x:Name="ResetLayoutButton" Margin="0,0,4,0" Padding="8,4" Style="{StaticResource FlatButton}" ToolTip="Give the nodes moved by hand back to the layout" Click="ResetLayout_Click">
+          <StackPanel Orientation="Horizontal">
+            <local:IconView VerticalAlignment="Center" Size="12" Kind="sync" />
+            <TextBlock Margin="6,0,0,0" VerticalAlignment="Center" Text="Reset layout" />
+          </StackPanel>
+        </Button>
+        <ToggleButton x:Name="LinkNamesButton" Margin="8,0,4,0" Padding="8,4" ToolTip="Write the name of each link on its line" Click="LinkNames_Click">
+          <StackPanel Orientation="Horizontal">
+            <local:IconView VerticalAlignment="Center" Size="12" Kind="link" />
+            <TextBlock Margin="6,0,0,0" VerticalAlignment="Center" Text="Link names" />
           </StackPanel>
         </ToggleButton>
       </StackPanel>

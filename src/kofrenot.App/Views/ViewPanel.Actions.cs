@@ -26,7 +26,20 @@ public partial class ViewPanel
     {
         var isTree = Tree.Visibility == Visibility.Visible;
         var isList = _definition is null && _listType is not null;
-        ActionBar.Visibility = isTree || isList ? Visibility.Visible : Visibility.Collapsed;
+        var isGraph = GraphBoard.Visibility == Visibility.Visible;
+        ActionBar.Visibility = isTree || isList || isGraph ? Visibility.Visible : Visibility.Collapsed;
+        foreach (var nodeAction in new UIElement[] { NewButton, EditButton, RenameButton })
+        {
+            nodeAction.Visibility = isGraph ? Visibility.Collapsed : Visibility.Visible;
+        }
+
+        foreach (var graphOnly in new UIElement[] { FitButton, ResetLayoutButton, LinkNamesButton })
+        {
+            graphOnly.Visibility = isGraph ? Visibility.Visible : Visibility.Collapsed;
+        }
+
+        ResetLayoutButton.IsEnabled = GraphBoard.CanResetLayout;
+        LinkNamesButton.IsChecked = ShowsLinkNames;
         foreach (var treeOnly in new UIElement[] { CutButton, CopyButton, PasteButton })
         {
             treeOnly.Visibility = isTree ? Visibility.Visible : Visibility.Collapsed;
@@ -83,10 +96,10 @@ public partial class ViewPanel
     /// <summary>New…, Edit and Rename, first in a menu.</summary>
     private void AddNodeItems(ContextMenu menu)
     {
-        menu.Items.Add(MenuItemOf("New…", string.Empty, AddNode, isEnabled: CreateNode is not null && (_definition is not null || _listType is not null)));
-        menu.Items.Add(MenuItemOf("Edit", "Enter", () => OpenSelected(), isEnabled: SelectedNode is not null));
+        menu.Items.Add(MenuItems.Of("New…", string.Empty, AddNode, isEnabled: CreateNode is not null && (_definition is not null || _listType is not null)));
+        menu.Items.Add(MenuItems.Of("Edit", "Enter", () => OpenSelected(), isEnabled: SelectedNode is not null));
         // Once the menu has closed and given the keyboard back, so the box keeps it.
-        menu.Items.Add(MenuItemOf("Rename", "F2", () => Dispatcher.BeginInvoke(StartRename, System.Windows.Threading.DispatcherPriority.Input), isEnabled: SelectedNode is not null));
+        menu.Items.Add(MenuItems.Of("Rename", "F2", () => Dispatcher.BeginInvoke(StartRename, System.Windows.Threading.DispatcherPriority.Input), isEnabled: SelectedNode is not null));
     }
 
     /// <summary>New: a node on the creation screen, under the node selected in a tree, of the list's type in a list; then selected.</summary>
