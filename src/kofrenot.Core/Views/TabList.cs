@@ -3,14 +3,14 @@ using Kofrenot.Core.Graph;
 
 namespace Kofrenot.Core.Views;
 
-/// <summary>A tab of the main window: the search (no view), or a view node.</summary>
+/// <summary>A tab of the main window: Home, the search (no view), or a view node.</summary>
 public sealed record Tab(Node? View)
 {
     public static Tab Search { get; } = new(View: null);
 
     public bool IsSearch => View is null;
 
-    public string Name => View?.Name ?? "Search";
+    public string Name => View?.Name ?? "Home";
 }
 
 /// <summary>

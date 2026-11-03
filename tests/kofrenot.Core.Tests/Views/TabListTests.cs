@@ -26,7 +26,7 @@ public sealed class TabListTests : IDisposable
         var tabs = _tabs.Of(_tree.Graph, _vault);
 
         Assert.Equal([Tab.Search, new Tab(memos), new Tab(files)], tabs);
-        Assert.Equal(("Search", true), (tabs[0].Name, tabs[0].IsSearch));
+        Assert.Equal(("Home", true), (tabs[0].Name, tabs[0].IsSearch));
         Assert.Equal(("Memos", false), (tabs[1].Name, tabs[1].IsSearch));
     }
 

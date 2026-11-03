@@ -29,6 +29,7 @@ It covers kofrenot on Windows and on Android; versions before 0.9 ran on Windows
 ### Changed
 - **Both**
   - **New icons, the same on Windows and Android**: one set of 72, for nodes, node types and actions, drawn by kofrenot instead of Windows' Segoe Fluent glyphs and the phone's text characters. A pinned node, or one kept offline, shows its icon filled in the accent; a link is removed with its own icon (a broken link) ([Architecture](docs/ARCHITECTURE.md#datasets)).
+  - **The first tab is named Home**, not Search: its tab, the first item of a node's breadcrumb on Windows, and its line in the tab sheet on Android, with a house icon.
   - **Removing a link says when a node is left with no link**, so only the search finds it then ([README](README.md#windows-and-android)).
 - **Android**
   - **Files added together keep their extension when their names would be the same** (`report.pdf`, `report.docx`), as dropped files do on Windows, instead of becoming homonyms.

@@ -762,7 +762,7 @@ Behavior for the user: [README.md](../README.md#node-details).
 ```
 search                                    details, level 2 of 4
 ┌─────────────────────────────────── ⚙ ┐  ┌─────────────────────────────────── ⚙ ┐
-│ [ dune                             ] │  │ ⌂ Search › Dune › Frank Herbert      │
+│ [ dune                             ] │  │ ⌂ Home › Dune › Frank Herbert        │
 │ Enter to see the details of “Dune”.  │  │ Frank Herbert                        │
 │ › Dune                           [›] │  │ Type      Generic                    │
 │     relates to Frank Herbert         │  │ Created   2026-10-16 09:12           │

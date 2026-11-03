@@ -22,7 +22,7 @@ public partial class NodeDetailsPanel : UserControl
     private const double MinFieldsHeight = 120;
 
     /// <summary>The first item of the breadcrumb: where Back returns to (the search, or a view).</summary>
-    public string HomeLabel { get; set; } = "⌂ Search";
+    public string HomeLabel { get; set; } = "⌂ Home";
 
     public NodeDetailsPanel()
     {
@@ -50,7 +50,7 @@ public partial class NodeDetailsPanel : UserControl
         e.Handled = true;
     }
 
-    /// <summary>Raised when the user goes back to the search (Esc at level 1, or ⌂ Search).</summary>
+    /// <summary>Raised when the user goes back to the search (Esc at level 1, or ⌂ Home).</summary>
     public event Action? BackToSearch;
 
     public NodeBrowser Browser { get; } = new();
