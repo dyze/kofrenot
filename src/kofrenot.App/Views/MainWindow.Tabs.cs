@@ -170,6 +170,30 @@ public partial class MainWindow
         menu.IsOpen = true;
     }
 
+    private IReadOnlyList<TabRow> _hiddenTabs = [];
+
+    /// <summary>▾ is shown only while some tabs do not fit.</summary>
+    private void TabsList_HiddenChanged(object sender, RoutedEventArgs e)
+    {
+        _hiddenTabs = ((TabStripPanel)e.OriginalSource).Hidden;
+        HiddenTabsButton.Visibility = _hiddenTabs.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
+        e.Handled = true;
+    }
+
+    /// <summary>▾ lists the tabs that do not fit: choosing one selects it, and brings it in sight.</summary>
+    private void HiddenTabs_Click(object sender, RoutedEventArgs e)
+    {
+        var menu = new ContextMenu { PlacementTarget = HiddenTabsButton, FontFamily = FontFamily };
+        foreach (var row in _hiddenTabs)
+        {
+            var item = new MenuItem { Header = row.Name };
+            item.Click += (_, _) => SelectTab(row.Tab.View);
+            menu.Items.Add(item);
+        }
+
+        menu.IsOpen = true;
+    }
+
     /// <summary>New view…: the creation screen for a view, its name typed there; it then opens in a tab.</summary>
     private void CreateView()
     {
