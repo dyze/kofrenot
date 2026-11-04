@@ -185,7 +185,7 @@ public partial class NodeDetailsPanel
             Focusable = focusable,
             Style = (Style)FindResource("FlatButton"),
             ToolTip = tip,
-            Content = new IconView { Kind = icon, Size = 12 },
+            Content = new IconView { Kind = icon, Size = (double)FindResource("RowIconSize") },
         };
         button.Click += (_, _) => click();
         return button;

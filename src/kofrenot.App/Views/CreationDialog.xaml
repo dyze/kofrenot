@@ -99,7 +99,7 @@
                   Style="{StaticResource FlatButton}"
                   ToolTip="Take this file back"
                   Click="RemoveFile_Click">
-            <local:IconView Size="12" Kind="remove" />
+            <local:IconView Size="{StaticResource RowIconSize}" Kind="remove" />
           </Button>
         </Grid>
       </Border>

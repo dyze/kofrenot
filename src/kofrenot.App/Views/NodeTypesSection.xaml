@@ -66,10 +66,10 @@
               </StackPanel>
               <StackPanel Grid.Column="3" Orientation="Horizontal">
                 <Button Style="{StaticResource LineButton}" ToolTip="Change this node type" Click="EditType_Click">
-                  <local:IconView Size="11" Kind="edit" />
+                  <local:IconView Size="{StaticResource RowIconSize}" Kind="edit" />
                 </Button>
                 <Button Style="{StaticResource LineButton}" ToolTip="Remove this node type" Click="RemoveType_Click">
-                  <local:IconView Size="11" Kind="remove" />
+                  <local:IconView Size="{StaticResource RowIconSize}" Kind="remove" />
                 </Button>
               </StackPanel>
             </Grid>
@@ -166,7 +166,7 @@
                            Visibility="{Binding ShowsChoicesHint, Converter={StaticResource VisibleWhen}}" />
               </Grid>
               <Button Style="{StaticResource LineButton}" ToolTip="Take this field out" Click="RemoveField_Click">
-                <local:IconView Size="11" Kind="remove" />
+                <local:IconView Size="{StaticResource RowIconSize}" Kind="remove" />
               </Button>
             </StackPanel>
           </DataTemplate>

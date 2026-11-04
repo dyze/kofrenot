@@ -55,82 +55,82 @@
       <StackPanel Orientation="Horizontal">
         <Button x:Name="NewButton" Margin="0,0,4,0" Padding="8,4" Style="{StaticResource FlatButton}" ToolTip="Add a node (in a tree: under the node selected)" Click="New_Click">
           <StackPanel Orientation="Horizontal">
-            <local:IconView VerticalAlignment="Center" Size="12" Kind="add" />
+            <local:IconView VerticalAlignment="Center" Size="{StaticResource LabeledIconSize}" Kind="add" />
             <TextBlock Margin="6,0,0,0" VerticalAlignment="Center" Text="New" />
           </StackPanel>
         </Button>
         <Button x:Name="EditButton" Margin="0,0,4,0" Padding="8,4" Style="{StaticResource FlatButton}" ToolTip="Open the node selected, to edit it (Enter)" Click="Edit_Click">
           <StackPanel Orientation="Horizontal">
-            <local:IconView VerticalAlignment="Center" Size="12" Kind="edit" />
+            <local:IconView VerticalAlignment="Center" Size="{StaticResource LabeledIconSize}" Kind="edit" />
             <TextBlock Margin="6,0,0,0" VerticalAlignment="Center" Text="Edit" />
           </StackPanel>
         </Button>
         <Button x:Name="RenameButton" Margin="0,0,4,0" Padding="8,4" Style="{StaticResource FlatButton}" ToolTip="Rename the node selected, here (F2)" Click="Rename_Click">
           <StackPanel Orientation="Horizontal">
-            <local:IconView VerticalAlignment="Center" Size="12" Kind="rename" />
+            <local:IconView VerticalAlignment="Center" Size="{StaticResource LabeledIconSize}" Kind="rename" />
             <TextBlock Margin="6,0,0,0" VerticalAlignment="Center" Text="Rename" />
           </StackPanel>
         </Button>
         <Button x:Name="CutButton" Margin="0,0,4,0" Padding="8,4" Style="{StaticResource FlatButton}" ToolTip="Cut the node selected, to move it (Ctrl+X)" Click="Cut_Click">
           <StackPanel Orientation="Horizontal">
-            <local:IconView VerticalAlignment="Center" Size="12" Kind="cut" />
+            <local:IconView VerticalAlignment="Center" Size="{StaticResource LabeledIconSize}" Kind="cut" />
             <TextBlock Margin="6,0,0,0" VerticalAlignment="Center" Text="Cut" />
           </StackPanel>
         </Button>
         <Button x:Name="CopyButton" Margin="0,0,4,0" Padding="8,4" Style="{StaticResource FlatButton}" ToolTip="Copy the node selected, with everything under it (Ctrl+C)" Click="Copy_Click">
           <StackPanel Orientation="Horizontal">
-            <local:IconView VerticalAlignment="Center" Size="12" Kind="copy" />
+            <local:IconView VerticalAlignment="Center" Size="{StaticResource LabeledIconSize}" Kind="copy" />
             <TextBlock Margin="6,0,0,0" VerticalAlignment="Center" Text="Copy" />
           </StackPanel>
         </Button>
         <Button x:Name="PasteButton" Margin="0,0,4,0" Padding="8,4" Style="{StaticResource FlatButton}" ToolTip="Paste under the node selected: moved when cut, a copy otherwise (Ctrl+V)" Click="Paste_Click">
           <StackPanel Orientation="Horizontal">
-            <local:IconView VerticalAlignment="Center" Size="12" Kind="paste" />
+            <local:IconView VerticalAlignment="Center" Size="{StaticResource LabeledIconSize}" Kind="paste" />
             <TextBlock Margin="6,0,0,0" VerticalAlignment="Center" Text="Paste" />
           </StackPanel>
         </Button>
         <Button x:Name="DeleteButton" Margin="0,0,4,0" Padding="8,4" Style="{StaticResource FlatButton}" Click="Delete_Click">
           <StackPanel Orientation="Horizontal">
-            <local:IconView VerticalAlignment="Center" Size="12" Kind="delete" />
+            <local:IconView VerticalAlignment="Center" Size="{StaticResource LabeledIconSize}" Kind="delete" />
             <TextBlock Margin="6,0,0,0" VerticalAlignment="Center" Text="Delete" />
           </StackPanel>
         </Button>
         <ToggleButton x:Name="DetailsButton" Margin="8,0,4,0" Padding="8,4" ToolTip="Show the type, size and last change of each node" Click="Details_Click">
           <StackPanel Orientation="Horizontal">
-            <local:IconView VerticalAlignment="Center" Size="12" Kind="view-details" />
+            <local:IconView VerticalAlignment="Center" Size="{StaticResource LabeledIconSize}" Kind="view-details" />
             <TextBlock Margin="6,0,0,0" VerticalAlignment="Center" Text="Details" />
           </StackPanel>
         </ToggleButton>
         <!-- A tree: the unlinked nodes beside it (ViewPanel.Unlinked), to drag into it. -->
         <ToggleButton x:Name="UnlinkedButton" Margin="8,0,4,0" Padding="8,4" ToolTip="Show the nodes without a parent beside the tree, to drag them into it" Click="Unlinked_Click">
           <StackPanel Orientation="Horizontal">
-            <local:IconView VerticalAlignment="Center" Size="12" Kind="unlink" />
+            <local:IconView VerticalAlignment="Center" Size="{StaticResource LabeledIconSize}" Kind="unlink" />
             <TextBlock Margin="6,0,0,0" VerticalAlignment="Center" Text="Unlinked" />
           </StackPanel>
         </ToggleButton>
         <!-- A list: its nodes as cards (ViewPanel.Cards), not rows. -->
         <ToggleButton x:Name="CardsButton" Margin="8,0,4,0" Padding="8,4" ToolTip="Show the nodes as cards, with a preview of each" Click="Cards_Click">
           <StackPanel Orientation="Horizontal">
-            <local:IconView VerticalAlignment="Center" Size="12" Kind="view-cards" />
+            <local:IconView VerticalAlignment="Center" Size="{StaticResource LabeledIconSize}" Kind="view-cards" />
             <TextBlock Margin="6,0,0,0" VerticalAlignment="Center" Text="Cards" />
           </StackPanel>
         </ToggleButton>
         <!-- A graph (GraphPanel): fit it, give the nodes moved by hand back to the layout, write the link names on the lines. -->
         <Button x:Name="FitButton" Margin="0,0,4,0" Padding="8,4" Style="{StaticResource FlatButton}" ToolTip="Show the whole graph (Home)" Click="Fit_Click">
           <StackPanel Orientation="Horizontal">
-            <local:IconView VerticalAlignment="Center" Size="12" Kind="eye" />
+            <local:IconView VerticalAlignment="Center" Size="{StaticResource LabeledIconSize}" Kind="eye" />
             <TextBlock Margin="6,0,0,0" VerticalAlignment="Center" Text="Fit" />
           </StackPanel>
         </Button>
         <Button x:Name="ResetLayoutButton" Margin="0,0,4,0" Padding="8,4" Style="{StaticResource FlatButton}" ToolTip="Give the nodes moved by hand back to the layout" Click="ResetLayout_Click">
           <StackPanel Orientation="Horizontal">
-            <local:IconView VerticalAlignment="Center" Size="12" Kind="sync" />
+            <local:IconView VerticalAlignment="Center" Size="{StaticResource LabeledIconSize}" Kind="sync" />
             <TextBlock Margin="6,0,0,0" VerticalAlignment="Center" Text="Reset layout" />
           </StackPanel>
         </Button>
         <ToggleButton x:Name="LinkNamesButton" Margin="8,0,4,0" Padding="8,4" ToolTip="Write the name of each link on its line" Click="LinkNames_Click">
           <StackPanel Orientation="Horizontal">
-            <local:IconView VerticalAlignment="Center" Size="12" Kind="link" />
+            <local:IconView VerticalAlignment="Center" Size="{StaticResource LabeledIconSize}" Kind="link" />
             <TextBlock Margin="6,0,0,0" VerticalAlignment="Center" Text="Link names" />
           </StackPanel>
         </ToggleButton>
@@ -158,7 +158,7 @@
                 ToolTip="The next node found (Enter)"
                 IsEnabled="False"
                 Click="SearchNext_Click">
-          <local:IconView Size="12" Kind="arrow-down" />
+          <local:IconView Size="{StaticResource LabeledIconSize}" Kind="arrow-down" />
         </Button>
       </StackPanel>
     </Grid>

@@ -54,7 +54,7 @@
                 Style="{StaticResource FlatButton}"
                 ToolTip="Save (Ctrl+S)"
                 Click="Save_Click">
-          <local:IconView Size="14" Kind="save" />
+          <local:IconView Size="{StaticResource ActionIconSize}" Kind="save" />
         </Button>
       </Grid>
     </Grid>

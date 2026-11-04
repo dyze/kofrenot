@@ -70,7 +70,7 @@
                 ToolTip="Lock the vault (Ctrl+L): it stays locked, also after a restart, until Unlock, which asks its pass phrase"
                 Visibility="Collapsed"
                 Click="LockButton_Click">
-          <local:IconView Size="14" Kind="lock" />
+          <local:IconView Size="{StaticResource ActionIconSize}" Kind="lock" />
         </Button>
 
         <!-- A vault shared with this account to read only: said here and in the window's title. -->
@@ -116,7 +116,7 @@
                 Style="{StaticResource FlatButton}"
                 ToolTip="Settings"
                 Click="SettingsButton_Click">
-          <local:IconView Size="16" Kind="settings" />
+          <local:IconView Size="{StaticResource ActionIconSize}" Kind="settings" />
         </Button>
 
         <!-- A newer release is available (see Settings > About). Over the button's corner; clicks go through. -->
@@ -163,7 +163,7 @@
                             ToolTip="Edit what this view shows"
                             Visibility="Collapsed"
                             Click="EditTab_Click">
-                      <local:IconView Size="14" Kind="settings" />
+                      <local:IconView Size="{StaticResource LabeledIconSize}" Kind="settings" />
                     </Button>
                     <Button x:Name="CloseButton"
                             Margin="6,0,0,0"
@@ -171,7 +171,7 @@
                             Style="{StaticResource FlatButton}"
                             ToolTip="Close this tab"
                             Click="CloseTab_Click">
-                      <local:IconView Size="10" Kind="close" />
+                      <local:IconView Size="{StaticResource RowIconSize}" Kind="close" />
                     </Button>
                   </StackPanel>
                   <Border x:Name="Underline"
@@ -202,7 +202,7 @@
                 Style="{StaticResource FlatButton}"
                 ToolTip="Open a view in a tab"
                 Click="AddTab_Click">
-          <local:IconView Size="12" Kind="add" />
+          <local:IconView Size="{StaticResource LabeledIconSize}" Kind="add" />
         </Button>
       </StackPanel>
 
@@ -217,7 +217,7 @@
               Visibility="Collapsed"
               Click="PasteFiles_Click">
         <StackPanel Orientation="Horizontal">
-          <local:IconView Margin="0,0,6,0" VerticalAlignment="Center" Size="12" Kind="paste" />
+          <local:IconView Margin="0,0,6,0" VerticalAlignment="Center" Size="{StaticResource LabeledIconSize}" Kind="paste" />
           <TextBlock VerticalAlignment="Center" FontSize="{StaticResource CaptionFontSize}" Text="Paste" />
         </StackPanel>
       </Button>
@@ -237,7 +237,7 @@
         <StackPanel Orientation="Horizontal">
           <local:IconView Margin="0,0,6,0"
                           VerticalAlignment="Center"
-                          Size="12" Kind="import" />
+                          Size="{StaticResource LabeledIconSize}" Kind="import" />
           <TextBlock VerticalAlignment="Center" FontSize="{StaticResource CaptionFontSize}" Text="Drop files" />
         </StackPanel>
       </Border>

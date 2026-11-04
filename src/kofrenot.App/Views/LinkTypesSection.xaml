@@ -62,7 +62,7 @@
                               Padding="4,0"
                               ToolTip="Remove this alias"
                               Click="RemoveAlias_Click">
-                        <local:IconView Size="10" Kind="remove" />
+                        <local:IconView Size="{StaticResource RowIconSize}" Kind="remove" />
                       </Button>
                     </StackPanel>
                   </Border>
@@ -91,10 +91,10 @@
                 <TextBlock Text="yours" FontSize="{StaticResource CaptionFontSize}" Opacity="0.8" />
               </Border>
               <Button Style="{StaticResource LineButton}" ToolTip="Rename this link type" Click="RenameType_Click">
-                <local:IconView Size="11" Kind="edit" />
+                <local:IconView Size="{StaticResource RowIconSize}" Kind="edit" />
               </Button>
               <Button Style="{StaticResource LineButton}" ToolTip="Remove this link type" Click="RemoveType_Click">
-                <local:IconView Size="11" Kind="remove" />
+                <local:IconView Size="{StaticResource RowIconSize}" Kind="remove" />
               </Button>
             </StackPanel>
             <TextBlock Margin="8,0,0,0" VerticalAlignment="Center" Opacity="0.7" TextWrapping="Wrap" Text="{Binding Warning}" />

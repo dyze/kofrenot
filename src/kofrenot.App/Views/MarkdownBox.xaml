@@ -25,7 +25,7 @@
         <Button Style="{StaticResource FlatButton}"
                 ToolTip="Link"
                 Click="Link_Click">
-          <local:IconView Size="14" Kind="link" />
+          <local:IconView Size="{StaticResource ActionIconSize}" Kind="link" />
         </Button>
       </StackPanel>
       <Border Width="1" Margin="6,4" Background="{DynamicResource DividerStrokeColorDefaultBrush}" />
@@ -37,7 +37,7 @@
                     ToolTip="Show checkboxes: each line becomes an item of a task list"
                     Click="Checklist_Click">
         <StackPanel Orientation="Horizontal">
-          <local:IconView VerticalAlignment="Center" Size="12" Kind="task-list" />
+          <local:IconView VerticalAlignment="Center" Size="{StaticResource LabeledIconSize}" Kind="task-list" />
           <TextBlock Margin="6,0,0,0" VerticalAlignment="Center" Text="Checkboxes" />
         </StackPanel>
       </ToggleButton>

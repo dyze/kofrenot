@@ -17,6 +17,15 @@
   <sys:Double x:Key="CaptionFontSize">13</sys:Double>
   <sys:Double x:Key="FooterFontSize">11</sys:Double>
 
+  <!-- Icons, by where they are, so the same kind of button has the same size everywhere.
+
+       Action   18  an icon alone on a button: the details' header, the title bar, the note's Save
+       Labeled  14  an icon before its label: toolbars, Paste, Drop files, + of the tabs
+       Row      12  a small button in a row or a chip: remove, edit, close a tab, unlink -->
+  <sys:Double x:Key="ActionIconSize">18</sys:Double>
+  <sys:Double x:Key="LabeledIconSize">14</sys:Double>
+  <sys:Double x:Key="RowIconSize">12</sys:Double>
+
   <Style x:Key="TitleText" TargetType="TextBlock">
     <Setter Property="FontSize" Value="{StaticResource TitleFontSize}" />
     <Setter Property="FontWeight" Value="SemiBold" />

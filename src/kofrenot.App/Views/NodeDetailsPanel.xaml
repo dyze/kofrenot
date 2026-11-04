@@ -104,7 +104,7 @@
                     ToolTip="Colour"
                     Click="ColorButton_Click">
               <Grid>
-                <local:IconView Size="14" Kind="colour" />
+                <local:IconView Size="{StaticResource ActionIconSize}" Kind="colour" />
                 <Ellipse x:Name="ColorDot"
                          Width="8"
                          Height="8"
@@ -148,7 +148,7 @@
                     VerticalAlignment="Center"
                     Style="{StaticResource FlatButton}"
                     Click="PinButton_Click">
-              <local:IconView x:Name="PinIcon" Size="14" Kind="pin" />
+              <local:IconView x:Name="PinIcon" Size="{StaticResource ActionIconSize}" Kind="pin" />
             </Button>
             <!-- Kept offline on this computer only (a server vault): its content downloaded ahead. Same look as the pin. -->
             <Button x:Name="OfflineButton"
@@ -158,7 +158,7 @@
                     Style="{StaticResource FlatButton}"
                     Visibility="Collapsed"
                     Click="OfflineButton_Click">
-              <local:IconView x:Name="OfflineIcon" Size="14" Kind="offline" />
+              <local:IconView x:Name="OfflineIcon" Size="{StaticResource ActionIconSize}" Kind="offline" />
             </Button>
             <!-- Its versions, each to restore (NodeDetailsPanel.History). -->
             <Button Grid.Column="4"
@@ -167,7 +167,7 @@
                     Style="{StaticResource FlatButton}"
                     ToolTip="History: its versions, to restore one"
                     Click="HistoryButton_Click">
-              <local:IconView Size="14" Kind="history" />
+              <local:IconView Size="{StaticResource ActionIconSize}" Kind="history" />
             </Button>
             <!-- Its name searched on the web, in the default browser (NodeDetailsPanel.WebSearch). -->
             <Button x:Name="WebSearchButton"
@@ -176,7 +176,7 @@
                     VerticalAlignment="Center"
                     Style="{StaticResource FlatButton}"
                     Click="WebSearchButton_Click">
-              <local:IconView Size="14" Kind="globe" />
+              <local:IconView Size="{StaticResource ActionIconSize}" Kind="globe" />
             </Button>
             <!-- Deletes it with its links, asked first (NodeDetailsPanel.Delete). -->
             <Button x:Name="DeleteButton"
@@ -186,7 +186,7 @@
                     Style="{StaticResource FlatButton}"
                     ToolTip="Delete this node, with its links (Ctrl+Del)"
                     Click="DeleteButton_Click">
-              <local:IconView Size="14" Kind="delete" />
+              <local:IconView Size="{StaticResource ActionIconSize}" Kind="delete" />
             </Button>
           </Grid>
           <TextBlock x:Name="RenameText" Margin="0,4,0,0" Opacity="0.8" TextWrapping="Wrap" Visibility="Collapsed" />
@@ -242,7 +242,7 @@
                           BorderThickness="1"
                           CornerRadius="10">
                     <StackPanel Orientation="Horizontal">
-                      <local:IconView Margin="0,0,0,1" VerticalAlignment="Center" Size="12" Kind="{Binding Icon}" />
+                      <local:IconView Margin="0,0,0,1" VerticalAlignment="Center" Size="{StaticResource RowIconSize}" Kind="{Binding Icon}" />
                       <TextBlock Margin="5,0,4,1" VerticalAlignment="Center" Text="{Binding Type.Name}" />
                       <Button Padding="3,0"
                               VerticalAlignment="Center"
@@ -251,7 +251,7 @@
                               ToolTip="Take this type out"
                               Visibility="{Binding CanRemove, Converter={StaticResource VisibleWhen}}"
                               Click="RemoveType_Click">
-                        <local:IconView Size="9" Kind="remove" />
+                        <local:IconView Size="{StaticResource RowIconSize}" Kind="remove" />
                       </Button>
                     </StackPanel>
                   </Border>
@@ -378,7 +378,7 @@
                           ToolTip="Remove this link"
                           Visibility="Hidden"
                           Click="RemoveLink_Click">
-                    <local:IconView Size="10" Kind="unlink" />
+                    <local:IconView Size="{StaticResource RowIconSize}" Kind="unlink" />
                   </Button>
                   <Button x:Name="Open" Grid.Column="4" Style="{StaticResource OpenRowButton}" Click="OpenLink_Click" />
                 </Grid>
