@@ -109,6 +109,7 @@ public partial class MainWindow
     {
         if (sender is FrameworkElement { DataContext: TabRow row })
         {
+            PressTab(row, e);
             SelectTab(row.Tab.View);
             e.Handled = true;
         }

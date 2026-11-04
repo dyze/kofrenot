@@ -42,6 +42,40 @@ public sealed class ViewTabsTests : IDisposable
     }
 
     [Fact]
+    public void AMovedView_GoesBeforeTheOneDroppedOn_OrLast_AndIsKept()
+    {
+        var (files, memos, books) = (Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid());
+        var tabs = Tabs();
+        tabs.Open(_vault, files);
+        tabs.Open(_vault, memos);
+        tabs.Open(_vault, books);
+
+        tabs.Move(_vault, books, before: files);
+        Assert.Equal([books, files, memos], Tabs().Of(_vault));
+
+        tabs.Move(_vault, books, before: null);
+        Assert.Equal([files, memos, books], Tabs().Of(_vault));
+
+        tabs.Move(_vault, files, before: Guid.NewGuid());
+        Assert.Equal([memos, books, files], Tabs().Of(_vault));
+    }
+
+    [Fact]
+    public void AViewNotOpen_OrPutWhereItIs_ChangesNothing()
+    {
+        var (files, memos) = (Guid.NewGuid(), Guid.NewGuid());
+        var tabs = Tabs();
+        tabs.Open(_vault, files);
+        tabs.Open(_vault, memos);
+
+        tabs.Move(_vault, Guid.NewGuid(), before: files);
+        tabs.Move(_vault, files, before: files);
+        tabs.Move(_vault, files, before: memos);
+
+        Assert.Equal([files, memos], Tabs().Of(_vault));
+    }
+
+    [Fact]
     public void ADamagedFile_MeansNone_AndIsReported()
     {
         Directory.CreateDirectory(Path.GetDirectoryName(FilePath)!);

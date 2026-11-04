@@ -151,7 +151,7 @@
            ▾ lists the others. A click selects one, ⚙ edits the selected view, × closes a view's tab, + opens a
            view in a new tab. -->
       <local:TabBarPanel x:Name="TabStrip" Margin="0,0,8,0" VerticalAlignment="Center" Visibility="Collapsed">
-        <ItemsControl x:Name="TabsList" Focusable="False" local:TabStripPanel.HiddenChanged="TabsList_HiddenChanged">
+        <ItemsControl x:Name="TabsList" Focusable="False" local:TabStripPanel.HiddenChanged="TabsList_HiddenChanged" MouseMove="TabsList_MouseMove">
           <ItemsControl.ItemsPanel>
             <ItemsPanelTemplate>
               <local:TabStripPanel />
@@ -159,7 +159,15 @@
           </ItemsControl.ItemsPanel>
           <ItemsControl.ItemTemplate>
             <DataTemplate>
-              <Border Margin="0,0,4,0" Padding="10,4" Cursor="Hand" Style="{StaticResource RowFrame}" MouseLeftButtonDown="Tab_MouseLeftButtonDown">
+              <Border Margin="0,0,4,0"
+                      Padding="10,4"
+                      AllowDrop="True"
+                      Cursor="Hand"
+                      Style="{StaticResource RowFrame}"
+                      MouseLeftButtonDown="Tab_MouseLeftButtonDown"
+                      DragOver="Tab_DragOver"
+                      DragLeave="Tab_DragLeave"
+                      Drop="Tab_Drop">
                 <Grid>
                   <StackPanel Orientation="Horizontal">
                     <TextBlock x:Name="TabText" VerticalAlignment="Center" FontSize="{StaticResource BodyFontSize}" Text="{Binding Name}" />
@@ -188,6 +196,9 @@
                           CornerRadius="1.5"
                           Background="{DynamicResource AccentFillColorDefaultBrush}"
                           Visibility="Collapsed" />
+                  <!-- Where a dragged tab goes: before or after this one. -->
+                  <Border x:Name="DropBefore" Width="3" Margin="-12,0,0,0" HorizontalAlignment="Left" CornerRadius="1.5" Background="{DynamicResource AccentFillColorDefaultBrush}" IsHitTestVisible="False" Visibility="Collapsed" />
+                  <Border x:Name="DropAfter" Width="3" Margin="0,0,-13,0" HorizontalAlignment="Right" CornerRadius="1.5" Background="{DynamicResource AccentFillColorDefaultBrush}" IsHitTestVisible="False" Visibility="Collapsed" />
                 </Grid>
               </Border>
               <DataTemplate.Triggers>

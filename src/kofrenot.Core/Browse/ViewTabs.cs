@@ -22,6 +22,30 @@ public sealed class ViewTabs(string path, ILog? log = null)
         }
     }
 
+    /// <summary>
+    /// Moves an open view just before <paramref name="before"/>, or last when it is null (or not open):
+    /// a tab dragged among the others. Nothing changes for a view not open, or put where it is.
+    /// </summary>
+    public void Move(Guid vault, Guid view, Guid? before)
+    {
+        var views = Of(vault).ToList();
+        if (!views.Remove(view) || before == view)
+        {
+            return;
+        }
+
+        var index = before is { } target && views.IndexOf(target) is >= 0 and var at ? at : views.Count;
+        views.Insert(index, view);
+        if (!views.SequenceEqual(Of(vault)))
+        {
+            _file.Change(vault, kept =>
+            {
+                kept.Clear();
+                kept.AddRange(views);
+            });
+        }
+    }
+
     public void Close(Guid vault, Guid view)
     {
         if (Of(vault).Contains(view))
