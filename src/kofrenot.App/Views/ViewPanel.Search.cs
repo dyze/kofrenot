@@ -129,7 +129,7 @@ public partial class ViewPanel
 
     private IReadOnlyList<Occurrence> Find(string text) =>
         _definition is not null && _tree is not null ? _tree.Find(text).Select(item => new Occurrence(item.Key, item.Node, item)).ToList()
-        : _list is not null ? _list.Find(text).Select(node => new Occurrence(node.Id.ToString(), node, null)).ToList()
+        : _list is not null ? InShownOrder(_list.Find(text)).Select(node => new Occurrence(node.Id.ToString(), node, null)).ToList()
         : GraphBoard.Visibility == Visibility.Visible ? GraphBoard.Find(text).Select(node => new Occurrence(node.Id.ToString(), node, null)).ToList()
         : [];
 

@@ -9,19 +9,21 @@
       <ResourceDictionary.MergedDictionaries>
         <ResourceDictionary Source="SharedStyles.xaml" />
       </ResourceDictionary.MergedDictionaries>
-      <!-- A list's panel while it shows cards: they wrap, row after row. -->
+      <!-- A list's panel while it shows cards: in columns, each card under the shortest one. -->
       <ItemsPanelTemplate x:Key="CardsPanel">
-        <WrapPanel />
+        <local:MasonryPanel />
       </ItemsPanelTemplate>
       <!-- A card's item: no fill behind it (its colour is see-through), a ring instead: grey when
-           hovered, the accent colour when selected. -->
+           hovered, the accent colour when selected; its own BorderBrush (set in code) while a card
+           dragged over it would take its place. -->
       <Style x:Key="CardItem" TargetType="ListBoxItem">
         <Setter Property="Margin" Value="0,0,8,8" />
         <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+        <Setter Property="BorderBrush" Value="Transparent" />
         <Setter Property="Template">
           <Setter.Value>
             <ControlTemplate TargetType="ListBoxItem">
-              <Border x:Name="Ring" Padding="2" BorderThickness="2" BorderBrush="Transparent" CornerRadius="12">
+              <Border x:Name="Ring" Padding="2" BorderThickness="2" BorderBrush="{TemplateBinding BorderBrush}" CornerRadius="12">
                 <ContentPresenter />
               </Border>
               <ControlTemplate.Triggers>
@@ -227,7 +229,7 @@
                 PreviewMouseLeftButtonDown="Tree_PreviewMouseLeftButtonDown"
                 PreviewMouseLeftButtonUp="Tree_PreviewMouseLeftButtonUp"
                 PreviewMouseMove="Tree_PreviewMouseMove"
-                QueryContinueDrag="Tree_QueryContinueDrag"
+                QueryContinueDrag="DragInside_QueryContinueDrag"
                 AllowDrop="True"
                 DragOver="Tree_DragOver"
                 DragLeave="Tree_DragLeave"
@@ -253,6 +255,11 @@
                PreviewMouseLeftButtonDown="List_PreviewMouseLeftButtonDown"
                PreviewMouseLeftButtonUp="List_PreviewMouseLeftButtonUp"
                PreviewMouseMove="List_PreviewMouseMove"
+               QueryContinueDrag="DragInside_QueryContinueDrag"
+               AllowDrop="True"
+               DragOver="List_DragOver"
+               DragLeave="List_DragLeave"
+               Drop="List_Drop"
                SelectionChanged="List_SelectionChanged"
                ContextMenuOpening="List_ContextMenuOpening">
         <!-- Filled when it opens: New…, Edit, Rename (ViewPanel.Actions). -->

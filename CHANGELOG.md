@@ -27,10 +27,14 @@ It covers kofrenot on Windows and on Android; versions before 0.9 ran on Windows
   - **Drop folders**: folders dropped on a tree node or on *Drop files* are imported whole, as a hierarchy: each folder becomes a node, its files datasets under it, sub-folders included; the preview shows them indented. Dropped again on the same node, they update what is there instead of adding it twice: a file becomes its dataset's new version (asked first), a folder's content is merged into its node ([README](README.md#views)).
   - **Select several nodes and drag them out**: Ctrl+click and Shift+click select several nodes in a tree or a list; dragged to a folder, datasets become their files and nodes with nodes under them folders, the tree kept. One node of a tree, dragged out of the window, does the same. Notes, empty nodes and files not downloaded are left out, and said so ([README](README.md#views)).
   - **Reorder tabs**: drag a view's tab before or after another; the order is kept on this device, *Home* stays first ([README](README.md#views)).
+  - **Arrange cards**: in a list shown as cards, drag a card onto another to take its place; the order is kept in the vault, for every device (the newest wins). Pinned nodes come first, with a pin ([README](README.md#views)).
   - **Labels and proposals in the Link box** of a node's details, as in the input box: the link type and the other node become labels, **Tab** or **Right** accepts the proposal in grey (a link type first, then a node), **Backspace** unlabels ([README](README.md#node-details)).
   - **Remove a link**: its broken-link button in the details (on the row hovered or selected) or **Remove link…** in its right-click menu, asked first; the nodes stay ([README](README.md#node-details)).
 
 ### Changed
+- **Windows**
+  - **Checked items collapsed in a task list**: at its bottom, under their count (*▸ 3 checked*), a click shows them, to save room ([README](README.md#notes)).
+  - **Cards as tall as their content**, in columns, instead of one size ([README](README.md#views)).
 - **Both**
   - **New icons, the same on Windows and Android**: one set of 72, for nodes, node types and actions, drawn by kofrenot instead of Windows' Segoe Fluent glyphs and the phone's text characters. A pinned node, or one kept offline, shows its icon filled in the accent; a link is removed with its own icon (a broken link) ([Architecture](docs/ARCHITECTURE.md#datasets)).
   - **The first tab is named Home**, not Search: its tab, the first item of a node's breadcrumb on Windows, and its line in the tab sheet on Android, with a house icon.

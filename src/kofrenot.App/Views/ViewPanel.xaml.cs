@@ -79,6 +79,7 @@ public partial class ViewPanel : UserControl
         _definition = null;
         _listType = null;
         _list = null;
+        _cardOrder = null;
         switch (new ViewPlanner(graph).Load(view).Definition)
         {
             case TreeDefinition definition when new CoreTreeView(graph, definition) is { Root: { } root } tree:
@@ -99,7 +100,7 @@ public partial class ViewPanel : UserControl
                 _list = new FlatView(graph, definition);
                 UseCardsPanel(ShowsCards);
                 Func<Node, ListBoxItem> itemOf = ShowsCards ? CardOf : RowOf;
-                var rows = _list.Nodes.Select(itemOf).ToList();
+                var rows = ShownNodes(_list).Select(itemOf).ToList();
                 List.Items.Clear();
                 rows.ForEach(row => List.Items.Add(row));
                 List.SelectedItem = rows.FirstOrDefault(row => NodeOf(row)?.Id == _selectedNode);

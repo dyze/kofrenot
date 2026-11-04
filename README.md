@@ -47,7 +47,7 @@ Both apps share the same vaults and the same core; each shows its own set of fea
 | Recent: opened here or changed on any device (last 7 days) | ✔ empty input box | ✔ home |
 | Node details, links | ✔ the Link box with labels and proposals, as the input box | ✔ |
 | Node types and fields shown | ✔ | ✔ (an image's thumbnail, **Open**) |
-| Views: trees and lists, as tabs | ✔ rows, cards, details; tabs reordered by dragging, **▾** lists those that do not fit | ✔ rows; **▾** lists every tab, **⋮** of a view tab closes it |
+| Views: trees and lists, as tabs | ✔ rows, cards (as tall as their content, pinned first, arranged by dragging), details; tabs reordered by dragging, **▾** lists those that do not fit | ✔ rows; **▾** lists every tab, **⋮** of a view tab closes it |
 | Views: graphs (family tree, network), nodes moved by hand | ✔ several at once; colours, link names, minimap, search; links and nodes added, files pasted, links removed | — (says it is shown on Windows) |
 | Unlinked nodes (no link leads to them), put into a tree | ✔ **Unlinked** beside a tree, dragged onto a node | ✔ **⋮** of a tree tab > *Unlinked nodes…*, one at a time |
 | Pin (synced: listed while the input box is empty) | ✔ | ✔ **⋮** on the node's page |
@@ -63,7 +63,7 @@ Both apps share the same vaults and the same core; each shows its own set of fea
 | Fields: fill, add your own, merge, resolve a conflict | ✔ | ✔ fill (a tap), add your own (text, number, date, web address, email, postal address, checkbox), resolve a conflict, an image set (chosen, a photo taken, from a dataset, or shared by another app) or removed; a merge on Windows |
 | Fields: open a web address, write to an email, show a postal address on a map | ✔ **↗** | ✔ an icon right of the value: open, mail, map |
 | History: a node's versions (text, file, view, names, colours, field values) | ✔ listed, restored | ✔ listed, restored |
-| Notes: edit | ✔ editor with a Markdown toolbar and a task list editor | ✔ Markdown text, task list editor (no reordering); tap a checkbox |
+| Notes: edit | ✔ editor with a Markdown toolbar and a task list editor, checked items collapsed | ✔ Markdown text, task list editor (no reordering); tap a checkbox |
 | Notes: resolve a conflict | ✔ keep one, or merge by hand | ✔ keep one |
 | Datasets: add files | ✔ creation screen, drop zone, drop on a tree, **Paste** (files or an image copied); folders as a hierarchy | ✔ **＋**, with a preview; a photo or video taken |
 | Import destination: under a node of a tree, the last one kept per vault, or no parent | ✔ drop zone | ✔ **＋** and the share sheet (files and text) |
@@ -185,7 +185,7 @@ A node has one or several **types**, each with its **fields**: *Frank Herbert* c
 - The input box also finds a node by its values: *Frank Herbert — Birthplace: Tacoma*, after the nodes found by name.
 
 ### Notes
-A note is Markdown text, saved as a new version each time (**Ctrl+S**, or by leaving it). **Checkboxes** on its toolbar turns its lines into a task list.
+A note is Markdown text, saved as a new version each time (**Ctrl+S**, or by leaving it). **Checkboxes** on its toolbar turns its lines into a task list. Its checked items are collapsed at its bottom under their count (**▸ 3 checked**): a click shows them, or hides them again.
 
 ### Datasets
 A dataset holds one file: drop it on the creation screen or on the dataset. Texts and images are shown in kofrenot (decrypted in memory only), others are exported (**Export…**, or drag the file out). **Open** (Ctrl+O, or a double-click on a file that is not an image) opens the file with the app Windows associates with it: a decrypted copy, deleted at kofrenot's next start. Each import is a new version.
@@ -200,7 +200,7 @@ A view shows your vault another way, in a tab: **a tree** from a node, following
 - In a tree: **Ctrl+C**, **Ctrl+X**, **Ctrl+V** and **Del** copy, move and delete, or drag a node onto another (Ctrl+V pastes a node, never the Windows clipboard: see **Paste** in [Datasets](#datasets)). A copy has its original's types, colour and field values, images included. Drop a file on a node to add it under it (the creation screen); several files, or folders, are previewed first, as with **Drop files**, then added under it, a folder's content under the folder's node by the tree's link type. What is already there is updated, not added again: a file whose dataset of the same name is under the same node becomes its new version (*update*, asked once more before), and a folder whose node is there gets its content merged (*existing*). Same names under different nodes are not homonyms; two files of one folder whose names would be the same (`report.pdf`, `report.docx`) keep their extension.
 - **Several nodes**: **Ctrl+click** adds or takes out a node, **Shift+click** selects the rows from the last one clicked, in a tree as in a list. Drag them to a folder (Explorer, the desktop) to export them: a dataset gives its latest file, a node with nodes under it in the tree a folder of them, sub-folders included; the same name twice in a folder becomes `name (2).ext`. They are decrypted into a temporary folder when the drag starts (the cursor waits a moment for large files), deleted once dropped. Notes, empty nodes and files not downloaded yet are left out, and said so after the drop. With several selected, Edit, Rename, Cut, Copy, Paste and Delete are off. One node of a tree goes out the same way once dragged out of kofrenot's window; until then, it is moved or copied inside kofrenot.
 - **Unlinked** on a tree's bar shows, beside it, the nodes no link leads to (a symmetric link such as *relates to* aside), views and the roots of trees left out: the newest first, at most 100, with a filter to find the others. Drag them (several with **Ctrl**/**Shift**) onto a node of the tree to put them under it, by the tree's link type; a double-click opens one.
-- **Cards** on a list's bar shows its nodes as cards, with a preview. **Details** shows type, size and last change in columns.
+- **Cards** on a list's bar shows its nodes as cards, with a preview, in columns, each as tall as its content. Pinned nodes come first, with a pin. Drag a card onto another to take its place (among the pinned, or among the others): the order is kept in the vault, for every device (arranged on two, the newest wins); new nodes come after, by name. **Details** shows type, size and last change in columns.
 - **A graph** follows the link types you choose, either way, up to 10 steps from its node, each type with a role: *down* puts the other node a rank below (*parent of*), *up* a rank above (*child of*), *beside* on the same rank (*married to*), *free* anywhere. It can keep only some node types, and its cards show the fields you name (*Born, Died*).
 
   | Layout | For | Places |

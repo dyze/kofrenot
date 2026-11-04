@@ -49,18 +49,21 @@ public partial class ViewPanel
         DragFiles(planned.Export, planned.Files);
     }
 
+    private void DragNode(TreeItem dragged) =>
+        DragInside(Tree, new DataObject(DragFormat, dragged.Key), dragged.Node, DragDropEffects.Move | DragDropEffects.Copy);
+
     /// <summary>
-    /// One node of a tree, in two steps: first a drag inside kofrenot (a move, a copy), with no file;
-    /// once the pointer leaves the window, that drag stops and the same one goes on as files, exported
-    /// then (<see cref="Tree_QueryContinueDrag"/>). A move inside kofrenot decrypts nothing.
+    /// One node of a tree or a card, in two steps: first a drag inside kofrenot (a move, a copy), with
+    /// no file; once the pointer leaves the window, that drag stops and the same one goes on as files,
+    /// exported then (<see cref="DragInside_QueryContinueDrag"/>). A move inside kofrenot decrypts nothing.
     /// </summary>
-    private void DragNode(TreeItem dragged)
+    private void DragInside(DependencyObject source, DataObject data, Node node, DragDropEffects allowed)
     {
-        _exportOnLeave = PlanExport([dragged.Node]);
+        _exportOnLeave = PlanExport([node]);
         _leftWindow = false;
         try
         {
-            DragDrop.DoDragDrop(Tree, new DataObject(DragFormat, dragged.Key), DragDropEffects.Move | DragDropEffects.Copy);
+            DragDrop.DoDragDrop(source, data, allowed);
         }
         finally
         {
@@ -75,7 +78,7 @@ public partial class ViewPanel
     }
 
     /// <summary>The pointer leaves the window, the button held: the drag inside kofrenot stops, to go on as files.</summary>
-    private void Tree_QueryContinueDrag(object sender, QueryContinueDragEventArgs e)
+    private void DragInside_QueryContinueDrag(object sender, QueryContinueDragEventArgs e)
     {
         if (_exportOnLeave is not null && !e.EscapePressed && e.KeyStates.HasFlag(DragDropKeyStates.LeftMouseButton) && IsPointerOutsideWindow())
         {
@@ -168,7 +171,10 @@ public partial class ViewPanel
         e.Handled = row is not null && KeepSeveralOnPress(row);
     }
 
-    /// <summary>Drags the rows selected out once the mouse has moved far enough, the button held.</summary>
+    /// <summary>
+    /// Once the mouse has moved far enough, the button held: one card is dragged to another place
+    /// (<see cref="DragCard"/>); otherwise the rows or cards selected are dragged out.
+    /// </summary>
     private void List_PreviewMouseMove(object sender, MouseEventArgs e)
     {
         if (e.LeftButton != MouseButtonState.Pressed || _listDragStart is not { } start || !HasMovedToDrag(e, List, start))
@@ -178,7 +184,14 @@ public partial class ViewPanel
 
         _listDragStart = null;
         _pressedInSelection = null;
-        DragOut(SelectedNodes);
+        if (_cardOrder is not null && !IsReadOnly() && List.SelectedItems is [ListBoxItem card])
+        {
+            DragCard(card);
+        }
+        else
+        {
+            DragOut(SelectedNodes);
+        }
     }
 
     private void List_PreviewMouseLeftButtonUp(object sender, MouseButtonEventArgs e)

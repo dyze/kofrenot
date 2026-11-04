@@ -9,22 +9,29 @@ using Kofrenot.Core.Datasets;
 using Kofrenot.Core.Graph;
 using Kofrenot.Core.Logging;
 using Kofrenot.Core.Storage;
+using Kofrenot.Core.Views;
 
 namespace Kofrenot.UI.Views;
 
 /// <summary>
 /// Cards (a toggle on a list's bar, kept per view in <see cref="ViewStates"/>): the list's items
-/// wrap as cards of one size, each its node's picture and name over a preview (<see cref="NodeCard"/>),
-/// in its colour. A card's preview is read once it comes into view, and dropped at the next redraw.
+/// go in columns as cards (<see cref="MasonryPanel"/>), each its node's picture and name over a preview
+/// (<see cref="NodeCard"/>), in its colour, as tall as its content: the pinned ones first, then as
+/// arranged by dragging (<see cref="CardOrder"/>). A card's preview is read once it comes into view,
+/// and dropped at the next redraw.
 /// </summary>
 public partial class ViewPanel
 {
     private const double CardWidth = 220;
-    private const double CardHeight = 170;
+    private const double ThumbnailHeight = 120;
 
     // The cards whose preview is not read yet, each with the place it goes.
     private readonly List<(ListBoxItem Item, Node Node, Decorator Body)> _unreadCards = [];
     private ItemsPanelTemplate? _rowsPanel;
+
+    // While the list shows cards: their order, and their nodes in that order.
+    private CardOrder? _cardOrder;
+    private IReadOnlyList<Node> _cards = [];
 
     /// <summary>Reads a note version's content for its card; null when its file is not there.</summary>
     public Func<Guid, string?>? ReadNote { get; set; }
@@ -47,7 +54,7 @@ public partial class ViewPanel
         Refresh();
     }
 
-    /// <summary>The list's items wrap as cards, or stack as rows.</summary>
+    /// <summary>The list's items go in columns as cards, or stack as rows.</summary>
     private void UseCardsPanel(bool cards)
     {
         _rowsPanel ??= List.ItemsPanel;
@@ -55,12 +62,41 @@ public partial class ViewPanel
         ScrollViewer.SetHorizontalScrollBarVisibility(List, cards ? ScrollBarVisibility.Disabled : ScrollBarVisibility.Auto);
     }
 
-    /// <summary>A card: its node's picture and name (as a row's, so it is renamed the same way) over its preview, read later.</summary>
+    /// <summary>The list's nodes in the order shown: as cards, by <see cref="CardOrder"/> (pinned first, then as arranged).</summary>
+    private IReadOnlyList<Node> ShownNodes(FlatView list)
+    {
+        if (!ShowsCards || _graph is null || _view is null)
+        {
+            _cardOrder = null;
+            _cards = [];
+            return list.Nodes;
+        }
+
+        _cardOrder = new CardOrder(_graph, _view.Id);
+        return _cards = _cardOrder.Of(list.Nodes);
+    }
+
+    /// <summary>Nodes found in the list, in the order shown.</summary>
+    private IReadOnlyList<Node> InShownOrder(IReadOnlyList<Node> nodes) => _cardOrder?.Of(nodes) ?? nodes;
+
+    /// <summary>
+    /// A card: its node's picture and name (as a row's, so it is renamed the same way), a pin when it
+    /// is pinned, over its preview, read later. As tall as its content.
+    /// </summary>
     private ListBoxItem CardOf(Node node)
     {
         var visual = NodeVisual.Of(_graph!, node);
-        var name = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 0, 0, 6) };
-        name.Children.Add(new NodeVisualView { Width = 20, Height = 20, Margin = new Thickness(0, 0, 8, 0), Visual = visual });
+        var name = new DockPanel { Margin = new Thickness(0, 0, 0, 6) };
+        var icon = new NodeVisualView { Width = 20, Height = 20, Margin = new Thickness(0, 0, 8, 0), Visual = visual };
+        DockPanel.SetDock(icon, Dock.Left);
+        name.Children.Add(icon);
+        if (_cardOrder?.IsPinned(node) == true)
+        {
+            var pin = new IconView { Kind = "pin", Size = 12, Opacity = 0.7, Margin = new Thickness(6, 0, 0, 0), VerticalAlignment = VerticalAlignment.Center, ToolTip = "Pinned" };
+            DockPanel.SetDock(pin, Dock.Right);
+            name.Children.Add(pin);
+        }
+
         name.Children.Add(new TextBlock { Text = node.Name, FontWeight = FontWeights.SemiBold, VerticalAlignment = VerticalAlignment.Center, TextTrimming = TextTrimming.CharacterEllipsis });
         DockPanel.SetDock(name, Dock.Top);
 
@@ -71,7 +107,6 @@ public partial class ViewPanel
         var card = new Border
         {
             Width = CardWidth,
-            Height = CardHeight,
             Padding = new Thickness(10),
             CornerRadius = new CornerRadius(8),
             BorderThickness = new Thickness(1),
@@ -154,7 +189,7 @@ public partial class ViewPanel
         DockPanel.SetDock(caption, Dock.Bottom);
         var panel = new DockPanel();
         panel.Children.Add(caption);
-        panel.Children.Add(new NodeVisualView { Width = double.NaN, Height = double.NaN, Visual = visual with { Color = NodeColor.None } });
+        panel.Children.Add(new NodeVisualView { Width = double.NaN, Height = ThumbnailHeight, Visual = visual with { Color = NodeColor.None } });
         return panel;
     }
 
