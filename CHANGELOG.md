@@ -41,6 +41,7 @@ It covers kofrenot on Windows and on Android; versions before 0.9 ran on Windows
   - **The node under a drag flashed** in a tree, as the pointer crossed its name and its icon: it stays highlighted until the pointer leaves it.
   - **A double-click on a tree's arrow opened the node**: it now only expands or collapses it.
   - **A node with many fields hid its links**: the details could not scroll past its fields. They now scroll in their own area, leaving room for the links or the note below.
+  - **The logo was blurred** on the privacy screen and in the title bar: it is drawn from the icon's frame that fits its size and the screen's scaling.
   - **Dragging a dataset out of a tree closed the Explorer window dropped on** (Explorer crashed). Its file is now exported when the pointer leaves kofrenot's window, then deleted; a move inside kofrenot decrypts nothing ([Architecture](docs/ARCHITECTURE.md#datasets)).
 - **Android**
   - **A vault that could not be opened went back to the list without a word.** A vault of a newer format now says to install the latest kofrenot, and one that needs an upgrade says to open it once on Windows first ([README](README.md#windows-and-android)).
