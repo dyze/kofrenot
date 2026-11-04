@@ -1,6 +1,6 @@
 # kofrenot
 
-A private knowledge system for Windows, read on Android too: notes, files and the links between them, encrypted, usable offline, and synced and shared through your own server.
+A private knowledge system for Windows, and Android: notes, files and the links between them, encrypted, usable offline, and synced and shared through your own server.
 
 ![Typing a link in the input box: the known parts become labels, the rest of a name is proposed in grey](docs/images/main.png)
 
@@ -12,17 +12,20 @@ A private knowledge system for Windows, read on Android too: notes, files and th
 > kofrenot (work PC) ┘   encrypted files only        └─ kofrenot (a friend: shared vault)
 > ```
 
+**Contents**: [Features](#features) · [Install](#install) · [First five minutes](#first-five-minutes) · [Vaults](#vaults) · [On Android](#on-android) · [Using kofrenot](#using-kofrenot) · [Keyboard shortcuts](#keyboard-shortcuts) · [Settings](#settings) · [Your data](#your-data) · [Development](#development)
+
 ## Features
 
 - **One box to find and add**: type `Dune`, or `Dune relates to Frank Herbert`, and the nodes and the link are added. Your own link types too.
 - **Notes** in Markdown, with **task lists** and **colours**, as in Google Keep.
 - **Datasets**: files of any kind and size, with thumbnails and a viewer for images and texts.
 - **Your node types**: a *Person* with a birth date and a website, a *Book* with its genre; a node can have several, and fields of its own. Values are searched offline.
-- **Views**: trees and lists over your nodes, in tabs, shown as rows or as **cards**.
+- **Views**: trees and lists over your nodes, in tabs, shown as rows or as **cards**; **graphs** for a family tree or the relations around a node (Windows).
 - **Encrypted**: everything in a vault, names included, opened by your pass phrase or your recovery key.
 - **Offline first**: browse, search and add without a network.
 - **Sync and share** through a Kofre server, as a reader or a writer.
-- **Versioned**: nothing is overwritten; edits made on two devices are shown, never lost.
+- **Versioned**: nothing is overwritten; a node's **history** restores any version, and edits made on two devices are shown, never lost.
+- **Quick capture**: drop files, or paste what you copied (files, a screenshot), on Windows; share from any app on Android.
 
 ### Windows and Android
 Both apps share the same vaults and the same core; each shows its own set of features. ✔ supported, — not yet ([ROADMAP](ROADMAP.md)), *never* not planned ([why](docs/ANDROID-CONCEPT.md#not-supported)); a note says how it differs.
@@ -82,6 +85,8 @@ How to use each: [Using kofrenot](#using-kofrenot) (Windows), [On Android](#on-a
 | A note with its task list | Cards | A tree |
 | --- | --- | --- |
 | ![A note](docs/images/note.png) | ![Cards](docs/images/cards.png) | ![A tree](docs/images/tree.png) |
+| **A family tree** | **A person, with fields** | **History** |
+| ![A family tree as a graph](docs/images/graph.png) | ![A person's details: dates, email, address, photo](docs/images/person.png) | ![A note's versions, to restore one](docs/images/history.png) |
 
 ## Install
 
@@ -92,6 +97,14 @@ Download `kofrenot-windows-setup-<version>.exe` from the [releases](https://gith
 kofrenot runs in the notification area. **Ctrl+Alt+K** shows it from any program; closing the window hides it.
 
 **Start with Windows** (on by default in the setup, then in Settings > General): when you sign in, kofrenot starts in the notification area, and opens your vault (asking for its pass phrase if not remembered) only when you first show it. The box is ticked only when Windows starts *this* copy; if it starts another one (the installed copy, while you run a build), Settings shows its path, and ticking the box switches to this copy.
+
+## First five minutes
+
+1. **Add a vault**: Settings > Vault, *New vault on the server* (sign in first, Settings > Server) or an empty folder. Keep the recovery key it shows ([Vaults](#vaults)).
+2. **Type** `Dune relates to Frank Herbert` in the box at the top, then **Enter**: two nodes and their link ([Input box](#input-box)).
+3. **Write a note**: type `Groceries`, choose *Note* on the creation screen, tick **Checkboxes** for a task list ([Notes](#notes)).
+4. **Drop files** on *Drop files* beside the tabs, or **Paste** what you copied: each becomes a dataset ([Datasets](#datasets)).
+5. **Open a view**: **+** in the tab bar, a tree from *Home*, a list of your notes as cards, or a graph ([Views](#views)).
 
 ## Vaults
 
@@ -206,7 +219,20 @@ A view shows your vault another way, in a tab: **a tree** from a node, following
   | Remove a link | Right-click its line > **Remove link…**, asked first; the nodes stay |
 - **Ctrl+F** finds a node in a tree, a list or a graph.
 
-Every shortcut is listed in Settings > **Key bindings**.
+### Keyboard shortcuts
+The main ones on Windows; every shortcut is listed in Settings > **Key bindings**.
+
+| Where | Keys |
+| --- | --- |
+| Any program | **Ctrl+Alt+K** shows kofrenot |
+| Main window | **Ctrl+1** to **Ctrl+9** switch vault · **Ctrl+L** locks it |
+| Input box | **Tab** accepts the proposal · **Enter** adds or opens · **Backspace** unlabels · **Esc** clears |
+| Node details | **F2** renames · **Ctrl+K** links · **Ctrl+Del** deletes · **Esc** goes back |
+| Note | **Ctrl+S** saves |
+| Dataset | **Ctrl+I** imports · **Ctrl+E** exports · **Ctrl+O** opens in its app |
+| Tree | **Ctrl+C**, **Ctrl+X**, **Ctrl+V** copy, cut, paste a node · **Del** deletes · **F2** renames |
+| Graph | **Home** fits · **Enter** opens · **Ctrl+A** selects all · **Esc** none |
+| Any view | **Ctrl+F** finds a node |
 
 ## Settings
 
@@ -258,12 +284,12 @@ keytool -genkeypair -v -keystore D:\keys\kofrenot-release.keystore -alias kofren
 ```
 1. Back up the keystore and its password (a password manager, a second copy): lost, the app cannot be updated, only uninstalled and installed again. Never add it to the repository.
 2. Build from the repository folder, the password typed hidden rather than written in a file or the command history, and cleared once built (PowerShell; `emulator` after `android.cmd` for the emulator build):
-   ```
-   $env:KOFRENOT_KEYSTORE = "D:\keys\kofrenot-release.keystore"
-   $secure = Read-Host -AsSecureString "Keystore password"
-   $env:KOFRENOT_KEYSTORE_PASS = [System.Net.NetworkCredential]::new('', $secure).Password
-   try { .\build\android.cmd } finally { Remove-Item Env:KOFRENOT_KEYSTORE_PASS }
-   ```
+```
+$env:KOFRENOT_KEYSTORE = "D:\keys\kofrenot-release.keystore"
+$secure = Read-Host -AsSecureString "Keystore password"
+$env:KOFRENOT_KEYSTORE_PASS = [System.Net.NetworkCredential]::new('', $secure).Password
+try { .\build\android.cmd } finally { Remove-Item Env:KOFRENOT_KEYSTORE_PASS }
+```
    The password goes in as text: a `SecureString` put in the variable as it is reads `System.Security.SecureString`, and signing fails (`java.exe` exits with code 2).
 3. Check: `apksigner verify --print-certs <apk>` (Android SDK, `build-tools`) names your certificate, not *Android Debug*. A release APK does not install over one signed with the debug key: uninstall that one first.
 
@@ -277,7 +303,7 @@ adb install -r artifacts\android\kofrenot-android-<version>.apk
 
 **Another set of data**: `kofrenot.exe --data D:\kofre-test` keeps settings, vaults list, remembered pass phrases and server account in that folder: to test, or to try sharing with a second account. One kofrenot runs at a time: quit the other first (tray icon > *Quit*).
 
-**Demo data** (for screenshots): `dotnet run --project samples\DemoVault` writes a vault of made-up books, notes, task lists, pictures and views to `artifacts\demo`; then, from the repository folder, `kofrenot.exe --data artifacts\demo\data` opens it (pass phrase `demo`, remembered on this computer; quit a running kofrenot first).
+**Demo data** (for screenshots): `dotnet run --project samples\DemoVault` writes a vault of made-up data to `artifacts\demo`: projects, notes and task lists, books and people with their fields and pictures, a family tree and a book club as graphs, a history, a conflict and unlinked nodes, its views open as tabs; then, from the repository folder, `kofrenot.exe --data artifacts\demo\data` opens it (pass phrase `demo`, remembered on this computer; quit a running kofrenot first).
 
 | Folder              | Purpose                                                                                  |
 | ------------------- | ---------------------------------------------------------------------------------------- |
