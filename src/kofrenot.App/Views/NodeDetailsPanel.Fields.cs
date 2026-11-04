@@ -13,7 +13,8 @@ namespace Kofrenot.UI.Views;
 /// <summary>
 /// A node's fields (<see cref="NodeFields"/>), each edited in place (<see cref="FieldPlanner"/>): a
 /// text, number, date or address in a box (<see cref="NodeDetailsPanel"/>'s FieldEdit), a checkbox,
-/// a choice in a list, those of the tab shown (NodeDetailsPanel's Tabs). A value set on two devices
+/// a choice in a list, those of the tab shown (NodeDetailsPanel's Tabs), in as many columns as the
+/// width holds (<see cref="FieldColumnsPanel"/>). A value set on two devices
 /// offers each to keep, its tab marked; two fields of one name offer to merge them. Add field… adds
 /// one of the node's own, with its first value.
 /// </summary>
@@ -35,12 +36,11 @@ public partial class NodeDetailsPanel
             ResetOwnField();
         }
 
-        FieldGrid.Children.Clear();
-        FieldGrid.RowDefinitions.Clear();
+        FieldColumns.Children.Clear();
         var canEdit = WriteChanges is not null;
         foreach (var field in ShowTabs(details))
         {
-            AddFieldRow(field, details.Fields, canEdit);
+            FieldColumns.Children.Add(FieldBlockOf(field, details.Fields, canEdit));
         }
 
         TypeBack(typing);
@@ -53,10 +53,18 @@ public partial class NodeDetailsPanel
         }
     }
 
-    private void AddFieldRow(NodeField field, IReadOnlyList<NodeField> fields, bool canEdit)
+    /// <summary>
+    /// A field's block: its label, its editor and its buttons, and under them, when it was set on two
+    /// devices, the values to keep. Its buttons' column is one width in every block, so editors line up.
+    /// </summary>
+    private Grid FieldBlockOf(NodeField field, IReadOnlyList<NodeField> fields, bool canEdit)
     {
-        var row = FieldGrid.RowDefinitions.Count;
-        FieldGrid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+        var block = new Grid();
+        block.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(110) });
+        block.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star), MaxWidth = 420 });
+        block.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto, SharedSizeGroup = "FieldButtons" });
+        block.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+        block.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
         var label = new TextBlock
         {
             Margin = new Thickness(0, 4, 8, 0),
@@ -66,29 +74,28 @@ public partial class NodeDetailsPanel
             TextTrimming = TextTrimming.CharacterEllipsis,
             ToolTip = field.Type is { } type ? $"A field of {type.Name}" : "A field of this node's own",
         };
-        Place(label, row, 0);
-        Place(EditorOf(field, canEdit), row, 1);
+        Place(block, label, 0, 0);
+        Place(block, EditorOf(field, canEdit), 0, 1);
 
         var actions = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(4, 4, 0, 0) };
         if (field.Value is { } value && FieldValue.LinkOf(field.Kind, value) is { } link)
         {
-            actions.Children.Add(SmallButton("open", OpenTipOf(field.Kind), () => OpenLink(link)));
+            actions.Children.Add(FieldButton("open", OpenTipOf(field.Kind), () => OpenLink(link)));
         }
 
         if (canEdit && field.Kind == FieldKind.Date)
         {
-            actions.Children.Add(SmallButton("calendar", "Choose a date", () => ShowCalendar(field), focusable: true));
+            actions.Children.Add(FieldButton("calendar", "Choose a date", () => ShowCalendar(field), focusable: true));
         }
 
         if (canEdit && fields.FirstOrDefault(other => other != field && other.IsOwn != field.IsOwn && NameKey.Of(other.Name) == NameKey.Of(field.Name)) is { } twin && !field.IsOwn)
         {
-            actions.Children.Add(SmallButton("merge", $"Merge {twin.Label} into {field.Label}", () => Merge(field, twin)));
+            actions.Children.Add(FieldButton("merge", $"Merge {twin.Label} into {field.Label}", () => Merge(field, twin)));
         }
 
-        Place(actions, row, 2);
+        Place(block, actions, 0, 2);
         if (field.Values is { IsConflict: true } values && canEdit)
         {
-            FieldGrid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
             var keep = new WrapPanel { Margin = new Thickness(0, 2, 0, 0) };
             keep.Children.Add(new TextBlock
             {
@@ -104,18 +111,20 @@ public partial class NodeDetailsPanel
                 keep.Children.Add(button);
             }
 
-            Place(keep, row + 1, 1);
+            Place(block, keep, 1, 1);
             Grid.SetColumnSpan(keep, 2);
         }
+
+        return block;
     }
 
     private Node Node => Browser.Details!.Node;
 
-    private void Place(UIElement element, int row, int column)
+    private static void Place(Grid block, UIElement element, int row, int column)
     {
         Grid.SetRow(element, row);
         Grid.SetColumn(element, column);
-        FieldGrid.Children.Add(element);
+        block.Children.Add(element);
     }
 
     private FrameworkElement EditorOf(NodeField field, bool canEdit)
@@ -176,16 +185,17 @@ public partial class NodeDetailsPanel
         }
     }
 
-    // A glyph's button beside a field; reached with Tab only when it is the field's own way to set it (an image removed, a date chosen).
-    private Button SmallButton(string icon, string tip, Action click, bool focusable = false)
+    // An icon's button beside a field, as large as the details' own (pin, history); reached with Tab only
+    // when it is the field's own way to set it (an image removed, a date chosen).
+    private Button FieldButton(string icon, string tip, Action click, bool focusable = false)
     {
         var button = new Button
         {
-            Padding = new Thickness(6, 2, 6, 2),
+            VerticalAlignment = VerticalAlignment.Center,
             Focusable = focusable,
             Style = (Style)FindResource("FlatButton"),
             ToolTip = tip,
-            Content = new IconView { Kind = icon, Size = (double)FindResource("RowIconSize") },
+            Content = new IconView { Kind = icon, Size = (double)FindResource("ActionIconSize") },
         };
         button.Click += (_, _) => click();
         return button;

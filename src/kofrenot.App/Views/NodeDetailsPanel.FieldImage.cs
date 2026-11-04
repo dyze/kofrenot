@@ -62,7 +62,7 @@ public partial class NodeDetailsPanel
 
             if (field.HasValue)
             {
-                panel.Children.Add(SmallButton("remove", "Remove this image", () => RemoveImage(field), focusable: true));
+                panel.Children.Add(FieldButton("delete", "Remove this image", () => RemoveImage(field), focusable: true));
             }
         }
 

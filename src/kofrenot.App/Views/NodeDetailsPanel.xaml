@@ -287,13 +287,8 @@
         <StackPanel x:Name="FieldsPanel" Margin="2,6,0,0">
           <!-- A tab per type, then Its own, for a node of several (NodeDetailsPanel.Tabs). -->
           <WrapPanel x:Name="DetailTabs" Margin="-8,2,0,2" Visibility="Collapsed" />
-          <Grid x:Name="FieldGrid">
-            <Grid.ColumnDefinitions>
-              <ColumnDefinition Width="110" />
-              <ColumnDefinition Width="*" MaxWidth="420" />
-              <ColumnDefinition Width="Auto" />
-            </Grid.ColumnDefinitions>
-          </Grid>
+          <!-- A block per field (NodeDetailsPanel.FieldBlockOf), in columns; their buttons one width in all. -->
+          <local:FieldColumnsPanel x:Name="FieldColumns" Grid.IsSharedSizeScope="True" />
           <TextBlock x:Name="FieldStatus"
                      Margin="110,2,0,0"
                      Foreground="{DynamicResource SystemFillColorCautionBrush}"
