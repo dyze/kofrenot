@@ -28,7 +28,7 @@ It covers kofrenot on Windows and on Android; versions before 0.9 ran on Windows
   - **Select several nodes and drag them out**: Ctrl+click and Shift+click select several nodes in a tree or a list; dragged to a folder, datasets become their files and nodes with nodes under them folders, the tree kept. One node of a tree, dragged out of the window, does the same. Notes, empty nodes and files not downloaded are left out, and said so ([README](README.md#views)).
   - **Reorder tabs**: drag a view's tab before or after another; the order is kept on this device, *Home* stays first ([README](README.md#views)).
   - **Arrange cards**: in a list shown as cards, drag a card onto another to take its place; the order is kept in the vault, for every device (the newest wins). Pinned nodes come first, with a pin ([README](README.md#views)).
-  - **Labels and proposals in the Link box** of a node's details, as in the input box: the link type and the other node become labels, **Tab** or **Right** accepts the proposal in grey (a link type first, then a node), **Backspace** unlabels ([README](README.md#node-details)).
+  - **Labels and proposals in the Link box** of a node's details, as in the input box, the box taking the place of **+ Link** on the links' header: the link type and the other node become labels, **Tab** or **Right** accepts the proposal in grey (a link type first, then a node), **Backspace** unlabels ([README](README.md#node-details)).
   - **Remove a link**: its broken-link button in the details (on the row hovered or selected) or **Remove link…** in its right-click menu, asked first; the nodes stay ([README](README.md#node-details)).
 
 ### Changed

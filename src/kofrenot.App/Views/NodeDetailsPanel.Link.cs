@@ -5,7 +5,7 @@ using Kofrenot.Core.Input;
 namespace Kofrenot.UI.Views;
 
 /// <summary>
-/// The link row, shown on demand (+ Link, Ctrl+K) at the top of the links: links the node shown to
+/// The link box, shown on demand (+ Link, Ctrl+K) in place of + Link, beside the links' header: links the node shown to
 /// another one, typed as in the input box after its name (<see cref="DetailsLink"/>), with its labels and proposals
 /// (<see cref="ChipBox"/>): the node shown is its fixed first node.
 /// </summary>
@@ -25,26 +25,35 @@ public partial class NodeDetailsPanel
 
     private void AddLinkButton_Click(object sender, RoutedEventArgs e) => StartLink();
 
-    /// <summary>Shows the link row, ready to type (+ Link, Ctrl+K).</summary>
-    /// <remarks>Laid out first: a row just shown cannot take the keyboard until then.</remarks>
+    /// <summary>Shows the link box in place of + Link, ready to type (+ Link, Ctrl+K).</summary>
+    /// <remarks>Laid out first: a box just shown cannot take the keyboard until then.</remarks>
     public void StartLink()
     {
-        LinkRow.Visibility = Visibility.Visible;
+        AddLinkButton.Visibility = Visibility.Collapsed;
+        LinkBox.Visibility = Visibility.Visible;
         LinkBox.Reset(fixedLeft: Browser.Details?.Node.Name);
         UpdateLayout();
         LinkBox.FocusText();
     }
 
-    private void HideLinkRow()
+    private void HideLinkBox()
     {
         LinkBox.Reset();
-        LinkRow.Visibility = Visibility.Collapsed;
+        LinkBox.Visibility = Visibility.Collapsed;
+        AddLinkButton.Visibility = Visibility.Visible;
+
+        // The reset showed the empty box's hint while the box was still shown: hidden with it.
+        ShowLinkPreview();
     }
 
-    private void ShowLinkPreview() => LinkPreviewText.Text = Link()?.Preview ?? string.Empty;
+    private void ShowLinkPreview()
+    {
+        LinkPreviewText.Text = Link()?.Preview ?? string.Empty;
+        LinkPreviewText.Visibility = LinkPreviewText.Text.Length > 0 && LinkBox.Visibility == Visibility.Visible ? Visibility.Visible : Visibility.Collapsed;
+    }
 
     /// <summary>
-    /// While the link row has the focus: Enter adds, Tab accepts the proposal, Esc hides it, else clears the row,
+    /// While the link box has the focus: Enter adds, Tab accepts the proposal, Esc hides it, else clears the box,
     /// then hides it; other keys are typed (Right and Backspace by the box).
     /// </summary>
     private bool HandleLinkKey(Key key)
@@ -61,7 +70,7 @@ public partial class NodeDetailsPanel
                     LinkBox.LabelAll();
                     if (AddLink?.Invoke(request, link.Choices) == true)
                     {
-                        HideLinkRow();
+                        HideLinkBox();
                         Focus();
                         Show();
                     }
@@ -80,7 +89,7 @@ public partial class NodeDetailsPanel
                 }
                 else
                 {
-                    HideLinkRow();
+                    HideLinkBox();
                     Focus();
                 }
 

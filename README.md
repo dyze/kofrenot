@@ -165,7 +165,7 @@ Type in the box at the top of the main window; the line under it says what Enter
 - **Keep offline** (the arrow beside the pin, in a server vault's node details): its content (a note's text, a dataset's file) is downloaded ahead and kept on this computer, so it opens offline. Each device chooses its own: nothing is written to the vault. The tooltip says *kept offline* once it is here.
 
 ### Node details
-**Enter** or a double-click on a node opens its details: its name, types, colour, pin, fields and links. **F2** renames it (a name being typed is saved when you go elsewhere: another tab, node or level, or the window hidden); **+ Link** (**Ctrl+K**) links it to another, typed as in the input box after its name (on Windows with the same labels, and **Tab** accepting the proposal in grey); a link opens the node at its other end. **Esc** goes back.
+**Enter** or a double-click on a node opens its details: its name, types, colour, pin, fields and links. **F2** renames it (a name being typed is saved when you go elsewhere: another tab, node or level, or the window hidden); **+ Link** (**Ctrl+K**) links it to another, typed as in the input box after its name (on Windows in a box taking the place of **+ Link**, with the same labels, and **Tab** accepting the proposal in grey); a link opens the node at its other end. **Esc** goes back.
 
 **The globe** (after History) searches the node's name on the web with the engine chosen in Settings > General (Google by default, or DuckDuckGo, Bing), in your default browser. The name leaves the computer only then.
 

@@ -68,7 +68,7 @@ public partial class NodeDetailsPanel : UserControl
     public void Open(KnowledgeGraph graph, Node node, Node? from = null)
     {
         Browser.Open(graph, node, from);
-        HideLinkRow();
+        HideLinkBox();
         if (from is not null)
         {
             Visited?.Invoke(from);
