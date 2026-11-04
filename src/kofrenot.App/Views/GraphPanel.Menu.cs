@@ -12,7 +12,8 @@ namespace Kofrenot.UI.Views;
 /// <summary>
 /// The right-click menus of a graph view. On a card: Open, and New node, linked to it through one
 /// of the view's link types, either way, of the view's node type when it keeps only one. On the background: New node,
-/// with no link, kept in the view where it was asked (a placement). On a line:
+/// with no link, kept in the view where it was asked (a placement). Paste files, on both, while the clipboard
+/// holds some (GraphPanel.Paste). On a line:
 /// Remove link, once confirmed (<see cref="DeletionPlanner.Link"/>). Nothing is changed in a vault read only.
 /// </summary>
 public partial class GraphPanel
@@ -50,6 +51,7 @@ public partial class GraphPanel
     {
         var menu = new ContextMenu();
         menu.Items.Add(MenuItems.Of("New node…", string.Empty, () => AddNodeAt(at), isEnabled: !IsReadOnly() && CreateNode is not null));
+        AddPasteItem(menu, at);
         return menu;
     }
 
@@ -94,6 +96,7 @@ public partial class GraphPanel
 
         newNode.IsEnabled &= newNode.Items.Count > 0;
         menu.Items.Add(newNode);
+        AddPasteItems(menu, card, verbs);
         return menu;
     }
 

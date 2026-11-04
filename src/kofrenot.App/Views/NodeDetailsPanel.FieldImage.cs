@@ -3,6 +3,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using Kofrenot.Core.Browse;
+using Kofrenot.Core.Datasets;
 using Kofrenot.Core.Graph;
 using Kofrenot.Core.Input;
 using Kofrenot.Core.Logging;
@@ -14,7 +15,8 @@ namespace Kofrenot.UI.Views;
 /// <summary>
 /// An image field: its thumbnail (a click shows the image, as a dataset's), Choose… to set another
 /// (<see cref="FieldPlanner.SetImage"/>, its file written as a dataset version's), From a dataset… to
-/// take an image dataset's, not copied (<see cref="FieldPlanner.SetImageFrom"/>), × to remove it, asked first.
+/// take an image dataset's, not copied (<see cref="FieldPlanner.SetImageFrom"/>), Paste, while the
+/// clipboard holds an image, to set it once its preview is accepted, × to remove it, asked first.
 /// </summary>
 public partial class NodeDetailsPanel
 {
@@ -22,6 +24,13 @@ public partial class NodeDetailsPanel
 
     /// <summary>Saves an image chosen for an image field: its files, then its value; false when it could not (the user is told).</summary>
     public Func<FieldSet, Func<Stream>, Task<bool>>? SaveImage { get; set; }
+
+    /// <summary>The system's clipboard, whose image or file can be pasted into an image field or a dataset; null: no Paste button.</summary>
+    public IClipboard? Clipboard
+    {
+        get => DatasetBox.Clipboard;
+        set => DatasetBox.Clipboard = value;
+    }
 
     private FrameworkElement ImageEditorOf(NodeField field, Thickness margin, bool canEdit)
     {
@@ -43,6 +52,14 @@ public partial class NodeDetailsPanel
             var fromDataset = new Button { Margin = new Thickness(8, 0, 0, 0), Padding = new Thickness(10, 2, 10, 2), Content = "From a dataset…", VerticalAlignment = VerticalAlignment.Center };
             fromDataset.Click += (_, _) => ChooseImageDataset(field);
             panel.Children.Add(fromDataset);
+            if (Clipboard is { } clipboard)
+            {
+                var paste = new Button { Margin = new Thickness(8, 0, 0, 0), Padding = new Thickness(10, 2, 10, 2), Content = "Paste", ToolTip = "Set the image copied: a screenshot, an image file", VerticalAlignment = VerticalAlignment.Center };
+                paste.Click += (_, _) => _ = PasteImage(field, clipboard);
+                PasteButtons.Follow(paste, clipboard, PasteOffer.FitsImage);
+                panel.Children.Add(paste);
+            }
+
             if (field.HasValue)
             {
                 panel.Children.Add(SmallButton("remove", "Remove this image", () => RemoveImage(field), focusable: true));
@@ -77,18 +94,58 @@ public partial class NodeDetailsPanel
             CheckFileExists = true,
             Filter = "Images|*.png;*.jpg;*.jpeg;*.gif;*.bmp;*.tif;*.tiff;*.ico;*.webp|All files|*.*",
         };
-        if (dialog.ShowDialog(Window.GetWindow(this)) != true || Browser is not { Graph: { } graph, Details: { } details } || SaveImage is null)
+        if (dialog.ShowDialog(Window.GetWindow(this)) == true)
+        {
+            var path = dialog.FileName;
+            await SetImage(field, () => ImportFile.FromPath(path));
+        }
+    }
+
+    // The image copied, or the image file copied in Explorer: set once its preview is accepted.
+    private async Task PasteImage(NodeField field, IClipboard clipboard)
+    {
+        Log.Info("Action", "Paste of an image into a field");
+        await SetImage(field, () => PasteOffer.Read(clipboard)?.OneFile, file =>
+        {
+            var accepted = PastePreviewDialog.Confirm(Window.GetWindow(this), $"Set this image as {field.Label}?", "Set", file);
+            if (!accepted)
+            {
+                Log.Info("Action", "Paste of an image cancelled");
+            }
+
+            return accepted;
+        });
+    }
+
+    /// <summary>Reads the image, described off the UI thread, then saves it as the field's value, once <paramref name="accept"/> says so.</summary>
+    private async Task SetImage(NodeField field, Func<ImportFile?> read, Func<ImportFile, bool>? accept = null)
+    {
+        if (Browser is not { Graph: { } graph, Details: { } details } || SaveImage is null)
         {
             return;
         }
 
-        var path = dialog.FileName;
         try
         {
-            var file = await Task.Run(() => DatasetFiles.Describe(path));
-            var plan = new FieldPlanner(graph).SetImage(details.Node, field, file);
+            if (read() is not { } file)
+            {
+                MessageDialog.Inform(Window.GetWindow(this), "The clipboard holds no image any more.");
+                return;
+            }
+
+            if (accept?.Invoke(file) == false)
+            {
+                return;
+            }
+
+            var described = await Task.Run(() =>
+            {
+                using var content = file.Open();
+                return DatasetFiles.Describe(file.Name, content);
+            });
+            var plan = new FieldPlanner(graph).SetImage(details.Node, field, described);
             ShowStatus(plan.Status);
-            if (plan.Changes is [FieldSet value] && await SaveImage(value, () => File.OpenRead(path)))
+            if (plan.Changes is [FieldSet value] && await SaveImage(value, file.Open))
             {
                 Show();
             }

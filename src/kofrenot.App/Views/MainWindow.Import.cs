@@ -2,45 +2,68 @@ using System.Windows;
 using System.Windows.Media;
 using Kofrenot.Core.Browse;
 using Kofrenot.Core.Datasets;
+using Kofrenot.Core.Graph;
 using Kofrenot.Core.Input;
 using Kofrenot.Core.Logging;
 
 namespace Kofrenot.UI.Views;
 
 /// <summary>
-/// Files secured quickly: dropped on the drop zone (or several on a tree), they become datasets,
-/// named after their files, once their preview is accepted.
+/// Files secured quickly: dropped on the drop zone (or several on a tree), or pasted by it (the
+/// files or the image copied), they become datasets, named after their files, once their preview is accepted.
 /// </summary>
 public partial class MainWindow
 {
+    private const string NothingToPaste = "The clipboard holds no file nor image any more.";
+
     /// <summary>
     /// Shows the preview of importing <paramref name="paths"/>, then imports them when accepted:
     /// under <paramref name="under"/> when dropped on a node, else to this vault's last destination
     /// (<see cref="ImportDestinations"/>), which the preview can change, and which is kept for the next one.
     /// </summary>
-    private async Task ImportFiles(IReadOnlyList<string> paths, ParentLink? under)
+    private Task ImportFiles(IReadOnlyList<string> paths, ParentLink? under) =>
+        Import((planner, parent) => planner.Preview(paths, parent), under, choosesDestination: under is null);
+
+    /// <summary>What was pasted in a view: under <paramref name="under"/>, or with no parent; the datasets imported.</summary>
+    private Task<IReadOnlyList<Node>> ImportPasted(Pasted pasted, ParentLink? under) =>
+        Import(pasted.Preview, under, choosesDestination: false);
+
+    private async Task<IReadOnlyList<Node>> Import(Func<FileImportPlanner, ParentLink?, ImportPreview> previewOf, ParentLink? under, bool choosesDestination)
     {
         if (_session.Current is not { } vault)
         {
-            return;
+            return [];
         }
 
         var planner = new FileImportPlanner(vault.Graph);
-        var choice = under is null
-            ? ImportPreviewDialog.Ask(this, vault.Graph, _destinations.Of(vault.Id), parent => planner.Preview(paths, parent))
-            : ImportPreviewDialog.Ask(this, planner.Preview(paths, under));
+        var choice = choosesDestination
+            ? ImportPreviewDialog.Ask(this, vault.Graph, _destinations.Of(vault.Id), parent => previewOf(planner, parent))
+            : ImportPreviewDialog.Ask(this, previewOf(planner, under));
         if (choice is null || !ConfirmUpdates(choice.Preview))
         {
             _log.Info("Action", "Import of files cancelled");
-            return;
+            return [];
         }
 
-        if (under is null)
+        if (choosesDestination)
         {
             _destinations.Set(vault.Id, choice.Destination);
         }
 
-        await _session.ImportFiles(Ask, choice.Preview);
+        return await _session.ImportFiles(Ask, choice.Preview);
+    }
+
+    private void PasteFiles_Click(object sender, RoutedEventArgs e)
+    {
+        _log.Info("Action", "Paste of files by the drop zone");
+        if (PasteOffer.Read(_clipboard) is { } pasted)
+        {
+            _ = Import(pasted.Preview, under: null, choosesDestination: true);
+        }
+        else
+        {
+            MessageDialog.Inform(this, NothingToPaste);
+        }
     }
 
     /// <summary>Asks before existing datasets get a new version, naming them; true when there are none.</summary>

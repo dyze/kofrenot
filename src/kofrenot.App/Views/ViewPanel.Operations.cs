@@ -211,6 +211,7 @@ public partial class ViewPanel
         menu.Items.Add(MenuItems.Of("Copy", "Ctrl+C", () => Take(isCut: false)));
         menu.Items.Add(MenuItems.Of("Cut", "Ctrl+X", () => Take(isCut: true)));
         menu.Items.Add(MenuItems.Of(_taken is { IsCut: true } ? "Move here" : "Paste a copy here", "Ctrl+V", () => Paste(), isEnabled: _taken is not null));
+        AddPasteFilesItem(menu);
         AddDeleteItem(menu);
     }
 

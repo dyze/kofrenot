@@ -3,8 +3,8 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:local="clr-namespace:Kofrenot.UI.Views">
   <!-- The file of a dataset, in its details: a text shown by its viewer (DatasetView), an image
-       in its own window (View image, or a double-click on the file). Import (Ctrl+I) or a file
-       dropped here adds a new version, Export (Ctrl+E) or dragging the file out saves it
+       in its own window (View image, or a double-click on the file). Import (Ctrl+I), a file
+       dropped here, or Paste (while the clipboard holds a file or an image) adds a new version, Export (Ctrl+E) or dragging the file out saves it
        elsewhere. Files imported on two devices before they synced show a conflict: keep one. -->
   <UserControl.Resources>
     <ResourceDictionary Source="SharedStyles.xaml" />
@@ -67,6 +67,14 @@
                 Content="Import…"
                 ToolTip="Import a file as the new version (Ctrl+I)"
                 Click="Import_Click" />
+        <Button x:Name="PasteButton"
+                Margin="6,0,0,0"
+                Padding="10,3"
+                Focusable="False"
+                Content="Paste"
+                ToolTip="Import the file or the image copied as the new version"
+                Visibility="Collapsed"
+                Click="Paste_Click" />
         <Button x:Name="ExportButton"
                 Margin="6,0,0,0"
                 Padding="10,3"

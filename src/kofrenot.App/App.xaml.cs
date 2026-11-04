@@ -29,6 +29,7 @@ public partial class App : Application
     private ServerConnection? _server;
     private SyncService? _sync;
     private GlobalHotkey? _hotkey;
+    private WindowsClipboard? _clipboard;
 
     // How long the copy running may take to quit when this one replaces it.
     private static readonly TimeSpan ReplaceTimeout = TimeSpan.FromSeconds(10);
@@ -88,6 +89,7 @@ public partial class App : Application
         session.Changed += sync.Soon;
         var opened = new OpenedFiles(files.Opened, log);
         opened.Clear();
+        var clipboard = _clipboard = new WindowsClipboard(log);
         _window = new MainWindow(
             settings,
             log,
@@ -98,6 +100,7 @@ public partial class App : Application
             new ViewStates(files.ViewStates, log),
             new ImportDestinations(files.ImportDestinations, log),
             opened,
+            clipboard,
             createSettings: () =>
             {
                 var created = new SettingsWindow(settings, logHub, files, updates, session, () => _window?.WhyNotSwitch(), wanted => ApplyHotkey(wanted, settings.Hotkey), (vault, wanted) => ApplyVaultHotkey(settings, vault, wanted, log), autoStart, openLog: OpenLogWindow);
@@ -316,6 +319,7 @@ public partial class App : Application
     {
         _tray?.Dispose();
         _hotkey?.Dispose();
+        _clipboard?.Dispose();
         _session?.Dispose();
         _sync?.Dispose();
         _server?.Dispose();

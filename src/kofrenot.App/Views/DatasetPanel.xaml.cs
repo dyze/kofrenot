@@ -36,6 +36,8 @@ public partial class DatasetPanel : UserControl
     private string? _work;
     private Point? _pressedAt;
     private bool _draggingOut;
+    private IClipboard? _clipboard;
+    private Action? _showPaste;
 
     public DatasetPanel()
     {
@@ -66,6 +68,17 @@ public partial class DatasetPanel : UserControl
 
     /// <summary>Shows a version's image in its own window.</summary>
     public Action<DatasetEdited>? ShowImage { get; set; }
+
+    /// <summary>The system's clipboard, whose file or image can be pasted as the new version; null: no Paste button.</summary>
+    public IClipboard? Clipboard
+    {
+        get => _clipboard;
+        set
+        {
+            _clipboard = value;
+            _showPaste = value is null ? null : PasteButtons.Follow(PasteButton, value, PasteOffer.FitsVersion, () => _node is not null && !IsBusy);
+        }
+    }
 
     public ILog Log
     {
@@ -147,6 +160,38 @@ public partial class DatasetPanel : UserControl
         }
     }
 
+    /// <summary>The file or the image copied, as the new version, once its preview is accepted.</summary>
+    private void PasteVersion()
+    {
+        if (_node is not { } node || IsBusy || _clipboard is null)
+        {
+            return;
+        }
+
+        Log.Info("Action", "Dataset: paste of a new version");
+        try
+        {
+            if (PasteOffer.Read(_clipboard)?.OneFile is not { } file)
+            {
+                StatusText.Text = "The clipboard holds no file nor image any more.";
+            }
+            else if (PastePreviewDialog.Confirm(Window.GetWindow(this), $"Import this file as the new version of “{node.Name}”? Its earlier versions are kept.", "Import", file))
+            {
+                _ = ImportFrom(() => file);
+            }
+            else
+            {
+                Log.Info("Action", "Dataset: paste of a new version cancelled");
+            }
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            // The message names the file: shown, not logged.
+            Log.Warn("Action", $"Dataset: the file copied cannot be read ({ex.GetType().Name})");
+            StatusText.Text = $"Cannot read the file: {ex.Message}";
+        }
+    }
+
     /// <summary>Asks where to save the file (Ctrl+E).</summary>
     public void ChooseExport()
     {
@@ -176,6 +221,7 @@ public partial class DatasetPanel : UserControl
         FileNameText.Text = latest?.File.Name ?? "No file yet";
         FileInfoText.Text = latest is null ? string.Empty : $"{DatasetType.Of(latest.File).Name} · {ByteSize.Format(latest.File.Size)} · imported {DateOf(latest)}";
         ImportButton.IsEnabled = !IsBusy;
+        _showPaste?.Invoke();
         ExportButton.IsEnabled = Exportable is not null;
         OpenButton.IsEnabled = Exportable is not null;
         ViewButton.Visibility = latest is not null && DatasetType.Of(latest.File).Viewer == DatasetViewer.Image ? Visibility.Visible : Visibility.Collapsed;
@@ -192,17 +238,23 @@ public partial class DatasetPanel : UserControl
         };
     }
 
-    /// <summary>Describes the file off the UI thread, then saves it as a new version unless it is the latest already.</summary>
-    private async Task ImportFrom(string path)
+    private Task ImportFrom(string path) => ImportFrom(() => ImportFile.FromPath(path));
+
+    /// <summary>Describes the file read off the UI thread, then saves it as a new version unless it is the latest already.</summary>
+    private async Task ImportFrom(Func<ImportFile> read)
     {
         var (graph, node, vault) = (_graph!, _node!, _vault!);
         const string Reading = "Reading the file…";
         const string Importing = "Importing…";
         await Run(Reading, async () =>
         {
-            var size = new FileInfo(path).Length;
-            var reading = ProgressOf(Reading, size);
-            var file = await Task.Run(() => DatasetFiles.Describe(path, reading));
+            var imported = read();
+            var reading = ProgressOf(Reading, imported.Size);
+            var file = await Task.Run(() =>
+            {
+                using var content = imported.Open();
+                return DatasetFiles.Describe(imported.Name, content, reading);
+            });
             var state = new DatasetPlanner(graph).Load(node, IsAvailableIn(vault));
             if (new DatasetPlanner(graph).Import(node, file, state) is not { } version)
             {
@@ -212,7 +264,7 @@ public partial class DatasetPanel : UserControl
 
             _work = Importing;
             ShowState();
-            return await Save!(version, () => File.OpenRead(path), ProgressOf(Importing, file.Size)) ? null : "The file was not imported.";
+            return await Save!(version, imported.Open, ProgressOf(Importing, file.Size)) ? null : "The file was not imported.";
         });
     }
 
@@ -279,6 +331,8 @@ public partial class DatasetPanel : UserControl
     }
 
     private void Import_Click(object sender, RoutedEventArgs e) => ChooseImport();
+
+    private void Paste_Click(object sender, RoutedEventArgs e) => PasteVersion();
 
     private void Export_Click(object sender, RoutedEventArgs e) => ChooseExport();
 

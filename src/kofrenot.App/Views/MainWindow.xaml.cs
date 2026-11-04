@@ -31,6 +31,8 @@ public partial class MainWindow : Window
     private readonly ViewTabs _tabs;
     private readonly ImportDestinations _destinations;
     private readonly OpenedFiles _opened;
+    private readonly IClipboard _clipboard;
+    private readonly Action _showPasteFiles;
     private readonly TabList _tabList;
     private readonly Func<SettingsWindow> _createSettings;
     private readonly Func<ImageWindow> _createImageWindow;
@@ -45,8 +47,10 @@ public partial class MainWindow : Window
     /// <param name="destinations">Where the last import went, per vault, on this device.</param>
     /// <param name="createSettings">Creates the Settings window, shown as a dialog over this one.</param>
     /// <param name="opened">Where datasets' files opened in their app are decrypted.</param>
-    public MainWindow(SettingsStore settings, ILog log, UpdateChecker updates, VaultSession session, RecentNodes recent, ViewTabs tabs, ViewStates viewStates, ImportDestinations destinations, OpenedFiles opened, Func<SettingsWindow> createSettings, Func<ImageWindow> createImageWindow)
+    /// <param name="clipboard">The system's clipboard: its files or image pasted, once their preview is accepted.</param>
+    public MainWindow(SettingsStore settings, ILog log, UpdateChecker updates, VaultSession session, RecentNodes recent, ViewTabs tabs, ViewStates viewStates, ImportDestinations destinations, OpenedFiles opened, IClipboard clipboard, Func<SettingsWindow> createSettings, Func<ImageWindow> createImageWindow)
     {
+        _clipboard = clipboard;
         _settings = settings;
         _opened = opened;
         _log = log;
@@ -60,6 +64,7 @@ public partial class MainWindow : Window
         _createImageWindow = createImageWindow;
 
         InitializeComponent();
+        _showPasteFiles = PasteButtons.Follow(PasteFilesButton, clipboard, PasteOffer.FitsImport, () => _session.Current is not null && !_session.IsReadOnly);
         StateChanged += (_, _) => FitMaximized();
         FitMaximized();
         AttachPrivacyScreen();
@@ -76,6 +81,7 @@ public partial class MainWindow : Window
         DetailsPanel.ExportDataset = (version, target) => _session.ExportDataset(Ask, version, target);
         DetailsPanel.IsImporting = _session.IsImporting;
         DetailsPanel.ShowImage = ShowImage;
+        DetailsPanel.Clipboard = clipboard;
         DetailsPanel.OpenDataset = OpenInApp;
         DetailsPanel.CanKeepOffline = () => _session.CanKeepOffline;
         DetailsPanel.IsKeptOffline = _session.IsKeptOffline;
@@ -92,6 +98,8 @@ public partial class MainWindow : Window
         ViewContent.CreateNode = (type, under, file) => RecordRecent(_session.CreateNode(Ask, type, under, file));
         ViewContent.DatasetFiles = () => _session.Current?.Datasets;
         ViewContent.ImportFiles = ImportFiles;
+        ViewContent.ImportPasted = ImportPasted;
+        ViewContent.Clipboard = clipboard;
         ViewContent.Rename = rename => _session.Rename(Ask, rename);
         ViewContent.Write = (changes, action) => _session.Write(Ask, changes, action);
         ViewContent.IsReadOnly = () => _session.IsReadOnly;
@@ -191,6 +199,7 @@ public partial class MainWindow : Window
         var readOnly = open && _session.IsReadOnly;
         ReadOnlyTag.Visibility = readOnly ? Visibility.Visible : Visibility.Collapsed;
         DropZone.Visibility = open && !readOnly ? Visibility.Visible : Visibility.Collapsed;
+        _showPasteFiles();
         ShowTitle();
         ShowSync();
         Title = (SelectedName.Length > 0 ? SelectedName : "kofrenot") + (readOnly ? " (read only)" : string.Empty);

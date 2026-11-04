@@ -45,6 +45,12 @@ public partial class ViewPanel : UserControl
             Refresh();
             return added;
         };
+        GraphBoard.ImportPasted = async (pasted, under) =>
+        {
+            IReadOnlyList<Node> added = ImportPasted is null ? [] : await ImportPasted(pasted, under);
+            Refresh();
+            return added;
+        };
     }
 
     /// <summary>Asks to open a node's details.</summary>
