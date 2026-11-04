@@ -16,8 +16,8 @@ namespace Kofrenot.UI.Views;
 /// <see cref="GraphLayout"/>: a card per node, a line per link (<see cref="GraphLines"/>), a legend of
 /// the link types, a minimap (<see cref="GraphMinimap"/>). A card dropped elsewhere is kept there
 /// (<see cref="GraphPlacer"/>); the zoom and the pan stay while the same view is shown again, and fit
-/// the graph when another one is. Its right-click menus are in GraphPanel.Menu, its links drawn by
-/// hand in GraphPanel.Link.
+/// the graph when another one is. A right-drag pans. Its cards selected are in GraphPanel.Selection,
+/// its right-click menus in GraphPanel.Menu, its links drawn by hand in GraphPanel.Link.
 /// </summary>
 public partial class GraphPanel : UserControl
 {
@@ -37,16 +37,17 @@ public partial class GraphPanel : UserControl
     private GraphContent? _content;
     private Guid? _laidOut;
     private Dictionary<Guid, NodePosition> _positions = [];
-    private Guid? _selected;
     private Matrix _matrix = Matrix.Identity;
     private bool _needsFit;
 
-    // A press on a card (a drag once the mouse goes far enough), or on the background (a pan).
+    // A left press on a card selected: the cards selected, from where they were (a drag once the mouse goes far enough).
     private Point _pressedAt;
-    private Guid? _pressedCard;
-    private NodePosition? _pressedPosition;
+    private Dictionary<Guid, NodePosition>? _pressedCards;
     private bool _isDragging;
+
+    // A right press: the board as it was, panned once the mouse goes far enough (a right-click otherwise).
     private Matrix? _panFrom;
+    private bool _hasPanned;
 
     public GraphPanel()
     {
@@ -87,16 +88,12 @@ public partial class GraphPanel : UserControl
         _positions = new Dictionary<Guid, NodePosition>(GraphLayout.Of(content, definition.Layout, graph.PositionsIn(view.Id)));
         _needsFit |= _laidOut != view.Id;
         _laidOut = view.Id;
-        if (_selected is { } selected && !_positions.ContainsKey(selected))
-        {
-            _selected = null;
-        }
-
+        _selection.IntersectWith(_positions.Keys);
         Cards.Children.Clear();
         _cards.Clear();
         foreach (var node in content.Nodes)
         {
-            var card = GraphCard.Of(graph, node, shown.CardLinesOf(node), node.Id == _selected);
+            var card = GraphCard.Of(graph, node, shown.CardLinesOf(node), _selection.Contains(node.Id));
             _cards[node.Id] = card;
             Cards.Children.Add(card);
             Place(node.Id);
@@ -178,26 +175,10 @@ public partial class GraphPanel : UserControl
         var position = _positions[node];
         Canvas.SetLeft(_cards[node], position.X - (GraphLayout.CardWidth / 2));
         Canvas.SetTop(_cards[node], position.Y - (GraphLayout.CardHeight / 2));
-        if (node == _selected)
+        if (node == Selected)
         {
             ShowLinkHandle();
         }
-    }
-
-    private void Select(Guid? node)
-    {
-        if (_selected is { } previous && _cards.TryGetValue(previous, out var was))
-        {
-            GraphCard.Mark(was, isSelected: false);
-        }
-
-        _selected = node;
-        if (node is { } selected && _cards.TryGetValue(selected, out var card))
-        {
-            GraphCard.Mark(card, isSelected: true);
-        }
-
-        ShowLinkHandle();
     }
 
     private void Open(Guid node)
@@ -286,70 +267,110 @@ public partial class GraphPanel : UserControl
 
     private void Surface_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
+        if (_hasPanned)
+        {
+            return;
+        }
+
         Surface.Focus();
         _pressedAt = e.GetPosition(Surface);
-        if (IsLinkHandle(e.OriginalSource) && _selected is { } linked)
+        if (IsLinkHandle(e.OriginalSource) && Selected is { } linked)
         {
             StartLink(linked);
         }
         else if (CardUnder(e.OriginalSource) is { } node)
         {
-            Select(node);
             if (e.ClickCount == 2)
             {
+                Select(node);
                 Open(node);
                 e.Handled = true;
                 return;
             }
 
-            _pressedCard = node;
-            _pressedPosition = _positions[node];
+            PressCard(node);
         }
         else
         {
-            Select(null);
-            _panFrom = _matrix;
+            StartBox(OnBoard(_pressedAt), adds: Keyboard.Modifiers == ModifierKeys.Control);
         }
 
         Surface.CaptureMouse();
         e.Handled = true;
     }
 
+    // Not captured yet: a right-click that does not move stays a click, its menu shown over what it is on.
+    private void Surface_MouseRightButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        if (!Surface.IsMouseCaptured)
+        {
+            Surface.Focus();
+            _pressedAt = e.GetPosition(Surface);
+            _panFrom = _matrix;
+        }
+    }
+
     private void Surface_MouseMove(object sender, MouseEventArgs e)
     {
+        var offset = e.GetPosition(Surface) - _pressedAt;
+        if (e.RightButton == MouseButtonState.Pressed && _panFrom is { } from)
+        {
+            Pan(from, offset);
+            return;
+        }
+
         if (e.LeftButton != MouseButtonState.Pressed)
         {
             FollowMouse(OnBoard(e.GetPosition(Surface)));
             return;
         }
 
-        var offset = e.GetPosition(Surface) - _pressedAt;
         if (_linkFrom is not null)
         {
             DragLink(OnBoard(e.GetPosition(Surface)));
         }
-        else if (_panFrom is { } from)
+        else if (_boxFrom is not null)
+        {
+            DragBox(OnBoard(e.GetPosition(Surface)));
+        }
+        else if (_pressedCards is { } starts && !IsReadOnly())
+        {
+            _isDragging |= offset.Length >= DragStart;
+            if (_isDragging)
+            {
+                foreach (var (node, start) in starts)
+                {
+                    _positions[node] = start with { X = start.X + (offset.X / _matrix.M11), Y = start.Y + (offset.Y / _matrix.M11) };
+                    Place(node);
+                }
+
+                _lines.Move(starts.Keys, _positions);
+            }
+        }
+    }
+
+    private void Pan(Matrix from, Vector offset)
+    {
+        if (!_hasPanned && offset.Length >= DragStart)
+        {
+            _hasPanned = true;
+            Surface.Cursor = Cursors.SizeAll;
+            Surface.CaptureMouse();
+        }
+
+        if (_hasPanned)
         {
             var panned = from;
             panned.Translate(offset.X, offset.Y);
             Transform(panned);
         }
-        else if (_pressedCard is { } node && _pressedPosition is { } start && !IsReadOnly())
-        {
-            _isDragging |= offset.Length >= DragStart;
-            if (_isDragging)
-            {
-                _positions[node] = start with { X = start.X + (offset.X / _matrix.M11), Y = start.Y + (offset.Y / _matrix.M11) };
-                Place(node);
-                _lines.Move(node, _positions);
-            }
-        }
     }
 
     private void Surface_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
     {
-        var moved = _isDragging && _pressedCard is { } node ? _positions[node] : null;
+        var moved = _isDragging && _pressedCards is { } starts ? starts.Keys.Select(node => _positions[node]).ToList() : null;
         var linked = _linkFrom is { } from ? (From: from, To: CardAt(e.GetPosition(Surface))) : ((Guid From, Guid? To)?)null;
+        var alone = _isDragging ? null : _pressedInSelection;
         Surface.ReleaseMouseCapture();
         if (moved is not null)
         {
@@ -359,40 +380,51 @@ public partial class GraphPanel : UserControl
         {
             EndLink(link.From, to);
         }
+        else if (alone is { } node)
+        {
+            Select(node);
+        }
     }
 
     private void Surface_LostMouseCapture(object sender, MouseEventArgs e)
     {
-        _pressedCard = null;
-        _pressedPosition = null;
+        _pressedCards = null;
+        _pressedInSelection = null;
         _isDragging = false;
         _panFrom = null;
+        _hasPanned = false;
+        Surface.ClearValue(CursorProperty);
+        StopBox();
         StopLink();
     }
 
-    /// <summary>Writes where a card was dropped; the vault's change shows the graph again.</summary>
-    private void Keep(NodePosition moved)
+    /// <summary>Writes where the cards were dropped, as one placement; the vault's change shows the graph again.</summary>
+    private void Keep(IReadOnlyList<NodePosition> moved)
     {
-        if (_graph is null || _view is null || new GraphPlacer(_graph).Move(_view.Id, [moved]) is not { } placed)
+        if (_graph is null || _view is null || new GraphPlacer(_graph).Move(_view.Id, moved) is not { } placed)
         {
             return;
         }
 
-        Write?.Invoke([placed], "Node placed in a graph view");
+        Write?.Invoke([placed], moved.Count == 1 ? "Node placed in a graph view" : $"Nodes placed in a graph view ({moved.Count})");
     }
 
     private void Surface_KeyDown(object sender, KeyEventArgs e)
     {
-        if (e.Key == Key.Enter && Keyboard.Modifiers == ModifierKeys.None && _selected is { } node)
+        e.Handled = (e.Key, Keyboard.Modifiers) switch
         {
-            Open(node);
-            e.Handled = true;
-        }
-        else if (e.Key == Key.Home && Keyboard.Modifiers == ModifierKeys.None)
-        {
-            Fit();
-            e.Handled = true;
-        }
+            (Key.Enter, ModifierKeys.None) when Selected is { } node => Run(() => Open(node)),
+            (Key.Home, ModifierKeys.None) => Run(Fit),
+            (Key.Escape, ModifierKeys.None) when _selection.Count > 0 => Run(() => Select(null)),
+            (Key.A, ModifierKeys.Control) => Run(() => SelectOnly(_cards.Keys)),
+            _ => false,
+        };
+    }
+
+    private static bool Run(Action action)
+    {
+        action();
+        return true;
     }
 
     // The node of the card under the mouse, or null over the background.

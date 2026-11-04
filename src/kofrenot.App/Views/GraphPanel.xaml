@@ -2,8 +2,9 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:local="clr-namespace:Kofrenot.UI.Views">
-  <!-- A graph view's content: cards joined by lines, laid out by Core (GraphLayout). Drag a card to move it (kept in
-       the vault), drag the handle of the card selected to another card to link them, drag the background to pan, the
+  <!-- A graph view's content: cards joined by lines, laid out by Core (GraphLayout). Drag a card to move it, with the
+       other cards selected (kept in the vault), drag the background to select the cards in a box, Ctrl+click to add
+       or take out one, drag the handle of the card selected to another card to link them, right-drag to pan, the
        wheel zooms; a double-click or Enter opens a node's details; a right-click on a card or a line offers its actions.
        Its buttons (Fit, Reset layout, Link names) and its search are on the view's bar (ViewPanel). -->
   <UserControl.Resources>
@@ -20,6 +21,7 @@
             MouseLeftButtonDown="Surface_MouseLeftButtonDown"
             MouseMove="Surface_MouseMove"
             MouseLeftButtonUp="Surface_MouseLeftButtonUp"
+            MouseRightButtonDown="Surface_MouseRightButtonDown"
             MouseRightButtonUp="Surface_MouseRightButtonUp"
             LostMouseCapture="Surface_LostMouseCapture"
             MouseWheel="Surface_MouseWheel"
@@ -30,6 +32,8 @@
         <Canvas x:Name="Cards" />
         <!-- While a link is dragged from the handle of the card selected (GraphPanel.Link). -->
         <Path x:Name="LinkBand" IsHitTestVisible="False" StrokeThickness="2" StrokeDashArray="4 3" Stroke="{DynamicResource AccentFillColorDefaultBrush}" Visibility="Collapsed" />
+        <!-- While the background is dragged: the cards it touches are selected (GraphPanel.Selection). -->
+        <Rectangle x:Name="SelectionBox" IsHitTestVisible="False" Stroke="{DynamicResource AccentFillColorDefaultBrush}" Fill="{DynamicResource SubtleFillColorSecondaryBrush}" Visibility="Collapsed" />
       </Canvas>
     </Border>
 

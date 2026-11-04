@@ -80,6 +80,14 @@ public static class GraphLayout
     public static Guid? CardAt(IEnumerable<NodePosition> cards, double x, double y) =>
         cards.LastOrDefault(card => Math.Abs(card.X - x) <= CardWidth / 2 && Math.Abs(card.Y - y) <= CardHeight / 2)?.Node;
 
+    /// <summary>The nodes whose card a box drawn on the board touches, in the order given: what a box selects.</summary>
+    public static IReadOnlyList<Guid> CardsIn(IEnumerable<NodePosition> cards, GraphBounds box) =>
+        cards
+            .Where(card => card.X + (CardWidth / 2) >= box.Left && card.X - (CardWidth / 2) <= box.Right
+                && card.Y + (CardHeight / 2) >= box.Top && card.Y - (CardHeight / 2) <= box.Bottom)
+            .Select(card => card.Node)
+            .ToList();
+
     /// <summary>Whether two cards, by their centres, cover one another (their gaps included).</summary>
     internal static bool Overlap(NodePosition first, NodePosition second) =>
         Math.Abs(first.X - second.X) < CardWidth + ColumnGap / 2 && Math.Abs(first.Y - second.Y) < CardHeight + ColumnGap / 2;

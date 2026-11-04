@@ -45,7 +45,7 @@ Both apps share the same vaults and the same core; each shows its own set of fea
 | Node details, links | ✔ | ✔ |
 | Node types and fields shown | ✔ | ✔ (an image's thumbnail, **Open**) |
 | Views: trees and lists, as tabs | ✔ rows, cards, details | ✔ rows; **▾** lists every tab, **⋮** of a view tab closes it |
-| Views: graphs (family tree, network), nodes moved by hand | ✔ colours, link names, minimap, search; links and nodes added, links removed | — (says it is shown on Windows) |
+| Views: graphs (family tree, network), nodes moved by hand | ✔ several at once; colours, link names, minimap, search; links and nodes added, links removed | — (says it is shown on Windows) |
 | Unlinked nodes (no link leads to them), put into a tree | ✔ **Unlinked** beside a tree, dragged onto a node | ✔ **⋮** of a tree tab > *Unlinked nodes…*, one at a time |
 | Pin (synced: listed while the input box is empty) | ✔ | ✔ **⋮** on the node's page |
 | Search the node's name on the web (only then does it leave the device) | ✔ the globe in the details header, the engine of Settings > General (Google, DuckDuckGo or Bing) in the default browser | ✔ the globe in the top bar, the phone's own search app (else the browser) |
@@ -193,7 +193,7 @@ A view shows your vault another way, in a tab: **a tree** from a node, following
   | In ranks | A family tree, an org chart | Ranks from the *down* and *up* links, couples side by side, fewer crossings |
   | Network | The relations around a node | Linked nodes close, the others apart |
 
-  Drag a card to move it: its place is kept in the vault, for every device (moved on two, the newest move wins); the others go around it. A right-click on the background adds a node with no link (**New node…**), kept where you clicked: a node placed in a graph stays in it, linked or not. **Reset layout** gives the moved cards back to the layout, and takes out those no link brings, asked first. The wheel zooms, dragging the background pans, **Fit** (**Home**) shows it whole, and the minimap in the corner (when it does not fit) goes where you click; a double-click or **Enter** opens a node. At most 500 nodes are drawn: lower the steps to see the others.
+  Drag a card to move it: its place is kept in the vault, for every device (moved on two, the newest move wins); the others go around it. Drag the background to select the cards in a box (**Ctrl** adds them to those selected), **Ctrl+click** adds or takes out one, **Ctrl+A** selects them all, **Esc** none: dragging one of them moves them all. A right-click on the background adds a node with no link (**New node…**), kept where you clicked: a node placed in a graph stays in it, linked or not. **Reset layout** gives the moved cards back to the layout, and takes out those no link brings, asked first. The wheel zooms, a right-drag pans, **Fit** (**Home**) shows it whole, and the minimap in the corner (when it does not fit) goes where you click; a double-click or **Enter** opens a node. At most 500 nodes are drawn: lower the steps to see the others.
 
   Each link type has its colour, listed in the legend when there are several; a link with a direction and no rank to show it has an arrow. Hover a line for its name (*Anne parent of Bob*), or **Link names** writes them all on the lines.
 

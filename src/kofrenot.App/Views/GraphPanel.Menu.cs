@@ -17,8 +17,17 @@ namespace Kofrenot.UI.Views;
 /// </summary>
 public partial class GraphPanel
 {
+    // A right-drag panned: no menu.
     private void Surface_MouseRightButtonUp(object sender, MouseButtonEventArgs e)
     {
+        _panFrom = null;
+        if (_hasPanned)
+        {
+            Surface.ReleaseMouseCapture();
+            e.Handled = true;
+            return;
+        }
+
         if (CardUnder(e.OriginalSource) is { } node && _graph?.FindNode(node) is { } card)
         {
             Select(node);

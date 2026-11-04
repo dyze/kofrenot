@@ -50,7 +50,7 @@ public partial class GraphPanel
     private void ShowLinkHandle()
     {
         Cards.Children.Remove(_linkHandle);
-        if (_isDragging || _selected is not { } selected || !_positions.TryGetValue(selected, out var at) || !CanLink)
+        if (_isDragging || Selected is not { } selected || !_positions.TryGetValue(selected, out var at) || !CanLink)
         {
             return;
         }
@@ -63,7 +63,7 @@ public partial class GraphPanel
     private void FollowMouse(Point onBoard)
     {
         _mouseOnBoard = onBoard;
-        if (_selected is { } selected && Cards.Children.Contains(_linkHandle) && _positions.TryGetValue(selected, out var at))
+        if (Selected is { } selected && Cards.Children.Contains(_linkHandle) && _positions.TryGetValue(selected, out var at))
         {
             PlaceLinkHandle(at);
         }
@@ -124,7 +124,7 @@ public partial class GraphPanel
             return;
         }
 
-        if (_linkTarget is { } previous && previous != _selected && _cards.TryGetValue(previous, out var was))
+        if (_linkTarget is { } previous && !_selection.Contains(previous) && _cards.TryGetValue(previous, out var was))
         {
             GraphCard.Mark(was, isSelected: false);
         }

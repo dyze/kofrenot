@@ -57,10 +57,10 @@ internal sealed class GraphLines(Canvas canvas)
         }
     }
 
-    /// <summary>Draws again the lines of a node being moved.</summary>
-    public void Move(Guid node, IReadOnlyDictionary<Guid, NodePosition> positions)
+    /// <summary>Draws again the lines of the nodes being moved, once each.</summary>
+    public void Move(ICollection<Guid> nodes, IReadOnlyDictionary<Guid, NodePosition> positions)
     {
-        foreach (var drawn in _lines.Where(line => line.Edge.Link.From == node || line.Edge.Link.To == node))
+        foreach (var drawn in _lines.Where(line => nodes.Contains(line.Edge.Link.From) || nodes.Contains(line.Edge.Link.To)))
         {
             Shape(drawn, positions);
         }

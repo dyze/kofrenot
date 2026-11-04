@@ -211,6 +211,16 @@ public sealed class GraphLayoutTests
         Assert.Null(GraphLayout.CardAt([below, above], 0, GraphLayout.CardHeight));
     }
 
+    [Fact]
+    public void ABox_SelectsTheCardsItTouches_InTheOrderGiven()
+    {
+        var (left, right, far) = (new NodePosition(Guid.NewGuid(), 0, 0), new NodePosition(Guid.NewGuid(), 300, 0), new NodePosition(Guid.NewGuid(), 0, 500));
+        var touchingBothEdges = new GraphBounds(GraphLayout.CardWidth / 2, -1, 300 - (GraphLayout.CardWidth / 2), 1);
+
+        Assert.Equal([right.Node, left.Node], GraphLayout.CardsIn([right, left, far], touchingBothEdges));
+        Assert.Empty(GraphLayout.CardsIn([left, right, far], new GraphBounds(100, 100, 120, 120)));
+    }
+
     private IReadOnlyDictionary<Guid, NodePosition> Layout(Node root, IReadOnlyList<GraphLink>? links = null, GraphLayoutKind kind = GraphLayoutKind.Layered) =>
         GraphLayout.Of(_family.Read(_family.Definition(root, layout: kind, links: links)), kind, new Dictionary<Guid, NodePosition>());
 
