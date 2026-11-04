@@ -105,11 +105,29 @@ public partial class NodeDetailsPanel
         }
     }
 
-    /// <summary>Leaves the details' note and fields, writing what changed, before the window is hidden or something else is shown.</summary>
-    public void Leave()
+    /// <summary>
+    /// Leaves the details, writing what changed: the name being typed, the fields, the note. When <paramref name="ask"/>
+    /// (another tab, node or level shown), a name or a value that cannot be written is discarded if the user agrees,
+    /// else kept, and false: the details are not left. Without asking (the window hidden, a vault switched, quit),
+    /// what can be written is, the rest kept in its box.
+    /// </summary>
+    public bool Leave(bool ask)
     {
-        LeaveFields(ask: false);
+        if (ask)
+        {
+            if (!LeaveName(ask: true) || !LeaveFields(ask: true))
+            {
+                return false;
+            }
+        }
+        else
+        {
+            LeaveName(ask: false);
+            LeaveFields(ask: false);
+        }
+
         LeaveNote();
+        return true;
     }
 
     // The box, and under it what is wrong with what is typed (ShowStatus).

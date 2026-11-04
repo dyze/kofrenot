@@ -45,6 +45,7 @@ It covers kofrenot on Windows and on Android; versions before 0.9 ran on Windows
   - **A node with many fields hid its links**: the details could not scroll past its fields. They now scroll in their own area, leaving room for the links or the note below.
   - **Too many tabs covered Paste and Drop files**: the tabs that do not fit are left out, listed by **▾** beside **+**, the selected one always shown ([README](README.md#views)).
   - **Small icons on buttons**: the details' header, the title bar, toolbars and rows use larger icons, the same size for the same kind of button.
+  - **A name being typed in a node's details was lost** when another tab was shown, the window hidden or the vault switched, and cancelled by the breadcrumb; once a linked node was opened, it could even rename that one. It is now saved whenever the details are left, as the fields and the note are; one that cannot be saved (empty, a link phrase) asks whether to discard it ([README](README.md#node-details)).
   - **The logo was blurred** on the privacy screen and in the title bar: it is drawn from the icon's frame that fits its size and the screen's scaling.
   - **Dragging a dataset out of a tree closed the Explorer window dropped on** (Explorer crashed). Its file is now exported when the pointer leaves kofrenot's window, then deleted; a move inside kofrenot decrypts nothing ([Architecture](docs/ARCHITECTURE.md#datasets)).
 - **Android**

@@ -119,7 +119,7 @@ public partial class MainWindow
     {
         if (IsVisible && IsActive && WindowState != WindowState.Minimized && _settingsDialog is null && target == _session.Selected?.Location)
         {
-            DetailsPanel.Leave();
+            DetailsPanel.Leave(ask: false);
             HideCovered();
             _log.Debug("Window", "Hidden (vault hotkey)");
             return;
@@ -140,7 +140,7 @@ public partial class MainWindow
 
     private string? WhyNot(string action)
     {
-        DetailsPanel.Leave();
+        DetailsPanel.Leave(ask: false);
         return QuitRefusal.Reason(DetailsPanel.UnsavedNote, _session.ImportsRunning, action);
     }
 

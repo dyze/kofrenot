@@ -50,12 +50,11 @@ public partial class MainWindow
     {
         if (DetailsShown)
         {
-            if (!DetailsPanel.LeaveFields())
+            if (!DetailsPanel.Leave(ask: true))
             {
                 return;
             }
 
-            DetailsPanel.LeaveNote();
             DetailsPanel.Browser.Close();
             DetailsPanel.Show();
         }

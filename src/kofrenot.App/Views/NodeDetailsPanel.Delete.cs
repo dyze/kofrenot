@@ -30,7 +30,7 @@ public partial class NodeDetailsPanel
 
     private bool DeleteNode()
     {
-        if (IsReadOnly() || Browser is not { Graph: { } graph, Details: { } details } || Write is null || !LeaveFields())
+        if (IsReadOnly() || Browser is not { Graph: { } graph, Details: { } details } || Write is null || !Leave(ask: true))
         {
             return false;
         }

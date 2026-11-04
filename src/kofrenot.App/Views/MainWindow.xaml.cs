@@ -627,7 +627,7 @@ public partial class MainWindow : Window
     /// <summary>Why kofrenot must not quit now (an unsaved note, an import running), or null.</summary>
     public string? WhyNotQuit()
     {
-        DetailsPanel.LeaveFields(ask: false);
+        DetailsPanel.Leave(ask: false);
         return QuitRefusal.Reason(DetailsPanel.UnsavedNote, _session.ImportsRunning);
     }
 
@@ -635,7 +635,7 @@ public partial class MainWindow : Window
     private void Window_Closing(object? sender, CancelEventArgs e)
     {
         e.Cancel = true;
-        DetailsPanel.Leave();
+        DetailsPanel.Leave(ask: false);
         HideCovered();
         _log.Debug("Window", "Hidden");
     }

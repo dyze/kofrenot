@@ -15,12 +15,11 @@ public partial class NodeDetailsPanel
 
     private async void HistoryButton_Click(object sender, RoutedEventArgs e)
     {
-        if (Browser is not { Graph: { } graph, Details: { } details } || !LeaveFields())
+        if (Browser is not { Graph: { } graph, Details: { } details } || !Leave(ask: true))
         {
             return;
         }
 
-        LeaveNote();
         Log.Info("Action", "Node history shown");
         var owner = Window.GetWindow(this);
         if (HistoryDialog.Ask(owner, details.Name, NodeHistory.Of(graph, details.Node)) is not { } entry

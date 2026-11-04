@@ -99,9 +99,8 @@ public partial class NodeDetailsPanel
             return;
         }
 
-        if (LeaveFields())
+        if (Leave(ask: true))
         {
-            LeaveNote();
             _chosenTab = tab.Name;
             Log.Info("Action", "Node details: tab shown");
             Show();
