@@ -8,6 +8,10 @@ It covers kofrenot on Windows and on Android; versions before 0.9 ran on Windows
 
 ## [Unreleased]
 
+## [0.14] - 2026-11-04
+
+*Graph views and the clipboard: family trees and relations drawn, files and images pasted, nodes and cards put in place by dragging.*
+
 > ⚠ **Vault format 10** (for graph views and the places of their nodes). Consequences:
 > - Each vault asks once, when it opens, to be upgraded; until you agree, this kofrenot does not use it.
 > - Once upgraded, **kofrenot 0.13 and older no longer open it, on Windows and Android**: update kofrenot on all your devices, and ask the members of a shared vault to update theirs, before upgrading.
@@ -404,7 +408,8 @@ It covers kofrenot on Windows and on Android; versions before 0.9 ran on Windows
 - **Update check** once a day against GitHub releases, switchable in About.
 - **Installer and portable zip** (`build\installer.cmd`), self-contained.
 
-[Unreleased]: https://github.com/dyze/kofrenot/compare/0.13...HEAD
+[Unreleased]: https://github.com/dyze/kofrenot/compare/0.14...HEAD
+[0.14]: https://github.com/dyze/kofrenot/compare/0.13...0.14
 [0.13]: https://github.com/dyze/kofrenot/compare/0.12...0.13
 [0.12]: https://github.com/dyze/kofrenot/compare/0.11...0.12
 [0.11]: https://github.com/dyze/kofrenot/compare/0.10...0.11

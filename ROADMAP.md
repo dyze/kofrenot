@@ -2,9 +2,6 @@
 
 Scope of each planned version. Implemented features move to [CHANGELOG.md](CHANGELOG.md), where each released version opens with its theme. The goal, principles, non-goals and open questions are in [GOAL.md](docs/GOAL.md). The features are sorted by priority, each tagged with the app that gets it: Windows, Android or Both (what each supports today: [README](README.md#windows-and-android)).
 
-## 0.14
-
-
 ## Later
 1. Both · **Events and qualifiers.**
 	* **Qualifiers** add context to a link: date, place, source, quantity, confidence. *Dune → written by → Frank Herbert (date: 1965)*.
