@@ -200,7 +200,7 @@ public partial class ViewPanel : UserControl
 
     /// <summary>A row of a list: the node pictured, as in a tree (no focus frame either).</summary>
     private ListBoxItem RowOf(Node node) =>
-        new() { Content = HeaderOf(node, isCut: false), Tag = node, FocusVisualStyle = null, HorizontalContentAlignment = HorizontalAlignment.Stretch };
+        new() { Content = HeaderOf(node, isCut: false), Tag = node, Style = (Style)FindResource("ListRowItem") };
 
     private static Node? NodeOf(object? row) => (row as ListBoxItem)?.Tag as Node;
 
