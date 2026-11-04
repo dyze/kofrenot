@@ -26,10 +26,12 @@ public partial class NodeDetailsPanel
     private void AddLinkButton_Click(object sender, RoutedEventArgs e) => StartLink();
 
     /// <summary>Shows the link row, ready to type (+ Link, Ctrl+K).</summary>
+    /// <remarks>Laid out first: a row just shown cannot take the keyboard until then.</remarks>
     public void StartLink()
     {
         LinkRow.Visibility = Visibility.Visible;
         LinkBox.Reset(fixedLeft: Browser.Details?.Node.Name);
+        UpdateLayout();
         LinkBox.FocusText();
     }
 
