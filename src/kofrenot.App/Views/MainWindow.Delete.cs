@@ -21,7 +21,7 @@ public partial class MainWindow
         {
             NodeDeleter.Delete(this, vault.Graph, node, (change, action) => _session.Write(Ask, change, action), _log);
             ShowInput();
-            InputBox.Focus();
+            InputBox.FocusText();
         };
         var menu = new ContextMenu { PlacementTarget = frame };
         menu.Items.Add(delete);

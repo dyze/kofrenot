@@ -64,6 +64,9 @@ public partial class MainWindow : Window
         _createImageWindow = createImageWindow;
 
         InitializeComponent();
+        InputBox.GraphOf = () => _session.Current?.Graph;
+        InputBox.PlanOf = () => _input.Plan;
+        InputBox.Changed += ShowInput;
         _showPasteFiles = PasteButtons.Follow(PasteFilesButton, clipboard, PasteOffer.FitsImport, () => _session.Current is not null && !_session.IsReadOnly);
         StateChanged += (_, _) => FitMaximized();
         FitMaximized();
@@ -213,7 +216,7 @@ public partial class MainWindow : Window
             return;
         }
 
-        InputPlaceholder.Visibility = Visibility.Collapsed;
+        InputBox.ShowChips();
         VaultText.Text = SelectedName;
         VaultText.ToolTip = _session.Folder;
         if (_session.Folder is null)
@@ -246,9 +249,8 @@ public partial class MainWindow : Window
             return;
         }
 
-        InputPlaceholder.Visibility = _chips.IsEmpty ? Visibility.Visible : Visibility.Collapsed;
         _input.Recent = _recent.Of(vault.Id);
-        _input.Update(vault.Graph, _chips.Text);
+        _input.Update(vault.Graph, InputBox.Input.Text);
         ShowPresented();
     }
 
@@ -256,10 +258,7 @@ public partial class MainWindow : Window
     {
         PreviewText.Text = _input.Preview;
         ResultsList.ItemsSource = _input.Rows;
-        if (_session.Current is { } vault)
-        {
-            ShowChips(vault.Graph);
-        }
+        InputBox.ShowChips();
     }
 
     /// <summary>
@@ -280,9 +279,7 @@ public partial class MainWindow : Window
             Key.Enter => AddInput(),
             Key.Up => Presented(_input.MoveChoice(-1) || _input.MoveSelection(-1)),
             Key.Down => Presented(_input.MoveChoice(1) || _input.MoveSelection(1)),
-            Key.Tab => AcceptProposal() || Presented(_input.SwitchSide()),
-            Key.Right => AcceptProposal(),
-            Key.Back => UnlabelLast(),
+            Key.Tab => InputBox.AcceptProposal() || Presented(_input.SwitchSide()),
             _ => false,
         };
     }
@@ -358,13 +355,13 @@ public partial class MainWindow : Window
     {
         if (_input is { Plan.CanAdd: true, Request: not null })
         {
-            LabelAll();
+            InputBox.LabelAll();
         }
 
         if (_input is { Plan.CanAdd: true, Request: { } request }
             && RecordRecent(_session.Create(Ask, request, _input.Choices)) is { } added)
         {
-            ClearInput();
+            InputBox.Clear();
 
             // A new view opens in a tab.
             if (added.NewNodes.LastOrDefault(node => node.Type == TypeCatalog.View.Id) is { } view)
@@ -374,7 +371,7 @@ public partial class MainWindow : Window
             }
         }
 
-        InputBox.Focus();
+        InputBox.FocusText();
         return true;
     }
 
@@ -455,15 +452,15 @@ public partial class MainWindow : Window
             return;
         }
 
-        if (InputBox.IsKeyboardFocusWithin && DismissProposal())
+        if (InputBox.IsKeyboardFocusWithin && InputBox.DismissProposal())
         {
             e.Handled = true;
             return;
         }
 
-        if (!_chips.IsEmpty)
+        if (!InputBox.IsEmpty)
         {
-            ClearInput();
+            InputBox.Clear();
         }
         else
         {
@@ -578,11 +575,7 @@ public partial class MainWindow : Window
         else if (_session.Current is not null)
         {
             // All of it selected, so typing replaces it: labels included.
-            _chips.Unlabel();
-            SetInputText(_chips.Tail);
-            ShowInput();
-            InputBox.Focus();
-            InputBox.SelectAll();
+            InputBox.UnlabelAndSelect();
         }
     }
 

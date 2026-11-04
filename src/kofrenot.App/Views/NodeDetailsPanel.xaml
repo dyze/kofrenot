@@ -339,15 +339,7 @@
       <!-- Shown by + Link or Ctrl+K: typed as in the input box, after the node's name
            ("relates to Frank Herbert"); Enter shows the creation screen, Esc clears then hides. -->
       <StackPanel x:Name="LinkRow" Margin="0,6,0,0" Visibility="Collapsed">
-        <Grid>
-          <TextBox x:Name="LinkBox" Padding="8,4" TextChanged="LinkBox_TextChanged" />
-          <TextBlock x:Name="LinkPlaceholder"
-                     Margin="11,0,0,0"
-                     VerticalAlignment="Center"
-                     IsHitTestVisible="False"
-                     Opacity="0.5"
-                     Text="relates to Frank Herbert" />
-        </Grid>
+        <local:ChipBox x:Name="LinkBox" VerticalPadding="4" Placeholder="relates to Frank Herbert" />
         <TextBlock x:Name="LinkPreviewText" Margin="2,4,0,0" Opacity="0.7" TextWrapping="Wrap" />
       </StackPanel>
     </StackPanel>

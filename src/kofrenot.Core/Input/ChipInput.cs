@@ -8,11 +8,13 @@ namespace Kofrenot.Core.Input;
 /// link type become labels once a link type is recognized and a space typed after it; a proposal
 /// (<see cref="InputCompletion"/>) becomes one when accepted. Backspace with no text after them turns
 /// the last label back into text. <see cref="Text"/> is read as before (<see cref="InputParser"/>):
-/// labels change how it shows, not what it means.
+/// labels change how it shows, not what it means. With a fixed first node (the node of the details' Link
+/// box), it is the start of <see cref="Text"/>, never a label shown nor taken out, and only a link type is proposed after it.
 /// </summary>
-public sealed class ChipInput
+public sealed class ChipInput(string? fixedLeft = null)
 {
-    private string? _left;
+    private readonly string? _fixedLeft = fixedLeft;
+    private string? _left = fixedLeft;
     private string? _linkType;
     private string? _right;
     private bool _typedAtEnd;
@@ -20,10 +22,15 @@ public sealed class ChipInput
     /// <summary>The text after the labels, as typed.</summary>
     public string Tail { get; private set; } = string.Empty;
 
-    public bool IsEmpty => _left is null && Tail.Length == 0;
+    public bool IsEmpty => (_left is null || IsFixed) && _linkType is null && Tail.Length == 0;
 
     /// <summary>The labels and the text after them, as one text.</summary>
     public string Text => string.Join(' ', Labels.Append(Tail));
+
+    /// <summary>The <see cref="Text"/> after the fixed first node; all of it without one.</summary>
+    public string Typed => string.Join(' ', Labels.Skip(IsFixed ? 1 : 0).Append(Tail));
+
+    private bool IsFixed => _fixedLeft is not null;
 
     private IEnumerable<string> Labels => new[] { _left, _linkType, _right }.OfType<string>();
 
@@ -47,7 +54,7 @@ public sealed class ChipInput
     /// <summary>Backspace with no text after the labels: the last one becomes text again. False when there is text, or no label.</summary>
     public bool Backspace()
     {
-        if (Tail.Length > 0 || (_right ?? _linkType ?? _left) is not { } last)
+        if (Tail.Length > 0 || (_right ?? _linkType ?? (IsFixed ? null : _left)) is not { } last)
         {
             return false;
         }
@@ -78,9 +85,14 @@ public sealed class ChipInput
             return null;
         }
 
-        return _linkType is null
-            ? InputCompletion.Propose(graph, Text, linkTypeTyped: false)
-            : InputCompletion.Propose(graph, _right is null ? Tail : $"{_right} {Tail}", linkTypeTyped: true);
+        if (_linkType is null)
+        {
+            return _fixedLeft is { } left
+                ? InputCompletion.ProposeLinkTypeAfter(graph.Types, left, Tail)
+                : InputCompletion.Propose(graph, Text, linkTypeTyped: false);
+        }
+
+        return InputCompletion.Propose(graph, _right is null ? Tail : $"{_right} {Tail}", linkTypeTyped: true);
     }
 
     /// <summary>Tab: the proposal becomes a label, replacing the side it completes. False when there is none.</summary>
@@ -125,14 +137,14 @@ public sealed class ChipInput
     /// <summary>All the labels become text again, as one text (the window shown again, its text selected).</summary>
     public void Unlabel()
     {
-        Tail = Text;
-        _left = _linkType = _right = null;
+        Tail = Typed;
+        (_left, _linkType, _right) = (_fixedLeft, null, null);
         _typedAtEnd = false;
     }
 
     public void Clear()
     {
-        _left = _linkType = _right = null;
+        (_left, _linkType, _right) = (_fixedLeft, null, null);
         Tail = string.Empty;
         _typedAtEnd = false;
     }
@@ -142,7 +154,7 @@ public sealed class ChipInput
     {
         var link = plan as LinkPlan;
         var chips = new List<InputChip>();
-        if (_left is not null)
+        if (_left is not null && !IsFixed)
         {
             chips.Add(NodeChip(graph, _left, link?.Left));
         }
@@ -166,6 +178,8 @@ public sealed class ChipInput
         var text = Text;
         switch (InputParser.Parse(text, types))
         {
+            case var request when IsFixed && (request is not LinkRequest link || !StartsWithFixed(link)):
+                return;
             case NodeRequest node:
                 (_left, _linkType, _right) = (node.Name, null, null);
                 break;
@@ -184,7 +198,8 @@ public sealed class ChipInput
     private bool Recognize(TypeCatalog types)
     {
         var text = Text;
-        if (InputParser.Parse(text, types) is not LinkRequest link || (link.Right.Length == 0 && !char.IsWhiteSpace(text[^1])))
+        if (InputParser.Parse(text, types) is not LinkRequest link || (link.Right.Length == 0 && !char.IsWhiteSpace(text[^1]))
+            || (IsFixed && !StartsWithFixed(link)))
         {
             return false;
         }
@@ -195,6 +210,9 @@ public sealed class ChipInput
         Tail = After(text, words.Length - InputParser.Words(link.Right).Length);
         return true;
     }
+
+    // The link read starts with the fixed node, not with more words of the text.
+    private bool StartsWithFixed(LinkRequest link) => InputParser.Words(link.Left).Length == InputParser.Words(_fixedLeft!).Length;
 
     // The link type's words, as typed between both nodes.
     private static string PhraseOf(string[] words, LinkRequest link) =>

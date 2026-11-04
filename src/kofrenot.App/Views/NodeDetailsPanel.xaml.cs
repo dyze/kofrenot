@@ -27,6 +27,7 @@ public partial class NodeDetailsPanel : UserControl
     public NodeDetailsPanel()
     {
         InitializeComponent();
+        AttachLinkBox();
         DatasetBox.ViewChanged += FitDatasetRow;
         SizeChanged += (_, _) => FitPropertiesRow();
         Breadcrumb.SizeChanged += (_, _) => FitPropertiesRow();

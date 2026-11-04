@@ -251,17 +251,92 @@ public sealed class ChipInputTests
         Assert.Equal(string.Empty, _input.Chips(_graph, plan: null)[1].HomonymMark);
     }
 
+    [Fact]
+    public void AFixedFirstNode_StartsTheText_WithoutALabel_AndStaysThroughBackspaceAndClear()
+    {
+        var input = new ChipInput(fixedLeft: "Melting Pot");
+
+        Assert.True(input.IsEmpty);
+        Assert.Equal(string.Empty, input.Typed);
+        Assert.False(input.Backspace());
+
+        Assert.True(TypeEach(input, "relates to "));
+        Assert.Equal("Melting Pot relates to ", input.Text);
+        Assert.Equal("relates to ", input.Typed);
+        Assert.Equal([new InputChip("relates to", true)], input.Chips(_graph, plan: null));
+
+        Assert.True(input.Backspace());
+        Assert.Equal("relates to", input.Tail);
+        input.Type(_graph, string.Empty);
+        Assert.False(input.Backspace());
+        Assert.True(input.IsEmpty);
+
+        TypeEach(input, "is a x");
+        input.Clear();
+        Assert.Equal(("Melting Pot ", string.Empty), (input.Text, input.Typed));
+    }
+
+    [Fact]
+    public void AFixedFirstNode_IsFollowedOnlyByALinkTypeProposal_ThenANode()
+    {
+        Add("Relativity");
+        Add("Melting Pot relaunch");
+        Add("Dune");
+        var input = new ChipInput(fixedLeft: "Melting Pot");
+
+        TypeEach(input, "rel");
+        Assert.Equal(new Proposal("ates to", "relates to", IsLinkType: true, WordsBefore: 2), input.Proposal(_graph));
+        Assert.True(input.Accept(_graph));
+        Assert.Equal(["relates to"], input.Chips(_graph, plan: null).Select(chip => chip.Text));
+
+        TypeEach(input, "du");
+        Assert.True(input.Accept(_graph));
+        Assert.Equal("relates to Dune ", input.Typed);
+
+        input.Clear();
+        input.Type(_graph, " ");
+        Assert.Null(input.Proposal(_graph));
+    }
+
+    [Fact]
+    public void AFixedFirstNode_KeepsALinkTypeInsideTheTextAsText()
+    {
+        var input = new ChipInput(fixedLeft: "Melting Pot");
+
+        Assert.False(TypeEach(input, "pan is a "));
+
+        Assert.Empty(input.Chips(_graph, plan: null));
+        input.LabelAll(_graph.Types);
+        Assert.Equal("pan is a ", input.Tail);
+    }
+
+    [Fact]
+    public void AFixedFirstNode_LabelsAll_AndUnlabelsAfterIt()
+    {
+        var input = new ChipInput(fixedLeft: "Melting Pot");
+        input.Type(_graph, "relates to Dune");
+
+        input.LabelAll(_graph.Types);
+        Assert.Equal(["relates to", "Dune"], input.Chips(_graph, plan: null).Select(chip => chip.Text));
+
+        input.Unlabel();
+        Assert.Equal(("relates to Dune ", "Melting Pot relates to Dune "), (input.Tail, input.Text));
+        Assert.Empty(input.Chips(_graph, plan: null));
+    }
+
+    private bool TypeEach(string text) => TypeEach(_input, text);
+
     // Types the text one character at a time after the current one, as the input box does; true when labels formed.
-    private bool TypeEach(string text)
+    private bool TypeEach(ChipInput input, string text)
     {
         var formed = false;
-        var tail = _input.Tail;
+        var tail = input.Tail;
         foreach (var character in text)
         {
-            if (_input.Type(_graph, tail += character))
+            if (input.Type(_graph, tail += character))
             {
                 formed = true;
-                tail = _input.Tail;
+                tail = input.Tail;
             }
         }
 

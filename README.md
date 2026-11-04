@@ -45,7 +45,7 @@ Both apps share the same vaults and the same core; each shows its own set of fea
 | Search names, pinned and recent nodes | ✔ | ✔ |
 | Search field values | ✔ | ✔ |
 | Recent: opened here or changed on any device (last 7 days) | ✔ empty input box | ✔ home |
-| Node details, links | ✔ | ✔ |
+| Node details, links | ✔ the Link box with labels and proposals, as the input box | ✔ |
 | Node types and fields shown | ✔ | ✔ (an image's thumbnail, **Open**) |
 | Views: trees and lists, as tabs | ✔ rows, cards, details; tabs reordered by dragging, **▾** lists those that do not fit | ✔ rows; **▾** lists every tab, **⋮** of a view tab closes it |
 | Views: graphs (family tree, network), nodes moved by hand | ✔ several at once; colours, link names, minimap, search; links and nodes added, files pasted, links removed | — (says it is shown on Windows) |
@@ -165,7 +165,7 @@ Type in the box at the top of the main window; the line under it says what Enter
 - **Keep offline** (the arrow beside the pin, in a server vault's node details): its content (a note's text, a dataset's file) is downloaded ahead and kept on this computer, so it opens offline. Each device chooses its own: nothing is written to the vault. The tooltip says *kept offline* once it is here.
 
 ### Node details
-**Enter** or a double-click on a node opens its details: its name, types, colour, pin, fields and links. **F2** renames it; **+ Link** (**Ctrl+K**) links it to another; a link opens the node at its other end. **Esc** goes back.
+**Enter** or a double-click on a node opens its details: its name, types, colour, pin, fields and links. **F2** renames it; **+ Link** (**Ctrl+K**) links it to another, typed as in the input box after its name (on Windows with the same labels, and **Tab** accepting the proposal in grey); a link opens the node at its other end. **Esc** goes back.
 
 **The globe** (after History) searches the node's name on the web with the engine chosen in Settings > General (Google by default, or DuckDuckGo, Bing), in your default browser. The name leaves the computer only then.
 

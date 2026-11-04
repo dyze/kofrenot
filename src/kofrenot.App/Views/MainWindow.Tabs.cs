@@ -90,7 +90,7 @@ public partial class MainWindow
         }
         else
         {
-            InputBox.Focus();
+            InputBox.FocusText();
         }
     }
 

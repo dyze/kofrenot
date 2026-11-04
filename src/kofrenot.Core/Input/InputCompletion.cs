@@ -22,6 +22,13 @@ public static class InputCompletion
         return NodeProposal(graph, typed) ?? (linkTypeTyped ? null : LinkTypeProposal(graph.Types, typed));
     }
 
+    /// <summary>
+    /// The rest of a link type starting with what is typed after <paramref name="left"/>, a node that stays as it is
+    /// (the node of the details): never a node, nor a link type starting inside its name.
+    /// </summary>
+    public static Proposal? ProposeLinkTypeAfter(TypeCatalog types, string left, string typed) =>
+        typed.Trim().Length == 0 ? null : LinkTypeProposal(types, $"{left} {typed.TrimStart()}", only: InputParser.Words(left).Length);
+
     private static Proposal? NodeProposal(KnowledgeGraph graph, string typed) =>
         graph.NodesByKey.Values
             .Where(nodes => nodes.Count > 0)
@@ -32,13 +39,13 @@ public static class InputCompletion
             .Select(name => new Proposal(name[typed.Length..], name, IsLinkType: false))
             .FirstOrDefault();
 
-    // The longest run of last words that starts a link type, after at least one word.
-    private static Proposal? LinkTypeProposal(TypeCatalog types, string typed)
+    // The longest run of last words that starts a link type, after at least one word (or after the first only words).
+    private static Proposal? LinkTypeProposal(TypeCatalog types, string typed, int? only = null)
     {
         var words = InputParser.Words(typed);
         var phrases = types.Verbs.SelectMany(verb => verb.Phrases).ToList();
         var space = char.IsWhiteSpace(typed[^1]) ? " " : string.Empty;
-        for (var start = 1; start < words.Length; start++)
+        for (var start = only ?? 1; start < words.Length && (only is null || start == only); start++)
         {
             var phrase = string.Join(' ', words[start..]) + space;
             if (phrases.Any(candidate => candidate.Equals(phrase, StringComparison.OrdinalIgnoreCase)))
