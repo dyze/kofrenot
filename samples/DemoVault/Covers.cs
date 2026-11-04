@@ -5,7 +5,7 @@ using System.Windows.Media.Imaging;
 
 namespace Kofrenot.Samples;
 
-/// <summary>Made-up pictures, drawn by WPF: book covers and a sketch, saved as JPEG.</summary>
+/// <summary>Made-up pictures, drawn by WPF: book covers, portraits and a sketch, saved as JPEG.</summary>
 internal static class Covers
 {
     private static readonly Typeface Title = new(new FontFamily("Georgia"), FontStyles.Normal, FontWeights.Bold, FontStretches.Normal);
@@ -20,6 +20,18 @@ internal static class Covers
             context.DrawEllipse(new SolidColorBrush(Color.FromArgb(50, 255, 255, 255)), null, new Point(300, 450), 230, 230);
             Text(context, title, Title, 72, 300, 340, 540);
             Text(context, author, Author, 30, 300, 780, 520);
+        });
+    }
+
+    /// <summary>A portrait of someone made up: their initials on a disc of their colour, over a lighter shade of it.</summary>
+    public static void Portrait(string path, string initials, Color color)
+    {
+        Save(path, 400, 400, context =>
+        {
+            var light = Color.FromRgb((byte)((color.R + 255) / 2), (byte)((color.G + 255) / 2), (byte)((color.B + 255) / 2));
+            context.DrawRectangle(new SolidColorBrush(light), null, new Rect(0, 0, 400, 400));
+            context.DrawEllipse(new SolidColorBrush(color), null, new Point(200, 200), 170, 170);
+            Text(context, initials, Author, 140, 200, 105, 400);
         });
     }
 
