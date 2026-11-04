@@ -3,8 +3,8 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:local="clr-namespace:Kofrenot.UI.Views">
   <!-- A note shown as a task list (TaskList), in MarkdownBox: a row per item, a checkbox and its
-       text; the items not checked first, then the items checked under their count. Rows are built
-       in code (TaskListBox.xaml.cs). -->
+       text; the items not checked first, then the items checked, collapsed under their count
+       until it is clicked. Rows are built in code (TaskListBox.xaml.cs). -->
   <UserControl.Resources>
     <ResourceDictionary Source="SharedStyles.xaml" />
   </UserControl.Resources>
@@ -22,7 +22,17 @@
           <TextBlock Margin="10,0,0,0" VerticalAlignment="Center" Text="List item" />
         </StackPanel>
       </Button>
-      <TextBlock x:Name="CheckedHeader" Margin="6,10,0,2" Style="{StaticResource CaptionText}" />
+      <Button x:Name="CheckedHeader"
+              Margin="0,6,0,0"
+              HorizontalAlignment="Left"
+              Padding="6,4"
+              Style="{StaticResource FlatButton}"
+              Click="CheckedHeader_Click">
+        <StackPanel Orientation="Horizontal" Opacity="0.7">
+          <local:IconView x:Name="CheckedChevron" VerticalAlignment="Center" Size="12" Kind="chevron-right" />
+          <TextBlock x:Name="CheckedCount" Margin="10,0,0,0" VerticalAlignment="Center" />
+        </StackPanel>
+      </Button>
       <StackPanel x:Name="DoneRows" />
     </StackPanel>
   </ScrollViewer>

@@ -11,12 +11,14 @@ namespace Kofrenot.UI.Views;
 /// The items of a task list, each a checkbox and its text. Enter adds an item after the one typed
 /// in, Backspace in an empty item removes it, Up/Down go from item to item in the order shown;
 /// an item moves within its part (not checked, checked) by its grip or Alt+Up/Down (<see cref="Move"/>).
+/// The checked items are collapsed under their count, to save room, until it is clicked.
 /// </summary>
 public partial class TaskListBox : UserControl
 {
     private readonly List<TextBox> _shownBoxes = [];
     private List<TaskItem> _items = [];
     private bool _isReadOnly;
+    private bool _showsChecked;
 
     public TaskListBox() => InitializeComponent();
 
@@ -34,10 +36,11 @@ public partial class TaskListBox : UserControl
         }
     }
 
-    /// <summary>Shows <paramref name="items"/>, in place of those shown.</summary>
+    /// <summary>Shows <paramref name="items"/>, in place of those shown, the checked ones collapsed.</summary>
     public void Show(IReadOnlyList<TaskItem> items)
     {
         _items = items.ToList();
+        _showsChecked = false;
         Build();
     }
 
@@ -56,14 +59,19 @@ public partial class TaskListBox : UserControl
         DoneRows.Children.Clear();
         _shownBoxes.Clear();
         _dropLines.Clear();
-        var shown = Enumerable.Range(0, _items.Count).OrderBy(index => _items[index].IsDone).ToList();
+        var shown = Enumerable.Range(0, _items.Count)
+            .Where(index => _showsChecked || !_items[index].IsDone)
+            .OrderBy(index => _items[index].IsDone)
+            .ToList();
         foreach (var index in shown)
         {
             (_items[index].IsDone ? DoneRows : OpenRows).Children.Add(RowOf(index, focusIndex == index));
         }
 
         var doneCount = _items.Count(item => item.IsDone);
-        CheckedHeader.Text = doneCount == 1 ? "1 checked" : $"{doneCount} checked";
+        CheckedCount.Text = doneCount == 1 ? "1 checked" : $"{doneCount} checked";
+        CheckedChevron.Kind = _showsChecked ? "chevron-down" : "chevron-right";
+        CheckedHeader.ToolTip = _showsChecked ? "Hide the checked items" : "Show the checked items";
         CheckedHeader.Visibility = doneCount > 0 ? Visibility.Visible : Visibility.Collapsed;
         AddButton.Visibility = _isReadOnly ? Visibility.Collapsed : Visibility.Visible;
     }
@@ -192,6 +200,12 @@ public partial class TaskListBox : UserControl
     }
 
     private void Add_Click(object sender, RoutedEventArgs e) => Insert(_items.Count);
+
+    private void CheckedHeader_Click(object sender, RoutedEventArgs e)
+    {
+        _showsChecked = !_showsChecked;
+        Build();
+    }
 
     /// <summary>Focuses a row once it is laid out (a row just built cannot take the focus yet).</summary>
     private void FocusLater(TextBox box) => Dispatcher.BeginInvoke(() =>
