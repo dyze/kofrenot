@@ -6,7 +6,8 @@ namespace Kofrenot.Core.Input;
 /// <summary>
 /// Finds the nodes while typing: a name matches when one of its words starts with the typed text
 /// ("her" finds "Frank Herbert"), ignoring case, accents and extra spaces; then the nodes whose
-/// field values match the same way, all offline.
+/// field values match the same way, all offline. A field's name and a range (<c>Born 1900..1950</c>,
+/// <see cref="ValueQuery"/>) finds the nodes whose value of that field is in it.
 /// </summary>
 public static class GraphSearch
 {
@@ -22,6 +23,11 @@ public static class GraphSearch
         if (query.Length == 0)
         {
             return [];
+        }
+
+        if (InRange(graph, text) is { } ranged)
+        {
+            return ranged.Take(limit).ToList();
         }
 
         var byName = graph.NodesByKey
@@ -43,12 +49,32 @@ public static class GraphSearch
             .Where(match => match.Field is not null)
             .OrderBy(match => NameKey.Of(match.Node.Name), StringComparer.Ordinal)
             .ThenBy(match => match.Node.Created)
-            .Select(match =>
-            {
-                var homonyms = graph.NodesNamed(match.Node.Name);
-                var rank = homonyms.TakeWhile(other => other.Id != match.Node.Id).Count() + 1;
-                return new SearchHit(match.Node, rank, homonyms.Count, IsExact: false, $"{match.Field!.Label}: {match.Field.Display}");
-            });
+            .Select(match => HitOf(graph, match.Node, match.Field!));
+
+    // "Born 1900..1950": the nodes whose field of that name has a value in the range, by name; null when the text is no range.
+    private static IEnumerable<SearchHit>? InRange(KnowledgeGraph graph, string text)
+    {
+        var words = InputParser.Words(text);
+        if (words.Length < 2 || !ValueQuery.IsRange(words[^1]))
+        {
+            return null;
+        }
+
+        var name = NameKey.Of(string.Join(' ', words[..^1]));
+        return graph.NodesWithFields
+            .Select(node => (Node: node, Field: NodeFields.Of(graph, node.Id).FirstOrDefault(field => NameKey.Of(field.Name) == name && ValueQuery.Matches(field, words[^1]))))
+            .Where(match => match.Field is not null)
+            .OrderBy(match => NameKey.Of(match.Node.Name), StringComparer.Ordinal)
+            .ThenBy(match => match.Node.Created)
+            .Select(match => HitOf(graph, match.Node, match.Field!));
+    }
+
+    private static SearchHit HitOf(KnowledgeGraph graph, Node node, NodeField field)
+    {
+        var homonyms = graph.NodesNamed(node.Name);
+        var rank = homonyms.TakeWhile(other => other.Id != node.Id).Count() + 1;
+        return new SearchHit(node, rank, homonyms.Count, IsExact: false, $"{field.Label}: {field.Display}");
+    }
 
     /// <summary>Whether a name matches the typed text, as in <see cref="Find"/>; an empty text matches nothing.</summary>
     public static Func<string, bool> MatcherOf(string text)

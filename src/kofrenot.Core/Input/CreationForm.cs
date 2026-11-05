@@ -36,7 +36,7 @@ public sealed partial class CreationForm
 
     public bool IsLink => _request is LinkRequest;
 
-    public string Title => IsLink ? "Add a link" : Under is { } under ? TitleUnder(under) : "Add a node";
+    public string Title => Plan is LinkPlan { IsUpdate: true } ? "Update a link" : IsLink ? "Add a link" : Under is { } under ? TitleUnder(under) : "Add a node";
 
     /// <summary>The type of the node, or of the left side's node when it is new.</summary>
     /// <exception cref="InvalidOperationException">Set when the type is fixed (<see cref="IsTypeFixed"/>).</exception>
@@ -77,7 +77,7 @@ public sealed partial class CreationForm
     /// <summary>What Add does, or why it cannot.</summary>
     public string Status => Plan is LinkPlan link && _text.Problem(link) is { } problem
         ? problem
-        : HasName ? $"Adds {_text.Additions(Plan)}." : "Type its name.";
+        : HasName ? $"{_text.Outcome(Plan)}." : "Type its name.";
 
     /// <summary>A node whose name exists already: Add makes another one. Null otherwise.</summary>
     public string? Warning => PlanText.Duplicate(Plan) is { } duplicate

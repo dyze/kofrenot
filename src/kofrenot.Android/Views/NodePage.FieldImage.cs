@@ -14,7 +14,7 @@ namespace Kofrenot.Phone.Views;
 /// </summary>
 public sealed partial class NodePage
 {
-    private void ShowImageChoices(FieldPlanner planner, Node node, NodeField field) =>
+    private void ShowImageChoices(FieldPlanner planner, FieldHolder node, NodeField field) =>
         _shell.ShowSheet(field.Label,
         [
             new("Choose an image…", () => _shell.Run(() => ChooseImageAsync(node, field)), Icon: "file"),
@@ -27,7 +27,7 @@ public sealed partial class NodePage
                 : Array.Empty<SheetChoice>(),
         ]);
 
-    private async Task ChooseImageAsync(Node node, NodeField field)
+    private async Task ChooseImageAsync(FieldHolder node, NodeField field)
     {
         if (await _shell.PickAsync($"The image of {field.Label}", images: true) is [var file])
         {
@@ -36,7 +36,7 @@ public sealed partial class NodePage
     }
 
     // The busy bar while it is read and sealed; what went wrong told.
-    private async Task SetImageAsync(Node node, NodeField field, ImportFile file)
+    private async Task SetImageAsync(FieldHolder node, NodeField field, ImportFile file)
     {
         var answers = new PreparedAnswers();
         Busy.IsVisible = true;
@@ -55,7 +55,7 @@ public sealed partial class NodePage
     }
 
     // An image dataset of the vault, found by its name: its latest file, not copied.
-    private void PickImageDataset(FieldPlanner planner, Node node, NodeField field) =>
+    private void PickImageDataset(FieldPlanner planner, FieldHolder node, NodeField field) =>
         _shell.Push(new PickNodePage(
             _shell,
             $"The image of {field.Label}",
@@ -71,7 +71,7 @@ public sealed partial class NodePage
                 return Task.CompletedTask;
             }));
 
-    private async Task RemoveImageAsync(FieldPlanner planner, Node node, NodeField field)
+    private async Task RemoveImageAsync(FieldPlanner planner, FieldHolder node, NodeField field)
     {
         if (await _shell.Confirm($"Remove the image of {field.Label}?", "Remove"))
         {

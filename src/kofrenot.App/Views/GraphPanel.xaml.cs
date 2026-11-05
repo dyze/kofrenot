@@ -59,6 +59,9 @@ public partial class GraphPanel : UserControl
     /// <summary>Asks to open a node's details.</summary>
     public event Action<Node>? OpenNode;
 
+    /// <summary>Asks to open a link's details, a click on its line: its qualifiers unfolded.</summary>
+    public event Action<Link>? OpenLink;
+
     /// <summary>Writes changes (a move, a reset of the layout, a link), logging the action; false when it could not.</summary>
     public Func<IReadOnlyList<Change>, string, bool>? Write { get; set; }
 
@@ -289,6 +292,12 @@ public partial class GraphPanel : UserControl
             }
 
             PressCard(node);
+        }
+        else if (e.OriginalSource is FrameworkElement { Tag: GraphEdge edge })
+        {
+            OpenLink?.Invoke(edge.Link);
+            e.Handled = true;
+            return;
         }
         else
         {

@@ -160,7 +160,7 @@ public sealed class ImageFieldTests
     public void AnImageValue_RoundTrips_WithItsFileAndContent()
     {
         var codec = new ChangeCodec(new KeyedBox(KeyRing.Of(Key)));
-        var change = new FieldSet(Guid.NewGuid(), Start, _bruce.Id, "person", "portrait", "Portrait", FieldKind.Image, null, [Guid.NewGuid()], Photo, Guid.NewGuid());
+        var change = new FieldSet(Guid.NewGuid(), Start, _bruce, "person", "portrait", "Portrait", FieldKind.Image, null, [Guid.NewGuid()], Photo, Guid.NewGuid());
 
         var decoded = Assert.IsType<FieldSet>(codec.Decode(change.Id, codec.Encode(change)));
 

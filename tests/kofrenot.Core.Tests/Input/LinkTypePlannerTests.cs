@@ -130,8 +130,8 @@ public sealed class LinkTypePlannerTests
         Assert.Equal(LinkTypeProblem.Unchanged, unchanged.Problem);
         Assert.Equal(string.Empty, unchanged.Status);
 
-        _graph.Apply(new LinkTypeDefined(Guid.NewGuid(), _clock.Now.AddMinutes(1), knows.Type.Id, "met", null, knows.Definitions));
-        _graph.Apply(new LinkTypeDefined(Guid.NewGuid(), _clock.Now.AddMinutes(2), knows.Type.Id, "knows", null, knows.Definitions));
+        _graph.Apply(new LinkTypeDefined(Guid.NewGuid(), _clock.Now.AddMinutes(1), knows.Type.Id, "met", null, [], knows.Definitions));
+        _graph.Apply(new LinkTypeDefined(Guid.NewGuid(), _clock.Now.AddMinutes(2), knows.Type.Id, "knows", null, [], knows.Definitions));
         var conflict = _graph.LinkTypes.All.Single();
         var settled = _planner.Rename(conflict, "knows", null);
 

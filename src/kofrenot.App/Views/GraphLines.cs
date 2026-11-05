@@ -42,7 +42,7 @@ internal sealed class GraphLines(Canvas canvas)
             }
 
             var arrow = HasArrow(edge) ? new Path { Fill = brush, IsHitTestVisible = false } : null;
-            var hit = new Path { Stroke = Brushes.Transparent, StrokeThickness = HitThickness, Tag = edge, ToolTip = $"{nameOf(edge.Link.From)} {edge.Name} {nameOf(edge.Link.To)}" };
+            var hit = new Path { Stroke = Brushes.Transparent, StrokeThickness = HitThickness, Tag = edge, ToolTip = $"{nameOf(edge.Link.From)} {edge.Label} {nameOf(edge.Link.To)}" };
             hit.MouseEnter += (_, _) => line.StrokeThickness = thickness + HoverThickness;
             hit.MouseLeave += (_, _) => line.StrokeThickness = thickness;
             var name = showsNames ? NameOf(edge) : null;
@@ -71,7 +71,7 @@ internal sealed class GraphLines(Canvas canvas)
 
     private static TextBlock NameOf(GraphEdge edge)
     {
-        var name = new TextBlock { Text = edge.Name, FontSize = NameFontSize, Padding = new Thickness(3, 0, 3, 0), IsHitTestVisible = false };
+        var name = new TextBlock { Text = edge.Label, FontSize = NameFontSize, Padding = new Thickness(3, 0, 3, 0), IsHitTestVisible = false };
         name.SetResourceReference(TextBlock.BackgroundProperty, "SolidBackgroundFillColorBaseBrush");
         name.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
         return name;

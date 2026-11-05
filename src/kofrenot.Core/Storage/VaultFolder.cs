@@ -64,7 +64,7 @@ public static class VaultFolder
             throw new IOException("A vault can only be created in an empty folder");
         }
 
-        var header = new VaultHeader(VaultFormat.Current, Guid.NewGuid());
+        var header = new VaultHeader(VaultFormat.Current, Guid.NewGuid(), OldestReader: VaultFormat.OldestReader, OldestWriter: VaultFormat.OldestWriter);
         var created = createKeys(header);
         Directory.CreateDirectory(ChangesOf(folder));
 

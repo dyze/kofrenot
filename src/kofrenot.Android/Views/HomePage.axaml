@@ -23,6 +23,12 @@
     <Style Selector="Border.chip.link TextBlock">
       <Setter Property="Foreground" Value="{StaticResource OnAccent}" />
     </Style>
+    <!-- A qualifier: outlined in the accent's colour (ChipInput). -->
+    <Style Selector="Border.chip.qualifier">
+      <Setter Property="Padding" Value="7,1" />
+      <Setter Property="BorderBrush" Value="{StaticResource Accent}" />
+      <Setter Property="Background" Value="Transparent" />
+    </Style>
     <Style Selector="Rectangle.newOutline">
       <Setter Property="RadiusX" Value="4" />
       <Setter Property="RadiusY" Value="4" />

@@ -34,11 +34,32 @@ public enum LinkProblem
 
     /// <summary>The link is already there (<see cref="LinkPlan.Existing"/>): a repeated link would count once.</summary>
     AlreadyLinked,
+
+    /// <summary>The link is already there with the qualifiers typed: nothing to update.</summary>
+    QualifiersUnchanged,
+
+    /// <summary>A qualifier's value does not fit its kind (<see cref="LinkPlan.QualifierError"/>).</summary>
+    QualifierInvalid,
+}
+
+/// <summary>A qualifier a link plan writes: added (no <see cref="Old"/>), changed, or taken out (no <see cref="New"/>), as shown.</summary>
+public sealed record QualifierChange(string Name, string? Old, string? New)
+{
+    /// <summary>"Date 1965", "Date: 1965 → 1966", "Date 1965 taken out".</summary>
+    public override string ToString() => (Old, New) switch
+    {
+        (null, _) => $"{Name} {New}",
+        (_, null) => $"{Name} {Old} taken out",
+        _ => $"{Name}: {Old} → {New}",
+    };
 }
 
 /// <summary>
-/// Adds a link, read as typed (<see cref="Verb"/>), and the nodes it needs that do not exist yet.
-/// <see cref="Existing"/> is the same link, when it is already there: then nothing is added.
+/// Adds a link, read as typed (<see cref="Verb"/>), and the nodes it needs that do not exist yet, with the
+/// qualifiers typed (<see cref="Qualifiers"/>). <see cref="Existing"/> is the same link, when it is already there:
+/// then nothing is added, or its qualifiers are updated (<see cref="IsUpdate"/>). <see cref="Between"/> are the links
+/// of its type between both nodes: with qualifiers typed, <see cref="LinkChoice"/> says which one is updated, or
+/// (its count) that a separate one is added.
 /// </summary>
 public sealed record LinkPlan(
     PlannedSide Left,
@@ -50,6 +71,24 @@ public sealed record LinkPlan(
     : AddPlan(Changes, NeedsConfirmation: false)
 {
     public LinkType Type => Verb.Type;
+
+    /// <summary>The links of its type already between both nodes, oldest first.</summary>
+    public IReadOnlyList<Link> Between { get; init; } = [];
+
+    /// <summary>Which of <see cref="Between"/> the qualifiers update; its count for a new separate link.</summary>
+    public int LinkChoice { get; init; }
+
+    /// <summary>The qualifiers it writes, in the order typed.</summary>
+    public IReadOnlyList<QualifierChange> Qualifiers { get; init; } = [];
+
+    /// <summary>Why a qualifier typed does not fit (<see cref="LinkProblem.QualifierInvalid"/>), naming it.</summary>
+    public string? QualifierError { get; init; }
+
+    /// <summary>It updates the qualifiers of <see cref="Existing"/>, adding nothing else.</summary>
+    public bool IsUpdate => Existing is not null && CanAdd;
+
+    /// <summary>Qualifiers are typed for nodes already linked so: which of <see cref="Between"/> they update, or a new link, is a choice.</summary>
+    public bool HasLinkChoice { get; init; }
 
     /// <summary>Both ends: the chosen node of a side, or the node added for it.</summary>
     public override IReadOnlyList<Node> Nodes

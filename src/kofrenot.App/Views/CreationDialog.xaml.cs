@@ -40,7 +40,7 @@ public partial class CreationDialog : Window
         NameBox.Visibility = form.IsNameEditable ? Visibility.Visible : Visibility.Collapsed;
         TypeBox.Visibility = form.IsTypeFixed ? Visibility.Collapsed : Visibility.Visible;
         NewText.Text = form.IsTypeFixed ? $"New node ({form.LeftType.Name})" : "New node";
-        ViewEditor.Setup(form.Types, form.FindRoots);
+        ViewEditor.Setup(form.Types, form.FindRoots, form.OrderChoicesOf);
         ViewEditor.Changed += ViewEditor_Changed;
         ContentBox.Edited += ContentBox_Edited;
         Loaded += (_, _) =>
@@ -76,6 +76,7 @@ public partial class CreationDialog : Window
         }
 
         ShowForm();
+        ShowQualifiers();
         FocusStep();
     }
 
@@ -129,7 +130,8 @@ public partial class CreationDialog : Window
 
         ShowStatus();
         BackButton.Visibility = _form.StepIndex > 0 ? Visibility.Visible : Visibility.Collapsed;
-        NextButton.Content = _form.IsLastStep ? "Add" : "Next";
+        NextButton.Content = !_form.IsLastStep ? "Next" : _form.Plan is LinkPlan { IsUpdate: true } ? "Update" : "Add";
+        TitleText.Text = _form.Title;
         NextButton.IsEnabled = !_reading && (_form.IsLastStep ? _form.CanAdd : _form.CanLeaveStep);
         _showing = false;
     }
@@ -190,6 +192,7 @@ public partial class CreationDialog : Window
         {
             _form.Verb = verb;
             ShowForm();
+            ShowQualifiers();
         }
     }
 

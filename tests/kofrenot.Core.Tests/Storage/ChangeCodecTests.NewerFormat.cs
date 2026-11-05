@@ -1,4 +1,5 @@
 using System.Text;
+using System.Text.Json.Nodes;
 
 namespace Kofrenot.Core.Tests.Storage;
 
@@ -26,7 +27,7 @@ public sealed partial class ChangeCodecTests
 
     [Theory]
     [InlineData("\"op\":\"defineEvent\"")]
-    [InlineData("\"op\":\"setField\",\"field\":{\"link\":\"3f2504e0-4f89-11d3-9a0c-0305e82c3301\",\"owner\":\"own\",\"id\":\"date\",\"name\":\"Date\",\"kind\":\"date\",\"value\":\"1965-01-01\",\"replaces\":[]}")]
+    [InlineData("\"op\":\"setField\",\"field\":{\"event\":\"3f2504e0-4f89-11d3-9a0c-0305e82c3301\",\"owner\":\"own\",\"id\":\"date\",\"name\":\"Date\",\"kind\":\"date\",\"value\":\"1965-01-01\",\"replaces\":[]}")]
     public void ANewerChange_ThisKofrenotDoesNotKnow_IsSkipped(string op)
     {
         var json = $"{{\"format\":{Newer},\"oldestReader\":{VaultFormat.Current},{op},{NewerAt}}}";
@@ -71,6 +72,19 @@ public sealed partial class ChangeCodecTests
     public void ANewerChange_WithAFieldOfAContentKind_IsSkipped() =>
         Assert.Null(DecodeJson($"{{\"format\":{Newer},\"oldestReader\":{VaultFormat.Current},\"op\":\"setField\",{NewerAt},"
             + "\"field\":{\"node\":\"3f2504e0-4f89-11d3-9a0c-0305e82c3301\",\"owner\":\"own\",\"id\":\"text\",\"name\":\"Text\",\"kind\":\"markdown\",\"value\":\"4\",\"replaces\":[]}}").Change);
+
+    [Fact]
+    public void AChange_IsWrittenWithTheFormatsThatMayReadAndWriteAfterIt()
+    {
+        var change = new NodeAdded(Guid.NewGuid(), NewerAtTime, new Node(Guid.NewGuid(), TypeCatalog.Generic.Id, "Dune", NewerAtTime));
+
+        var json = JsonNode.Parse(_keyed.Open(SealKind.Change, _codec.Encode(change), change.Id.ToByteArray()))!;
+
+        Assert.Equal((VaultFormat.Current, VaultFormat.OldestReader, VaultFormat.OldestWriter), ((int)json["format"]!, (int)json["oldestReader"]!, (int)json["oldestWriter"]!));
+        Assert.Equal(VaultFormat.OldestWriter, _codec.DecodeWithFormat(change.Id, _codec.Encode(change)).OldestWriter);
+    }
+
+    private static readonly DateTimeOffset NewerAtTime = new(2026, 10, 16, 9, 12, 0, TimeSpan.Zero);
 
     private DecodedChange DecodeJson(string json)
     {

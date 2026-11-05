@@ -353,43 +353,66 @@
       <ItemsControl x:Name="LinksList" Grid.IsSharedSizeScope="True">
         <ItemsControl.ItemTemplate>
           <DataTemplate>
-            <Border x:Name="Frame" Margin="0,1" Style="{StaticResource RowFrame}" MouseLeftButtonDown="Link_MouseLeftButtonDown" MouseRightButtonUp="Link_MouseRightButtonUp">
-              <Grid>
-                <Border x:Name="SelectionBar" Style="{StaticResource RowSelectionBar}" />
-                <Grid x:Name="Row">
-                  <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto" SharedSizeGroup="LinkType" />
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="Auto" />
-                  </Grid.ColumnDefinitions>
-                  <TextBlock x:Name="Type" Margin="10,0,16,0" VerticalAlignment="Center" Opacity="0.75" Text="{Binding Type}" />
-                  <local:NodeVisualView Grid.Column="1" Margin="0,1,10,1" Visual="{Binding Visual}" />
-                  <TextBlock x:Name="Other" Grid.Column="2" VerticalAlignment="Center" Text="{Binding Other}" TextTrimming="CharacterEllipsis" />
-                  <!-- Shown on the row hovered or selected; never in a vault read only (LinksList.Tag, NodeDetailsPanel.Delete). -->
-                  <Button x:Name="Remove"
-                          Grid.Column="3"
-                          Padding="8,4"
-                          Style="{StaticResource FlatButton}"
-                          ToolTip="Remove this link"
-                          Visibility="Hidden"
-                          Click="RemoveLink_Click">
-                    <local:IconView Size="{StaticResource RowIconSize}" Kind="unlink" />
-                  </Button>
-                  <Button x:Name="Open" Grid.Column="4" Style="{StaticResource OpenRowButton}" Click="OpenLink_Click" />
+            <StackPanel>
+              <Border x:Name="Frame" Margin="0,1" Style="{StaticResource RowFrame}" MouseLeftButtonDown="Link_MouseLeftButtonDown" MouseRightButtonUp="Link_MouseRightButtonUp">
+                <Grid>
+                  <Border x:Name="SelectionBar" Style="{StaticResource RowSelectionBar}" />
+                  <Grid x:Name="Row">
+                    <Grid.ColumnDefinitions>
+                      <ColumnDefinition Width="Auto" SharedSizeGroup="LinkType" />
+                      <ColumnDefinition Width="Auto" />
+                      <ColumnDefinition Width="*" />
+                      <ColumnDefinition Width="Auto" />
+                      <ColumnDefinition Width="Auto" />
+                      <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock x:Name="Type" Margin="10,0,16,0" VerticalAlignment="Center" Opacity="0.75" Text="{Binding Type}" />
+                    <local:NodeVisualView Grid.Column="1" Margin="0,1,10,1" Visual="{Binding Visual}" />
+                    <TextBlock x:Name="Other" Grid.Column="2" VerticalAlignment="Center" TextTrimming="CharacterEllipsis">
+                      <Run Text="{Binding Other, Mode=OneWay}" /><Run Text="{Binding QualifierSuffix, Mode=OneWay}" FontWeight="Normal" Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                    </TextBlock>
+                    <!-- Unfolds the link's qualifiers under it (NodeDetailsPanel.Qualifiers): always shown when it has some, else
+                         on the row hovered or selected, to add one of its own; never then in a vault read only. -->
+                    <Button x:Name="Unfold"
+                            Grid.Column="3"
+                            Padding="8,4"
+                            Style="{StaticResource FlatButton}"
+                            Focusable="False"
+                            Visibility="Hidden"
+                            Loaded="UnfoldQualifiers_Loaded"
+                            Click="UnfoldQualifiers_Click" />
+                    <!-- Shown on the row hovered or selected; never in a vault read only (LinksList.Tag, NodeDetailsPanel.Delete). -->
+                    <Button x:Name="Remove"
+                            Grid.Column="4"
+                            Padding="8,4"
+                            Style="{StaticResource FlatButton}"
+                            ToolTip="Remove this link"
+                            Visibility="Hidden"
+                            Click="RemoveLink_Click">
+                      <local:IconView Size="{StaticResource RowIconSize}" Kind="unlink" />
+                    </Button>
+                    <Button x:Name="Open" Grid.Column="5" Style="{StaticResource OpenRowButton}" Click="OpenLink_Click" />
+                  </Grid>
                 </Grid>
-              </Grid>
-            </Border>
+              </Border>
+              <!-- The qualifiers of a link unfolded, edited as fields (NodeDetailsPanel.Qualifiers); out of the row, so a click in them does not select it. -->
+              <ContentControl Margin="10,2,0,8" Focusable="False" Loaded="QualifierHost_Loaded" />
+            </StackPanel>
             <DataTemplate.Triggers>
               <Trigger SourceName="Frame" Property="IsMouseOver" Value="True">
                 <Setter TargetName="Remove" Property="Visibility" Value="Visible" />
+                <Setter TargetName="Unfold" Property="Visibility" Value="Visible" />
               </Trigger>
               <DataTrigger Binding="{Binding IsSelected}" Value="True">
                 <Setter TargetName="Remove" Property="Visibility" Value="Visible" />
+                <Setter TargetName="Unfold" Property="Visibility" Value="Visible" />
               </DataTrigger>
               <DataTrigger Binding="{Binding Tag, RelativeSource={RelativeSource AncestorType=ItemsControl}}" Value="True">
                 <Setter TargetName="Remove" Property="Visibility" Value="Collapsed" />
+                <Setter TargetName="Unfold" Property="Visibility" Value="Hidden" />
+              </DataTrigger>
+              <DataTrigger Binding="{Binding HasQualifiers}" Value="True">
+                <Setter TargetName="Unfold" Property="Visibility" Value="Visible" />
               </DataTrigger>
               <DataTrigger Binding="{Binding IsSelected}" Value="True">
                 <Setter TargetName="Frame" Property="Background" Value="{DynamicResource SubtleFillColorSecondaryBrush}" />

@@ -38,23 +38,37 @@ public sealed class AddPlanner(KnowledgeGraph graph, TimeProvider? clock = null)
             return new LinkPlan(left, verb, right, problem, Existing: null, Changes: []);
         }
 
-        if (left.Chosen is { } leftNode && right.Chosen is { } rightNode
-            && FindLink(verb, leftNode.Id, rightNode.Id) is { } existing)
+        var between = left.Chosen is { } leftNode && right.Chosen is { } rightNode ? LinksBetween(verb, leftNode.Id, rightNode.Id) : [];
+        var typed = request.QualifiersTyped;
+        var plan = new LinkPlan(left, verb, right, LinkProblem.None, Existing: null, Changes: []) { Between = between, HasLinkChoice = between.Count > 0 && typed.Count > 0 };
+        if (between.Count > 0 && typed.Count == 0)
         {
-            return new LinkPlan(left, verb, right, LinkProblem.AlreadyLinked, existing, Changes: []);
+            return plan with { Problem = LinkProblem.AlreadyLinked, Existing = between[0] };
         }
 
-        var now = _clock.GetUtcNow();
-        var changes = new List<Change>();
-        var leftId = Resolve(left, now, changes);
-        var rightId = Resolve(right, now, changes);
-        var (from, to) = verb.IsReverse ? (rightId, leftId) : (leftId, rightId);
-        changes.Add(new LinkAdded(Guid.NewGuid(), now, new Link(Guid.NewGuid(), verb.Type.Id, from, to, now)));
-        return new LinkPlan(left, verb, right, LinkProblem.None, Existing: null, changes);
+        var linkChoice = Math.Clamp(choices.Link, 0, between.Count);
+        plan = plan with { LinkChoice = linkChoice };
+        var qualifiers = new QualifierPlanner(graph, verb.Type, _clock);
+        return linkChoice < between.Count
+            ? qualifiers.Update(plan, between[linkChoice], typed)
+            : qualifiers.Add(plan, NewLink(plan, isSeparate: between.Count > 0), typed);
     }
 
-    private Link? FindLink(LinkVerb verb, Guid left, Guid right) =>
-        verb.IsReverse ? graph.FindLink(verb.Type.Id, right, left) : graph.FindLink(verb.Type.Id, left, right);
+    // The new link, after the new nodes it needs.
+    private (Link Link, List<Change> Changes) NewLink(LinkPlan plan, bool isSeparate)
+    {
+        var now = _clock.GetUtcNow();
+        var changes = new List<Change>();
+        var leftId = Resolve(plan.Left, now, changes);
+        var rightId = Resolve(plan.Right!, now, changes);
+        var (from, to) = plan.Verb.IsReverse ? (rightId, leftId) : (leftId, rightId);
+        var link = new Link(Guid.NewGuid(), plan.Verb.Type.Id, from, to, now, isSeparate);
+        changes.Add(new LinkAdded(Guid.NewGuid(), now, link));
+        return (link, changes);
+    }
+
+    private IReadOnlyList<Link> LinksBetween(LinkVerb verb, Guid left, Guid right) =>
+        verb.IsReverse ? graph.LinksBetween(verb.Type.Id, right, left) : graph.LinksBetween(verb.Type.Id, left, right);
 
     private PlannedSide Side(string name, NodeType? type, int choice)
     {

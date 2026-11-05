@@ -49,7 +49,7 @@ public sealed class RestorePlannerTests
     [Fact]
     public void AFieldValue_IsSetAgain_OverItsFieldsCurrentValue()
     {
-        var first = Apply(new FieldSet(Guid.NewGuid(), Start.AddMinutes(1), _dune.Id, FieldSet.Own, "published", "Published", FieldKind.Text, "1965", []));
+        var first = Apply(new FieldSet(Guid.NewGuid(), Start.AddMinutes(1), _dune, FieldSet.Own, "published", "Published", FieldKind.Text, "1965", []));
         var second = Apply(first with { Id = Guid.NewGuid(), At = Start.AddMinutes(2), Value = "1966", Replaces = [first.Id] });
         Apply(first with { Id = Guid.NewGuid(), Field = "pages", Name = "Pages", Value = "412" });
 
@@ -63,7 +63,7 @@ public sealed class RestorePlannerTests
     [Fact]
     public void AnImage_KeepsTheFileItWasWrittenWith()
     {
-        var image = Apply(new FieldSet(Guid.NewGuid(), Start.AddMinutes(1), _dune.Id, FieldSet.Own, "cover", "Cover", FieldKind.Image, null, [], new DatasetFile("cover.png", 10, "11")));
+        var image = Apply(new FieldSet(Guid.NewGuid(), Start.AddMinutes(1), _dune, FieldSet.Own, "cover", "Cover", FieldKind.Image, null, [], new DatasetFile("cover.png", 10, "11")));
         Apply(image with { Id = Guid.NewGuid(), At = Start.AddMinutes(2), File = null, Replaces = [image.Id] });
 
         var change = Assert.IsType<FieldSet>(Assert.Single(Restore(image.Id).Changes));

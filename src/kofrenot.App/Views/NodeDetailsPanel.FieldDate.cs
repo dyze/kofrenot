@@ -2,6 +2,7 @@ using System.Globalization;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using Kofrenot.Core.Browse;
+using Kofrenot.Core.Graph;
 
 namespace Kofrenot.UI.Views;
 
@@ -11,9 +12,9 @@ namespace Kofrenot.UI.Views;
 /// </summary>
 public partial class NodeDetailsPanel
 {
-    private void ShowCalendar(NodeField field)
+    private void ShowCalendar(NodeField field, FieldHolder holder)
     {
-        if (!_boxes.TryGetValue((field.Owner, field.Field), out var box))
+        if (!_boxes.TryGetValue((holder.Id, field.Owner, field.Field), out var box))
         {
             return;
         }
@@ -26,7 +27,7 @@ public partial class NodeDetailsPanel
             popup.IsOpen = false;
             if (calendar.SelectedDate is { } chosen)
             {
-                WriteFields(planner => planner.Set(Node, field, chosen.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)), "Field set", field);
+                WriteFields(planner => planner.Set(holder, field, chosen.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)), "Field set", field, holder);
             }
         };
         popup.IsOpen = true;

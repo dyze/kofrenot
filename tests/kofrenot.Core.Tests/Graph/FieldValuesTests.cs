@@ -10,7 +10,7 @@ public sealed class FieldValuesTests
     public FieldValuesTests() => _graph.Add(_frank);
 
     private FieldSet Set(string field, string? value, int minutes, params Guid[] replaces) =>
-        new(Guid.NewGuid(), Start.AddMinutes(minutes), _frank.Id, "person", field, field, FieldKind.Text, value, replaces);
+        new(Guid.NewGuid(), Start.AddMinutes(minutes), _frank, "person", field, field, FieldKind.Text, value, replaces);
 
     [Fact]
     public void ANode_HasNoFieldSet_UntilOneIs()
@@ -74,7 +74,7 @@ public sealed class FieldValuesTests
     public void AnOwnField_IsApartFromATypesFieldOfTheSameId()
     {
         _graph.Apply(Set("born", "1920", 1));
-        _graph.Apply(new FieldSet(Guid.NewGuid(), Start.AddMinutes(2), _frank.Id, FieldSet.Own, "born", "Born", FieldKind.Text, "Tacoma", []));
+        _graph.Apply(new FieldSet(Guid.NewGuid(), Start.AddMinutes(2), _frank, FieldSet.Own, "born", "Born", FieldKind.Text, "Tacoma", []));
 
         Assert.Equal([("person", "1920"), (FieldSet.Own, "Tacoma")], _graph.FieldsOf(_frank.Id).Select(field => (field.Owner, field.Shown.Value)));
     }

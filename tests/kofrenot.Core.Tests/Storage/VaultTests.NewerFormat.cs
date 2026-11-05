@@ -65,7 +65,7 @@ public sealed partial class VaultTests
     {
         var vault = Open(snapshot: false);
         WriteChange($"{{\"format\":{Newer},\"oldestReader\":{VaultFormat.Current},\"oldestWriter\":{Newer},\"op\":\"setField\",\"at\":\"2026-10-16T09:12:00Z\","
-            + $"\"field\":{{\"link\":\"{Guid.NewGuid()}\",\"owner\":\"own\",\"id\":\"date\",\"name\":\"Date\",\"kind\":\"date\",\"value\":\"1965-01-01\",\"replaces\":[]}}}}");
+            + $"\"field\":{{\"event\":\"{Guid.NewGuid()}\",\"owner\":\"own\",\"id\":\"date\",\"name\":\"Date\",\"kind\":\"date\",\"value\":\"1965-01-01\",\"replaces\":[]}}}}");
 
         Assert.Equal(0, vault.Refresh());
         Assert.True(vault.IsReadOnly);

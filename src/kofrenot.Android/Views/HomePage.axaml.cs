@@ -113,6 +113,13 @@ public sealed partial class HomePage : UserControl, IPage
             return;
         }
 
+        if (text.Length > 0 && LinkSearch.Find(graph, text) is { } links)
+        {
+            List.ItemsSource = links.Select(hit => NodeRow.Of(graph, hit.Found, detail: $"{hit.From.Name} {hit.Verb?.Name} {hit.To.Name} · {hit.Field.Label}: {hit.Field.Display}")).ToList();
+            ShowMessage(links.Count == 0 ? "No link has this qualifier." : null);
+            return;
+        }
+
         if (text.Length > 0)
         {
             var hits = GraphSearch.Find(graph, text, limit: 100);
@@ -200,7 +207,7 @@ public sealed partial class HomePage : UserControl, IPage
     // The search tab's text read as the input box reads it: what it adds, offered under the box.
     private void ShowAdd(KnowledgeGraph graph, string text)
     {
-        _adding = _tab.IsSearch && !_shell.Services.Session.IsReadOnly && InputParser.Parse(text, graph.Types) is { } request
+        _adding = _tab.IsSearch && !_shell.Services.Session.IsReadOnly && InputParser.Parse(text, graph) is { } request
             ? new CreationForm(graph, request)
             : null;
         AddButton.IsVisible = _adding is { CanAdd: true };

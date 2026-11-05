@@ -9,7 +9,11 @@ namespace Kofrenot.Core.Views;
 /// (<see cref="GraphLegendItem.Color"/>), whether it has a direction (not for a symmetric type), and
 /// its name as read from its <see cref="Link.From"/> node.
 /// </summary>
-public sealed record GraphEdge(Link Link, GraphRole Role, int Color, bool IsDirected, string Name);
+public sealed record GraphEdge(Link Link, GraphRole Role, int Color, bool IsDirected, string Name, string? Qualifier = null)
+{
+    /// <summary>Its name with its qualifier shown: "wrote · 1965".</summary>
+    public string Label => Qualifier is { } shown ? $"{Name} · {shown}" : Name;
+}
 
 /// <summary>A link type a graph view follows, as its legend shows it: its name, its role, and its colour, the type's place among the view's link types.</summary>
 public sealed record GraphLegendItem(string LinkType, string Name, GraphRole Role, int Color);
@@ -143,7 +147,8 @@ public sealed class GraphView(KnowledgeGraph graph, GraphDefinition definition, 
         return nodes
             .SelectMany(node => LinksOf(node.Id))
             .Where(link => shown.Contains(link.From) && shown.Contains(link.To) && drawn.Add(link.Id))
-            .Select(link => new GraphEdge(link, _roles[link.Type], ColorOf(link.Type), graph.Types.FindLinkType(link.Type)?.IsSymmetric == false, graph.Types.LinkName(link, link.From)))
+            .Select(link => new GraphEdge(
+                link, _roles[link.Type], ColorOf(link.Type), graph.Types.FindLinkType(link.Type)?.IsSymmetric == false, graph.Types.LinkName(link, link.From), NodeFields.ShownOf(graph, link)?.Display))
             .ToList();
     }
 }

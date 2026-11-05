@@ -30,4 +30,7 @@ public sealed partial class CreationForm
             .Where(pair => IsView(pair.Side) && _views[pair.Side].Definition is not null)
             .Select(pair => new ViewEdited(Guid.NewGuid(), _clock.GetUtcNow(), pair.Node.Id, _views[pair.Side].Definition!, []))
             .ToList();
+
+    /// <summary>The qualifiers a tree being defined can be sorted by (<see cref="ViewDraft.OrderChoices"/>).</summary>
+    public IReadOnlyList<Fields.FieldDefinition> OrderChoicesOf(ViewDraft draft) => draft.OrderChoices(_graph);
 }

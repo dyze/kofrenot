@@ -27,7 +27,7 @@ public partial class NodeDetailsPanel
 
     private void ShowFields(NodeDetails details)
     {
-        var typing = TypingKept(details.Node);
+        var typing = TypingKept(details);
         _boxes.Clear();
         _errors.Clear();
         // Add field… belongs to the node it was started on (leaving it asked about it: LeaveFields).
@@ -40,7 +40,7 @@ public partial class NodeDetailsPanel
         var canEdit = WriteChanges is not null;
         foreach (var field in ShowTabs(details))
         {
-            FieldColumns.Children.Add(FieldBlockOf(field, details.Fields, canEdit));
+            FieldColumns.Children.Add(FieldBlockOf(field, details.Fields, canEdit, details.Node));
         }
 
         TypeBack(typing);
@@ -56,8 +56,9 @@ public partial class NodeDetailsPanel
     /// <summary>
     /// A field's block: its label, its editor and its buttons, and under them, when it was set on two
     /// devices, the values to keep. Its buttons' column is one width in every block, so editors line up.
+    /// A link's qualifier (<paramref name="holder"/> a link) with a value has × to take it out, asked first.
     /// </summary>
-    private Grid FieldBlockOf(NodeField field, IReadOnlyList<NodeField> fields, bool canEdit)
+    private Grid FieldBlockOf(NodeField field, IReadOnlyList<NodeField> fields, bool canEdit, FieldHolder holder)
     {
         var block = new Grid();
         block.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(110) });
@@ -72,10 +73,10 @@ public partial class NodeDetailsPanel
             Opacity = 0.7,
             Text = field.Label,
             TextTrimming = TextTrimming.CharacterEllipsis,
-            ToolTip = field.Type is { } type ? $"A field of {type.Name}" : "A field of this node's own",
+            ToolTip = field.TypeName is { } type ? $"A {(holder.IsLink ? "qualifier" : "field")} of {type}" : holder.IsLink ? "A qualifier of this link's own" : "A field of this node's own",
         };
         Place(block, label, 0, 0);
-        Place(block, EditorOf(field, canEdit), 0, 1);
+        Place(block, EditorOf(field, canEdit, holder), 0, 1);
 
         var actions = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(4, 4, 0, 0) };
         if (field.Value is { } value && FieldValue.LinkOf(field.Kind, value) is { } link)
@@ -85,12 +86,17 @@ public partial class NodeDetailsPanel
 
         if (canEdit && field.Kind == FieldKind.Date)
         {
-            actions.Children.Add(FieldButton("calendar", "Choose a date", () => ShowCalendar(field), focusable: true));
+            actions.Children.Add(FieldButton("calendar", "Choose a date", () => ShowCalendar(field, holder), focusable: true));
         }
 
         if (canEdit && fields.FirstOrDefault(other => other != field && other.IsOwn != field.IsOwn && NameKey.Of(other.Name) == NameKey.Of(field.Name)) is { } twin && !field.IsOwn)
         {
-            actions.Children.Add(FieldButton("merge", $"Merge {twin.Label} into {field.Label}", () => Merge(field, twin)));
+            actions.Children.Add(FieldButton("merge", $"Merge {twin.Label} into {field.Label}", () => Merge(field, twin, holder)));
+        }
+
+        if (canEdit && holder.IsLink && field.HasValue && field.Kind != FieldKind.Image)
+        {
+            actions.Children.Add(FieldButton("remove", $"Take {field.Label} out of this link", () => RemoveQualifier(field, holder)));
         }
 
         Place(block, actions, 0, 2);
@@ -107,7 +113,7 @@ public partial class NodeDetailsPanel
             foreach (var (version, shown) in values.Current.Zip(field.Conflict))
             {
                 var button = new Button { Margin = new Thickness(0, 2, 6, 0), Padding = new Thickness(8, 1, 8, 1), Focusable = false, Content = shown };
-                button.Click += (_, _) => WriteFields(planner => planner.Keep(Node, field, version), "Field conflict resolved");
+                button.Click += (_, _) => WriteFields(planner => planner.Keep(holder, field, version), "Field conflict resolved", holder: holder);
                 keep.Children.Add(button);
             }
 
@@ -127,12 +133,12 @@ public partial class NodeDetailsPanel
         block.Children.Add(element);
     }
 
-    private FrameworkElement EditorOf(NodeField field, bool canEdit)
+    private FrameworkElement EditorOf(NodeField field, bool canEdit, FieldHolder holder)
     {
         var margin = new Thickness(0, 4, 0, 0);
         if (field.Kind == FieldKind.Image)
         {
-            return ImageEditorOf(field, margin, canEdit);
+            return ImageEditorOf(field, margin, canEdit, holder);
         }
 
         if (!canEdit)
@@ -144,7 +150,7 @@ public partial class NodeDetailsPanel
         {
             case FieldKind.Checkbox:
                 var check = new CheckBox { Margin = margin, MinWidth = 0, IsChecked = FieldValue.IsChecked(field.Value) };
-                check.Click += (_, _) => WriteFields(planner => planner.Check(Node, field, check.IsChecked == true), "Field set");
+                check.Click += (_, _) => WriteFields(planner => planner.Check(holder, field, check.IsChecked == true), "Field set", holder: holder);
                 return check;
             case FieldKind.Choice:
                 var list = new ComboBox { Margin = margin, MinWidth = 140, HorizontalAlignment = HorizontalAlignment.Left };
@@ -154,12 +160,12 @@ public partial class NodeDetailsPanel
                 {
                     if (list.SelectedItem is string chosen && chosen != (field.Value ?? ClearChoice))
                     {
-                        WriteFields(planner => chosen == ClearChoice ? planner.Clear(Node, field) : planner.Set(Node, field, chosen), "Field set");
+                        WriteFields(planner => chosen == ClearChoice ? planner.Clear(holder, field) : planner.Set(holder, field, chosen), "Field set", holder: holder);
                     }
                 };
                 return list;
             default:
-                return BoxOf(field, margin);
+                return BoxOf(field, margin, holder);
         }
     }
 
@@ -201,8 +207,11 @@ public partial class NodeDetailsPanel
         return button;
     }
 
-    /// <summary>Writes a plan of the node's fields, or says why it cannot (under <paramref name="about"/> when given); false when nothing was written.</summary>
-    private bool WriteFields(Func<FieldPlanner, FieldPlan> plan, string action, NodeField? about = null)
+    /// <summary>
+    /// Writes a plan of the node's fields or a link's qualifiers (<paramref name="holder"/>, the node by default), or says
+    /// why it cannot (under <paramref name="about"/> when given); false when nothing was written.
+    /// </summary>
+    private bool WriteFields(Func<FieldPlanner, FieldPlan> plan, string action, NodeField? about = null, FieldHolder? holder = null)
     {
         if (Browser is not { Graph: { } graph, Details: not null } || WriteChanges is null)
         {
@@ -210,7 +219,7 @@ public partial class NodeDetailsPanel
         }
 
         var planned = plan(new FieldPlanner(graph));
-        ShowStatus(planned.Status, about);
+        ShowStatus(planned.Status, about, holder);
         if (!planned.CanApply || !WriteChanges(planned.Changes, action))
         {
             return false;
@@ -220,7 +229,7 @@ public partial class NodeDetailsPanel
         return true;
     }
 
-    private void Merge(NodeField kept, NodeField dropped)
+    private void Merge(NodeField kept, NodeField dropped, FieldHolder holder)
     {
         var owner = Window.GetWindow(this);
         var (mine, theirs) = (kept.Display, dropped.Display);
@@ -234,7 +243,7 @@ public partial class NodeDetailsPanel
 
         if (MessageDialog.Confirm(owner, $"Merge {dropped.Label} into {kept.Label}, keeping “{FieldValue.Display(kept.Kind, value)}”?\n\n{dropped.Label} goes.", "Merge"))
         {
-            WriteFields(planner => planner.Merge(Node, kept, dropped, value), "Fields merged");
+            WriteFields(planner => planner.Merge(holder, kept, dropped, value), "Fields merged", holder: holder);
         }
     }
 

@@ -25,6 +25,12 @@ public sealed record NodeDetails(
 
 /// <summary>
 /// A link of the node shown: its type, and the node at the other end with its picture. <see cref="CanOpen"/>: that
-/// node can be opened one level deeper (not at the last level, and not already in the trail).
+/// node can be opened one level deeper (not at the last level, and not already in the trail). <see cref="Qualifier"/>
+/// is the value of its qualifier shown (<see cref="NodeFields.ShownOf"/>), or null; <see cref="HasQualifiers"/>: it has
+/// some to unfold, its own or its type's, set or not.
 /// </summary>
-public sealed record LinkRow(string Type, string Other, Node OtherNode, bool CanOpen, bool IsSelected, NodeVisual Visual, Link Link);
+public sealed record LinkRow(string Type, string Other, Node OtherNode, bool CanOpen, bool IsSelected, NodeVisual Visual, Link Link, string? Qualifier = null, bool HasQualifiers = false)
+{
+    /// <summary>Shown after the other node's name: " · 1965", or nothing.</summary>
+    public string QualifierSuffix => Qualifier is { } shown ? $" · {shown}" : string.Empty;
+}

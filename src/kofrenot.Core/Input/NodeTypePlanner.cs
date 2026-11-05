@@ -111,25 +111,15 @@ public sealed class NodeTypePlanner(KnowledgeGraph graph, TimeProvider? clock = 
             return Refused(NodeTypeProblem.Taken, taken.Name);
         }
 
-        var fields = draft.Fields.Select(FieldOf).ToList();
-        if (fields.Any(field => field.Kind.IsContent()))
+        var (fieldsProblem, detail, fields) = CheckedFields.Of(draft.Fields);
+        switch (fieldsProblem)
         {
-            throw new ArgumentException("A type of the user's has no content field", nameof(draft));
-        }
-
-        if (fields.Any(field => field.Name.Length == 0))
-        {
-            return Refused(NodeTypeProblem.FieldEmpty);
-        }
-
-        if (fields.GroupBy(field => NameKey.Of(field.Name)).FirstOrDefault(same => same.Count() > 1) is { } twice)
-        {
-            return Refused(NodeTypeProblem.FieldTwice, twice.First().Name);
-        }
-
-        if (fields.FirstOrDefault(field => field.Kind == FieldKind.Choice && !AreValid(field.Choices)) is { } badChoices)
-        {
-            return Refused(NodeTypeProblem.BadChoices, badChoices.Name);
+            case FieldDraftsProblem.FieldEmpty:
+                return Refused(NodeTypeProblem.FieldEmpty);
+            case FieldDraftsProblem.FieldTwice:
+                return Refused(NodeTypeProblem.FieldTwice, detail);
+            case FieldDraftsProblem.BadChoices:
+                return Refused(NodeTypeProblem.BadChoices, detail);
         }
 
         var icon = TypeIcons.Find(draft.Icon);
@@ -152,13 +142,4 @@ public sealed class NodeTypePlanner(KnowledgeGraph graph, TimeProvider? clock = 
             edited?.Definitions.Select(definition => definition.Id).ToList() ?? []);
         return new NodeTypePlan(edited, name, NodeTypeProblem.None, Detail: null, change);
     }
-
-    private static FieldDefinition FieldOf(FieldDraft draft) => new(
-        draft.Id ?? Guid.NewGuid().ToString(),
-        draft.Name.Trim(),
-        draft.Kind,
-        draft.Kind == FieldKind.Choice ? draft.Choices.Select(choice => choice.Trim()).ToList() : []);
-
-    private static bool AreValid(IReadOnlyList<string> choices) =>
-        choices.Count > 0 && choices.All(choice => choice.Length > 0) && choices.Distinct(StringComparer.CurrentCultureIgnoreCase).Count() == choices.Count;
 }

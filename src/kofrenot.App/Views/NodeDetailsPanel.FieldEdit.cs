@@ -16,11 +16,11 @@ namespace Kofrenot.UI.Views;
 /// </summary>
 public partial class NodeDetailsPanel
 {
-    // The boxes of the fields shown, by owner and field, and the line under each saying what is wrong with it.
-    private readonly Dictionary<(string Owner, string Field), TextBox> _boxes = [];
-    private readonly Dictionary<(string Owner, string Field), TextBlock> _errors = [];
+    // The boxes of the fields shown, by holder (the node, or a link unfolded), owner and field, and the line under each saying what is wrong with it.
+    private readonly Dictionary<(Guid Holder, string Owner, string Field), TextBox> _boxes = [];
+    private readonly Dictionary<(Guid Holder, string Owner, string Field), TextBlock> _errors = [];
 
-    // The box typed in, the node and field it writes.
+    // The box typed in, the node or link and field it writes.
     private Typing? _typing;
 
     /// <summary>
@@ -40,15 +40,15 @@ public partial class NodeDetailsPanel
             return true;
         }
 
-        var plan = new FieldPlanner(graph).Set(typing.Node, typing.Field, typing.Box.Text);
+        var plan = new FieldPlanner(graph).Set(typing.Holder, typing.Field, typing.Box.Text);
         if (plan.Problem != FieldProblem.Invalid)
         {
             // Written, or the same value typed otherwise ("1920-10-8"): shown as written either way.
             _typing = null;
-            return !plan.CanApply || WriteFields(_ => plan, "Field set");
+            return !plan.CanApply || WriteFields(_ => plan, "Field set", holder: typing.Holder);
         }
 
-        ShowStatus(plan.Status, typing.Field);
+        ShowStatus(plan.Status, typing.Field, typing.Holder);
         if (!ask)
         {
             return false;
@@ -87,11 +87,12 @@ public partial class NodeDetailsPanel
         return true;
     }
 
-    /// <summary>What is wrong, under the field it is about when it has a box; else under the fields.</summary>
-    private void ShowStatus(string status, NodeField? about = null)
+    /// <summary>What is wrong, under the field it is about (of <paramref name="holder"/>, the node by default) when it has a box; else under the fields.</summary>
+    private void ShowStatus(string status, NodeField? about = null, FieldHolder? holder = null)
     {
         HideStatus();
-        var line = about is not null && _errors.TryGetValue((about.Owner, about.Field), out var error) ? error : FieldStatus;
+        var holderId = holder?.Id ?? Browser.Details?.Node.Id;
+        var line = about is not null && holderId is { } id && _errors.TryGetValue((id, about.Owner, about.Field), out var error) ? error : FieldStatus;
         line.Text = status;
         line.Visibility = status.Length > 0 ? Visibility.Visible : Visibility.Collapsed;
     }
@@ -131,7 +132,7 @@ public partial class NodeDetailsPanel
     }
 
     // The box, and under it what is wrong with what is typed (ShowStatus).
-    private StackPanel BoxOf(NodeField field, Thickness margin)
+    private StackPanel BoxOf(NodeField field, Thickness margin, FieldHolder holder)
     {
         var box = new TextBox { Text = field.Value ?? string.Empty, ToolTip = HintOf(field.Kind) };
         var error = new TextBlock
@@ -141,10 +142,9 @@ public partial class NodeDetailsPanel
             TextWrapping = TextWrapping.Wrap,
             Visibility = Visibility.Collapsed,
         };
-        var node = Node;
         box.GotKeyboardFocus += (_, _) =>
         {
-            _typing = new Typing(box, node, field);
+            _typing = new Typing(box, holder, field);
             // Reached with the keyboard: at the end of its value, as every box; a click puts the caret where it is.
             if (Mouse.LeftButton != MouseButtonState.Pressed)
             {
@@ -153,8 +153,8 @@ public partial class NodeDetailsPanel
         };
         box.TextChanged += (_, _) => Mark(box, field);
         box.LostKeyboardFocus += (_, _) => WriteBox(box);
-        _boxes[(field.Owner, field.Field)] = box;
-        _errors[(field.Owner, field.Field)] = error;
+        _boxes[(holder.Id, field.Owner, field.Field)] = box;
+        _errors[(holder.Id, field.Owner, field.Field)] = error;
         return new StackPanel { Margin = margin, Children = { box, error } };
     }
 
@@ -183,26 +183,27 @@ public partial class NodeDetailsPanel
         _ => "Its text",
     };
 
-    // What is typed in a box of this node, kept while its fields are shown again (a change from elsewhere).
-    private (string Owner, string Field, string Text, int Caret, bool HasFocus)? TypingKept(Node node)
+    // What is typed in a box of this node or of one of its links, kept while its fields are shown again (a change from elsewhere).
+    private (FieldHolder Holder, string Owner, string Field, string Text, int Caret, bool HasFocus)? TypingKept(NodeDetails details)
     {
-        var kept = _typing is { IsChanged: true } typing && typing.Node.Id == node.Id
-            ? (typing.Field.Owner, typing.Field.Field, typing.Box.Text, typing.Box.CaretIndex, typing.Box.IsKeyboardFocusWithin)
-            : ((string, string, string, int, bool)?)null;
+        var kept = _typing is { IsChanged: true } typing && (typing.Holder.Id == details.Node.Id || details.Links.Any(row => row.Link.Id == typing.Holder.Id))
+            ? (typing.Holder, typing.Field.Owner, typing.Field.Field, typing.Box.Text, typing.Box.CaretIndex, typing.Box.IsKeyboardFocusWithin)
+            : ((FieldHolder, string, string, string, int, bool)?)null;
         _typing = null;
         return kept;
     }
 
-    private void TypeBack((string Owner, string Field, string Text, int Caret, bool HasFocus)? kept)
+    private void TypeBack((FieldHolder Holder, string Owner, string Field, string Text, int Caret, bool HasFocus)? kept)
     {
-        if (kept is not { } typed || !_boxes.TryGetValue((typed.Owner, typed.Field), out var box) || Browser.Details is not { } details)
+        if (kept is not { } typed || !_boxes.TryGetValue((typed.Holder.Id, typed.Owner, typed.Field), out var box) || Browser.Graph is not { } graph
+            || NodeFields.Of(graph, typed.Holder).FirstOrDefault(field => (field.Owner, field.Field) == (typed.Owner, typed.Field)) is not { } shown)
         {
             return;
         }
 
         box.Text = typed.Text;
         box.CaretIndex = Math.Min(typed.Caret, typed.Text.Length);
-        _typing = new Typing(box, details.Node, details.Fields.First(field => (field.Owner, field.Field) == (typed.Owner, typed.Field)));
+        _typing = new Typing(box, typed.Holder, shown);
         if (typed.HasFocus)
         {
             box.Focus();
@@ -214,7 +215,7 @@ public partial class NodeDetailsPanel
     {
         switch (key)
         {
-            case Key.Enter when _typing is { } typing:
+            case Key.Enter when _typing is { Box.IsKeyboardFocusWithin: true } typing:
                 WriteBox(typing.Box);
                 return true;
             case Key.Enter when OwnFieldForm.IsKeyboardFocusWithin:
@@ -223,7 +224,7 @@ public partial class NodeDetailsPanel
             case Key.Escape when OwnFieldForm.IsKeyboardFocusWithin:
                 CloseOwnField();
                 return true;
-            case Key.Escape when _typing is { } typing:
+            case Key.Escape when _typing is { Box.IsKeyboardFocusWithin: true } typing:
                 typing.Box.Text = typing.Field.Value ?? string.Empty;
                 _typing = null;
                 HideStatus();
@@ -240,14 +241,14 @@ public partial class NodeDetailsPanel
         if (_typing is { IsChanged: true } typing && typing.Box == box)
         {
             _typing = null;
-            if (!WriteFields(planner => planner.Set(typing.Node, typing.Field, box.Text), "Field set", typing.Field))
+            if (!WriteFields(planner => planner.Set(typing.Holder, typing.Field, box.Text), "Field set", typing.Field, typing.Holder))
             {
                 _typing = typing;
             }
         }
     }
 
-    private sealed record Typing(TextBox Box, Node Node, NodeField Field)
+    private sealed record Typing(TextBox Box, FieldHolder Holder, NodeField Field)
     {
         public bool IsChanged => Box.Text != (Field.Value ?? string.Empty);
     }

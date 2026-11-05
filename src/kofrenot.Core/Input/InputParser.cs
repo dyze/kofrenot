@@ -37,6 +37,16 @@ public static class InputParser
         return new NodeRequest(Join(words));
     }
 
+    /// <summary>
+    /// The request, with the qualifiers typed after a link sentence (<see cref="QualifierText"/>), its link type's;
+    /// null for an empty text.
+    /// </summary>
+    public static InputRequest? Parse(string text, KnowledgeGraph graph)
+    {
+        var request = Parse(text, graph.Types);
+        return request is LinkRequest link ? QualifierText.Split(link, graph.LinkTypes.FieldsOf(link.Verb.Type.Id)) : request;
+    }
+
     /// <summary>The words of a text, as the parser reads them.</summary>
     internal static string[] Words(string text) => text.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries);
 

@@ -64,6 +64,25 @@ public sealed record LinkTypePlan(
     };
 }
 
+/// <summary>
+/// Gives the links of <see cref="Type"/>, the user's or a built-in one, the qualifiers <see cref="Fields"/>;
+/// <see cref="Change"/> is null when it cannot (<see cref="Problem"/>) or nothing changes.
+/// </summary>
+public sealed record QualifierListPlan(LinkType Type, FieldDraftsProblem Problem, string? Detail, IReadOnlyList<Fields.FieldDefinition> Fields, LinkTypeDefined? Change)
+{
+    public bool CanApply => Change is not null;
+
+    /// <summary>What applying does, or why it cannot; empty when nothing changes.</summary>
+    public string Status => Problem switch
+    {
+        FieldDraftsProblem.FieldEmpty => "Name every qualifier.",
+        FieldDraftsProblem.FieldTwice => $"Two qualifiers are named “{Detail}”.",
+        FieldDraftsProblem.BadChoices => $"Give “{Detail}” its options, each once.",
+        _ when Change is null => string.Empty,
+        _ => $"Changes the qualifiers of “{Type.Name}”: its links show them as they are now, one taken out keeping its values as their own.",
+    };
+}
+
 /// <summary>Removes <see cref="Type"/> with its aliases, unless links still have it (<see cref="Links"/>).</summary>
 public sealed record LinkTypeRemoval(CustomLinkType Type, int Links, ChangesRemoved? Change)
 {
@@ -88,6 +107,31 @@ public sealed class LinkTypePlanner(KnowledgeGraph graph, TimeProvider? clock = 
 
     /// <summary>New names for a link type of the user's; it keeps the way it reads.</summary>
     public LinkTypePlan Rename(CustomLinkType renamed, string nameText, string? reverseText) => Plan(renamed, nameText, reverseText);
+
+    /// <summary>
+    /// The qualifiers of the links of <paramref name="type"/>, a link type of the user's (its names kept) or a built-in
+    /// one (given fields only); a qualifier taken out stays on its links, with its values, as their own.
+    /// </summary>
+    public QualifierListPlan Qualifiers(LinkType type, IReadOnlyList<FieldDraft> drafts)
+    {
+        var (problem, detail, fields) = CheckedFields.Of(drafts);
+        var defined = graph.LinkTypes.Defined(type.Id);
+        if (problem != FieldDraftsProblem.None || (defined is { IsConflict: false } && defined.Fields.SequenceEqual(fields)) || (defined is null && fields.Count == 0))
+        {
+            return new QualifierListPlan(type, problem, detail, fields, Change: null);
+        }
+
+        var names = graph.LinkTypes.Find(type.Id)?.Names[^1];
+        var change = new LinkTypeDefined(
+            Guid.NewGuid(),
+            _clock.GetUtcNow(),
+            type.Id,
+            names?.Name ?? type.Name,
+            names is null ? type.Reverse?.Name : names.ReverseName,
+            fields,
+            defined?.Names.Select(current => current.Id).ToList() ?? []);
+        return new QualifierListPlan(type, problem, detail, fields, change);
+    }
 
     public LinkTypeRemoval Remove(CustomLinkType type)
     {
@@ -146,6 +190,7 @@ public sealed class LinkTypePlanner(KnowledgeGraph graph, TimeProvider? clock = 
             renamed?.Type.Id ?? id.ToString(),
             name,
             reverse,
+            renamed?.Fields ?? [],
             renamed?.Names.Select(current => current.Id).ToList() ?? []);
         return new LinkTypePlan(renamed, name, reverse, LinkTypeProblem.None, Taken: null, TakenBy: null, hidden, change);
     }

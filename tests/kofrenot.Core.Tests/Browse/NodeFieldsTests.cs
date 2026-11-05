@@ -21,7 +21,7 @@ public sealed class NodeFieldsTests
     private IReadOnlyList<NodeField> Fields => NodeFields.Of(_graph, _frank.Id);
 
     private FieldSet Set(string owner, FieldDefinition field, string? value, int minutes, params Guid[] replaces) =>
-        new(Guid.NewGuid(), Start.AddMinutes(minutes), _frank.Id, owner, field.Id, field.Name, field.Kind, value, replaces);
+        new(Guid.NewGuid(), Start.AddMinutes(minutes), _frank, owner, field.Id, field.Name, field.Kind, value, replaces);
 
     [Fact]
     public void ATypesFields_ShowEmpty_InTheirOrder()
@@ -30,7 +30,7 @@ public sealed class NodeFieldsTests
 
         Assert.Equal(["Born", "Website"], fields.Select(field => field.Label));
         Assert.All(fields, field => Assert.Equal((null, "", false), (field.Value, field.Display, field.IsOwn)));
-        Assert.Equal(("person", "born", FieldKind.Date, "Person"), (fields[0].Owner, fields[0].Field, fields[0].Kind, fields[0].Type!.Name));
+        Assert.Equal(("person", "born", FieldKind.Date, "Person"), (fields[0].Owner, fields[0].Field, fields[0].Kind, fields[0].TypeName));
         Assert.Empty(fields[0].Current);
         Assert.Empty(fields[0].Conflict);
     }
@@ -89,7 +89,7 @@ public sealed class NodeFieldsTests
         _graph.Apply(tacoma);
 
         var own = Fields[^1];
-        Assert.Equal(("Birthplace", "Tacoma", true, (NodeType?)null), (own.Label, own.Value, own.IsOwn, own.Type));
+        Assert.Equal(("Birthplace", "Tacoma", true, (string?)null), (own.Label, own.Value, own.IsOwn, own.TypeName));
 
         _graph.Apply(Set(FieldSet.Own, place, null, 3, tacoma.Id));
 

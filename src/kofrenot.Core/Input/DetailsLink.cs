@@ -20,7 +20,7 @@ public sealed record DetailsLink(LinkRequest? Request, AddChoices Choices, strin
             return new DetailsLink(null, choices, Hint, CanAdd: false);
         }
 
-        if (InputParser.Parse($"{node.Name} {typed.Trim()}", graph.Types) is not LinkRequest request
+        if (InputParser.Parse($"{node.Name} {typed.Trim()}", graph) is not LinkRequest request
             || !graph.NodesNamed(request.Left).Any(other => other.Id == node.Id))
         {
             return new DetailsLink(null, choices, "Start with a link phrase, such as “relates to”.", CanAdd: false);
@@ -30,6 +30,6 @@ public sealed record DetailsLink(LinkRequest? Request, AddChoices Choices, strin
         var text = new PlanText(graph);
         return text.Problem(plan) is { } problem
             ? new DetailsLink(request, choices, problem, CanAdd: false)
-            : new DetailsLink(request, choices, $"Enter to add {text.Additions(plan)}.", CanAdd: true);
+            : new DetailsLink(request, choices, $"Enter to {text.Action(plan)}.", CanAdd: true);
     }
 }

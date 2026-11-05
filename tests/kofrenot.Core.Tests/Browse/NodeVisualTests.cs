@@ -135,12 +135,12 @@ public sealed class NodeVisualTests
     public void ANodeWithoutAnImage_OrWithItsImageCleared_HasNoThumbnail()
     {
         var node = Add("generic");
-        _graph.Apply(new FieldSet(Guid.NewGuid(), Start, node.Id, FieldSet.Own, "born", "Born", FieldKind.Text, "1965", []));
+        _graph.Apply(new FieldSet(Guid.NewGuid(), Start, node, FieldSet.Own, "born", "Born", FieldKind.Text, "1965", []));
 
         Assert.Null(NodeVisual.Of(_graph, node).Thumbnail);
 
         var image = SetImage(node, FieldSet.Own, "photo");
-        _graph.Apply(new FieldSet(Guid.NewGuid(), Start.AddMinutes(5), node.Id, FieldSet.Own, "photo", "Photo", FieldKind.Image, null, [image.Id]));
+        _graph.Apply(new FieldSet(Guid.NewGuid(), Start.AddMinutes(5), node, FieldSet.Own, "photo", "Photo", FieldKind.Image, null, [image.Id]));
 
         Assert.Null(NodeVisual.Of(_graph, node).Thumbnail);
     }
@@ -161,7 +161,7 @@ public sealed class NodeVisualTests
 
     private FieldSet SetImage(Node node, string owner, string field, int minutes = 0)
     {
-        var image = new FieldSet(Guid.NewGuid(), Start.AddMinutes(minutes), node.Id, owner, field, field, FieldKind.Image, null, [], new DatasetFile($"{field}.png", 10, new string('b', 64)));
+        var image = new FieldSet(Guid.NewGuid(), Start.AddMinutes(minutes), node, owner, field, field, FieldKind.Image, null, [], new DatasetFile($"{field}.png", 10, new string('b', 64)));
         _graph.Apply(image);
         return image;
     }

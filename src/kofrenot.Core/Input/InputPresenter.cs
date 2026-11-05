@@ -8,8 +8,10 @@ namespace Kofrenot.Core.Input;
 /// a node. <see cref="Node"/> is the node its details open on: the node, or the link's other end.
 /// <see cref="IsChosen"/>: the homonym chosen, or the row selected. A header (<see cref="IsHeader"/>)
 /// names the rows under it, while the input box is empty. A node row has its <see cref="Visual"/>.
+/// <see cref="LinkOption"/>: with qualifiers typed for nodes linked already, a link they may update, or
+/// (past the last) a new one beside them (<see cref="LinkPlan.LinkChoice"/>).
 /// </summary>
-public sealed record ResultRow(string Text, bool IsLink, bool IsChosen, Node? Node = null, Node? From = null, bool IsHeader = false, NodeVisual? Visual = null, string? Detail = null)
+public sealed record ResultRow(string Text, bool IsLink, bool IsChosen, Node? Node = null, Node? From = null, bool IsHeader = false, NodeVisual? Visual = null, string? Detail = null, int? LinkOption = null)
 {
     internal RowKey? Key => Node is null ? null : new RowKey(From?.Id, Node.Id);
 }
@@ -33,14 +35,16 @@ public sealed class InputPresenter
     private string? _rightName;
     private int _leftChoice;
     private int _rightChoice;
+    private int _linkChoice;
     private bool _rightActive;
     private RowKey? _selected;
+    private IReadOnlyList<LinkHit>? _linkHits;
 
     /// <summary>What the text asks for, or null when it is empty.</summary>
     public InputRequest? Request { get; private set; }
 
     /// <summary>The homonyms chosen on each side, for the creation screen.</summary>
-    public AddChoices Choices => new(_leftChoice, _rightChoice);
+    public AddChoices Choices => new(_leftChoice, _rightChoice, Link: _linkChoice);
 
     public AddPlan? Plan { get; private set; }
 
@@ -70,7 +74,8 @@ public sealed class InputPresenter
 
         _graph = graph;
         _text = text;
-        Request = InputParser.Parse(text, graph.Types);
+        _linkHits = LinkSearch.Find(graph, text);
+        Request = _linkHits is null ? InputParser.Parse(text, graph) : null;
         if (Request is LinkRequest link)
         {
             KeepChoices(link);
@@ -78,12 +83,12 @@ public sealed class InputPresenter
         else
         {
             _leftName = _rightName = null;
-            _leftChoice = _rightChoice = 0;
+            _leftChoice = _rightChoice = _linkChoice = 0;
             _rightActive = false;
         }
 
         Plan = Request is null ? null : new AddPlanner(graph).Plan(Request, Choices);
-        Rows = Plan is null ? StartRows(graph) : RowsOf(graph, Plan);
+        Rows = _linkHits is { } hits ? HitRows(graph, hits) : Plan is null ? StartRows(graph) : RowsOf(graph, Plan);
         if (SelectedRow is null)
         {
             _selected = null;
@@ -122,15 +127,31 @@ public sealed class InputPresenter
         return true;
     }
 
-    /// <summary>Up / Down: the previous or next homonym of the side being typed. False when there is no choice.</summary>
+    /// <summary>
+    /// Up / Down: the previous or next homonym of the side being typed; or, with qualifiers typed for nodes
+    /// linked already, the link they update, or a new one. False when there is no choice.
+    /// </summary>
     public bool MoveChoice(int step)
     {
-        if (_graph is null || Plan is not LinkPlan { } link || ActiveSide(link) is not { Candidates.Count: > 1 } side)
+        if (_graph is null || Plan is not LinkPlan { } link)
         {
             return false;
         }
 
-        Choose(link, (side.Choice + step + side.Candidates.Count) % side.Candidates.Count);
+        if (ActiveSide(link) is { Candidates.Count: > 1 } side)
+        {
+            Choose(link, (side.Choice + step + side.Candidates.Count) % side.Candidates.Count);
+            return true;
+        }
+
+        if (!link.HasLinkChoice)
+        {
+            return false;
+        }
+
+        var options = link.Between.Count + 1;
+        _linkChoice = (link.LinkChoice + step + options) % options;
+        Update(_graph, _text);
         return true;
     }
 
@@ -141,6 +162,13 @@ public sealed class InputPresenter
     /// </summary>
     public bool Select(ResultRow row)
     {
+        if (_graph is not null && row.LinkOption is { } option && Plan is LinkPlan { HasLinkChoice: true } typed && option != typed.LinkChoice && Rows.Contains(row))
+        {
+            _linkChoice = option;
+            Update(_graph, _text);
+            return true;
+        }
+
         if (_graph is null || row.Key is not { } key || !Rows.Any(listed => listed.Key == key))
         {
             return false;
@@ -203,6 +231,12 @@ public sealed class InputPresenter
             _leftChoice = 0;
         }
 
+        if (NameKey.Of(link.Left) != (_leftName is null ? null : NameKey.Of(_leftName))
+            || NameKey.Of(link.Right) != (_rightName is null ? null : NameKey.Of(_rightName)))
+        {
+            _linkChoice = 0;
+        }
+
         if (NameKey.Of(link.Right) != (_rightName is null ? null : NameKey.Of(_rightName)))
         {
             _rightChoice = 0;
@@ -223,6 +257,16 @@ public sealed class InputPresenter
             return $"Enter to see the details of “{text.NodeLabel(selected)}”. Up/Down: another one.";
         }
 
+        if (_linkHits is { } hits)
+        {
+            return hits.Count switch
+            {
+                0 => "No link has this qualifier.",
+                1 => "1 link found. Down, then Enter to see its details.",
+                _ => $"{hits.Count} links found. Up/Down, then Enter to see the details of one.",
+            };
+        }
+
         if (plan is null)
         {
             return Hint;
@@ -238,9 +282,10 @@ public sealed class InputPresenter
             return problem;
         }
 
-        var preview = $"Enter to add {text.Additions(plan)}.";
+        var preview = $"Enter to {text.Action(plan)}.";
         return plan is LinkPlan typed && ActiveSide(typed) is { Candidates.Count: > 1 } side
             ? $"{preview} Up/Down: which “{side.Name}”. Tab: the other side."
+            : plan is LinkPlan { HasLinkChoice: true } ? $"{preview} Up/Down: which link."
             : preview;
     }
 
@@ -283,12 +328,48 @@ public sealed class InputPresenter
             return rows;
         }
 
+        if (plan is LinkPlan { HasLinkChoice: true } linked)
+        {
+            return LinkOptions(graph, text, linked);
+        }
+
         var name = plan is LinkPlan typed ? ActiveSide(typed)!.Name : ((NodePlan)plan).Name;
         foreach (var hit in GraphSearch.Find(graph, name))
         {
             AddNode(graph, text, rows, hit.Node, chosen: new RowKey(null, hit.Node.Id) == _selected, withLinks: hit.IsExact, hit.Field);
         }
 
+        return rows;
+    }
+
+    // The links found by a qualifier, as read, each opening the node it leads to.
+    private List<ResultRow> HitRows(KnowledgeGraph graph, IReadOnlyList<LinkHit> hits)
+    {
+        var text = new PlanText(graph);
+        return hits
+            .Select(hit => new ResultRow(
+                $"{text.NodeLabel(hit.From)} {hit.Verb?.Name ?? hit.Link.Type} {text.NodeLabel(hit.To)}",
+                IsLink: false,
+                IsChosen: false,
+                hit.Found,
+                hit.Found == hit.From ? hit.To : hit.From,
+                Visual: NodeVisual.Of(graph, hit.Found),
+                Detail: $"{hit.Field.Label}: {hit.Field.Display}"))
+            .Select(row => row with { IsChosen = row.Key == _selected })
+            .ToList();
+    }
+
+    // The links the qualifiers typed may update, each with its qualifier shown, then a new one.
+    private static List<ResultRow> LinkOptions(KnowledgeGraph graph, PlanText text, LinkPlan link)
+    {
+        var rows = link.Between
+            .Select((existing, index) => new ResultRow(
+                $"{link.Verb.Name} {text.Label(link.Right!)}{(NodeFields.ShownOf(graph, existing) is { } shown ? $" · {shown.Display}" : string.Empty)}",
+                IsLink: true,
+                IsChosen: index == link.LinkChoice,
+                LinkOption: index))
+            .ToList();
+        rows.Add(new ResultRow("+ a new link", IsLink: true, IsChosen: link.LinkChoice == link.Between.Count, LinkOption: link.Between.Count));
         return rows;
     }
 

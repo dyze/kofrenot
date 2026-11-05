@@ -41,7 +41,7 @@ public sealed class CustomNodeTypesTests
     public void TheCatalog_KeepsTheUsersLinkTypesAndAliases()
     {
         _graph.Apply(Define("person", "Person", 1));
-        _graph.Apply(new LinkTypeDefined(Guid.NewGuid(), Start.AddMinutes(2), "wrote", "wrote", "written by", []));
+        _graph.Apply(new LinkTypeDefined(Guid.NewGuid(), Start.AddMinutes(2), "wrote", "wrote", "written by", [], []));
         _graph.Apply(new AliasAdded(Guid.NewGuid(), Start.AddMinutes(3), "contains", false, "holds"));
 
         Assert.NotNull(_graph.Types.FindLinkType("wrote"));

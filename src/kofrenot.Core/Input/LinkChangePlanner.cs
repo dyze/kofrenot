@@ -16,7 +16,7 @@ public enum LinkChangeProblem
 
 /// <summary>
 /// Changes <see cref="Link"/> so that it reads <see cref="Target"/> from the node it is seen from:
-/// <see cref="Changes"/> remove it (its copies too) and add the new link. Empty when it cannot (<see cref="Problem"/>).
+/// <see cref="Changes"/> remove it (its copies too) and add the new link, with its qualifiers. Empty when it cannot (<see cref="Problem"/>).
 /// </summary>
 public sealed record LinkChangePlan(Link Link, LinkVerb Target, LinkChangeProblem Problem, IReadOnlyList<Change> Changes);
 
@@ -43,11 +43,20 @@ public sealed class LinkChangePlanner(KnowledgeGraph graph, TimeProvider? clock 
         }
 
         var now = _clock.GetUtcNow();
-        Change[] changes =
+        var changed = new Link(Guid.NewGuid(), target.Type.Id, from, to, now, link.IsSeparate);
+        List<Change> changes =
         [
             new ChangesRemoved(Guid.NewGuid(), now, graph.CopiesOf(link)),
-            new LinkAdded(Guid.NewGuid(), now, new Link(Guid.NewGuid(), target.Type.Id, from, to, now)),
+            new LinkAdded(Guid.NewGuid(), now, changed),
+            .. QualifiersCopied(link, changed, now),
         ];
         return new LinkChangePlan(link, target, problem, changes);
     }
+
+    // The qualifiers shown, onto the new link: those of the old type's become its own, an image keeps its file.
+    private IEnumerable<FieldSet> QualifiersCopied(Link link, Link changed, DateTimeOffset now) =>
+        graph.QualifiersOf(link)
+            .Select(field => field.Shown)
+            .Where(value => value.Value is not null || value.File is not null)
+            .Select(value => value with { Id = Guid.NewGuid(), At = now, Holder = changed, Replaces = [], Content = value.File is null ? null : value.Content ?? value.Id });
 }

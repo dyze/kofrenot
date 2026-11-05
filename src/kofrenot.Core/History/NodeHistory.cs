@@ -52,7 +52,7 @@ public sealed record HistoryEntry(Guid Id, DateTimeOffset At, VersionKind Kind, 
 /// The versions of a node, newest first: its content versions (a note's texts, a dataset's files, a
 /// view's definitions), its names, its colours and its fields' values. Nothing is overwritten in a
 /// vault, so each is there to restore (<see cref="RestorePlanner"/>). Its types and links have no
-/// versions: they are added and taken out.
+/// versions: they are added and taken out. A link's history is its qualifiers' values (<see cref="OfLink"/>).
 /// </summary>
 public static class NodeHistory
 {
@@ -61,9 +61,16 @@ public static class NodeHistory
         var entries = Contents(graph, node)
             .Concat(Names(graph, node))
             .Concat(Colors(graph, node))
-            .Concat(Fields(graph, node));
-        return entries.OrderByDescending(entry => entry.At).ThenBy(entry => entry.Id).ToList();
+            .Concat(Fields(graph.FieldsOf(node.Id), graph.FieldSetsOf(node.Id)));
+        return Newest(entries);
     }
+
+    /// <summary>The values of a link's qualifiers, set on it or on a copy, newest first.</summary>
+    public static IReadOnlyList<HistoryEntry> OfLink(KnowledgeGraph graph, Link link) =>
+        Newest(Fields(graph.QualifiersOf(link), graph.QualifierSetsOf(link)));
+
+    private static List<HistoryEntry> Newest(IEnumerable<HistoryEntry> entries) =>
+        entries.OrderByDescending(entry => entry.At).ThenBy(entry => entry.Id).ToList();
 
     private static IEnumerable<HistoryEntry> Contents(KnowledgeGraph graph, Node node)
     {
@@ -84,11 +91,11 @@ public static class NodeHistory
     }
 
     // Each field's values, named as its latest value names it.
-    private static IEnumerable<HistoryEntry> Fields(KnowledgeGraph graph, Node node) =>
-        graph.FieldsOf(node.Id).SelectMany(field =>
+    private static IEnumerable<HistoryEntry> Fields(IReadOnlyList<FieldVersions> fields, IEnumerable<FieldSet> all) =>
+        fields.SelectMany(field =>
         {
             var current = field.Current.Select(value => value.Id).ToHashSet();
-            var values = graph.FieldSetsOf(node.Id).Where(value => value.Owner == field.Owner && value.Field == field.Field);
+            var values = all.Where(value => value.Owner == field.Owner && value.Field == field.Field);
             return values.Select(value => Entry(value, value.Id, value.At, VersionKind.Field, field.Shown.Name, LabelOf(value), current));
         });
 

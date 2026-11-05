@@ -72,7 +72,7 @@ public sealed class NodeBrowser
     /// <summary>A click on a link row: selects it, as Up/Down would. False when it changed nothing or is not listed.</summary>
     public bool Select(LinkRow row)
     {
-        var index = Details?.Links.ToList().FindIndex(link => link.OtherNode.Id == row.OtherNode.Id && link.Type == row.Type) ?? -1;
+        var index = Details?.Links.ToList().FindIndex(link => link.Link.Id == row.Link.Id) ?? -1;
         if (index < 0 || index == _trail[^1].Selected)
         {
             return false;
@@ -126,7 +126,7 @@ public sealed class NodeBrowser
         var rows = links.Select((link, index) =>
         {
             var other = graph.FindNode(link.Other(node.Id))!;
-            return new LinkRow(graph.Types.LinkName(link, node.Id), text.NodeLabel(other), other, CanOpen(other), index == level.Selected, NodeVisual.Of(graph, other), link);
+            return new LinkRow(graph.Types.LinkName(link, node.Id), text.NodeLabel(other), other, CanOpen(other), index == level.Selected, NodeVisual.Of(graph, other), link, NodeFields.ShownOf(graph, link)?.Display, NodeFields.OfLink(graph, link).Count > 0);
         });
         var names = graph.NamesOf(node.Id);
         IReadOnlyList<string> conflict = names.Count > 1 ? names.Select(version => version.Name).ToList() : [];

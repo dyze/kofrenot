@@ -30,7 +30,7 @@ public sealed class CopyFieldsTests
 
     private FieldSet Set(FieldDefinition field, string? value, DatasetFile? file = null, params Guid[] replaces)
     {
-        var set = new FieldSet(Guid.NewGuid(), TreeGraph.Start, _bruce.Id, "person", field.Id, field.Name, field.Kind, value, replaces, file);
+        var set = new FieldSet(Guid.NewGuid(), TreeGraph.Start, _bruce, "person", field.Id, field.Name, field.Kind, value, replaces, file);
         _tree.Graph.Apply(set);
         return set;
     }
@@ -80,7 +80,7 @@ public sealed class CopyFieldsTests
     {
         var first = Set(Born, "1920-10-08");
         Set(Born, "1920-10-09", null, first.Id);
-        var own = new FieldSet(Guid.NewGuid(), TreeGraph.Start, _bruce.Id, FieldSet.Own, "nick", "Nickname", FieldKind.Text, "Batman", []);
+        var own = new FieldSet(Guid.NewGuid(), TreeGraph.Start, _bruce, FieldSet.Own, "nick", "Nickname", FieldKind.Text, "Batman", []);
         _tree.Graph.Apply(own);
         _tree.Graph.Apply(own with { Id = Guid.NewGuid(), Value = null, Replaces = [own.Id] });
 

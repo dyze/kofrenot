@@ -96,14 +96,14 @@ public sealed partial class VaultSession
     /// described off the UI thread. False when it cannot be read or saved, or is not an image
     /// kofrenot shows (the user is told why).
     /// </summary>
-    public async Task<bool> SetImage(ISessionQuestions ask, Node node, NodeField field, ImportFile file)
+    public async Task<bool> SetImage(ISessionQuestions ask, FieldHolder holder, NodeField field, ImportFile file)
     {
         if (Current is not { } vault || await Describe(ask, file) is not { } described)
         {
             return false;
         }
 
-        var plan = new FieldPlanner(vault.Graph, _time).SetImage(node, field, described);
+        var plan = new FieldPlanner(vault.Graph, _time).SetImage(holder, field, described);
         if (plan.Changes is not [FieldSet value])
         {
             ask.Tell(plan.Status);

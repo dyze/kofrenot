@@ -21,13 +21,14 @@ public sealed partial class NodePage
     {
         if ((sender as Control)?.Tag is FieldLine { Field: { } field } && !_shell.Services.Session.IsReadOnly)
         {
-            _shell.Run(() => FillAsync(field));
+            _shell.Run(() => FillAsync(field, _browser.Details!.Node));
         }
     }
 
-    private async Task FillAsync(NodeField field)
+    /// <summary>Fills a field of the node, or a qualifier of one of its links (<paramref name="node"/> the link).</summary>
+    private async Task FillAsync(NodeField field, FieldHolder node)
     {
-        if (Vault is not { } vault || _browser.Details?.Node is not { } node)
+        if (Vault is not { } vault)
         {
             return;
         }
@@ -61,7 +62,7 @@ public sealed partial class NodePage
     }
 
     // A calendar instead of a date typed, as on Windows; None clears it. Written as typed ones are: 2026-10-27.
-    private void ShowCalendar(FieldPlanner planner, Node node, NodeField field)
+    private void ShowCalendar(FieldPlanner planner, FieldHolder node, NodeField field)
     {
         var shown = DateTime.TryParseExact(field.Value, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var date) ? date : (DateTime?)null;
         var calendar = new Avalonia.Controls.Calendar { SelectedDate = shown, DisplayDate = shown ?? DateTime.Today, HorizontalAlignment = HorizontalAlignment.Center };
@@ -76,9 +77,11 @@ public sealed partial class NodePage
         _shell.ShowSheet(field.Label, calendar, [new SheetChoice("None", () => WriteField(planner.Clear(node, field), "Field value cleared"), IsCurrent: !field.HasValue)]);
     }
 
-    private async Task AddFieldAsync()
+    /// <summary>A field of the node's own, or a qualifier of a link's own (<paramref name="holder"/> the link).</summary>
+    private async Task AddFieldAsync(FieldHolder? holder = null)
     {
-        if (Vault is not { } vault || _browser.Details?.Node is not { } node)
+        var target = holder ?? (_browser.Details?.Node is { } shown ? FieldHolder.OfNode(shown.Id) : (FieldHolder?)null);
+        if (Vault is not { } vault || target is not { } node)
         {
             return;
         }
@@ -96,7 +99,7 @@ public sealed partial class NodePage
             : () => _shell.Run(() => AddFieldValueAsync(planner, node, name, kind)))));
     }
 
-    private async Task AddFieldValueAsync(FieldPlanner planner, Node node, string name, FieldKind kind)
+    private async Task AddFieldValueAsync(FieldPlanner planner, FieldHolder node, string name, FieldKind kind)
     {
         var value = await _shell.AskText($"{name.Trim()}: its value", string.Empty, "Add", text => planner.AddOwn(node, name, kind, text).Error, text => planner.AddOwn(node, name, kind, text).CanApply);
         if (value is not null)
@@ -105,7 +108,7 @@ public sealed partial class NodePage
         }
     }
 
-    private void AskChecked(FieldPlanner planner, Node node, string name) =>
+    private void AskChecked(FieldPlanner planner, FieldHolder node, string name) =>
         _shell.ShowSheet($"{name.Trim()}: its value", new[] { true, false }.Select(isChecked => new SheetChoice(isChecked ? "Checked" : "Not checked",
             () => WriteField(planner.AddOwn(node, name, FieldKind.Checkbox, FieldValue.Of(isChecked)), "Field of its own added"))));
 

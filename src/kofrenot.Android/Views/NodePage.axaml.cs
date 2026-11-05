@@ -124,7 +124,7 @@ public sealed partial class NodePage : UserControl, IPage
         ShowFields(details);
         ShowConflicts(details);
         ShowContent(vault, details.Node, details.Color);
-        Links.ItemsSource = details.Links.Select(link => NodeRow.Of(vault.Graph, link.OtherNode, link.Type, link: link.Link) with { CanOpen = link.CanOpen }).ToList();
+        Links.ItemsSource = details.Links.Select(link => NodeRow.Of(vault.Graph, link.OtherNode, link.Type + link.QualifierSuffix, link: link.Link) with { CanOpen = link.CanOpen }).ToList();
         LinksHeader.IsVisible = details.Links.Count > 0;
     }
 
@@ -217,11 +217,16 @@ public sealed partial class NodePage : UserControl, IPage
     };
 
     // A screen of its own: this one stays as it is, a note being edited included, until Back comes to it.
+    // A link with qualifiers, or whose type has some, opens its sheet (NodePage.Qualifiers); another opens its node.
     private void Link_Click(object? sender, RoutedEventArgs e)
     {
-        if ((sender as Control)?.Tag is NodeRow { CanOpen: true } row)
+        if ((sender as Control)?.Tag is NodeRow { Link: { } link } row && Vault is { } vault && NodeFields.OfLink(vault.Graph, link).Count > 0)
         {
-            _shell.Push(new NodePage(_shell, row.Node));
+            ShowLinkSheet(row, link);
+        }
+        else if ((sender as Control)?.Tag is NodeRow { CanOpen: true } open)
+        {
+            _shell.Push(new NodePage(_shell, open.Node));
         }
     }
 

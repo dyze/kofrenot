@@ -1,6 +1,6 @@
 # kofrenot: qualifiers concept
 
-**Qualifiers** add context to a link: date, place, source, quantity, confidence. They come with **compatibility levels**, so that an older kofrenot still opens a vault with qualifiers, read-only, instead of refusing it. The compatibility levels are implemented (0.15, [CHANGELOG](../CHANGELOG.md#unreleased), [Format](ARCHITECTURE.md#compatibility-levels)); qualifiers are planned ([ROADMAP.md](../ROADMAP.md)). Events, the other half of the roadmap item, are left for later ([Events](#events-later)).
+**Qualifiers** add context to a link: date, place, source, quantity, confidence. They come with **compatibility levels**, so that an older kofrenot still opens a vault with qualifiers, read-only, instead of refusing it. The compatibility levels are implemented (0.15, [Format](ARCHITECTURE.md#compatibility-levels)), and qualifiers (0.16, [CHANGELOG](../CHANGELOG.md#unreleased), [README](../README.md#node-types-and-fields)); events are planned ([ROADMAP.md](../ROADMAP.md)). Events, the other half of the roadmap item, are left for later ([Events](#events-later)).
 
 ```
 Dune ──written by──► Frank Herbert
@@ -11,7 +11,7 @@ Dune ──written by──► Frank Herbert
 ## Principles
 - **A qualifier is a field on a link.** It has the same kinds, editors, conflicts, history and offline search as a node's fields ([Node types and fields](../README.md#node-types-and-fields)).
 - **It hangs on the link's id, not on a reading of it.** *Dune written by Herbert* and *Herbert wrote Dune* reach the same qualifiers.
-- **The link type defines its qualifiers**, as a node type defines its fields. A link can also have qualifiers of its own.
+- **The link type defines its qualifiers**, as a node type defines its fields, a built-in one too (its names kept). A link can also have qualifiers of its own.
 - **Same paths as today.** Qualifiers are typed in the input box, edited in the details panel, and found by search. There is no new screen to learn.
 - **Older apps degrade, not refuse.** A kofrenot that does not know qualifiers shows links without them, read-only ([Compatibility levels](#compatibility-levels)).
 
@@ -90,7 +90,8 @@ Each level comes with a test: a vault written by the new format, read by the rea
                            { "id": "…", "name": "Source", "kind": "web" }],
                 "replaces": ["…"] } }
 ```
-- The field kinds are the node types' kinds, except **image**: no use case yet.
+- The field kinds are the node types' kinds, **image** included (a cover, a scan of the source).
+- A built-in link type (*relates to*, *contains*, *is a*) is given fields by a `defineLinkType` of its id: its names are written, but its own are kept. A 0.15 reader ignores it, as any definition of a built-in id.
 - A field taken out of a link type stays on its links with its value, as their own, as with node types.
 - A 0.15 reader ignores `fields`, and keeps the type's name.
 
@@ -100,9 +101,17 @@ Each level comes with a test: a vault written by the new format, read by the rea
   "field": { "link": "<link id>", "owner": "<link type id> or own", "id": "<field id>",
              "name": "Date", "kind": "date", "value": "1965", "replaces": ["<value id>"] } }
 ```
-- `link` instead of `node`: exactly one of the two. Everything else is `setField` as it is: `replaces` for history and conflicts, an empty value to clear.
+- `link` instead of `node`: exactly one of the two. The values of a link and of its copies (the same link added on two devices before they synced) are merged: set on both, they are a conflict. Everything else is `setField` as it is: `replaces` for history and conflicts, an empty value to clear.
 - A link removed (`remove`) hides its qualifiers, as a node's fields; nothing is deleted.
 - A 0.15 reader skips it (known `op`, unknown target).
+
+### Separate links: `addLink` + `separate`
+```json
+{ "format": 11, "oldestReader": 10, "op": "addLink",
+  "link": { "id": "…", "type": "married-to", "from": "…", "to": "…", "created": "…", "separate": true } }
+```
+- Links of one type between the same nodes are copies of one link, the oldest shown. A link added with **+ a new link** ([Several links](#several-links-of-a-type-between-the-same-two-nodes)) is `separate`: no copy, shown beside the others, with qualifiers of its own.
+- A 0.15 reader ignores `separate`: it shows the oldest of them, read only.
 
 ### Format 11 header
 ```json
@@ -117,6 +126,7 @@ Each level comes with a test: a vault written by the new format, read by the rea
 | `FieldPlanner` (a node's fields) | the same planner for a link's (`FieldPlanner.ForLink`) |
 | `KnowledgeGraph` search on node values | + link values ([Search](#search)) |
 | `VaultFormat.Current` | 11, its files written with `oldestReader` 10, `oldestWriter` 11 (`VaultHeader`, `ChangeData` read them since 0.15) |
+| `LinkIndex`: copies keyed by type and nodes | + the link's id when `Link.IsSeparate` (`KnowledgeGraph.LinksBetween`) |
 
 ## Adding qualifiers
 
@@ -131,7 +141,7 @@ Each level comes with a test: a vault written by the new format, read by the rea
 - Android: the same in the search box; **Enter** or a tap on the proposal accepts.
 
 ### Creation screen
-Once the link type is chosen, its qualifiers show as one more step, all optional. With no qualifier defined, there is no step.
+Once the link type is chosen, its qualifiers show on the link step, under it, all optional (not a step of their own: the link type chosen there changes them). With no qualifier defined, there are none. On a link updated, each says its value now; an empty box leaves it as it is.
 
 ### Settings > Link types (Windows)
 Each type gets a field list, edited as a node type's (`NodeTypeForm`). Android leaves it to Windows: it defines the vault ([What the phone changes](ANDROID-CONCEPT.md#what-the-phone-changes)).
@@ -151,7 +161,7 @@ Link exists ─► "Date: 1965 → 1966"  [Update]
 - Either reading works: *Herbert wrote Dune, Date 1966*.
 
 ### Several links of a type between the same two nodes
-The sentence is then ambiguous, so the input box asks which one, by its shown qualifier:
+Possible with a separate link (`addLink` + `separate`). The sentence is then ambiguous, so the input box asks which one, by its shown qualifier, as soon as qualifiers are typed for nodes linked so already (one link included, so a second can be added):
 
 ```
 Ann married to Bob, End 2010
@@ -161,8 +171,8 @@ Ann married to Bob, End 2010
 ```
 
 ### Details panel and graph
-- Each link row gets **▸**, which unfolds its qualifiers in the fields' editor: **Enter** or leaving saves, **Esc** reverts, empty clears, **Add qualifier…** adds one of its own, **×** removes (asked first).
-- Android: a tap on a link opens the same sheet; a long press still removes the link.
+- Each link row gets a chevron at its right, beside its other buttons, which unfolds its qualifiers in the fields' editor: **Enter** or leaving saves, **Esc** reverts, empty clears, **Add qualifier…** adds one of its own, **×** removes (asked first).
+- Android: a tap on a link with qualifiers (its own, or its type's) opens the same sheet, with *Open* its other node first; another opens its node, as before. A long press still removes the link, and adds one of its own. The phone updates the first of several links (no choice).
 - Graph view: a click on an edge opens it.
 
 ### History and conflicts
@@ -183,7 +193,7 @@ Same sentence shape, offline as every field:
 | `Frank Herbert wrote, Date 1960..1970` | his links in that range, so the books |
 | `, Source isfdb` | any link with that value |
 
-The `..` range is for dates and numbers. It could serve node fields too (`Born 1900..1950`); that is decided with this feature ([Open questions](#open-questions)).
+The `..` range is for dates and numbers, node fields' too (`Born 1900..1950`). A date's end is a year, a month or a day, included whole.
 
 ### Views
 A tree or list can sort a node's children by a qualifier of the link (books by date). The view definition gains an optional `order` (`{ "field": "<field id>" }`), written in format 11.
@@ -194,19 +204,15 @@ An event links several nodes, each in a role: *Publication of Dune (work: Dune, 
 - Its roles are link types (*work*, *publisher*), which may carry qualifiers.
 - **Turn into event…** on a link would replace it with an event node, carrying its qualifiers, when it needs a third participant. Duplicate links of a type between two nodes are a hint that they should be events.
 
-## Docs to update when implemented
-| Doc | What |
-| --- | --- |
-| `GOAL.md` | Decisions: compatibility levels; qualifiers. The *Links* row ("Qualifiers would later…") becomes the decision |
-| `ARCHITECTURE.md` | Format table (+ `oldestReader`, `oldestWriter` columns) and its rules; the change JSON; `FieldHolder` |
-| `README.md` | Node types and fields (qualifiers); the input box; the matrix: qualifiers on both apps, link type fields on Windows |
-| `CHANGELOG.md` | 0.15: *Added* (done); 0.16: the format 11 quote, saying 0.15 opens it read-only and 0.14 and older not at all |
-| `ROADMAP.md` | The item is split: qualifiers out, events stay |
+## Decisions
+Taken with the owner for 0.16:
 
-## Open questions
-| Topic | Question |
+| Topic | Decision |
 | --- | --- |
-| Separator | `,` before a qualifier name, as proposed? It must stay easy on a phone keyboard |
-| Ranges | `..` for node fields too, in the same version? |
-| Image qualifiers | Left out for now: any use case? |
-| Shown qualifier | The first of the type's list, or one marked as shown? |
+| Separator | `,` before a qualifier's name |
+| Ranges | `..` for node fields too, in the same version |
+| Image qualifiers | Included, as a node type's image field |
+| Shown qualifier | The first with a value, in the type's list first; no mark |
+| Several links of a type between two nodes | Now: `addLink` with `separate` ([Separate links](#separate-links-addlink--separate)) |
+| Built-in link types | Their qualifiers are defined too, in Settings > Link types ([Definitions](#definitions-definelinktype--fields)) |
+| Scope | All of this concept in 0.16, events excepted |

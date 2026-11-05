@@ -81,7 +81,7 @@ public sealed partial class ChangeCodecTests
     [InlineData(null)]
     public void ALinkTypeName_RoundTrips(string? reverse)
     {
-        var change = new LinkTypeDefined(Guid.NewGuid(), At, Guid.NewGuid().ToString(), "wrote", reverse, [Guid.NewGuid()]);
+        var change = new LinkTypeDefined(Guid.NewGuid(), At, Guid.NewGuid().ToString(), "wrote", reverse, [], [Guid.NewGuid()]);
 
         var decoded = Assert.IsType<LinkTypeDefined>(_codec.Decode(change.Id, _codec.Encode(change)));
 

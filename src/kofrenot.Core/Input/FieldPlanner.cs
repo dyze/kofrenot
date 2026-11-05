@@ -16,10 +16,10 @@ public enum FieldProblem
     /// <summary>The field has this value already, with no conflict.</summary>
     Unchanged,
 
-    /// <summary>A field of the node's own with no name.</summary>
+    /// <summary>A field of the holder's own with no name.</summary>
     NameEmpty,
 
-    /// <summary>The node has a field of its own with this name already.</summary>
+    /// <summary>The node or link has a field of its own with this name already.</summary>
     NameTaken,
 }
 
@@ -41,14 +41,14 @@ public sealed record FieldPlan(FieldProblem Problem, string? Error, IReadOnlyLis
 }
 
 /// <summary>
-/// Turns what is typed in a node's fields into the changes that write it (<see cref="FieldSet"/>).
+/// Turns what is typed in a node's fields, or a link's qualifiers (<see cref="FieldHolder"/>), into the changes that write it (<see cref="FieldSet"/>).
 /// A value replaces every current one, so it resolves a conflict. A field of the node's own exists
 /// while it has a value: cleared, it goes. Two fields of the same name are merged only on demand,
 /// keeping one value.
 /// </summary>
 public sealed class FieldPlanner(KnowledgeGraph graph, TimeProvider? clock = null)
 {
-    /// <summary>The kinds a field of a node's own can have, typed: a choice needs its options, from a type.</summary>
+    /// <summary>The kinds a field of a holder's own can have, typed: a choice needs its options, from a type.</summary>
     public static IReadOnlyList<FieldKind> OwnKinds { get; } = FieldKinds.Small.Where(kind => kind != FieldKind.Choice).ToList();
 
     /// <summary>Why <paramref name="file"/> cannot be an image field's: null when it can (one kofrenot shows, small enough to decode).</summary>
@@ -60,51 +60,51 @@ public sealed class FieldPlanner(KnowledgeGraph graph, TimeProvider? clock = nul
     private readonly TimeProvider _clock = clock ?? TimeProvider.System;
 
     /// <summary>The value typed for a field: empty clears it.</summary>
-    public FieldPlan Set(Node node, NodeField field, string text)
+    public FieldPlan Set(FieldHolder holder, NodeField field, string text)
     {
         if (text.Trim().Length == 0)
         {
-            return Clear(node, field);
+            return Clear(holder, field);
         }
 
         var input = FieldValue.Parse(field.Kind, text, field.Choices);
-        return input.IsValid ? Write(node, field, input.Value) : FieldPlan.Refused(FieldProblem.Invalid, input.Error);
+        return input.IsValid ? Write(holder, field, input.Value) : FieldPlan.Refused(FieldProblem.Invalid, input.Error);
     }
 
     /// <summary>A checkbox checked or not.</summary>
-    public FieldPlan Check(Node node, NodeField field, bool isChecked) => Write(node, field, FieldValue.Of(isChecked));
+    public FieldPlan Check(FieldHolder holder, NodeField field, bool isChecked) => Write(holder, field, FieldValue.Of(isChecked));
 
-    public FieldPlan Clear(Node node, NodeField field) => Write(node, field, value: null);
+    public FieldPlan Clear(FieldHolder holder, NodeField field) => Write(holder, field, value: null);
 
     /// <summary>An image chosen for an image field: its file is written with the change (<c>VaultSession.SaveImage</c>).</summary>
-    public FieldPlan SetImage(Node node, NodeField field, DatasetFile file)
+    public FieldPlan SetImage(FieldHolder holder, NodeField field, DatasetFile file)
     {
         if (field.Kind != FieldKind.Image)
         {
             throw new ArgumentException("Not an image field", nameof(field));
         }
 
-        return WhyNotImage(file) is { } why ? FieldPlan.Refused(FieldProblem.Invalid, why) : Write(node, field, value: null, file);
+        return WhyNotImage(file) is { } why ? FieldPlan.Refused(FieldProblem.Invalid, why) : Write(holder, field, value: null, file);
     }
 
     /// <summary>
     /// An image dataset's file as an image field's: nothing copied, the field shows that version's
     /// content (<see cref="FieldSet.Content"/>), kept as every version is.
     /// </summary>
-    public FieldPlan SetImageFrom(Node node, NodeField field, DatasetEdited image)
+    public FieldPlan SetImageFrom(FieldHolder holder, NodeField field, DatasetEdited image)
     {
-        var plan = SetImage(node, field, image.File);
+        var plan = SetImage(holder, field, image.File);
         return plan.Changes is [FieldSet value] ? plan with { Changes = [value with { Content = image.Id }] } : plan;
     }
 
     /// <summary>Keeps one of the values of a conflict (<see cref="FieldVersions.Current"/>); an image keeps its file, written already.</summary>
-    public FieldPlan Keep(Node node, NodeField field, FieldSet version) =>
+    public FieldPlan Keep(FieldHolder holder, NodeField field, FieldSet version) =>
         version.File is null
-            ? Write(node, field, version.Value)
+            ? Write(holder, field, version.Value)
             : new FieldPlan(FieldProblem.None, Error: null, [version with { Id = Guid.NewGuid(), At = _clock.GetUtcNow(), Replaces = field.Current, Content = version.Content ?? version.Id }]);
 
-    /// <summary>A field of the node's own, with its first value.</summary>
-    public FieldPlan AddOwn(Node node, string nameText, FieldKind kind, string text)
+    /// <summary>A field of the holder's own, with its first value.</summary>
+    public FieldPlan AddOwn(FieldHolder holder, string nameText, FieldKind kind, string text)
     {
         var name = nameText.Trim();
         if (name.Length == 0)
@@ -117,7 +117,7 @@ public sealed class FieldPlanner(KnowledgeGraph graph, TimeProvider? clock = nul
             throw new ArgumentOutOfRangeException(nameof(kind), kind, "Not a kind of an own field");
         }
 
-        if (NodeFields.Of(graph, node.Id).Any(field => field.IsOwn && NameKey.Of(field.Name) == NameKey.Of(name)))
+        if (NodeFields.Of(graph, holder).Any(field => field.IsOwn && NameKey.Of(field.Name) == NameKey.Of(name)))
         {
             return FieldPlan.Refused(FieldProblem.NameTaken);
         }
@@ -128,15 +128,15 @@ public sealed class FieldPlanner(KnowledgeGraph graph, TimeProvider? clock = nul
             return FieldPlan.Refused(FieldProblem.Invalid, input.Error);
         }
 
-        var change = new FieldSet(Guid.NewGuid(), _clock.GetUtcNow(), node.Id, FieldSet.Own, Guid.NewGuid().ToString(), name, kind, input.Value, []);
+        var change = new FieldSet(Guid.NewGuid(), _clock.GetUtcNow(), holder, FieldSet.Own, Guid.NewGuid().ToString(), name, kind, input.Value, []);
         return new FieldPlan(FieldProblem.None, Error: null, [change]);
     }
 
     /// <summary>
     /// Merges two fields of the same name into <paramref name="kept"/>, with <paramref name="value"/>
-    /// (one of theirs): the other one is cleared, so a field of the node's own goes.
+    /// (one of theirs): the other one is cleared, so a field of the holder's own goes.
     /// </summary>
-    public FieldPlan Merge(Node node, NodeField kept, NodeField dropped, string value)
+    public FieldPlan Merge(FieldHolder holder, NodeField kept, NodeField dropped, string value)
     {
         if (!FieldValue.IsValid(kept.Kind, value) || (kept.Kind == FieldKind.Choice && !kept.Choices.Contains(value)))
         {
@@ -144,15 +144,15 @@ public sealed class FieldPlanner(KnowledgeGraph graph, TimeProvider? clock = nul
         }
 
         var now = _clock.GetUtcNow();
-        Change[] changes = [ValueOf(node, kept, value, now), ValueOf(node, dropped, value: null, now)];
+        Change[] changes = [ValueOf(holder, kept, value, now), ValueOf(holder, dropped, value: null, now)];
         return new FieldPlan(FieldProblem.None, Error: null, changes);
     }
 
-    private FieldPlan Write(Node node, NodeField field, string? value, DatasetFile? file = null) =>
+    private FieldPlan Write(FieldHolder holder, NodeField field, string? value, DatasetFile? file = null) =>
         field.Value == value && field.Image?.File == file && field.Values is not { IsConflict: true }
             ? FieldPlan.Refused(FieldProblem.Unchanged)
-            : new FieldPlan(FieldProblem.None, Error: null, [ValueOf(node, field, value, _clock.GetUtcNow(), file)]);
+            : new FieldPlan(FieldProblem.None, Error: null, [ValueOf(holder, field, value, _clock.GetUtcNow(), file)]);
 
-    private static FieldSet ValueOf(Node node, NodeField field, string? value, DateTimeOffset at, DatasetFile? file = null) =>
-        new(Guid.NewGuid(), at, node.Id, field.Owner, field.Field, field.Name, field.Kind, value, field.Current, file);
+    private static FieldSet ValueOf(FieldHolder holder, NodeField field, string? value, DateTimeOffset at, DatasetFile? file = null) =>
+        new(Guid.NewGuid(), at, holder, field.Owner, field.Field, field.Name, field.Kind, value, field.Current, file);
 }

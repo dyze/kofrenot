@@ -32,7 +32,7 @@ public partial class NodeDetailsPanel
         set => DatasetBox.Clipboard = value;
     }
 
-    private FrameworkElement ImageEditorOf(NodeField field, Thickness margin, bool canEdit)
+    private FrameworkElement ImageEditorOf(NodeField field, Thickness margin, bool canEdit, FieldHolder holder)
     {
         var panel = new StackPanel { Margin = margin, Orientation = Orientation.Horizontal };
         if (field.Image?.Image is { } image)
@@ -47,22 +47,22 @@ public partial class NodeDetailsPanel
         if (canEdit && SaveImage is not null)
         {
             var choose = new Button { Margin = new Thickness(field.HasValue ? 8 : 0, 0, 0, 0), Padding = new Thickness(10, 2, 10, 2), Content = "Choose…", VerticalAlignment = VerticalAlignment.Center };
-            choose.Click += (_, _) => _ = ChooseImage(field);
+            choose.Click += (_, _) => _ = ChooseImage(field, holder);
             panel.Children.Add(choose);
             var fromDataset = new Button { Margin = new Thickness(8, 0, 0, 0), Padding = new Thickness(10, 2, 10, 2), Content = "From a dataset…", VerticalAlignment = VerticalAlignment.Center };
-            fromDataset.Click += (_, _) => ChooseImageDataset(field);
+            fromDataset.Click += (_, _) => ChooseImageDataset(field, holder);
             panel.Children.Add(fromDataset);
             if (Clipboard is { } clipboard)
             {
                 var paste = new Button { Margin = new Thickness(8, 0, 0, 0), Padding = new Thickness(10, 2, 10, 2), Content = "Paste", ToolTip = "Set the image copied: a screenshot, an image file", VerticalAlignment = VerticalAlignment.Center };
-                paste.Click += (_, _) => _ = PasteImage(field, clipboard);
+                paste.Click += (_, _) => _ = PasteImage(field, clipboard, holder);
                 PasteButtons.Follow(paste, clipboard, PasteOffer.FitsImage);
                 panel.Children.Add(paste);
             }
 
             if (field.HasValue)
             {
-                panel.Children.Add(FieldButton("delete", "Remove this image", () => RemoveImage(field), focusable: true));
+                panel.Children.Add(FieldButton("delete", "Remove this image", () => RemoveImage(field, holder), focusable: true));
             }
         }
 
@@ -86,7 +86,7 @@ public partial class NodeDetailsPanel
         }
     }
 
-    private async Task ChooseImage(NodeField field)
+    private async Task ChooseImage(NodeField field, FieldHolder holder)
     {
         var dialog = new OpenFileDialog
         {
@@ -97,15 +97,15 @@ public partial class NodeDetailsPanel
         if (dialog.ShowDialog(Window.GetWindow(this)) == true)
         {
             var path = dialog.FileName;
-            await SetImage(field, () => ImportFile.FromPath(path));
+            await SetImage(field, holder, () => ImportFile.FromPath(path));
         }
     }
 
     // The image copied, or the image file copied in Explorer: set once its preview is accepted.
-    private async Task PasteImage(NodeField field, IClipboard clipboard)
+    private async Task PasteImage(NodeField field, IClipboard clipboard, FieldHolder holder)
     {
         Log.Info("Action", "Paste of an image into a field");
-        await SetImage(field, () => PasteOffer.Read(clipboard)?.OneFile, file =>
+        await SetImage(field, holder, () => PasteOffer.Read(clipboard)?.OneFile, file =>
         {
             var accepted = PastePreviewDialog.Confirm(Window.GetWindow(this), $"Set this image as {field.Label}?", "Set", file);
             if (!accepted)
@@ -118,9 +118,9 @@ public partial class NodeDetailsPanel
     }
 
     /// <summary>Reads the image, described off the UI thread, then saves it as the field's value, once <paramref name="accept"/> says so.</summary>
-    private async Task SetImage(NodeField field, Func<ImportFile?> read, Func<ImportFile, bool>? accept = null)
+    private async Task SetImage(NodeField field, FieldHolder holder, Func<ImportFile?> read, Func<ImportFile, bool>? accept = null)
     {
-        if (Browser is not { Graph: { } graph, Details: { } details } || SaveImage is null)
+        if (Browser is not { Graph: { } graph, Details: not null } || SaveImage is null)
         {
             return;
         }
@@ -143,7 +143,7 @@ public partial class NodeDetailsPanel
                 using var content = file.Open();
                 return DatasetFiles.Describe(file.Name, content);
             });
-            var plan = new FieldPlanner(graph).SetImage(details.Node, field, described);
+            var plan = new FieldPlanner(graph).SetImage(holder, field, described);
             ShowStatus(plan.Status);
             if (plan.Changes is [FieldSet value] && await SaveImage(value, file.Open))
             {
@@ -159,19 +159,19 @@ public partial class NodeDetailsPanel
     }
 
     // An image dataset of the vault: its latest file, not copied (FieldPlanner.SetImageFrom).
-    private void ChooseImageDataset(NodeField field)
+    private void ChooseImageDataset(NodeField field, FieldHolder holder)
     {
         if (Browser?.Graph is { } graph && ImageDatasetDialog.Ask(Window.GetWindow(this), graph, field.Label) is { } choice)
         {
-            WriteFields(planner => planner.SetImageFrom(Node, field, choice.Image), "Field image set from a dataset", field);
+            WriteFields(planner => planner.SetImageFrom(holder, field, choice.Image), "Field image set from a dataset", field, holder);
         }
     }
 
-    private void RemoveImage(NodeField field)
+    private void RemoveImage(NodeField field, FieldHolder holder)
     {
         if (MessageDialog.Confirm(Window.GetWindow(this), $"Remove the image of {field.Label}?", "Remove"))
         {
-            WriteFields(planner => planner.Clear(Node, field), "Field image removed");
+            WriteFields(planner => planner.Clear(holder, field), "Field image removed", holder: holder);
         }
     }
 }

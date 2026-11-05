@@ -16,7 +16,7 @@ public sealed class ValueSearchTests
         _graph.Add(node);
         foreach (var (field, value) in values)
         {
-            _graph.Apply(new FieldSet(Guid.NewGuid(), Start, node.Id, "person", field.Id, field.Name, field.Kind, value, []));
+            _graph.Apply(new FieldSet(Guid.NewGuid(), Start, node, "person", field.Id, field.Name, field.Kind, value, []));
         }
 
         return node;
@@ -90,7 +90,7 @@ public sealed class ValueSearchTests
         _graph.Apply(new NodeTypeDefined(Guid.NewGuid(), Start, "book", "Book", null, null, [read], []));
         var dune = new Node(Guid.NewGuid(), "book", "Dune", Start);
         _graph.Add(dune);
-        _graph.Apply(new FieldSet(Guid.NewGuid(), Start, dune.Id, "book", "read", "Read", FieldKind.Checkbox, "true", []));
+        _graph.Apply(new FieldSet(Guid.NewGuid(), Start, dune, "book", "read", "Read", FieldKind.Checkbox, "true", []));
 
         Assert.Equal("Read: Yes", Assert.Single(GraphSearch.Find(_graph, "yes")).Field);
         Assert.Empty(GraphSearch.Find(_graph, "true"));

@@ -91,7 +91,7 @@ public partial class ChipBox : UserControl
     {
         if (GraphOf?.Invoke() is { } graph)
         {
-            Input.LabelAll(graph.Types);
+            Input.LabelAll(graph);
             Update();
             Dispatcher.Invoke(() => { }, DispatcherPriority.Render);
         }

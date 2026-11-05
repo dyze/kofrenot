@@ -41,6 +41,7 @@ public sealed class VaultFolderTests : IDisposable
         var read = VaultHeader.Read(VaultFolder.HeaderOf(Folder));
         Assert.Equal(access.Header.Id, read.Id);
         Assert.Equal(VaultFormat.Current, read.Format);
+        Assert.Equal((VaultFormat.OldestReader, VaultFormat.OldestWriter), (read.OldestReader, read.OldestWriter));
         Assert.Null(read.Key);
         Assert.Equal(access.Keys.CurrentKey, VaultKeys.Unlock(Folder, read, "secret")?.Keys.CurrentKey);
         Assert.Equal(access.Keys.CurrentKey, VaultKeys.Unlock(Folder, read, recovery)?.Keys.CurrentKey);

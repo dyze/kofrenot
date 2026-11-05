@@ -45,7 +45,7 @@ a node's fields = the fields of each of its types  +  its own fields
 | Field removed from a type | Its nodes with a value keep it, as their own field; the same on a retype |
 | Same name | A type's field and an own field (or two types' fields) of the same name are both shown, labelled by where they come from (*Birth date (Person)*, *Birth date (own)*); merged only on demand, keeping one value |
 | Values | Small values (text, number, date, url, checkbox, choice) are metadata, always local and searchable offline; an image, a Markdown text and a File stay content, fetched on demand (an image's thumbnail synced) |
-| Links | A value that names another node is a link, not a field. Qualifiers (fields on links) would later use the same field kinds |
+| Links | A value that names another node is a link, not a field. A link has **qualifiers**: fields of the same kinds, defined by its link type (built-in ones included) or its own, on the link's id whichever way it is read (since 0.16, format 11: [QUALIFIERS-CONCEPT.md](QUALIFIERS-CONCEPT.md)) |
 | Filled in | A node's details (Windows); in the input box later |
 | Content types | A node has one type with content (*note*, *dataset*, *view*) at most; adding one takes the other out, hiding its content, not deleting it |
 
@@ -144,6 +144,7 @@ What each version contains: [ROADMAP.md](../ROADMAP.md).
 | Views | A node type holding a definition (a tree from a root node through a link type, a list of the nodes of a type, or a graph from a root node through link types each with a role, since 0.14), in versions kept in its changes: views work offline (since 0.4) |
 | Graph positions | A node moved by hand in a graph view keeps its place in the vault, per view; moved on two devices, the newest move wins, with no conflict shown: a place matters less than a name. A node placed in a view stays in it, even with no link (since 0.14, format 10) |
 | Compatibility levels | Each new vault format says what an older kofrenot may still do: read it, skipping what it does not know (`oldestReader`), and write to it (`oldestWriter`); compatible, read-only compatible or incompatible. Read only rather than full access, so an older writer never drops what it does not see (since 0.15, read by format 10: [Format](ARCHITECTURE.md#format), [QUALIFIERS-CONCEPT.md](QUALIFIERS-CONCEPT.md#compatibility-levels)) |
+| Qualifiers | Fields on links (a date, a source, a place), with the fields' kinds, editors, history, conflicts and offline search. A link type lists them, as a node type its fields; a built-in link type too, its names kept. The values of a link and of its copies are merged; a link added beside others of its type between the same nodes on purpose (*separate*) has its own. Format 11, read only by 0.15 (since 0.16: [QUALIFIERS-CONCEPT.md](QUALIFIERS-CONCEPT.md)) |
 
 ## Open questions
 Decisions to take with the owner before the matching features:

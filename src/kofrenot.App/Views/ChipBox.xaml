@@ -76,6 +76,13 @@
               <Setter TargetName="Chip" Property="Background" Value="{DynamicResource AccentFillColorDefaultBrush}" />
               <Setter TargetName="ChipText" Property="Foreground" Value="{DynamicResource TextOnAccentFillColorPrimaryBrush}" />
             </DataTrigger>
+            <!-- A qualifier: its name, then its value once the next one is typed; outlined in the accent's colour. -->
+            <DataTrigger Binding="{Binding IsQualifier}" Value="True">
+              <Setter TargetName="ChipVisual" Property="Visibility" Value="Collapsed" />
+              <Setter TargetName="Chip" Property="Padding" Value="7,1" />
+              <Setter TargetName="Chip" Property="BorderBrush" Value="{DynamicResource AccentFillColorDefaultBrush}" />
+              <Setter TargetName="Chip" Property="Background" Value="Transparent" />
+            </DataTrigger>
             <DataTrigger Binding="{Binding HomonymMark}" Value="">
               <Setter TargetName="HomonymMark" Property="Visibility" Value="Collapsed" />
             </DataTrigger>

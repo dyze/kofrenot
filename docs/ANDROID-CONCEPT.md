@@ -32,7 +32,7 @@ The phone must not leave a vault in a state Windows cannot fix. Rule (since 0.12
 | The phone writes | Left to Windows |
 | --- | --- |
 | Nodes and links added; names, colours, pins; nodes and links deleted (asked first) | Your node types, link types and aliases (their definitions, a removal of one) |
-| Fields filled; types added to a node, taken out | The vault's name; upgrade, attach, keys, key rotation |
+| Fields filled, a link's qualifiers too; types added to a node, taken out | The vault's name; upgrade, attach, keys, key rotation; a link type's qualifiers |
 | Notes, files, photos; a version restored | A member removed (it rotates the vault key) |
 | Members invited, roles changed; leaving a vault shared with you | Vaults created, moved, deleted; the account's pass phrase, recovery key |
 

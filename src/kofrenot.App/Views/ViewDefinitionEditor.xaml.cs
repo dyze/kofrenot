@@ -2,6 +2,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using Kofrenot.Core.Browse;
+using Kofrenot.Core.Fields;
 using Kofrenot.Core.Graph;
 using Kofrenot.Core.Input;
 using Kofrenot.Core.Views;
@@ -10,6 +11,12 @@ namespace Kofrenot.UI.Views;
 
 /// <summary>A node a tree can start from, in the editor's list: its name (marked among homonyms) and type.</summary>
 public sealed record RootChoice(Node Node, string Label, NodeVisual Visual);
+
+/// <summary>What a tree's children are sorted by: their name (no field), or a qualifier of its link type.</summary>
+public sealed record OrderChoice(string? Field, string Label)
+{
+    public override string ToString() => Label;
+}
 
 /// <summary>
 /// Edits a <see cref="ViewDraft"/>: a tree from a node found by name (Up/Down in the name choose
@@ -20,6 +27,7 @@ public partial class ViewDefinitionEditor : UserControl
 {
     private TypeCatalog _types = TypeCatalog.BuiltIn;
     private Func<string, IReadOnlyList<SearchHit>> _findRoots = _ => [];
+    private Func<ViewDraft, IReadOnlyList<FieldDefinition>> _orderChoices = _ => [];
     private bool _showing;
 
     public ViewDefinitionEditor() => InitializeComponent();
@@ -30,10 +38,12 @@ public partial class ViewDefinitionEditor : UserControl
     public ViewDraft Draft { get; private set; } = ViewDraft.Default;
 
     /// <param name="findRoots">Finds the nodes a tree can start from, by name.</param>
-    public void Setup(TypeCatalog types, Func<string, IReadOnlyList<SearchHit>> findRoots)
+    /// <param name="orderChoices">The qualifiers a tree can be sorted by.</param>
+    public void Setup(TypeCatalog types, Func<string, IReadOnlyList<SearchHit>> findRoots, Func<ViewDraft, IReadOnlyList<FieldDefinition>> orderChoices)
     {
         _types = types;
         _findRoots = findRoots;
+        _orderChoices = orderChoices;
         LinkTypeBox.ItemsSource = types.LinkTypes;
         NodeTypeBox.ItemsSource = types.NodeTypes;
         SetupGraph(types);
@@ -77,6 +87,10 @@ public partial class ViewDefinitionEditor : UserControl
         NodeTypeLabel.Visibility = NodeTypeBox.Visibility = flat ? Visibility.Visible : Visibility.Collapsed;
         ShowGraph(Draft.Display == ViewDisplay.Graph);
         LinkTypeBox.SelectedItem = Draft.LinkType;
+        var orders = _orderChoices(Draft).Select(field => new OrderChoice(field.Id, field.Name)).Prepend(new OrderChoice(null, "Name")).ToList();
+        OrderBox.ItemsSource = orders;
+        OrderBox.SelectedItem = orders.FirstOrDefault(order => order.Field == Draft.Order) ?? orders[0];
+        OrderLabel.Visibility = OrderBox.Visibility = tree && orders.Count > 1 ? Visibility.Visible : Visibility.Collapsed;
         NodeTypeBox.SelectedItem = Draft.NodeType;
         RootList.SelectedItem = RootChoices.FirstOrDefault(choice => choice.Node.Id == Draft.Root?.Id);
         _showing = false;
@@ -125,6 +139,14 @@ public partial class ViewDefinitionEditor : UserControl
         if (LinkTypeBox.SelectedItem is LinkType type)
         {
             Change(view => view with { LinkType = type });
+        }
+    }
+
+    private void OrderBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (OrderBox.SelectedItem is OrderChoice order)
+        {
+            Change(view => view with { Order = order.Field });
         }
     }
 

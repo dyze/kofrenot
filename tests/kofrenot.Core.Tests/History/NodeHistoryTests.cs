@@ -62,8 +62,8 @@ public sealed class NodeHistoryTests
     {
         Apply(new DatasetEdited(Guid.NewGuid(), Start, _dune.Id, new DatasetFile("survey.csv", 3, "00"), []));
         Apply(new ViewEdited(Guid.NewGuid(), Start, _dune.Id, new FlatDefinition(TypeCatalog.Note.Id), []));
-        Apply(new FieldSet(Guid.NewGuid(), Start, _dune.Id, FieldSet.Own, "read", "Read", FieldKind.Checkbox, FieldValue.Of(true), []));
-        Apply(new FieldSet(Guid.NewGuid(), Start, _dune.Id, FieldSet.Own, "cover", "Cover", FieldKind.Image, null, [], new DatasetFile("cover.png", 10, "11")));
+        Apply(new FieldSet(Guid.NewGuid(), Start, _dune, FieldSet.Own, "read", "Read", FieldKind.Checkbox, FieldValue.Of(true), []));
+        Apply(new FieldSet(Guid.NewGuid(), Start, _dune, FieldSet.Own, "cover", "Cover", FieldKind.Image, null, [], new DatasetFile("cover.png", 10, "11")));
 
         var history = NodeHistory.Of(_graph, _dune);
         var labels = history.Select(entry => entry.Label).ToList();
@@ -84,5 +84,5 @@ public sealed class NodeHistoryTests
     }
 
     private FieldSet Value(DateTimeOffset at, string? value, IReadOnlyList<Guid> replaces) =>
-        new(Guid.NewGuid(), at, _dune.Id, FieldSet.Own, "published", "Published", FieldKind.Text, value, replaces);
+        new(Guid.NewGuid(), at, _dune, FieldSet.Own, "published", "Published", FieldKind.Text, value, replaces);
 }

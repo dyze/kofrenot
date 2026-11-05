@@ -16,7 +16,7 @@ A private knowledge system for Windows, and Android: notes, files and the links 
 
 ## Features
 
-- **One box to find and add**: type `Dune`, or `Dune relates to Frank Herbert`, and the nodes and the link are added. Your own link types too.
+- **One box to find and add**: type `Dune`, or `Dune relates to Frank Herbert`, and the nodes and the link are added. Your own link types too, and **qualifiers** that give a link its context: `Dune written by Frank Herbert, Date 1965`.
 - **Notes** in Markdown, with **task lists** and **colours**, as in Google Keep.
 - **Datasets**: files of any kind and size, with thumbnails and a viewer for images and texts.
 - **Your node types**: a *Person* with a birth date and a website, a *Book* with its genre; a node can have several, and fields of its own. Values are searched offline.
@@ -45,6 +45,8 @@ Both apps share the same vaults and the same core; each shows its own set of fea
 | **Browse** | | |
 | Search names, pinned and recent nodes | ✔ | ✔ |
 | Search field values | ✔ | ✔ |
+| Search links by a qualifier (`written by, Date 1965`, `, Source isfdb`); ranges of dates and numbers (`Born 1900..1950`) | ✔ | ✔ |
+| A link's first qualifier shown after its other node | ✔ in its row; beside its name in a graph | ✔ in its row |
 | Recent: opened here or changed on any device (last 7 days) | ✔ empty input box | ✔ home |
 | Node details, links | ✔ the Link box with labels and proposals, as the input box | ✔ |
 | Node types and fields shown | ✔ | ✔ (an image's thumbnail, **Open**) |
@@ -63,6 +65,10 @@ Both apps share the same vaults and the same core; each shows its own set of fea
 | Your node types: create, change, remove, copy from another vault (Settings > Node types) | ✔ | — |
 | Fields: fill, add your own, merge, resolve a conflict | ✔ | ✔ fill (a tap), add your own (text, number, date, web address, email, postal address, checkbox), resolve a conflict, an image set (chosen, a photo taken, from a dataset, or shared by another app) or removed; a merge on Windows |
 | Fields: open a web address, write to an email, show a postal address on a map | ✔ **↗** | ✔ an icon right of the value: open, mail, map |
+| Qualifiers typed after a link (`, Date 1965`), the link updated by its sentence again | ✔ the input box and the Link box, labels and proposals; the creation screen to fill them | ✔ the search box, labels and proposals |
+| Qualifiers: fill, add your own, take out, resolve a conflict, history | ✔ the chevron at the right of a link's row; a click on a line of a graph | ✔ a tap on a link with qualifiers (its sheet), a long press to add one of its own |
+| Several links of a type between two nodes (*married to Bob · 1995*, *· 2015*) | ✔ the input box asks which one, or **+ a new link** | ✔ shown, the first one updated |
+| A link type's qualifiers, built-in link types included (Settings > Link types) | ✔ | — (defined on Windows) |
 | History: a node's versions (text, file, view, names, colours, field values) | ✔ listed, restored | ✔ listed, restored |
 | Notes: edit | ✔ editor with a Markdown toolbar and a task list editor, checked items collapsed | ✔ Markdown text, task list editor (no reordering); tap a checkbox |
 | Notes: resolve a conflict | ✔ keep one, or merge by hand | ✔ keep one |
@@ -72,7 +78,7 @@ Both apps share the same vaults and the same core; each shows its own set of fea
 | Datasets: new version of a file, resolve a conflict | ✔ **Import…**, a drop, **Paste** | ✔ **Import…** (a conflict resolved by importing; keeping one of its versions on Windows) |
 | Datasets: view images and texts | ✔ | an image's thumbnail |
 | Datasets: open in another app, export, share | ✔ **Open**, **Export…**, drag out (several at once, with their tree as folders) | ✔ **Open**, **Export…**, **Share…** (Android's share sheet) |
-| Views: create, edit | ✔ | — |
+| Views: create, edit (a tree sorted by a qualifier of its links) | ✔ | — |
 | **Share** | | |
 | Members, roles, share, leave | ✔ | ✔ share, change a role, leave (Settings > Vault > **Members…**); a member removed on Windows |
 | **App** | | |
@@ -160,8 +166,11 @@ Type in the box at the top of the main window; the line under it says what Enter
 | `Dune relates to Frank Herbert` | a link between them, and the nodes not there yet |
 | `Kitchen contains Knives` | a link from *Kitchen* to *Knives*, read *Knives contained by Kitchen* from the other side |
 | `Dune is a novel` | a link from *Dune* to *novel* |
+| `Dune written by Frank Herbert, Date 1965, Source isfdb.org` | the link with its **qualifiers**; typed again for a link already there, it updates them (*Date: 1965 → 1966*); `, Date` with no value takes one out |
+| `written by, Date 1965` · `Frank Herbert wrote, Date 1960..1970` · `, Source isfdb` | nothing: it **finds the links** of that type, of that node, or any, with that value or in that range, each opening the node it leads to |
 
 - Matching nodes are listed as you type; **Tab** accepts the rest of a name proposed in grey.
+- **Qualifiers** come after a complete link: **,** then a qualifier's name of its link type (or its first letters, the rest proposed in grey) makes it a label; what follows is its value, until the next **,** and name. A **,** not followed by a qualifier's name stays in the name (*Herbert, Frank*). The link type's qualifiers are set in Settings > Link types; the creation screen shows them to fill. With qualifiers typed for nodes linked so already, the list offers their links (*married to Bob · 1995*) and **+ a new link**: **Up/Down** or a click chooses which one is updated, or adds another beside them.
 - **Enter** shows the creation screen first: the type of each new node (generic, note, dataset or view), a note's text, a dataset's file.
 - With the box empty, your **pinned** nodes are listed, then your **recent** ones: the 10 newest you opened on this computer or that changed on any device in the last 7 days, each node once, with its latest activity (*changed 5 min ago*, *opened yesterday*): a change made on your phone is at hand here. Pins are synced; the nodes opened are this computer's.
 - **Keep offline** (the arrow beside the pin, in a server vault's node details): its content (a note's text, a dataset's file) is downloaded ahead and kept on this computer, so it opens offline. Each device chooses its own: nothing is written to the vault. The tooltip says *kept offline* once it is here.
@@ -172,6 +181,8 @@ Type in the box at the top of the main window; the line under it says what Enter
 **The globe** (after History) searches the node's name on the web with the engine chosen in Settings > General (Google by default, or DuckDuckGo, Bing), in your default browser. The name leaves the computer only then.
 
 **Delete** (the trash can, last of the header, or **Ctrl+Del**) deletes the node with its links, on every device, after a confirmation naming what goes; the node before it is shown again. A right-click on a search result or **Del** in a list does the same. A link's broken-link button (on the row hovered or selected) or its right-click menu removes it; the nodes stay, and the confirmation says when one is left with no link. Not in a vault shared with you to read only. A dataset's file stays in the vault, only hidden, until the vault is packed ([ROADMAP](ROADMAP.md#later)).
+
+**Qualifiers**: the chevron at the right of a link's row, before its remove button, unfolds them under it (shown when it has some, else on the row hovered or selected, to add one) (a click on a line of a graph does too), edited as fields are: **Enter** or leaving the box saves, **Esc** puts back, empty clears, **×** takes one out (asked first); **Add qualifier…** adds one of the link's own, **History…** lists their values to restore one. The row shows its first qualifier with a value after the other node: *written by Frank Herbert · 1965*. Values set on a link added on two devices before they synced are merged; set on both, both show, to keep one.
 
 **History** (the clock beside the pin) lists its versions, newest first: its text, file or view definition, its names, colours and field values, each with when and what it held (a note's text is not shown). **Restore** makes one the current version again, after a confirmation: it is written as a new version, so the others stay in the history; restoring one of a conflict resolves it. A note's text or a dataset's file restored in a server vault is downloaded first. Its types and links have no versions, and a node deleted is not restored.
 
@@ -184,7 +195,8 @@ A node has one or several **types**, each with its **fields**: *Frank Herbert* c
 - **An image field** shows its thumbnail, also as the node's picture in every list (search, links, views), as an image dataset's file does; the first in the order of its fields when it has several: a click shows the image, **Choose…** sets another (PNG, JPEG, GIF, BMP, TIFF or WebP, up to 64 MB), **From a dataset…** takes an image dataset of the vault, found by its name (its file is not copied: the field shows it as it is now, a newer version of the dataset not changing it), **×** removes it (asked first). It is stored encrypted as a dataset's file is, downloaded when shown in a server vault; its thumbnail comes with the sync.
 - **Add field…** gives a node a field of its own, with its first value; cleared, it goes. A node of several types, or of a type and fields of its own, shows a tab per type, then *Its own*, so it fits without scrolling: a note's tab its text, a dataset's its file, a view's what it shows, the others their fields; links stay under them. The tab with content opens first; the tab chosen stays from node to node, a dot marks one with a value in conflict. Two fields of one name show where they come from (*Born (Person)*, *Born (own)*); the merge button keeps one value.
 - A value set on two devices before they synced shows both, to keep one.
-- The input box also finds a node by its values: *Frank Herbert — Birthplace: Tacoma*, after the nodes found by name.
+- The input box also finds a node by its values: *Frank Herbert — Birthplace: Tacoma*, after the nodes found by name. A field's name and a range finds the nodes whose date or number is in it: `Born 1900..1950`, `Born 1965-08..`, `Pages ..300` (a year or a month as an end includes all of it).
+- **Qualifiers** are fields on links (a date, a source, a place), of the same kinds. Settings > **Link types** > **Qualifiers** gives a link type its list, as a node type its fields, the built-in ones (*relates to*, *contains*, *is a*) included; one taken out stays on its links, with its value, as their own (asked first). A link can also have qualifiers of its own. They hang on the link, so *Dune written by Frank Herbert* and *Frank Herbert wrote Dune* show the same ones; a link changed to another type keeps them.
 
 ### Notes
 A note is Markdown text, saved as a new version each time (**Ctrl+S**, or by leaving it). **Checkboxes** on its toolbar turns its lines into a task list. Its checked items are collapsed at its bottom under their count (**▸ 3 checked**): a click shows them, or hides them again.
@@ -199,6 +211,7 @@ A dataset holds one file: drop it on the creation screen or on the dataset. Text
 ### Views
 A view shows your vault another way, in a tab: **a tree** from a node, following a link type (*contains* by default), **a list** of every node of a type, or **a graph** from a node (Windows). **+** in the tab bar opens or creates one. On Windows, the tabs that do not fit in the window are listed by **▾** beside **+**; the selected one is always shown. Drag a view's tab before or after another to change their order, kept on this device (*Home* stays first).
 
+- **Sorted by** in a tree's definition sorts each node's children by a qualifier of their links (books by *Date*), those without a value after, by name; by name otherwise.
 - In a tree: **Ctrl+C**, **Ctrl+X**, **Ctrl+V** and **Del** copy, move and delete, or drag a node onto another (Ctrl+V pastes a node, never the Windows clipboard: see **Paste** in [Datasets](#datasets)). A copy has its original's types, colour and field values, images included. Drop a file on a node to add it under it (the creation screen); several files, or folders, are previewed first, as with **Drop files**, then added under it, a folder's content under the folder's node by the tree's link type. What is already there is updated, not added again: a file whose dataset of the same name is under the same node becomes its new version (*update*, asked once more before), and a folder whose node is there gets its content merged (*existing*). Same names under different nodes are not homonyms; two files of one folder whose names would be the same (`report.pdf`, `report.docx`) keep their extension.
 - **Several nodes**: **Ctrl+click** adds or takes out a node, **Shift+click** selects the rows from the last one clicked, in a tree as in a list. Drag them to a folder (Explorer, the desktop) to export them: a dataset gives its latest file, a node with nodes under it in the tree a folder of them, sub-folders included; the same name twice in a folder becomes `name (2).ext`. They are decrypted into a temporary folder when the drag starts (the cursor waits a moment for large files), deleted once dropped. Notes, empty nodes and files not downloaded yet are left out, and said so after the drop. With several selected, Edit, Rename, Cut, Copy, Paste and Delete are off. One node of a tree goes out the same way once dragged out of kofrenot's window; until then, it is moved or copied inside kofrenot.
 - **Unlinked** on a tree's bar shows, beside it, the nodes no link leads to (a symmetric link such as *relates to* aside), views and the roots of trees left out: the newest first, at most 100, with a filter to find the others. Drag them (several with **Ctrl**/**Shift**) onto a node of the tree to put them under it, by the tree's link type; a double-click opens one.

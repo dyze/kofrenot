@@ -9,8 +9,9 @@ namespace Kofrenot.UI.Views;
 
 /// <summary>
 /// Settings > Link types: lists the link types of the open vault, a line per way each reads; adds
-/// or removes aliases (<see cref="AliasPlanner"/>), and adds, renames or removes the user's link
-/// types (<see cref="LinkTypePlanner"/>), each typed in place.
+/// or removes aliases (<see cref="AliasPlanner"/>), adds, renames or removes the user's link
+/// types (<see cref="LinkTypePlanner"/>), each typed in place, and changes the qualifiers of any
+/// link type, built-in ones included (<see cref="QualifiersEditor"/>).
 /// </summary>
 public partial class LinkTypesSection : UserControl
 {
@@ -21,6 +22,7 @@ public partial class LinkTypesSection : UserControl
     private VaultSession? _session;
     private AliasEditor? _aliasEditor;
     private TypeEditor? _renameEditor;
+    private QualifiersEditor? _qualifiersEditor;
     private LineEditor? _toFocus;
     private (string TypeId, string Status)? _removal;
 
@@ -74,7 +76,12 @@ public partial class LinkTypesSection : UserControl
                 continue;
             }
 
-            AddWay(lines, new WayLine(type.Forward, IsOtherWay: false, IsBothWays: type.Reverse is null, custom, WarningOf(type.Type, custom)));
+            AddWay(lines, new WayLine(type.Forward, IsOtherWay: false, IsBothWays: type.Reverse is null, custom, WarningOf(type.Type, custom), graph.LinkTypes.FieldsOf(type.Type.Id)));
+            if (_qualifiersEditor?.Type == type.Type)
+            {
+                lines.Add(_qualifiersEditor);
+            }
+
             if (type.Reverse is { } reverse)
             {
                 AddWay(lines, new WayLine(reverse, IsOtherWay: true, IsBothWays: false, Custom: null, Warning: string.Empty));
@@ -138,6 +145,19 @@ public partial class LinkTypesSection : UserControl
                 }
 
                 break;
+            case QualifiersEditor qualifiers when qualifiers.Plan() is { Change: { } change }:
+                if (qualifiers.Removed is { Count: > 0 } removed
+                    && !MessageDialog.Confirm(window, $"Take {string.Join(", ", removed.Select(name => $"“{name}”"))} out of “{qualifiers.Type.Name}”?\n\nIts links keep their values, as their own qualifiers.", "Take out"))
+                {
+                    return;
+                }
+
+                if (_session.Write(new WpfQuestions(window), change, $"Link type {change.LinkType} qualifiers changed ({change.Fields.Count})"))
+                {
+                    Close(qualifiers);
+                }
+
+                break;
             case TypeEditor type when type.Plan() is { Change: { } change }:
                 var action = type.IsRename ? $"Link type {change.LinkType} renamed" : $"Link type {change.LinkType} added";
                 if (_session.Write(new WpfQuestions(window), change, action))
@@ -162,6 +182,10 @@ public partial class LinkTypesSection : UserControl
         else if (editor == _aliasEditor)
         {
             _aliasEditor = null;
+        }
+        else if (editor == _qualifiersEditor)
+        {
+            _qualifiersEditor = null;
         }
         else
         {
@@ -190,6 +214,29 @@ public partial class LinkTypesSection : UserControl
         {
             _session.Write(new WpfQuestions(window), new AliasPlanner(graph).Remove(alias), $"Alias removed from {alias.Verb.Type.Id}");
             Show();
+        }
+    }
+
+    private QualifierListPlan? PlanQualifiers(LinkType type, IReadOnlyList<FieldDraft> fields) =>
+        Graph is { } graph ? new LinkTypePlanner(graph).Qualifiers(type, fields) : null;
+
+    private void EditQualifiers_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is FrameworkElement { DataContext: WayLine line } && Graph is { } graph)
+        {
+            var type = line.Phrases.Verb.Type;
+            _qualifiersEditor = new QualifiersEditor(type, graph.LinkTypes.FieldsOf(type.Id), PlanQualifiers);
+            Edit(_qualifiersEditor);
+        }
+    }
+
+    private void AddQualifier_Click(object sender, RoutedEventArgs e) => _qualifiersEditor?.AddField();
+
+    private void RemoveQualifier_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is FrameworkElement { DataContext: FieldRow row })
+        {
+            _qualifiersEditor?.RemoveField(row);
         }
     }
 

@@ -102,7 +102,7 @@ public sealed partial class HomePage
     /// <summary>Before the creation screen: all of the text as labels.</summary>
     private void LabelAll(KnowledgeGraph graph)
     {
-        _chips.LabelAll(graph.Types);
+        _chips.LabelAll(graph);
         SetSearchText(_chips.Tail);
         ShowChips(graph);
     }
@@ -184,6 +184,10 @@ public sealed partial class HomePage
         if (chip.IsLinkType)
         {
             border.Classes.Add("link");
+        }
+        else if (chip.IsQualifier)
+        {
+            border.Classes.Add("qualifier");
         }
 
         Control view = border;

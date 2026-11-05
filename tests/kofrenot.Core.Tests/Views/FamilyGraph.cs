@@ -10,8 +10,8 @@ internal sealed class FamilyGraph
 
     public FamilyGraph()
     {
-        _tree.Graph.Apply(new LinkTypeDefined(Guid.NewGuid(), TreeGraph.Start, Parent, "parent of", "child of", []));
-        _tree.Graph.Apply(new LinkTypeDefined(Guid.NewGuid(), TreeGraph.Start, Spouse, "married to", null, []));
+        _tree.Graph.Apply(new LinkTypeDefined(Guid.NewGuid(), TreeGraph.Start, Parent, "parent of", "child of", [], []));
+        _tree.Graph.Apply(new LinkTypeDefined(Guid.NewGuid(), TreeGraph.Start, Spouse, "married to", null, [], []));
     }
 
     public static GraphLink[] Family => [new(Parent, GraphRole.Down), new(Spouse, GraphRole.Beside)];

@@ -25,10 +25,13 @@ public sealed record ViewDraft(ViewDisplay Display, Node? Root, LinkType LinkTyp
     /// <summary>What a graph follows and shows, kept while another display is chosen.</summary>
     public GraphDraft Graph { get; init; } = GraphDraft.Default;
 
+    /// <summary>The qualifier of <see cref="LinkType"/> a tree's children are sorted by (its field id); by name when null.</summary>
+    public string? Order { get; init; }
+
     /// <summary>The definition, or null while a tree or a graph has no root, or a graph no link type.</summary>
     public ViewDefinition? Definition => Display switch
     {
-        ViewDisplay.Tree => Root is null ? null : new TreeDefinition(Root.Id, LinkType.Id),
+        ViewDisplay.Tree => Root is null ? null : new TreeDefinition(Root.Id, LinkType.Id, Order),
         ViewDisplay.Graph => Root is null || Graph.Links.Count == 0 ? null : new GraphDefinition(Root.Id, Graph.Depth, Graph.Layout, Graph.Links, Graph.NodeTypes, Graph.Fields),
         _ => new FlatDefinition(NodeType.Id),
     };
@@ -43,6 +46,7 @@ public sealed record ViewDraft(ViewDisplay Display, Node? Root, LinkType LinkTyp
         {
             Root = graph.FindNode(tree.Root),
             LinkType = graph.Types.FindLinkType(tree.LinkType) ?? new LinkType(tree.LinkType, [tree.LinkType]),
+            Order = tree.Order,
         },
         FlatDefinition flat => Default with
         {
@@ -58,6 +62,10 @@ public sealed record ViewDraft(ViewDisplay Display, Node? Root, LinkType LinkTyp
         _ => Default,
     };
 
+    /// <summary>The qualifiers a tree through <see cref="LinkType"/> can be sorted by: its type's that are typed.</summary>
+    public IReadOnlyList<Fields.FieldDefinition> OrderChoices(KnowledgeGraph graph) =>
+        graph.LinkTypes.FieldsOf(LinkType.Id).Where(field => Fields.FieldKinds.IsSmall(field.Kind)).ToList();
+
     /// <summary>The nodes a tree can start from, found by name as in the input box.</summary>
     public static IReadOnlyList<SearchHit> FindRoots(KnowledgeGraph graph, string text) => GraphSearch.Find(graph, text, RootChoices);
 
@@ -65,7 +73,7 @@ public sealed record ViewDraft(ViewDisplay Display, Node? Root, LinkType LinkTyp
     public static string Describe(ViewDefinition? definition, KnowledgeGraph graph) => definition switch
     {
         TreeDefinition tree => graph.FindNode(tree.Root) is { } root
-            ? $"A tree from “{root.Name}” through “{LinkTypeName(graph, tree.LinkType)}”"
+            ? $"A tree from “{root.Name}” through “{LinkTypeName(graph, tree.LinkType)}”{OrderName(graph, tree)}"
             : "A tree from a node not here: removed, or not synced yet",
         FlatDefinition flat => $"A list of every {graph.Types.NodeTypeName(flat.NodeType)}",
         GraphDefinition shown => graph.FindNode(shown.Root) is { } root
@@ -73,6 +81,9 @@ public sealed record ViewDraft(ViewDisplay Display, Node? Root, LinkType LinkTyp
             : "A graph from a node not here: removed, or not synced yet",
         _ => "No definition yet",
     };
+
+    private static string OrderName(KnowledgeGraph graph, TreeDefinition tree) =>
+        tree.Order is { } order && graph.LinkTypes.FieldsOf(tree.LinkType).FirstOrDefault(field => field.Id == order) is { } field ? $", by “{field.Name}”" : string.Empty;
 
     private static string LinkTypeName(KnowledgeGraph graph, string linkType) => graph.Types.FindLinkType(linkType)?.Name ?? linkType;
 }

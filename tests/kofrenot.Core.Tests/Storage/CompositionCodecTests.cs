@@ -131,13 +131,13 @@ public sealed class CompositionCodecTests
     [InlineData(FieldKind.Text, null)]
     public void AFieldValue_RoundTrips(FieldKind kind, string? value)
     {
-        var change = new FieldSet(Guid.NewGuid(), At, Guid.NewGuid(), "person", "born", "Born", kind, value, [Guid.NewGuid()]);
+        var change = new FieldSet(Guid.NewGuid(), At, FieldHolder.OfNode(Guid.NewGuid()), "person", "born", "Born", kind, value, [Guid.NewGuid()]);
 
         var decoded = RoundTrip(change);
 
         Assert.Equal(
-            (change.Id, change.At, change.Node, change.Owner, change.Field, change.Name, change.Kind, change.Value),
-            (decoded.Id, decoded.At, decoded.Node, decoded.Owner, decoded.Field, decoded.Name, decoded.Kind, decoded.Value));
+            (change.Id, change.At, change.Holder.Id, change.Owner, change.Field, change.Name, change.Kind, change.Value),
+            (decoded.Id, decoded.At, decoded.Holder.Id, decoded.Owner, decoded.Field, decoded.Name, decoded.Kind, decoded.Value));
         Assert.Equal(change.Replaces, decoded.Replaces);
     }
 

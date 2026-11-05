@@ -15,7 +15,7 @@ internal sealed record ChangeData(
     string Op,
     DateTimeOffset At,
     Node? Node = null,
-    Link? Link = null,
+    ChangeData.LinkData? Link = null,
     ChangeData.RenameData? Rename = null,
     ChangeData.AliasData? Alias = null,
     ChangeData.PinData? Pin = null,
@@ -58,10 +58,14 @@ internal sealed record ChangeData(
     private const string FieldSetOp = "setField";
     private const string NodesPlacedOp = "placeNodes";
 
-    public static ChangeData From(Change change) => change switch
+    /// <summary>The change as written by this kofrenot: in <see cref="VaultFormat.Current"/>, with its levels.</summary>
+    public static ChangeData From(Change change) =>
+        Of(change) with { OldestReader = VaultFormat.OldestReader, OldestWriter = VaultFormat.OldestWriter };
+
+    private static ChangeData Of(Change change) => change switch
     {
         NodeAdded added => new(VaultFormat.Current, NodeAddedOp, added.At, Node: added.Node),
-        LinkAdded added => new(VaultFormat.Current, LinkAddedOp, added.At, Link: added.Link),
+        LinkAdded added => new(VaultFormat.Current, LinkAddedOp, added.At, Link: LinkData.Of(added.Link)),
         NodeRenamed renamed => new(VaultFormat.Current, NodeRenamedOp, renamed.At, Rename: new RenameData(renamed.Node, renamed.Name, [.. renamed.Replaces])),
         AliasAdded alias => new(VaultFormat.Current, AliasAddedOp, alias.At, Alias: new AliasData(alias.LinkType, alias.IsReverse, alias.Phrase)),
         ChangesRemoved removal => new(VaultFormat.Current, RemoveOp, removal.At, Removes: [.. removal.Removes]),
@@ -73,7 +77,7 @@ internal sealed record ChangeData(
         NodeRetyped retype => new(VaultFormat.Current, NodeRetypedOp, retype.At, Retype: new RetypeData(retype.Node, retype.Type, [.. retype.Replaces])),
         MemberAdded added => new(VaultFormat.Current, MemberAddedOp, added.At, Member: MemberData.From(added)),
         MemberRemoved removed => new(VaultFormat.Current, MemberRemovedOp, removed.At, MemberRemoval: new MemberRemovalData(removed.Account, removed.Signature)),
-        LinkTypeDefined defined => new(VaultFormat.Current, LinkTypeDefinedOp, defined.At, LinkType: new LinkTypeData(defined.LinkType, defined.Name, defined.ReverseName, [.. defined.Replaces])),
+        LinkTypeDefined defined => new(VaultFormat.Current, LinkTypeDefinedOp, defined.At, LinkType: LinkTypeData.From(defined)),
         NodeColored color => new(VaultFormat.Current, NodeColoredOp, color.At, Color: new ColorData(color.Node, color.Color, [.. color.Replaces])),
         NodeTypeDefined defined => new(VaultFormat.Current, NodeTypeDefinedOp, defined.At, NodeType: NodeTypeData.From(defined)),
         NodeTypeAdded added => new(VaultFormat.Current, NodeTypeAddedOp, added.At, AddType: new AddTypeData(added.Node, added.Type)),
@@ -110,7 +114,7 @@ internal sealed record ChangeData(
         Op switch
         {
             NodeAddedOp when IsComplete(Node) => new NodeAdded(id, At, Node),
-            LinkAddedOp when IsComplete(Link) => new LinkAdded(id, At, Link),
+            LinkAddedOp when Link?.ToLink() is { } link => new LinkAdded(id, At, link),
             NodeRenamedOp when IsComplete(Rename) => new NodeRenamed(id, At, Rename.Node, Rename.Name!, Rename.Replaces!),
             AliasAddedOp when IsComplete(Alias) => new AliasAdded(id, At, Alias.LinkType!, Alias.Reverse, Alias.Phrase!),
             RemoveOp when Removes is { Count: > 0 } => new ChangesRemoved(id, At, Removes),
@@ -127,9 +131,7 @@ internal sealed record ChangeData(
             MemberAddedOp when Member?.ToMember() is { } member && Member.Signature is { Length: > 0 } signature => new MemberAdded(id, At, member, signature),
             MemberRemovedOp when MemberRemoval is { Signature: { Length: > 0 } signature } && MemberRemoval.Account != Guid.Empty
                 => new MemberRemoved(id, At, MemberRemoval.Account, signature),
-            LinkTypeDefinedOp when LinkType is { Id: { Length: > 0 } type, Name: { } name, Replaces: { } replaces }
-                && !string.IsNullOrWhiteSpace(name) && LinkType.Reverse is null or { Length: > 0 }
-                => new LinkTypeDefined(id, At, type, name, LinkType.Reverse, replaces),
+            LinkTypeDefinedOp when LinkType?.ToChange(id, At, unknownKinds) is { } defined => defined,
             NodeColoredOp when Color is { Replaces: { } replaces } && Color.Node != Guid.Empty && Color.Color is null or { Length: > 0 }
                 => new NodeColored(id, At, Color.Node, Color.Color, replaces),
             NodeTypeDefinedOp when NodeType?.ToChange(id, At, unknownKinds) is { } defined => defined,
@@ -145,8 +147,6 @@ internal sealed record ChangeData(
     private static bool IsComplete([NotNullWhen(true)] Node? node) =>
         node is not null && node.Id != Guid.Empty && !string.IsNullOrEmpty(node.Type) && !string.IsNullOrWhiteSpace(node.Name);
 
-    private static bool IsComplete([NotNullWhen(true)] Link? link) =>
-        link is not null && link.Id != Guid.Empty && !string.IsNullOrEmpty(link.Type) && link.From != Guid.Empty && link.To != Guid.Empty;
 
     private static bool IsComplete([NotNullWhen(true)] RenameData? rename) =>
         rename is { Name: not null, Replaces.Count: > 0 } && rename.Node != Guid.Empty && !string.IsNullOrWhiteSpace(rename.Name);
@@ -159,6 +159,21 @@ internal sealed record ChangeData(
         && !string.IsNullOrWhiteSpace(file.Name)
         && file.Size >= 0
         && file.Sha256.Length == 64 && file.Sha256.All(char.IsAsciiHexDigitLower);
+
+    /// <summary>
+    /// <c>"link": { "id": "…", "type": "contains", "from": "…", "to": "…", "created": "…" }</c>; <c>"separate": true</c>
+    /// for a link added beside others of its type between the same nodes, not a copy of them (since format 11).
+    /// </summary>
+    internal sealed record LinkData(Guid Id, string? Type, Guid From, Guid To, DateTimeOffset Created, bool? Separate = null)
+    {
+        public static LinkData Of(Link link) => new(link.Id, link.Type, link.From, link.To, link.Created, link.IsSeparate ? true : null);
+
+        /// <summary>The link, or null when incomplete.</summary>
+        public Link? ToLink() =>
+            Id != Guid.Empty && !string.IsNullOrEmpty(Type) && From != Guid.Empty && To != Guid.Empty
+                ? new Link(Id, Type, From, To, Created, Separate == true)
+                : null;
+    }
 
     /// <summary><c>"rename": { "node": "…", "name": "…", "replaces": ["…"] }</c></summary>
     internal sealed record RenameData(Guid Node, string? Name, List<Guid>? Replaces);
@@ -180,9 +195,10 @@ internal sealed record ChangeData(
 
     /// <summary>
     /// <c>"view": { "node": "…", "display": "tree", "query": { "root": "…", "linkType": "contains" }, "replaces": ["…"] }</c>,
+    /// a tree's <c>"order": { "field": "…" }</c> when its children are sorted by a qualifier (since format 11),
     /// or <c>"display": "flat", "query": { "nodeType": "note" }</c>, or <c>"display": "graph"</c> (<see cref="GraphQueryData"/>).
     /// </summary>
-    internal sealed record ViewData(Guid Node, string? Display, QueryData? Query, List<Guid>? Replaces)
+    internal sealed record ViewData(Guid Node, string? Display, QueryData? Query, List<Guid>? Replaces, OrderData? Order = null)
     {
         private const string Tree = "tree";
         private const string Flat = "flat";
@@ -190,7 +206,7 @@ internal sealed record ChangeData(
 
         public static ViewData From(ViewEdited view) => view.Definition switch
         {
-            TreeDefinition tree => new(view.Node, Tree, new QueryData(tree.Root, tree.LinkType), [.. view.Replaces]),
+            TreeDefinition tree => new(view.Node, Tree, new QueryData(tree.Root, tree.LinkType), [.. view.Replaces], tree.Order is { } order ? new OrderData(order) : null),
             FlatDefinition flat => new(view.Node, Flat, new QueryData(NodeType: flat.NodeType), [.. view.Replaces]),
             GraphDefinition graph => new(view.Node, Graph, GraphQueryData.From(graph), [.. view.Replaces]),
             _ => throw new ArgumentOutOfRangeException(nameof(view), view.Definition.GetType().Name, "Unknown view definition"),
@@ -199,7 +215,8 @@ internal sealed record ChangeData(
         /// <summary>The definition, or null when incomplete.</summary>
         public ViewDefinition? ToDefinition() => (Display, Query) switch
         {
-            (Tree, { Root: { } root, LinkType: { } linkType }) when root != Guid.Empty && linkType.Length > 0 => new TreeDefinition(root, linkType),
+            (Tree, { Root: { } root, LinkType: { } linkType }) when root != Guid.Empty && linkType.Length > 0 && Order is null or { Field.Length: > 0 }
+                => new TreeDefinition(root, linkType, Order?.Field),
             (Flat, { NodeType: { } nodeType }) when nodeType.Length > 0 => new FlatDefinition(nodeType),
             (Graph, { } query) => GraphQueryData.ToDefinition(query),
             _ => null,
@@ -240,6 +257,9 @@ internal sealed record ChangeData(
             Enum.TryParse(text, ignoreCase: true, out value) && Enum.IsDefined(value) && !char.IsDigit(text![0]);
     }
 
+    /// <summary><c>"order": { "field": "…" }</c>: the qualifier a tree's children are sorted by.</summary>
+    internal sealed record OrderData(string? Field);
+
     /// <summary><c>{ "type": "parent-of", "role": "down" }</c>: <c>down</c>, <c>up</c>, <c>beside</c> or <c>free</c>.</summary>
     internal sealed record GraphLinkData(string? Type, string? Role);
 
@@ -265,8 +285,22 @@ internal sealed record ChangeData(
     /// <summary><c>"color": { "node": "…", "color": "yellow", "replaces": [] }</c>; a null colour takes it away.</summary>
     internal sealed record ColorData(Guid Node, string? Color, List<Guid>? Replaces);
 
-    /// <summary><c>"linkType": { "id": "…", "name": "wrote", "reverse": "written by", "replaces": [] }</c>; no reverse when symmetric.</summary>
-    internal sealed record LinkTypeData(string? Id, string? Name, string? Reverse, List<Guid>? Replaces);
+    /// <summary>
+    /// <c>"linkType": { "id": "…", "name": "wrote", "reverse": "written by", "fields": [{ "id": "…", "name": "Date", "kind": "date" }], "replaces": [] }</c>;
+    /// no reverse when symmetric, no fields before format 11.
+    /// </summary>
+    internal sealed record LinkTypeData(string? Id, string? Name, string? Reverse, List<Guid>? Replaces, List<FieldDefinitionData>? Fields = null)
+    {
+        public static LinkTypeData From(LinkTypeDefined defined) =>
+            new(defined.LinkType, defined.Name, defined.ReverseName, [.. defined.Replaces], [.. defined.Fields.Select(FieldDefinitionData.From)]);
+
+        /// <summary>The change, or null when incomplete: a field incomplete, or two fields with one id.</summary>
+        public LinkTypeDefined? ToChange(Guid id, DateTimeOffset at, bool unknownKinds) =>
+            Id is { Length: > 0 } && !string.IsNullOrWhiteSpace(Name) && Replaces is not null && Reverse is null or { Length: > 0 }
+            && FieldDefinitionData.ToDefinitions(Fields ?? [], unknownKinds) is { } fields
+                ? new LinkTypeDefined(id, at, Id, Name, Reverse, fields, Replaces)
+                : null;
+    }
 
     /// <summary>
     /// <c>"nodeType": { "id": "…", "name": "Person", "icon": "Contact", "color": "blue", "fields": [{ "id": "…", "name": "Born", "kind": "date" }],
@@ -286,10 +320,9 @@ internal sealed record ChangeData(
                 return null;
             }
 
-            var fields = Fields.Select(field => field?.ToDefinition(unknownKinds)).ToList();
-            return fields.Any(field => field is null) || fields.DistinctBy(field => field!.Id).Count() < fields.Count
-                ? null
-                : new NodeTypeDefined(id, at, Id, Name, Icon, Color, fields!, Replaces);
+            return FieldDefinitionData.ToDefinitions(Fields, unknownKinds) is { } fields
+                ? new NodeTypeDefined(id, at, Id, Name, Icon, Color, fields, Replaces)
+                : null;
         }
     }
 
@@ -298,6 +331,13 @@ internal sealed record ChangeData(
     {
         public static FieldDefinitionData From(FieldDefinition field) =>
             new(field.Id, field.Name, FieldKinds.NameOf(field.Kind), field.Kind == FieldKind.Choice ? [.. field.Choices] : null);
+
+        /// <summary>The fields of a type, or null when one is incomplete, or two have one id.</summary>
+        public static List<FieldDefinition>? ToDefinitions(IReadOnlyList<FieldDefinitionData?> fields, bool unknownKinds)
+        {
+            var definitions = fields.Select(field => field?.ToDefinition(unknownKinds)).OfType<FieldDefinition>().ToList();
+            return definitions.Count < fields.Count || definitions.DistinctBy(field => field.Id).Count() < definitions.Count ? null : definitions;
+        }
 
         /// <summary>The field, or null when incomplete. A kind this version does not know is kept as <see cref="FieldKind.Unknown"/> when <paramref name="unknownKinds"/>.</summary>
         public FieldDefinition? ToDefinition(bool unknownKinds) =>
@@ -320,22 +360,32 @@ internal sealed record ChangeData(
 
     /// <summary>
     /// <c>"field": { "node": "…", "owner": "&lt;type id&gt;", "id": "…", "name": "Born", "kind": "date", "value": "1920-10-08", "replaces": [] }</c>;
-    /// <c>"owner": "own"</c> for a field of the node's own, no value to clear it. An image has a
+    /// <c>"link"</c> instead of <c>"node"</c> for a link's (a qualifier), exactly one of the two;
+    /// <c>"owner": "own"</c> for a field of the holder's own, no value to clear it. An image has a
     /// <c>"file": { "name": "…", "size": 1, "sha256": "…" }</c> instead of a value, and the
     /// <c>"content"</c> change whose file it keeps when not its own.
     /// </summary>
-    internal sealed record FieldData(Guid Node, string? Owner, string? Id, string? Name, string? Kind, string? Value, List<Guid>? Replaces, FileData? File = null, Guid? Content = null)
+    internal sealed record FieldData(Guid? Node, string? Owner, string? Id, string? Name, string? Kind, string? Value, List<Guid>? Replaces, FileData? File = null, Guid? Content = null, Guid? Link = null)
     {
-        public static FieldData From(FieldSet field) =>
-            new(field.Node, field.Owner, field.Field, field.Name, FieldKinds.NameOf(field.Kind), field.Value, [.. field.Replaces], field.File is { } file ? FileData.From(file) : null, field.Content);
+        public static FieldData From(FieldSet field) => new(
+            field.Holder.IsLink ? null : field.Holder.Id,
+            field.Owner,
+            field.Field,
+            field.Name,
+            FieldKinds.NameOf(field.Kind),
+            field.Value,
+            [.. field.Replaces],
+            field.File is { } file ? FileData.From(file) : null,
+            field.Content,
+            field.Holder.IsLink ? field.Holder.Id : null);
 
         /// <summary>
-        /// The change, or null when incomplete, or with a value its kind does not write. A kind this
+        /// The change, or null when incomplete (no node or link, or both), or with a value its kind does not write. A kind this
         /// version does not know is kept as <see cref="FieldKind.Unknown"/> when <paramref name="unknownKinds"/>, its value as text only.
         /// </summary>
         public FieldSet? ToChange(Guid id, DateTimeOffset at, bool unknownKinds)
         {
-            if (Node == Guid.Empty || Owner is not { Length: > 0 } || Id is not { Length: > 0 } || string.IsNullOrWhiteSpace(Name)
+            if (HolderOf(Node, Link) is not { } holder || Owner is not { Length: > 0 } || Id is not { Length: > 0 } || string.IsNullOrWhiteSpace(Name)
                 || FieldKinds.Parse(Kind, unknownKinds) is not { } kind || Replaces is null)
             {
                 return null;
@@ -343,11 +393,18 @@ internal sealed record ChangeData(
 
             if (kind == FieldKind.Unknown)
             {
-                return new FieldSet(id, at, Node, Owner, Id, Name, kind, Value is { Length: > 0 } ? Value : null, Replaces);
+                return new FieldSet(id, at, holder, Owner, Id, Name, kind, Value is { Length: > 0 } ? Value : null, Replaces);
             }
 
-            return HasValueOf(kind) ? new FieldSet(id, at, Node, Owner, Id, Name, kind, Value, Replaces, File?.ToFile(), Content) : null;
+            return HasValueOf(kind) ? new FieldSet(id, at, holder, Owner, Id, Name, kind, Value, Replaces, File?.ToFile(), Content) : null;
         }
+
+        private static FieldHolder? HolderOf(Guid? node, Guid? link) => (node, link) switch
+        {
+            ({ } id, null) when id != Guid.Empty => FieldHolder.OfNode(id),
+            (null, { } id) when id != Guid.Empty => FieldHolder.OfLink(id),
+            _ => (FieldHolder?)null,
+        };
 
         // An image has a file or none (its content only with a file), the other kinds a value they write or none.
         private bool HasValueOf(FieldKind kind) => kind == FieldKind.Image

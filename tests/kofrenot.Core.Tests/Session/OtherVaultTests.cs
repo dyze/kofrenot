@@ -80,7 +80,11 @@ public sealed class OtherVaultTests : IDisposable
     {
         var header = VaultFolder.HeaderOf(_first.Location.Folder);
         var json = JsonNode.Parse(File.ReadAllText(header))!;
-        json["format"] = VaultFormat.Current + 1;
+        foreach (var level in new[] { "format", "oldestReader", "oldestWriter" })
+        {
+            json[level] = VaultFormat.Current + 1;
+        }
+
         File.WriteAllText(header, json.ToJsonString());
 
         Assert.Null(Session.NodeTypesOf(Ask, _first));

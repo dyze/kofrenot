@@ -37,7 +37,7 @@ public sealed class InputPresenterTests
     public void ANodeFoundByAValue_ShowsTheField()
     {
         var frank = Add("Frank Herbert");
-        _graph.Apply(new FieldSet(Guid.NewGuid(), Start, frank.Id, FieldSet.Own, "place", "Birthplace", FieldKind.Text, "Tacoma", []));
+        _graph.Apply(new FieldSet(Guid.NewGuid(), Start, frank, FieldSet.Own, "place", "Birthplace", FieldKind.Text, "Tacoma", []));
 
         _input.Update(_graph, "tacoma");
 

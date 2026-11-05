@@ -205,4 +205,12 @@ public partial class MainWindow
     }
 
     private void ViewContent_OpenNode(Node node) => OpenDetails(node, from: null);
+
+    private void ViewContent_OpenLink(Link link)
+    {
+        if (_session.Current?.Graph.FindNode(link.From) is { } from && OpenDetails(from, from: null))
+        {
+            DetailsPanel.UnfoldLink(link);
+        }
+    }
 }

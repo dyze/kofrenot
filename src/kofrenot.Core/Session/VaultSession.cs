@@ -210,7 +210,8 @@ public sealed partial class VaultSession : IDisposable
         var withNotes = notes.Count > 0 ? $", {notes.Count} with content" : string.Empty;
         var added = Append(ask, vault, [.. form.Plan.Changes, .. form.LinksToSave(), .. form.ViewsToSave()], form.Plan switch
         {
-            LinkPlan link => $"Link added ({link.Type.Id}, {(link.Left.IsNew ? 1 : 0) + (link.Right?.IsNew == true ? 1 : 0)} new nodes{withNotes})",
+            LinkPlan { IsUpdate: true } link => $"Link updated ({link.Type.Id}, {link.Qualifiers.Count} qualifiers)",
+            LinkPlan link => $"Link added ({link.Type.Id}, {link.Qualifiers.Count} qualifiers, {(link.Left.IsNew ? 1 : 0) + (link.Right?.IsNew == true ? 1 : 0)} new nodes{withNotes})",
             NodePlan node => $"Node added ({node.Type.Id}{(node.NeedsConfirmation ? ", a duplicate" : string.Empty)}{withNotes})",
             _ => "Added",
         }, notes);

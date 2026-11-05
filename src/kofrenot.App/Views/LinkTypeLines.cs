@@ -1,4 +1,6 @@
+using System.Collections.ObjectModel;
 using System.ComponentModel;
+using Kofrenot.Core.Fields;
 using Kofrenot.Core.Graph;
 using Kofrenot.Core.Input;
 
@@ -7,15 +9,21 @@ namespace Kofrenot.UI.Views;
 /// <summary>
 /// A way a link type reads, as a line of Settings > Link types: its name, its other built-in
 /// phrases and the user's aliases. The first line of a user's link type carries it (<see cref="Custom"/>),
-/// with what is wrong with it.
+/// with what is wrong with it. The first line of every link type, built-in or not, names its qualifiers.
 /// </summary>
-public sealed record WayLine(VerbPhrases Phrases, bool IsOtherWay, bool IsBothWays, CustomLinkType? Custom, string Warning)
+public sealed record WayLine(VerbPhrases Phrases, bool IsOtherWay, bool IsBothWays, CustomLinkType? Custom, string Warning, IReadOnlyList<FieldDefinition>? Fields = null)
 {
     public string Name => Phrases.Verb.Name;
 
     public string BuiltIn => string.Join(", ", Phrases.BuiltIn.Skip(1));
 
     public bool IsYours => Custom is not null;
+
+    /// <summary>The first line of a type: its qualifiers are changed from it.</summary>
+    public bool HasQualifiers => !IsOtherWay;
+
+    /// <summary>"Qualifiers: Date, Source", or nothing.</summary>
+    public string QualifierNames => Fields is { Count: > 0 } fields ? $"Qualifiers: {string.Join(", ", fields.Select(qualifier => qualifier.Name))}" : string.Empty;
 }
 
 /// <summary>A line being typed in: its plan is shown as it changes, and applied by Enter or its button.</summary>
@@ -124,5 +132,59 @@ public sealed class TypeEditor(CustomLinkType? renamed, Func<CustomLinkType?, st
     {
         var current = Plan();
         Show(current is null || current.Problem == LinkTypeProblem.Empty ? string.Empty : current.Status, current?.CanApply == true);
+    }
+}
+
+/// <summary>
+/// The qualifiers of a link type, changed under its first line: a field list as a node type's
+/// (<see cref="FieldRow"/>), saved at once (<see cref="LinkTypePlanner.Qualifiers"/>).
+/// </summary>
+public sealed class QualifiersEditor : LineEditor
+{
+    private readonly Func<LinkType, IReadOnlyList<FieldDraft>, QualifierListPlan?> _plan;
+
+    public QualifiersEditor(LinkType type, IReadOnlyList<FieldDefinition> fields, Func<LinkType, IReadOnlyList<FieldDraft>, QualifierListPlan?> plan)
+    {
+        Type = type;
+        Start = fields;
+        _plan = plan;
+        foreach (var field in fields)
+        {
+            Fields.Add(new FieldRow(FieldDraft.Of(field), Refresh));
+        }
+
+        Refresh();
+    }
+
+    public LinkType Type { get; }
+
+    /// <summary>The qualifiers when the editor opened: those taken out are asked about.</summary>
+    public IReadOnlyList<FieldDefinition> Start { get; }
+
+    public ObservableCollection<FieldRow> Fields { get; } = [];
+
+    public string Title => $"Qualifiers of “{Type.Name}”";
+
+    /// <summary>The qualifiers taken out: their values stay on the links, as their own.</summary>
+    public IReadOnlyList<string> Removed => Start.Where(qualifier => Fields.All(row => row.Id != qualifier.Id)).Select(qualifier => qualifier.Name).ToList();
+
+    public QualifierListPlan? Plan() => _plan(Type, Fields.Select(row => row.Draft).ToList());
+
+    public void AddField()
+    {
+        Fields.Add(new FieldRow(new FieldDraft(null, string.Empty, FieldKind.Text), Refresh));
+        Refresh();
+    }
+
+    public void RemoveField(FieldRow row)
+    {
+        Fields.Remove(row);
+        Refresh();
+    }
+
+    public override void Refresh()
+    {
+        var current = Plan();
+        Show(current?.Status ?? string.Empty, current?.CanApply == true);
     }
 }

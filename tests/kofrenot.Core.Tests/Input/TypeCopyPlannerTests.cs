@@ -113,7 +113,7 @@ public sealed class TypeCopyPlannerTests
     {
         var frank = new Node(Guid.NewGuid(), "person", "Frank Herbert", Start);
         _target.Add(frank);
-        _target.Apply(new FieldSet(Guid.NewGuid(), Start, frank.Id, "person", "born", "Born", FieldKind.Date, "1920-10-08", []));
+        _target.Apply(new FieldSet(Guid.NewGuid(), Start, frank, "person", "born", "Born", FieldKind.Date, "1920-10-08", []));
 
         _target.Apply(Copy(Person()).Change!);
 

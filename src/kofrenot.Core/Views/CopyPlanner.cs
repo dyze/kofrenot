@@ -112,7 +112,7 @@ public sealed class CopyPlanner(KnowledgeGraph graph, string linkType, TimeProvi
 
         foreach (var value in values)
         {
-            var copied = value with { Id = Guid.NewGuid(), At = now, Node = copy, Replaces = [], Content = null };
+            var copied = value with { Id = Guid.NewGuid(), At = now, Holder = FieldHolder.OfNode(copy), Replaces = [], Content = null };
             if (value.Image is { } image)
             {
                 contents.Add(new ContentCopy(image, copied.Image!));

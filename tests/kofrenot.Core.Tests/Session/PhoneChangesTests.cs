@@ -18,7 +18,7 @@ public sealed class PhoneChangesTests
         new NodePinned(Guid.NewGuid(), Start, Guid.NewGuid()),
         new NodeTypeAdded(Guid.NewGuid(), Start, Guid.NewGuid(), "person"),
         new NodeTypeRemoved(Guid.NewGuid(), Start, Guid.NewGuid(), [Guid.NewGuid()]),
-        new FieldSet(Guid.NewGuid(), Start, Guid.NewGuid(), FieldSet.Own, "born", "Born", FieldKind.Date, "1965-01-01", []),
+        new FieldSet(Guid.NewGuid(), Start, FieldHolder.OfNode(Guid.NewGuid()), FieldSet.Own, "born", "Born", FieldKind.Date, "1965-01-01", []),
         new NoteEdited(Guid.NewGuid(), Start, Guid.NewGuid(), []),
         new ViewEdited(Guid.NewGuid(), Start, Guid.NewGuid(), new FlatDefinition(TypeCatalog.Note.Id), []),
         new MemberAdded(Guid.NewGuid(), Start, new VaultMember(Guid.NewGuid(), Guid.NewGuid(), [], "ada@example.com", MemberRole.Writer), []),
@@ -27,7 +27,7 @@ public sealed class PhoneChangesTests
     public static TheoryData<Change> OfTheVault => new()
     {
         new NodeTypeDefined(Guid.NewGuid(), Start, "person", "Person", null, null, [], []),
-        new LinkTypeDefined(Guid.NewGuid(), Start, "wrote", "wrote", "written by", []),
+        new LinkTypeDefined(Guid.NewGuid(), Start, "wrote", "wrote", "written by", [], []),
         new AliasAdded(Guid.NewGuid(), Start, TypeCatalog.Contains.Id, IsReverse: false, "holds"),
         new VaultNamed(Guid.NewGuid(), Start, "Mine", []),
         new MemberRemoved(Guid.NewGuid(), Start, Guid.NewGuid(), []),
@@ -47,7 +47,7 @@ public sealed class PhoneChangesTests
     public void ARemoval_OfNodesLinksAndPins_IsWritten_OneOfADefinition_IsNot()
     {
         var person = new NodeTypeDefined(Guid.NewGuid(), Start, "person", "Person", null, null, [], []);
-        var wrote = new LinkTypeDefined(Guid.NewGuid(), Start, "wrote", "wrote", "written by", []);
+        var wrote = new LinkTypeDefined(Guid.NewGuid(), Start, "wrote", "wrote", "written by", [], []);
         var holds = new AliasAdded(Guid.NewGuid(), Start, TypeCatalog.Contains.Id, IsReverse: false, "holds");
         var pin = new NodePinned(Guid.NewGuid(), Start, _dune.Id);
         foreach (var change in new Change[] { person, wrote, holds, pin })

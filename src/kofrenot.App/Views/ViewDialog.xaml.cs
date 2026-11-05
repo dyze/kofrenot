@@ -27,7 +27,7 @@ public partial class ViewDialog : Window
         ConflictText.Visibility = loaded.IsConflict ? Visibility.Visible : Visibility.Collapsed;
         NameBox.Text = view.Name;
         NameBox.TextChanged += (_, _) => ShowSave();
-        Editor.Setup(graph.Types, text => ViewDraft.FindRoots(graph, text));
+        Editor.Setup(graph.Types, text => ViewDraft.FindRoots(graph, text), draft => draft.OrderChoices(graph));
         Editor.Load(loaded.Definition is { } definition ? ViewDraft.Of(definition, graph) : ViewDraft.Default);
         Editor.Changed += ShowSave;
         ShowSave();

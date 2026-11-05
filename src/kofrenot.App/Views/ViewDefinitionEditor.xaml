@@ -62,6 +62,15 @@
               FontSize="{StaticResource BodyFontSize}"
               SelectionChanged="LinkTypeBox_SelectionChanged" />
 
+    <!-- A tree: its children sorted by name, or by a qualifier of its link type (books by date). -->
+    <TextBlock x:Name="OrderLabel" Grid.Row="3" Margin="0,10,0,0" VerticalAlignment="Center" Opacity="0.7" Text="Sorted by" />
+    <ComboBox x:Name="OrderBox"
+              Grid.Row="3"
+              Grid.Column="1"
+              Margin="0,10,0,0"
+              FontSize="{StaticResource BodyFontSize}"
+              SelectionChanged="OrderBox_SelectionChanged" />
+
     <TextBlock x:Name="NodeTypeLabel" Grid.Row="3" Margin="0,10,0,0" VerticalAlignment="Center" Opacity="0.7" Text="Nodes of type" />
     <ComboBox x:Name="NodeTypeBox"
               Grid.Row="3"

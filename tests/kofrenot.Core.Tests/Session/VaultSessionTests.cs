@@ -219,7 +219,11 @@ public sealed partial class VaultSessionTests : IDisposable
         var folder = _device.CreateFolderVault();
         Session.Close();
         var header = JsonNode.Parse(File.ReadAllText(VaultFolder.HeaderOf(folder)))!;
-        header["format"] = VaultFormat.Current + 1;
+        foreach (var level in new[] { "format", "oldestReader", "oldestWriter" })
+        {
+            header[level] = VaultFormat.Current + 1;
+        }
+
         File.WriteAllText(VaultFolder.HeaderOf(folder), header.ToJsonString());
 
         Session.Open(Ask);
@@ -382,6 +386,23 @@ public sealed partial class VaultSessionTests : IDisposable
         var dune = Assert.Single(_device.Vault.Graph.Nodes, node => node.Name == "Dune");
         Assert.NotNull(plan);
         Assert.Equal("# Spice", _device.Vault.ReadNote(_device.Vault.Graph.NoteVersionsOf(dune.Id).Single().Id));
+    }
+
+    [Fact]
+    public void ALinkWithQualifiers_IsAdded_ThenUpdatedBySayingItAgain()
+    {
+        _device.CreateFolderVault();
+        Ask.Creation = _ => true;
+        var graph = _device.Vault.Graph;
+        _device.Vault.Append(new LinkTypeDefined(Guid.NewGuid(), DateTimeOffset.UtcNow, "wrote", "wrote", "written by", [new FieldDefinition("date", "Date", FieldKind.Date)], []));
+
+        Session.Create(Ask, InputParser.Parse("Frank Herbert wrote Dune, Date 1965-08-01", graph)!);
+        var updated = Session.Create(Ask, InputParser.Parse("Dune written by Frank Herbert, Date 1966-01-01", graph)!);
+
+        Assert.True(((LinkPlan)updated!).IsUpdate);
+        Assert.Equal("1966-01-01", NodeFields.ShownOf(graph, graph.Links.Single())!.Value);
+        Assert.Contains(_device.Log.Entries, entry => entry.Message == "Link added (wrote, 1 qualifiers, 2 new nodes)");
+        Assert.Contains(_device.Log.Entries, entry => entry.Message == "Link updated (wrote, 1 qualifiers)");
     }
 
     [Fact]

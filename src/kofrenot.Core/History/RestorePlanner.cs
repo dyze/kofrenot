@@ -31,7 +31,7 @@ public sealed class RestorePlanner(KnowledgeGraph graph, TimeProvider? clock = n
         {
             NameVersion name => new NodeRenamed(id, at, node.Id, name.Name, graph.NamesOf(node.Id).Select(current => current.Id).ToList()),
             NodeColored color => new NodeColored(id, at, node.Id, color.Color, graph.ColorsOf(node.Id).Select(current => current.Id).ToList()),
-            FieldSet value => value with { Id = id, At = at, Replaces = CurrentValuesOf(node, value), Content = value.File is null ? null : value.Content ?? value.Id },
+            FieldSet value => Restored(value, node, graph.FieldsOf(node.Id), id, at),
             NoteEdited => new NoteEdited(id, at, node.Id, graph.NoteVersionsOf(node.Id).Select(current => current.Id).ToList()),
             DatasetEdited dataset => new DatasetEdited(id, at, node.Id, dataset.File, graph.DatasetVersionsOf(node.Id).Select(current => current.Id).ToList()),
             ViewEdited view => new ViewEdited(id, at, node.Id, view.Definition, graph.ViewVersionsOf(node.Id).Select(current => current.Id).ToList()),
@@ -43,6 +43,20 @@ public sealed class RestorePlanner(KnowledgeGraph graph, TimeProvider? clock = n
         return new RestorePlan(entry, [change], contents);
     }
 
-    private List<Guid> CurrentValuesOf(Node node, FieldSet value) =>
-        graph.FieldsOf(node.Id).Where(field => field.Owner == value.Owner && field.Field == value.Field).SelectMany(field => field.Current).Select(current => current.Id).ToList();
+    /// <summary>The plan restoring a value of a link's qualifier, or null when it would change nothing.</summary>
+    public RestorePlan? Plan(Link link, HistoryEntry entry) =>
+        entry is { CanRestore: true, Version: FieldSet value }
+            ? new RestorePlan(entry, [Restored(value, link, graph.QualifiersOf(link), Guid.NewGuid(), _clock.GetUtcNow())], [])
+            : null;
+
+    // A value again, on its holder (a link's shown one, when it was set on a copy), over the field's current ones.
+    private static FieldSet Restored(FieldSet value, FieldHolder holder, IReadOnlyList<FieldVersions> fields, Guid id, DateTimeOffset at) =>
+        value with
+        {
+            Id = id,
+            At = at,
+            Holder = holder,
+            Replaces = fields.Where(field => field.Owner == value.Owner && field.Field == value.Field).SelectMany(field => field.Current).Select(current => current.Id).ToList(),
+            Content = value.File is null ? null : value.Content ?? value.Id,
+        };
 }

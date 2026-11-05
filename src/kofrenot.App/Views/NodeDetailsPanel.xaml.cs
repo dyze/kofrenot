@@ -145,6 +145,12 @@ public partial class NodeDetailsPanel : UserControl
             return HandleFieldKey(key);
         }
 
+        // In a link's qualifiers, keys are a field's: Enter writes the box, not opens the link.
+        if (IsInQualifiers)
+        {
+            return HandleFieldKey(key);
+        }
+
         if (HandleDatasetKey(key))
         {
             return true;

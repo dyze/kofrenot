@@ -37,6 +37,7 @@ public partial class ViewPanel : UserControl
         List.AddHandler(ScrollViewer.ScrollChangedEvent, new ScrollChangedEventHandler((_, _) => ReadCardsInView()));
         Unlinked.OpenNode += node => OpenNode?.Invoke(node);
         GraphBoard.OpenNode += node => OpenNode?.Invoke(node);
+        GraphBoard.OpenLink += link => OpenLink?.Invoke(link);
         GraphBoard.Write = (changes, action) => Write?.Invoke(changes, action) == true;
         GraphBoard.IsReadOnly = () => IsReadOnly();
         GraphBoard.CreateNode = (type, linkedTo) =>
@@ -55,6 +56,9 @@ public partial class ViewPanel : UserControl
 
     /// <summary>Asks to open a node's details.</summary>
     public event Action<Node>? OpenNode;
+
+    /// <summary>Asks to open a link's details: its first node's, the link's qualifiers unfolded.</summary>
+    public event Action<Link>? OpenLink;
 
     /// <summary>The nodes expanded in each view, kept on this device.</summary>
     public ViewStates? States { get; set; }

@@ -57,9 +57,9 @@ public sealed record NodeTypeDefined(
     IReadOnlyList<Guid> Replaces) : Change(Id, At), IReplacing;
 
 /// <summary>
-/// A value of a field of <see cref="Node"/>, or none when <see cref="Value"/> and <see cref="File"/>
-/// are null. <see cref="Owner"/> is the node type the field belongs to, or <see cref="Own"/> for a
-/// field of the node's own; <see cref="Field"/> is the field's id. Its <see cref="Name"/> and
+/// A value of a field of <see cref="Holder"/>, a node or a link (a qualifier), or none when
+/// <see cref="Value"/> and <see cref="File"/> are null. <see cref="Owner"/> is the node or link type
+/// the field belongs to, or <see cref="Own"/> for a field of the holder's own; <see cref="Field"/> is the field's id. Its <see cref="Name"/> and
 /// <see cref="Kind"/> are written with it, so a value whose field left its type still shows. An
 /// <see cref="FieldKind.Image"/>'s value is its <see cref="File"/>: its content and thumbnail are
 /// kept as a dataset version's, named by this change's id, or by <see cref="Content"/>, the change
@@ -70,7 +70,7 @@ public sealed record NodeTypeDefined(
 public sealed record FieldSet(
     Guid Id,
     DateTimeOffset At,
-    Guid Node,
+    FieldHolder Holder,
     string Owner,
     string Field,
     string Name,
@@ -80,14 +80,16 @@ public sealed record FieldSet(
     DatasetFile? File = null,
     Guid? Content = null) : Change(Id, At), INodeVersion
 {
-    /// <summary>The <see cref="Owner"/> of a field of the node's own.</summary>
+    /// <summary>The <see cref="Owner"/> of a field of the holder's own.</summary>
     public const string Own = "own";
+
+    Guid INodeVersion.Node => Holder.Id;
 
     /// <summary>
     /// An image's file as the dataset version it is stored as (never written as one): what reads,
     /// downloads, shows and exports it. Null without a file.
     /// </summary>
-    public DatasetEdited? Image => File is { } file ? new DatasetEdited(Content ?? Id, At, Node, file, []) : null;
+    public DatasetEdited? Image => File is { } file ? new DatasetEdited(Content ?? Id, At, Holder.Id, file, []) : null;
 }
 
 /// <summary>
@@ -106,12 +108,20 @@ public sealed record AliasAdded(Guid Id, DateTimeOffset At, string LinkType, boo
 /// <summary>
 /// Names a link type of the user's (<see cref="LinkType"/> is its id), read forward as
 /// <see cref="Name"/> and reverse as <see cref="ReverseName"/>, or the same both ways when it has
-/// none. The first one (no <see cref="Replaces"/>) adds the type; later ones rename it over the
-/// names they replace. Two renames replacing the same name, neither knowing the other, make a
-/// conflict. Removed, with all its names, by a <see cref="ChangesRemoved"/>.
+/// none, with the fields of its links (<see cref="Fields"/>: their qualifiers). The first one (no
+/// <see cref="Replaces"/>) adds the type; later ones change it over the definitions they replace.
+/// Two replacing the same one, neither knowing the other, make a conflict. Removed, with all its
+/// definitions, by a <see cref="ChangesRemoved"/>. A definition of a built-in type's id gives it
+/// fields only: its names stay the built-in ones.
 /// </summary>
-public sealed record LinkTypeDefined(Guid Id, DateTimeOffset At, string LinkType, string Name, string? ReverseName, IReadOnlyList<Guid> Replaces)
-    : Change(Id, At), IReplacing;
+public sealed record LinkTypeDefined(
+    Guid Id,
+    DateTimeOffset At,
+    string LinkType,
+    string Name,
+    string? ReverseName,
+    IReadOnlyList<FieldDefinition> Fields,
+    IReadOnlyList<Guid> Replaces) : Change(Id, At), IReplacing;
 
 /// <summary>
 /// Removes earlier changes that can be removed (nodes, links, aliases, link types, pins, placements), by id. Files are never deleted:

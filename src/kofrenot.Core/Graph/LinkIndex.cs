@@ -2,7 +2,8 @@ namespace Kofrenot.Core.Graph;
 
 /// <summary>
 /// The links of a graph. Copies of a link (same type and nodes, either direction when symmetric:
-/// added on two devices before they synced) count as one: the oldest is shown. A removed link is
+/// added on two devices before they synced) count as one: the oldest is shown. A separate link
+/// (<see cref="Link.IsSeparate"/>) is no copy: it is shown beside the others. A removed link is
 /// not shown, and the next copy is, so a removal names every copy (<see cref="CopiesOf"/>). A
 /// removal may arrive before its link. A link of a type not known yet reads one way until its type
 /// arrives (<see cref="Refile"/>).
@@ -19,12 +20,22 @@ internal sealed class LinkIndex(Func<TypeCatalog> types, ISet<Guid> removed)
     /// <summary>The links shown of a node, oldest first, whether its other node is known or not.</summary>
     public IReadOnlyList<Link> Of(Guid node) => _byNode.TryGetValue(node, out var links) ? links : [];
 
-    public Link? Find(string type, Guid from, Guid to) =>
-        _copies.TryGetValue(KeyOf(type, from, to), out var copies) ? copies[0] : null;
+    /// <summary>The links shown of this type between these nodes, oldest first; either direction for a symmetric type.</summary>
+    public IReadOnlyList<Link> Between(string type, Guid from, Guid to)
+    {
+        var symmetric = IsSymmetric(type);
+        return Of(from).Where(link => link.Type == type && ((link.From == from && link.To == to) || (symmetric && link.From == to && link.To == from))).ToList();
+    }
+
+    /// <summary>The link shown for this link or copy id; null when removed, or not arrived.</summary>
+    public Link? ShownOf(Guid id) =>
+        _added.TryGetValue(id, out var link) && _copies.TryGetValue(KeyOf(link), out var copies) && copies.Any(copy => copy.Id == id)
+            ? copies[0]
+            : null;
 
     /// <summary>The ids of the link and of its copies not removed, oldest first.</summary>
     public IReadOnlyList<Guid> CopiesOf(Link link) =>
-        _copies.TryGetValue(KeyOf(link.Type, link.From, link.To), out var copies) ? copies.Select(copy => copy.Id).ToList() : [];
+        _copies.TryGetValue(KeyOf(link), out var copies) ? copies.Select(copy => copy.Id).ToList() : [];
 
     /// <summary>False when it is already there, or changes no link shown (removed, or a newer copy).</summary>
     public bool Add(Link link)
@@ -34,7 +45,7 @@ internal sealed class LinkIndex(Func<TypeCatalog> types, ISet<Guid> removed)
             return false;
         }
 
-        var key = KeyOf(link.Type, link.From, link.To);
+        var key = KeyOf(link);
         if (!_copies.TryGetValue(key, out var copies))
         {
             _copies[key] = copies = [];
@@ -51,7 +62,7 @@ internal sealed class LinkIndex(Func<TypeCatalog> types, ISet<Guid> removed)
         foreach (var id in ids)
         {
             if (!_added.TryGetValue(id, out var link)
-                || !_copies.TryGetValue(KeyOf(link.Type, link.From, link.To), out var copies)
+                || !_copies.TryGetValue(KeyOf(link), out var copies)
                 || copies.RemoveAll(copy => copy.Id == id) == 0)
             {
                 continue;
@@ -60,7 +71,7 @@ internal sealed class LinkIndex(Func<TypeCatalog> types, ISet<Guid> removed)
             var shown = _shown.ContainsKey(id) ? link : copies[0];
             if (copies.Count == 0)
             {
-                _copies.Remove(KeyOf(link.Type, link.From, link.To));
+                _copies.Remove(KeyOf(link));
             }
 
             Replace(shown, copies.FirstOrDefault());
@@ -128,11 +139,16 @@ internal sealed class LinkIndex(Func<TypeCatalog> types, ISet<Guid> removed)
         return links;
     }
 
-    private LinkKey KeyOf(string type, Guid from, Guid to)
+    // A separate link is keyed by its id too: it has no copy.
+    private LinkKey KeyOf(Link link)
     {
-        var symmetric = types().FindLinkType(type)?.IsSymmetric ?? false;
-        return symmetric && from.CompareTo(to) > 0 ? new LinkKey(type, to, from) : new LinkKey(type, from, to);
+        var separate = link.IsSeparate ? link.Id : Guid.Empty;
+        return IsSymmetric(link.Type) && link.From.CompareTo(link.To) > 0
+            ? new LinkKey(link.Type, link.To, link.From, separate)
+            : new LinkKey(link.Type, link.From, link.To, separate);
     }
 
-    private readonly record struct LinkKey(string Type, Guid First, Guid Second);
+    private bool IsSymmetric(string type) => types().FindLinkType(type)?.IsSymmetric ?? false;
+
+    private readonly record struct LinkKey(string Type, Guid First, Guid Second, Guid Separate);
 }

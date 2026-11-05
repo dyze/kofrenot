@@ -161,7 +161,7 @@ public sealed class SnapshotStoreTests : IDisposable
         Change[] changes =
         [
             new NodeTypeDefined(Guid.NewGuid(), Start, "book", "Book", null, null, [new FieldDefinition("stars", "Stars", FieldKind.Unknown)], []),
-            new FieldSet(Guid.NewGuid(), Start, node, "own", "stars", "Stars", FieldKind.Unknown, "4/5", []),
+            new FieldSet(Guid.NewGuid(), Start, FieldHolder.OfNode(node), "own", "stars", "Stars", FieldKind.Unknown, "4/5", []),
         ];
 
         Store().Save(changes, VaultFormat.Current + 1, VaultFormat.Current + 1);

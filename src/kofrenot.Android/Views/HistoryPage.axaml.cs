@@ -23,18 +23,29 @@ public sealed record HistoryLine(HistoryEntry Entry, string Heading, string Labe
 }
 
 /// <summary>
-/// A node's versions on a screen of their own (⋮ > History… on its page), as kofrenot on Windows
-/// lists them; Restore makes one the current one again, after a confirmation.
+/// A node's versions on a screen of their own (⋮ > History… on its page), or a link's qualifiers' (its sheet),
+/// as kofrenot on Windows lists them; Restore makes one the current one again, after a confirmation.
 /// </summary>
 public sealed partial class HistoryPage : UserControl, IPage
 {
     private readonly Shell _shell;
-    private readonly Guid _nodeId;
+    private readonly FieldHolder _holder;
+    private readonly string? _linkTitle;
 
     public HistoryPage(Shell shell, Node node)
     {
         _shell = shell;
-        _nodeId = node.Id;
+        _holder = node;
+        InitializeComponent();
+        Refresh();
+    }
+
+    /// <param name="title">The link as read from the node shown: "written by Frank Herbert".</param>
+    public HistoryPage(Shell shell, Link link, string title)
+    {
+        _shell = shell;
+        _holder = link;
+        _linkTitle = title;
         InitializeComponent();
         Refresh();
     }
@@ -55,7 +66,10 @@ public sealed partial class HistoryPage : UserControl, IPage
             return;
         }
 
-        if (graph.FindNode(_nodeId) is not { } node)
+        var history = _holder.IsLink
+            ? graph.FindLink(_holder.Id) is { } link ? NodeHistory.OfLink(graph, link) : null
+            : graph.FindNode(_holder.Id) is { } node ? NodeHistory.Of(graph, node) : null;
+        if (history is null)
         {
             if (_shell.IsShown(this))
             {
@@ -65,9 +79,9 @@ public sealed partial class HistoryPage : UserControl, IPage
             return;
         }
 
-        Bar.Title = $"History of {node.Name}";
+        Bar.Title = $"History of {_linkTitle ?? graph.FindNode(_holder.Id)!.Name}";
         var canWrite = !_shell.Services.Session.IsReadOnly;
-        History.ItemsSource = NodeHistory.Of(graph, node).Select(entry => HistoryLine.Of(entry, canWrite)).ToList();
+        History.ItemsSource = history.Select(entry => HistoryLine.Of(entry, canWrite)).ToList();
     }
 
     private void Restore_Click(object? sender, RoutedEventArgs e)
@@ -80,8 +94,7 @@ public sealed partial class HistoryPage : UserControl, IPage
 
     private async Task RestoreAsync(HistoryLine line)
     {
-        if (Vault is not { } vault || vault.Graph.FindNode(_nodeId) is not { } node
-            || new RestorePlanner(vault.Graph).Plan(node, line.Entry) is not { } plan)
+        if (Vault is not { } vault || PlanOf(vault.Graph, line.Entry) is not { } plan)
         {
             return;
         }
@@ -106,4 +119,8 @@ public sealed partial class HistoryPage : UserControl, IPage
             Refresh();
         }
     }
+
+    private RestorePlan? PlanOf(KnowledgeGraph graph, HistoryEntry entry) => _holder.IsLink
+        ? graph.FindLink(_holder.Id) is { } link ? new RestorePlanner(graph).Plan(link, entry) : null
+        : graph.FindNode(_holder.Id) is { } node ? new RestorePlanner(graph).Plan(node, entry) : null;
 }

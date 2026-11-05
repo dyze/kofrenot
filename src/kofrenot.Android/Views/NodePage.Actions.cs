@@ -46,7 +46,7 @@ public sealed partial class NodePage
             new("Rename…", () => _shell.Run(RenameAsync), Icon: "rename"),
             new("Colour…", () => ShowColors(details.Color), Icon: "colour"),
             new(details.IsPinned ? "Unpin" : "Pin", TogglePin, Icon: "pin"),
-            new("Add field…", () => _shell.Run(AddFieldAsync), Icon: "add"),
+            new("Add field…", () => _shell.Run(() => AddFieldAsync()), Icon: "add"),
             AddTypeChoice(vault.Graph, details),
             RemoveTypeChoice(vault.Graph, details),
             new("Delete…", () => _shell.Run(DeleteAsync), Icon: "delete"),
@@ -143,7 +143,11 @@ public sealed partial class NodePage
         if (!IsReadOnly && (sender as Control)?.Tag is NodeRow { Link: { } link } row)
         {
             e.Handled = true;
-            _shell.ShowSheet(row.Name, [new("Remove link…", () => _shell.Run(() => RemoveLinkAsync(link)), Icon: "unlink")]);
+            _shell.ShowSheet(row.Name,
+            [
+                new("Add a qualifier…", () => _shell.Run(() => AddFieldAsync(link)), Icon: "add"),
+                new("Remove link…", () => _shell.Run(() => RemoveLinkAsync(link)), Icon: "unlink"),
+            ]);
         }
     }
 

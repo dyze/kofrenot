@@ -179,7 +179,7 @@ public sealed class ChipInputTests
         Add("b");
         TypeEach("a is a  b ");
 
-        _input.LabelAll(_graph.Types);
+        _input.LabelAll(_graph);
 
         Assert.Equal(string.Empty, _input.Tail);
         Assert.Equal(
@@ -193,7 +193,7 @@ public sealed class ChipInputTests
     {
         _input.Type(_graph, "Knives contained by Kitchen");
 
-        _input.LabelAll(_graph.Types);
+        _input.LabelAll(_graph);
 
         Assert.Equal(["Knives", "contained by", "Kitchen"], _input.Chips(_graph, plan: null).Select(chip => chip.Text));
     }
@@ -202,12 +202,12 @@ public sealed class ChipInputTests
     public void LabelAll_MakesASingleNodeALabel_AndLeavesAMissingSecondNode()
     {
         TypeEach("Dune  Messiah");
-        _input.LabelAll(_graph.Types);
+        _input.LabelAll(_graph);
         Assert.Equal(["Dune Messiah"], _input.Chips(_graph, plan: null).Select(chip => chip.Text));
 
         _input.Clear();
         _input.Type(_graph, "a is a");
-        _input.LabelAll(_graph.Types);
+        _input.LabelAll(_graph);
         Assert.Equal(["a", "is a"], _input.Chips(_graph, plan: null).Select(chip => chip.Text));
         Assert.Null(_input.Proposal(_graph));
     }
@@ -215,7 +215,7 @@ public sealed class ChipInputTests
     [Fact]
     public void LabelAll_LeavesAnEmptyTextEmpty()
     {
-        _input.LabelAll(_graph.Types);
+        _input.LabelAll(_graph);
 
         Assert.True(_input.IsEmpty);
     }
@@ -306,7 +306,7 @@ public sealed class ChipInputTests
         Assert.False(TypeEach(input, "pan is a "));
 
         Assert.Empty(input.Chips(_graph, plan: null));
-        input.LabelAll(_graph.Types);
+        input.LabelAll(_graph);
         Assert.Equal("pan is a ", input.Tail);
     }
 
@@ -316,7 +316,7 @@ public sealed class ChipInputTests
         var input = new ChipInput(fixedLeft: "Melting Pot");
         input.Type(_graph, "relates to Dune");
 
-        input.LabelAll(_graph.Types);
+        input.LabelAll(_graph);
         Assert.Equal(["relates to", "Dune"], input.Chips(_graph, plan: null).Select(chip => chip.Text));
 
         input.Unlabel();

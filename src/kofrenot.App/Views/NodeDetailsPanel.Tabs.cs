@@ -53,7 +53,7 @@ public partial class NodeDetailsPanel
     {
         var tabs = details.Types
             .Where(type => type != TypeCatalog.Generic)
-            .Select(type => new DetailsTab(type.Name, type.HasContent, details.Fields.Where(field => field.Type == type).ToList()))
+            .Select(type => new DetailsTab(type.Name, type.HasContent, details.Fields.Where(field => !field.IsOwn && field.Owner == type.Id).ToList()))
             .Where(tab => tab.IsContent || tab.Fields.Count > 0)
             .ToList();
         if (details.Fields.Where(field => field.IsOwn).ToList() is { Count: > 0 } own)

@@ -171,8 +171,14 @@ public sealed class KnowledgeGraph
     public IReadOnlyList<Link> LinksOf(Guid node) =>
         _links.Of(node).Where(link => _nodes.ContainsKey(link.Other(node))).ToList();
 
-    /// <summary>The link of this type between these nodes, or null. Either direction for a symmetric type.</summary>
-    public Link? FindLink(string type, Guid from, Guid to) => _links.Find(type, from, to);
+    /// <summary>The first link of this type between these nodes, or null. Either direction for a symmetric type.</summary>
+    public Link? FindLink(string type, Guid from, Guid to) => LinksBetween(type, from, to).FirstOrDefault();
+
+    /// <summary>
+    /// The links of this type between these nodes, oldest first: one, or several when separate links were
+    /// added beside it (<see cref="Link.IsSeparate"/>). Either direction for a symmetric type.
+    /// </summary>
+    public IReadOnlyList<Link> LinksBetween(string type, Guid from, Guid to) => _links.Between(type, from, to);
 
     /// <summary>
     /// The ids of a link and of its copies (the same link added on two devices before they synced),
@@ -248,13 +254,29 @@ public sealed class KnowledgeGraph
     public IEnumerable<Change> TypeChangesOf(Guid node) => _types.Of(node);
 
     /// <summary>The fields of a node that were set, each with its current values, in the order they were first set.</summary>
-    public IReadOnlyList<FieldVersions> FieldsOf(Guid node) => _fields.Current(node);
+    public IReadOnlyList<FieldVersions> FieldsOf(Guid node) => _fields.Current([node]);
+
+    /// <summary>
+    /// The qualifiers of a link that were set, on it or on its copies (the same link added on two devices
+    /// before they synced), each with its current values, in the order they were first set.
+    /// </summary>
+    public IReadOnlyList<FieldVersions> QualifiersOf(Link link) => _fields.Current(CopiesOf(link));
 
     /// <summary>The nodes shown with a field set: what the search goes through for values.</summary>
-    internal IEnumerable<Node> NodesWithFields => _fields.Nodes.Select(FindNode).OfType<Node>();
+    internal IEnumerable<Node> NodesWithFields => _fields.Holders.Select(FindNode).OfType<Node>();
+
+    /// <summary>The links shown, both nodes known, with a qualifier set on them or a copy, each once.</summary>
+    public IEnumerable<Link> LinksWithQualifiers =>
+        _fields.Holders.Select(_links.ShownOf).OfType<Link>().Distinct().Where(link => _nodes.ContainsKey(link.From) && _nodes.ContainsKey(link.To));
 
     /// <summary>The values set on a node, whatever they replace: when it last changed.</summary>
     public IEnumerable<FieldSet> FieldSetsOf(Guid node) => _fields.Of(node);
+
+    /// <summary>The qualifiers set on a link and its copies, whatever they replace: its history.</summary>
+    public IEnumerable<FieldSet> QualifierSetsOf(Link link) => CopiesOf(link).SelectMany(_fields.Of);
+
+    /// <summary>The link shown with this id, or for this copy of it; null when removed, or not arrived.</summary>
+    public Link? FindLink(Guid id) => _links.ShownOf(id);
 
     /// <summary>
     /// The current colours of a node, oldest first: none before it is given one, one, or several

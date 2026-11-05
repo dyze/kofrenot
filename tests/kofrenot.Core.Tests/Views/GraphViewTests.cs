@@ -122,7 +122,7 @@ public sealed class GraphViewTests
     }
 
     private void Set(Node node, string field, string value) =>
-        _family.Graph.Apply(new FieldSet(Guid.NewGuid(), TreeGraph.Start, node.Id, FieldSet.Own, field.ToLowerInvariant(), field, FieldKind.Text, value, []));
+        _family.Graph.Apply(new FieldSet(Guid.NewGuid(), TreeGraph.Start, node, FieldSet.Own, field.ToLowerInvariant(), field, FieldKind.Text, value, []));
     [Fact]
     public void AnEdge_HasItsTypesColour_ItsDirection_AndItsName_AsReadFromItsFirstNode()
     {

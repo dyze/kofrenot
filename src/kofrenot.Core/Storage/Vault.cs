@@ -89,7 +89,7 @@ public sealed partial class Vault
         var path = VaultFolder.ChangeFileOf(_folder, change.Id);
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
         AtomicFile.Write(path, _codec.Encode(change), overwrite: false);
-        Written(VaultFormat.Current, VaultFormat.Current);
+        Written(VaultFormat.Current, VaultFormat.OldestWriter);
         _read[change.Id] = change;
         Graph.Apply(change);
         _log.Debug(Category, $"Change {change.Id} written");

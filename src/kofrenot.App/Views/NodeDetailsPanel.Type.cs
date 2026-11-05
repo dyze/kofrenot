@@ -52,7 +52,7 @@ public partial class NodeDetailsPanel
     {
         if (sender is FrameworkElement { DataContext: TypeChip chip } && Browser is { Graph: { } graph, Details: { } details })
         {
-            var kept = details.Fields.Any(field => field.Type == chip.Type && field.Value is not null) ? "\n\nIts fields with a value stay, as its own." : string.Empty;
+            var kept = details.Fields.Any(field => !field.IsOwn && field.Owner == chip.Type.Id && field.Value is not null) ? "\n\nIts fields with a value stay, as its own." : string.Empty;
             Change(new TypeSetPlanner(graph).Remove(details.Node, chip.Type), $"Take the type {chip.Type.Name} out of “{details.Name}”?{kept}", "Take it out", alwaysAsk: true);
         }
     }

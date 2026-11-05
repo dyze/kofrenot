@@ -97,6 +97,15 @@
                 <local:IconView Size="{StaticResource RowIconSize}" Kind="remove" />
               </Button>
             </StackPanel>
+            <Button x:Name="QualifiersButton"
+                    Style="{StaticResource LineButton}"
+                    FontFamily="{x:Static SystemFonts.MessageFontFamily}"
+                    FontSize="{StaticResource CaptionFontSize}"
+                    Content="Qualifiers"
+                    ToolTip="The fields of its links: a date, a source, a place"
+                    Visibility="{Binding HasQualifiers, Converter={StaticResource VisibleWhen}}"
+                    Click="EditQualifiers_Click" />
+            <TextBlock Margin="8,0,0,0" VerticalAlignment="Center" Opacity="0.7" Text="{Binding QualifierNames}" />
             <TextBlock Margin="8,0,0,0" VerticalAlignment="Center" Opacity="0.7" TextWrapping="Wrap" Text="{Binding Warning}" />
           </WrapPanel>
         </Grid>
@@ -122,6 +131,43 @@
                      Loaded="EditorBox_Loaded"
                      KeyDown="EditorBox_KeyDown" />
             <Button x:Name="ApplyButton" Margin="8,0,0,0" Padding="12,4" Content="Add" IsEnabled="{Binding CanApply}" Click="ApplyEditor_Click" />
+            <Button Margin="4,0,0,0" Padding="12,4" Content="Cancel" Click="CancelEditor_Click" />
+          </StackPanel>
+          <TextBlock Style="{StaticResource EditorStatus}" Text="{Binding Status}" />
+        </StackPanel>
+        <DataTemplate.Triggers>
+          <Trigger SourceName="Editor" Property="IsKeyboardFocusWithin" Value="True">
+            <Setter TargetName="ApplyButton" Property="Style" Value="{DynamicResource AccentButtonStyle}" />
+          </Trigger>
+        </DataTemplate.Triggers>
+      </DataTemplate>
+
+      <!-- The qualifiers of a link type, under its first line: a list of fields, as a node type's. -->
+      <DataTemplate DataType="{x:Type local:QualifiersEditor}">
+        <StackPanel x:Name="Editor" Margin="16,3,0,6">
+          <TextBlock Margin="0,0,0,4" FontWeight="SemiBold" Text="{Binding Title}" />
+          <ItemsControl ItemsSource="{Binding Fields}" Focusable="False">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate DataType="{x:Type local:FieldRow}">
+                <StackPanel Margin="0,2" Orientation="Horizontal">
+                  <TextBox Width="160" Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" ToolTip="Its name: Date, Source" Loaded="EditorBox_Loaded" KeyDown="EditorBox_KeyDown" />
+                  <ComboBox Width="110" Margin="6,0,0,0" ItemsSource="{x:Static local:FieldRow.Kinds}" SelectedItem="{Binding Kind}" />
+                  <TextBox Width="200"
+                           Margin="6,0,0,0"
+                           Text="{Binding Choices, UpdateSourceTrigger=PropertyChanged}"
+                           ToolTip="Its options, separated by commas: Novel, Short story"
+                           Visibility="{Binding IsChoice, Converter={StaticResource VisibleWhen}}"
+                           KeyDown="EditorBox_KeyDown" />
+                  <Button Style="{StaticResource LineButton}" ToolTip="Take this qualifier out" Click="RemoveQualifier_Click">
+                    <local:IconView Size="{StaticResource RowIconSize}" Kind="remove" />
+                  </Button>
+                </StackPanel>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+          <StackPanel Margin="0,4,0,0" Orientation="Horizontal">
+            <Button Padding="10,2" Content="Add qualifier" Click="AddQualifier_Click" />
+            <Button x:Name="ApplyButton" Margin="8,0,0,0" Padding="12,4" Content="Save" IsEnabled="{Binding CanApply}" Click="ApplyEditor_Click" />
             <Button Margin="4,0,0,0" Padding="12,4" Content="Cancel" Click="CancelEditor_Click" />
           </StackPanel>
           <TextBlock Style="{StaticResource EditorStatus}" Text="{Binding Status}" />

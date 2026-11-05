@@ -100,7 +100,7 @@ public sealed class CustomLinkTypesTests
     [Fact]
     public void ANameOfABuiltInType_IsIgnored()
     {
-        _graph.Apply(new LinkTypeDefined(Guid.NewGuid(), Start, "contains", "holds", null, []));
+        _graph.Apply(new LinkTypeDefined(Guid.NewGuid(), Start, "contains", "holds", null, [], []));
 
         Assert.Empty(_graph.LinkTypes.All);
         Assert.Same(TypeCatalog.BuiltIn, _graph.LinkTypes.Catalog);
@@ -195,11 +195,11 @@ public sealed class CustomLinkTypesTests
     private static LinkTypeDefined Define(string name, string? reverse = null, int minutes = 0)
     {
         var id = Guid.NewGuid();
-        return new LinkTypeDefined(id, Start.AddMinutes(minutes), id.ToString(), name, reverse, []);
+        return new LinkTypeDefined(id, Start.AddMinutes(minutes), id.ToString(), name, reverse, [], []);
     }
 
     private static LinkTypeDefined Rename(LinkTypeDefined type, string name, string? reverse, IReadOnlyList<Guid> replaces, int minutes = 1) =>
-        new(Guid.NewGuid(), Start.AddMinutes(minutes), type.LinkType, name, reverse, replaces);
+        new(Guid.NewGuid(), Start.AddMinutes(minutes), type.LinkType, name, reverse, [], replaces);
 
     private static Link Link(string type, Node from, Node to, int minutes = 0) =>
         new(Guid.NewGuid(), type, from.Id, to.Id, Start.AddMinutes(minutes));

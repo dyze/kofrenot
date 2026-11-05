@@ -27,8 +27,9 @@ public sealed record TreeItem(Node Node, IReadOnlyList<Guid> Path, bool CanExpan
 
 /// <summary>
 /// A tree view: from its root, each node holds the nodes its links of the view's type lead to
-/// (from it, or either way for a symmetric type), by name. Children are read from the graph when
-/// asked, so a large tree costs only what is expanded, and changes show.
+/// (from it, or either way for a symmetric type), by name, or by the value of the link's qualifier
+/// the view is sorted by (<see cref="TreeDefinition.Order"/>, <see cref="QualifierOrder"/>). Children are read
+/// from the graph when asked, so a large tree costs only what is expanded, and changes show.
 /// </summary>
 public sealed class TreeView(KnowledgeGraph graph, TreeDefinition definition)
 {
@@ -69,8 +70,12 @@ public sealed class TreeView(KnowledgeGraph graph, TreeDefinition definition)
     }
 
     public IReadOnlyList<TreeItem> ChildrenOf(TreeItem item) => item.CanExpand
-        ? NodeOrder.ByName(_links.ChildrenOf(item.Node.Id)).Select(child => ItemOf(child, item.Path)).ToList()
+        ? Ordered(item.Node.Id).Select(child => ItemOf(child, item.Path)).ToList()
         : [];
+
+    private IEnumerable<Node> Ordered(Guid node) => definition.Order is { } order
+        ? QualifierOrder.Of(graph, _links.ToChildren(node), node, order)
+        : NodeOrder.ByName(_links.ChildrenOf(node).DistinctBy(child => child.Id));
 
     private TreeItem ItemOf(Node node, IReadOnlyList<Guid> parentPath) =>
         new(node, [.. parentPath, node.Id], !parentPath.Contains(node.Id) && _links.ToChildren(node.Id).Any());

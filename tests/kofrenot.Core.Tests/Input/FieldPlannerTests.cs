@@ -37,7 +37,7 @@ public sealed class FieldPlannerTests
         Assert.True(plan.CanApply);
         Assert.Equal(string.Empty, plan.Status);
         var value = Assert.IsType<FieldSet>(Assert.Single(plan.Changes));
-        Assert.Equal((_frank.Id, "person", "born", "Born", FieldKind.Date, "1920-10-08", Start.AddMinutes(10)), (value.Node, value.Owner, value.Field, value.Name, value.Kind, value.Value, value.At));
+        Assert.Equal((_frank.Id, "person", "born", "Born", FieldKind.Date, "1920-10-08", Start.AddMinutes(10)), (value.Holder.Id, value.Owner, value.Field, value.Name, value.Kind, value.Value, value.At));
         Assert.Empty(value.Replaces);
     }
 
