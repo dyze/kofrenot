@@ -3,7 +3,7 @@
 Scope of each planned version. Implemented features move to [CHANGELOG.md](CHANGELOG.md), where each released version opens with its theme. The goal, principles, non-goals and open questions are in [GOAL.md](docs/GOAL.md). The features are sorted by priority, each tagged with the app that gets it: Windows, Android or Both (what each supports today: [README](README.md#windows-and-android)).
 
 ## Later
-1. Both · **Events and qualifiers.**
+1. Both · **Events and qualifiers** ([QUALIFIERS-CONCEPT.md](docs/QUALIFIERS-CONCEPT.md)).
 	* **Qualifiers** add context to a link: date, place, source, quantity, confidence. *Dune → written by → Frank Herbert (date: 1965)*.
 	* **Events** link several nodes, each in a role, with qualifiers of their own. *Publication of Dune (work: Dune, publisher: Chilton Books, date: 1965, country: USA)*.
 	* Qualifiers and roles are [fields](README.md#node-types-and-fields), so they are searched offline like any other.
