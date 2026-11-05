@@ -75,6 +75,8 @@ public sealed class QualifierSearchTests
     [InlineData(", Pages 200..300", 1)]
     [InlineData(", Pages ..199", 1)]
     [InlineData(", Date 19..20", 0)]
+    [InlineData(", Date 1965-13..", 0)]
+    [InlineData(", Date ..1969-02-30", 0)]
     [InlineData(", Pages a..b", 0)]
     public void ARange_FindsTheDatesAndNumbersInIt(string text, int count) =>
         Assert.Equal(count, Found(text).Count);

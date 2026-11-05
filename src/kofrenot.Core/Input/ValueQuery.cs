@@ -1,5 +1,4 @@
 using System.Globalization;
-using System.Text.RegularExpressions;
 using Kofrenot.Core.Browse;
 using Kofrenot.Core.Fields;
 using Kofrenot.Core.Graph;
@@ -12,7 +11,7 @@ namespace Kofrenot.Core.Input;
 /// or for a date or a number a range, either end left open (<c>1960..1970</c>, <c>1965-08..</c>, <c>..12.5</c>).
 /// A date's ends are a year, a month or a day (<c>1960</c>, <c>1960-05</c>, <c>1960-05-01</c>), each included whole.
 /// </summary>
-public static partial class ValueQuery
+public static class ValueQuery
 {
     private const string Range = "..";
 
@@ -75,8 +74,6 @@ public static partial class ValueQuery
     private static decimal? NumberOf(string typed) =>
         FieldValue.Parse(FieldKind.Number, typed) is { IsValid: true, Value: { } value } ? decimal.Parse(value, CultureInfo.InvariantCulture) : null;
 
-    private static bool IsDateEnd(string typed) => DateEnd().IsMatch(typed);
-
-    [GeneratedRegex(@"^\d{4}(-\d{2}(-\d{2})?)?$")]
-    private static partial Regex DateEnd();
+    // A day, a month or a year, as a date field writes it.
+    private static bool IsDateEnd(string typed) => FieldValue.IsValid(FieldKind.Date, typed);
 }
