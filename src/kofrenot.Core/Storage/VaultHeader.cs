@@ -6,9 +6,10 @@ namespace Kofrenot.Core.Storage;
 /// <summary>
 /// The plain part of a vault (<c>kofrenot-vault.json</c>): its format and its id; up to format 5,
 /// its master key wrapped by the pass phrase too (since 6, the keys are in <c>keys/</c>:
-/// <see cref="VaultKeys"/>). Nothing in it is secret.
+/// <see cref="VaultKeys"/>). <see cref="OldestReader"/> and <see cref="OldestWriter"/> are the oldest formats
+/// that may read and write the vault (<see cref="VaultFormat"/>); its format when null. Nothing in it is secret.
 /// </summary>
-public sealed record VaultHeader(int Format, Guid Id, WrappedKey? Key = null)
+public sealed record VaultHeader(int Format, Guid Id, WrappedKey? Key = null, int? OldestReader = null, int? OldestWriter = null)
 {
     /// <summary>The first format whose header holds no key.</summary>
     public const int KeysApart = 6;
@@ -40,7 +41,7 @@ public sealed record VaultHeader(int Format, Guid Id, WrappedKey? Key = null)
 
         if (header is not null)
         {
-            VaultFormat.EnsureSupported(header.Format);
+            VaultFormat.EnsureSupported(header.Format, header.OldestReader);
         }
 
         return IsComplete(header) ? header : throw new InvalidDataException("The vault header is damaged");
@@ -53,5 +54,6 @@ public sealed record VaultHeader(int Format, Guid Id, WrappedKey? Key = null)
     private static bool IsComplete([NotNullWhen(true)] VaultHeader? header) =>
         header is { Format: >= 1 }
         && header.Id != Guid.Empty
+        && VaultFormat.IsLevel(header.OldestReader, header.Format) && VaultFormat.IsLevel(header.OldestWriter, header.Format)
         && (header.Key is { Salt: not null, Sealed: not null, Iterations: > 0 } || (header.Key is null && header.Format >= KeysApart));
 }

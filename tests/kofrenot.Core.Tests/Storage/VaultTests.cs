@@ -1,6 +1,6 @@
 namespace Kofrenot.Core.Tests.Storage;
 
-public sealed class VaultTests : IDisposable
+public sealed partial class VaultTests : IDisposable
 {
     private static readonly DateTimeOffset Start = new(2026, 10, 1, 12, 0, 0, TimeSpan.Zero);
 

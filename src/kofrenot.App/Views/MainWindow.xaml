@@ -73,14 +73,14 @@
           <local:IconView Size="{StaticResource ActionIconSize}" Kind="lock" />
         </Button>
 
-        <!-- A vault shared with this account to read only: said here and in the window's title. -->
+        <!-- A vault read only (shared with this account to read, or written by a newer kofrenot): said here and in the window's title. -->
         <Border x:Name="ReadOnlyTag"
                 Margin="8,0,0,0"
                 Padding="6,1"
                 VerticalAlignment="Center"
                 CornerRadius="4"
                 Background="{DynamicResource SubtleFillColorSecondaryBrush}"
-                ToolTip="Shared with you to read only: you can see and search it, not change it"
+                MouseLeftButtonUp="ReadOnlyTag_MouseLeftButtonUp"
                 Visibility="Collapsed">
           <StackPanel Orientation="Horizontal">
             <local:IconView Margin="0,0,4,0"

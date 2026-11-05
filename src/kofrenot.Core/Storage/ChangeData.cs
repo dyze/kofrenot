@@ -7,6 +7,8 @@ namespace Kofrenot.Core.Storage;
 /// <summary>
 /// A change as JSON, in a change file (<see cref="ChangeCodec"/>) or in the snapshot
 /// (<see cref="SnapshotStore"/>): its format, its operation, and the part that operation uses.
+/// <see cref="OldestReader"/> and <see cref="OldestWriter"/> are the oldest formats that may read it and write
+/// to its vault (<see cref="VaultFormat"/>); its format when null.
 /// </summary>
 internal sealed record ChangeData(
     int Format,
@@ -31,7 +33,9 @@ internal sealed record ChangeData(
     ChangeData.AddTypeData? AddType = null,
     ChangeData.RemoveTypeData? RemoveType = null,
     ChangeData.FieldData? Field = null,
-    ChangeData.PlaceData? Place = null)
+    ChangeData.PlaceData? Place = null,
+    int? OldestReader = null,
+    int? OldestWriter = null)
 {
     private const string NodeAddedOp = "addNode";
     private const string LinkAddedOp = "addLink";
@@ -79,18 +83,31 @@ internal sealed record ChangeData(
         _ => throw new ArgumentOutOfRangeException(nameof(change), change.GetType().Name, "Unknown change"),
     };
 
-    /// <exception cref="InvalidDataException">Not valid, or an unknown or incomplete change.</exception>
-    /// <exception cref="NewerVaultFormatException">Written by a newer kofrenot.</exception>
-    public Change ToChange(Guid id)
+    /// <summary>The oldest format that may write to the vault of this change.</summary>
+    public int OldestWriterOrFormat => OldestWriter ?? Format;
+
+    /// <summary>
+    /// The change; null when written by a newer kofrenot in a way this one does not know (an
+    /// operation, or what it applies to), so skipped. In a newer change, or in the snapshot
+    /// (<paramref name="unknownKinds"/>), a field of a kind this version does not know is kept as
+    /// <see cref="FieldKind.Unknown"/>.
+    /// </summary>
+    /// <exception cref="InvalidDataException">Not valid, or an unknown or incomplete change of a format this kofrenot writes.</exception>
+    /// <exception cref="NewerVaultFormatException">Written by a newer kofrenot, which this one may not read.</exception>
+    public Change? ToChange(Guid id, bool unknownKinds = false)
     {
-        if (Format < 1)
+        if (Format < 1 || !VaultFormat.IsLevel(OldestReader, Format) || !VaultFormat.IsLevel(OldestWriter, Format))
         {
-            throw new InvalidDataException($"Change format {Format} is not valid");
+            throw new InvalidDataException($"Change format {Format} (oldest reader {OldestReader}, oldest writer {OldestWriter}) is not valid");
         }
 
-        VaultFormat.EnsureSupported(Format);
+        VaultFormat.EnsureSupported(Format, OldestReader);
+        var newer = Format > VaultFormat.Current;
+        return Decode(id, unknownKinds || newer) ?? (newer ? null : throw new InvalidDataException($"Unknown or incomplete change '{Op}'"));
+    }
 
-        return Op switch
+    private Change? Decode(Guid id, bool unknownKinds) =>
+        Op switch
         {
             NodeAddedOp when IsComplete(Node) => new NodeAdded(id, At, Node),
             LinkAddedOp when IsComplete(Link) => new LinkAdded(id, At, Link),
@@ -115,15 +132,14 @@ internal sealed record ChangeData(
                 => new LinkTypeDefined(id, At, type, name, LinkType.Reverse, replaces),
             NodeColoredOp when Color is { Replaces: { } replaces } && Color.Node != Guid.Empty && Color.Color is null or { Length: > 0 }
                 => new NodeColored(id, At, Color.Node, Color.Color, replaces),
-            NodeTypeDefinedOp when NodeType?.ToChange(id, At) is { } defined => defined,
+            NodeTypeDefinedOp when NodeType?.ToChange(id, At, unknownKinds) is { } defined => defined,
             NodeTypeAddedOp when AddType is { Type: { Length: > 0 } type } && AddType.Node != Guid.Empty => new NodeTypeAdded(id, At, AddType.Node, type),
             NodeTypeRemovedOp when RemoveType is { Removes: { Count: > 0 } removes } && RemoveType.Node != Guid.Empty
                 => new NodeTypeRemoved(id, At, RemoveType.Node, removes),
-            FieldSetOp when Field?.ToChange(id, At) is { } field => field,
+            FieldSetOp when Field?.ToChange(id, At, unknownKinds) is { } field => field,
             NodesPlacedOp when Place?.ToChange(id, At) is { } placed => placed,
-            _ => throw new InvalidDataException($"Unknown or incomplete change '{Op}'"),
+            _ => null,
         };
-    }
 
     // JSON can leave out any field, whatever the types say.
     private static bool IsComplete([NotNullWhen(true)] Node? node) =>
@@ -262,7 +278,7 @@ internal sealed record ChangeData(
             new(defined.NodeType, defined.Name, defined.Icon, defined.Color, [.. defined.Fields.Select(FieldDefinitionData.From)], [.. defined.Replaces]);
 
         /// <summary>The change, or null when incomplete: a field incomplete, or two fields with one id.</summary>
-        public NodeTypeDefined? ToChange(Guid id, DateTimeOffset at)
+        public NodeTypeDefined? ToChange(Guid id, DateTimeOffset at, bool unknownKinds)
         {
             if (Id is not { Length: > 0 } || string.IsNullOrWhiteSpace(Name) || Fields is null || Replaces is null
                 || Icon is { Length: 0 } || Color is { Length: 0 })
@@ -270,7 +286,7 @@ internal sealed record ChangeData(
                 return null;
             }
 
-            var fields = Fields.Select(field => field?.ToDefinition()).ToList();
+            var fields = Fields.Select(field => field?.ToDefinition(unknownKinds)).ToList();
             return fields.Any(field => field is null) || fields.DistinctBy(field => field!.Id).Count() < fields.Count
                 ? null
                 : new NodeTypeDefined(id, at, Id, Name, Icon, Color, fields!, Replaces);
@@ -283,11 +299,16 @@ internal sealed record ChangeData(
         public static FieldDefinitionData From(FieldDefinition field) =>
             new(field.Id, field.Name, FieldKinds.NameOf(field.Kind), field.Kind == FieldKind.Choice ? [.. field.Choices] : null);
 
-        /// <summary>The field, or null when incomplete.</summary>
-        public FieldDefinition? ToDefinition() =>
-            Id is { Length: > 0 } && !string.IsNullOrWhiteSpace(Name) && FieldKinds.Parse(Kind) is { } kind
-            && (kind == FieldKind.Choice ? Choices is not null && Choices.All(choice => !string.IsNullOrWhiteSpace(choice)) : Choices is null)
-                ? new FieldDefinition(Id, Name, kind, Choices ?? [])
+        /// <summary>The field, or null when incomplete. A kind this version does not know is kept as <see cref="FieldKind.Unknown"/> when <paramref name="unknownKinds"/>.</summary>
+        public FieldDefinition? ToDefinition(bool unknownKinds) =>
+            Id is { Length: > 0 } && !string.IsNullOrWhiteSpace(Name) && FieldKinds.Parse(Kind, unknownKinds) is { } kind
+            && kind switch
+            {
+                FieldKind.Choice => Choices is not null && Choices.All(choice => !string.IsNullOrWhiteSpace(choice)),
+                FieldKind.Unknown => true,
+                _ => Choices is null,
+            }
+                ? new FieldDefinition(Id, Name, kind, kind == FieldKind.Choice ? Choices! : [])
                 : null;
     }
 
@@ -308,12 +329,25 @@ internal sealed record ChangeData(
         public static FieldData From(FieldSet field) =>
             new(field.Node, field.Owner, field.Field, field.Name, FieldKinds.NameOf(field.Kind), field.Value, [.. field.Replaces], field.File is { } file ? FileData.From(file) : null, field.Content);
 
-        /// <summary>The change, or null when incomplete, or with a value its kind does not write.</summary>
-        public FieldSet? ToChange(Guid id, DateTimeOffset at) =>
-            Node != Guid.Empty && Owner is { Length: > 0 } && Id is { Length: > 0 } && !string.IsNullOrWhiteSpace(Name)
-            && FieldKinds.Parse(Kind) is { } kind && Replaces is not null && HasValueOf(kind)
-                ? new FieldSet(id, at, Node, Owner, Id, Name, kind, Value, Replaces, File?.ToFile(), Content)
-                : null;
+        /// <summary>
+        /// The change, or null when incomplete, or with a value its kind does not write. A kind this
+        /// version does not know is kept as <see cref="FieldKind.Unknown"/> when <paramref name="unknownKinds"/>, its value as text only.
+        /// </summary>
+        public FieldSet? ToChange(Guid id, DateTimeOffset at, bool unknownKinds)
+        {
+            if (Node == Guid.Empty || Owner is not { Length: > 0 } || Id is not { Length: > 0 } || string.IsNullOrWhiteSpace(Name)
+                || FieldKinds.Parse(Kind, unknownKinds) is not { } kind || Replaces is null)
+            {
+                return null;
+            }
+
+            if (kind == FieldKind.Unknown)
+            {
+                return new FieldSet(id, at, Node, Owner, Id, Name, kind, Value is { Length: > 0 } ? Value : null, Replaces);
+            }
+
+            return HasValueOf(kind) ? new FieldSet(id, at, Node, Owner, Id, Name, kind, Value, Replaces, File?.ToFile(), Content) : null;
+        }
 
         // An image has a file or none (its content only with a file), the other kinds a value they write or none.
         private bool HasValueOf(FieldKind kind) => kind == FieldKind.Image

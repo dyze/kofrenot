@@ -201,6 +201,10 @@ public partial class MainWindow : Window
         LockButton.Visibility = open ? Visibility.Visible : Visibility.Collapsed;
         var readOnly = open && _session.IsReadOnly;
         ReadOnlyTag.Visibility = readOnly ? Visibility.Visible : Visibility.Collapsed;
+        ReadOnlyTag.ToolTip = _session.NeedsNewerKofrenotToWrite
+            ? $"{VaultFormat.ReadOnlyMessage}\n\nClick to get the latest kofrenot."
+            : "Shared with you to read only: you can see and search it, not change it";
+        ReadOnlyTag.Cursor = _session.NeedsNewerKofrenotToWrite ? Cursors.Hand : null;
         DropZone.Visibility = open && !readOnly ? Visibility.Visible : Visibility.Collapsed;
         _showPasteFiles();
         ShowTitle();
@@ -471,6 +475,24 @@ public partial class MainWindow : Window
         e.Handled = true;
     }
 
+    // A vault written by a newer kofrenot: the tag leads to it.
+    private void ReadOnlyTag_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+    {
+        if (_session.NeedsNewerKofrenotToWrite)
+        {
+            _log.Info("Action", "Get the latest kofrenot (read-only vault)");
+            OpenReleases();
+        }
+    }
+
+    private void OpenReleases()
+    {
+        if (Browser.Open(ProjectLinks.Releases, _log) is { } error)
+        {
+            MessageDialog.Inform(this, $"Cannot open {ProjectLinks.Releases}.\n\n{error}");
+        }
+    }
+
     private void StateButton_Click(object sender, RoutedEventArgs e)
     {
         if (_session.Folder is null)
@@ -479,10 +501,7 @@ public partial class MainWindow : Window
         }
         else if (_session.NewerFormat is not null)
         {
-            if (Browser.Open(ProjectLinks.Releases, _log) is { } error)
-            {
-                MessageDialog.Inform(this, $"Cannot open {ProjectLinks.Releases}.\n\n{error}");
-            }
+            OpenReleases();
         }
         else if (_session.OlderFormat is not null)
         {

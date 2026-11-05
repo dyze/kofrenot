@@ -2,8 +2,11 @@ namespace Kofrenot.Core.Storage;
 
 /// <summary>
 /// The format of a vault's files (header and change files): one number, raised by every breaking
-/// change. A kofrenot reads the formats up to <see cref="Current"/> included; a newer one asks
-/// the user to upgrade kofrenot.
+/// change. A kofrenot reads the formats up to <see cref="Current"/> included. A newer file also
+/// says which older formats may still use it: <c>oldestReader</c>, the oldest that can read it, skipping
+/// what it does not know; <c>oldestWriter</c>, the oldest that can write to the vault (both the file's
+/// format when missing). Newer than both: read only; newer than <c>oldestReader</c>: not opened, and the
+/// user is asked to upgrade kofrenot.
 /// </summary>
 public static class VaultFormat
 {
@@ -32,14 +35,21 @@ public static class VaultFormat
     public static string OlderMessage(int format) =>
         $"This vault is in format {format}: this kofrenot uses it once upgraded to format {Current}, which kofrenot older than {Since(Current)} no longer opens.";
 
-    /// <exception cref="NewerVaultFormatException"><paramref name="format"/> is newer than <see cref="Current"/>.</exception>
-    public static void EnsureSupported(int format)
+    /// <summary>Why a vault written by a newer kofrenot, which this one may read but not write (<see cref="Vault.IsReadOnly"/>), is read only.</summary>
+    public const string ReadOnlyMessage = "This vault was changed by a newer kofrenot: some details are hidden, and it cannot be changed here. Install the latest kofrenot to change it.";
+
+    /// <summary>Whether a file of <paramref name="format"/>, readable from <paramref name="oldestReader"/> (its format when null), is read by this kofrenot.</summary>
+    /// <exception cref="NewerVaultFormatException">It is not: its <paramref name="oldestReader"/> is newer than <see cref="Current"/>.</exception>
+    public static void EnsureSupported(int format, int? oldestReader = null)
     {
-        if (format > Current)
+        if ((oldestReader ?? format) > Current)
         {
             throw new NewerVaultFormatException(format);
         }
     }
+
+    /// <summary>Whether a file's <c>oldestReader</c> or <c>oldestWriter</c> fits its <paramref name="format"/>: missing, or a format from 1 to it.</summary>
+    internal static bool IsLevel(int? level, int format) => level is not { } value || (value >= 1 && value <= format);
 }
 
 /// <summary>The vault was written by a newer kofrenot: this one must be upgraded to use it.</summary>

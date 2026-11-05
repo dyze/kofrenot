@@ -23,12 +23,23 @@ public sealed partial class VaultSession
     /// </summary>
     public MemberRole? MyRole => Current is { } vault && _server.Identity is not null ? SharedRole(MyRoleIn(vault)) : Selected?.Role;
 
-    /// <summary>The open vault is read only: shared with this account to read.</summary>
-    public bool IsReadOnly => Current is { } vault && MyRoleIn(vault) == MemberRole.Reader;
+    /// <summary>The open vault is read only: shared with this account to read, or written by a newer kofrenot (<see cref="Vault.IsReadOnly"/>).</summary>
+    public bool IsReadOnly => ReadOnlyReason is not null;
+
+    /// <summary>Why the open vault is read only, as told to the user; null when it is not.</summary>
+    public string? ReadOnlyReason => Current switch
+    {
+        { IsReadOnly: true } => VaultFormat.ReadOnlyMessage,
+        { } vault when MyRoleIn(vault) == MemberRole.Reader => ReadOnlyMessage,
+        _ => null,
+    };
+
+    /// <summary>The open vault is read only until kofrenot is updated: a newer one wrote to it.</summary>
+    public bool NeedsNewerKofrenotToWrite => Current?.IsReadOnly == true;
 
     /// <summary>The open vault can be shared from here: a server vault of this account, opened with its pass phrase, the server recent enough.</summary>
     public bool CanShare =>
-        Current is { } vault
+        Current is { IsReadOnly: false } vault
         && Selected?.Location.IsOnServer == true
         && _server.IsSignedIn && _server.TooOld is null
         && _server.Identity is { } account && _access?.Identity?.Id == account.Identity.Id
@@ -122,7 +133,7 @@ public sealed partial class VaultSession
         }
 
         _log.Info("Action", "Change refused: the vault is read only");
-        ask.Tell(ReadOnlyMessage);
+        ask.Tell(ReadOnlyReason!);
         return false;
     }
 

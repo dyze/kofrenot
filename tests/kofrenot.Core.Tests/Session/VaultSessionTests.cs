@@ -3,7 +3,7 @@ using System.Text.Json.Nodes;
 namespace Kofrenot.Core.Tests.Session;
 
 /// <summary>The session over folder vaults: registered, created, unlocked, locked, switched, written.</summary>
-public sealed class VaultSessionTests : IDisposable
+public sealed partial class VaultSessionTests : IDisposable
 {
     private static readonly DateTimeOffset Start = new(2026, 10, 1, 12, 0, 0, TimeSpan.Zero);
 

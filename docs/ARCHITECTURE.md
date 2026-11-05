@@ -310,14 +310,36 @@ One number for the whole vault, `VaultFormat.Current`, written in the header and
 | 9 | 0.13 | the field kinds `email` and `address` ([Types and fields](#types-and-fields)): a 0.12 app would drop a node type with such a field, and its values |
 | 10 | 0.14 | `editView` with `"display": "graph"` and `placeNodes` ([Views](#views)): a 0.13 app cannot read them |
 
-| Found | This kofrenot |
+#### Compatibility levels
+Since 0.15, a file of a newer format can say what an older kofrenot may still do with it. Both are optional, the file's format when missing (every file written up to format 10):
+
+| Number | Where | Meaning |
+| --- | --- | --- |
+| `format` | header, each change file | the format it was written in |
+| `oldestReader` | header, each change file | the oldest format that can read it, skipping what it does not know |
+| `oldestWriter` | header, each change file | the oldest format that can write to the vault |
+
+`oldestWriter` is in each change file too, not only in the header: the header is written once, and the first change of a newer format raises the vault (`Vault.OldestWriter`, the highest of all its files, as `Vault.Format`).
+
+| Found (F = `VaultFormat.Current`) | This kofrenot |
 | --- | --- |
-| format ≤ `VaultFormat.Current` | reads it |
-| header with a newer format | does not open the vault |
-| change file with a newer format (another device has a newer kofrenot) | closes the vault, at opening or at a refresh |
-| format < 1 | the file is damaged: skipped like an unreadable file |
+| format ≤ F | reads it |
+| header or change file with `oldestReader` > F (another device has a newer kofrenot) | does not open the vault, or closes it at a refresh |
+| `oldestReader` ≤ F < format | reads it with the skip rules below |
+| `oldestWriter` > F, in the header or any change file | **read only** (`Vault.IsReadOnly`): the vault refuses every write (`Vault.EnsureCanWrite`), pins and graph positions too; sync keeps downloading |
+| format < 1, or `oldestReader` / `oldestWriter` not between 1 and format | the file is damaged: skipped like an unreadable file |
+
+Skip rules, for a change of a newer format:
+
+| Found | Does |
+| --- | --- |
+| an unknown `op`, or a known one this version cannot apply (`setField` on a `link`, not a `node`) | skips the change, logged at Debug (a count, no id); not read again until kofrenot is updated, never kept in the snapshot |
+| an unknown property | ignores it |
+| a field of an unknown kind | keeps it as `FieldKind.Unknown`, its value shown as text, never dropped |
 
 - `NewerVaultFormatException` (a `NotSupportedException`) carries the format found. `VaultSession.NewerFormat` keeps it: the main window and Settings > Vault say to upgrade, and *Get the latest kofrenot* opens the releases page.
+- `VaultSession.IsReadOnly` covers both read-only cases (a reader's role, a newer kofrenot), `ReadOnlyReason` says which; the screens already hide what changes the vault. On Windows *Read only* in the title bar opens the releases page when a newer kofrenot is the reason; on Android the banner says it.
+- Each new format states its `oldestReader` and `oldestWriter`, with the reason, in the format table above: compatible (older, older: an older writer cannot overwrite the addition), read-only compatible (older, new: an older writer could drop it), incompatible (new, new: keys, encryption, removals). A test writes the new format and reads it as the old one would ([QUALIFIERS-CONCEPT.md](QUALIFIERS-CONCEPT.md#deciding-a-future-formats-level)).
 - A breaking change (something an older kofrenot would misread or not read) raises `VaultFormat.Current`. The owner decides it first (`CLAUDE.md`). Changes that only add something older versions ignore safely (such as an unknown type, shown by its id) do not.
 - No migration: files are never rewritten, so a vault holds files of several formats, each read as written.
 
@@ -450,7 +472,8 @@ start ─► snapshot (local) ─► the changes it holds, applied to the graph
 - Encrypted with the master key like a change file (`KFS1` · nonce · ciphertext · tag, AAD = vault id), so it reveals nothing more than the vault.
 - Written as `*.tmp`, then renamed. It is only a cache: deleting it costs one full read.
 - A change file that arrives late, older than changes already applied, is fine: adds do not depend on order, and renames name what they replace (see [Renames](#renames)), so the result is the same in any order.
-- It holds the changes themselves, as in their files (`ChangeData`, `SnapshotStore.Format` 4), so a new kind of change needs nothing more. As they are written again in the current format, it also keeps the highest vault format of their files (`Vault.Format`, see [Format](#format)). A snapshot of an older format is not used: every change is read again once.
+- It holds the changes themselves, as in their files (`ChangeData`, `SnapshotStore.Format` 5), so a new kind of change needs nothing more. As they are written again in the current format, it also keeps the highest vault format of their files and their highest `oldestWriter` (`Vault.Format`, `Vault.OldestWriter`, see [Format](#format)). A snapshot of an older format is not used: every change is read again once.
+- It keeps the changes as this kofrenot read them, so a change of a newer format lost what it did not know. It also keeps the format of the kofrenot that saved it (`savedBy`): a kofrenot of another format does not use it when it holds changes newer than that reader, and reads every change again, whole.
 - Ten renames of one node are still ten files, each read once per device; packing them into bigger files is an open question ([GOAL.md](GOAL.md#open-questions), *Packs*).
 
 ### Renames

@@ -259,5 +259,24 @@ public sealed class FieldKindsTests
     public void ContentKinds_AreNotSmall(FieldKind kind)
     {
         Assert.False(kind.IsSmall());
+        Assert.True(kind.IsContent());
+    }
+
+    [Fact]
+    public void AnUnknownName_IsKeptAsUnknown_WhenAsked_NotAContentKind()
+    {
+        Assert.Equal(FieldKind.Unknown, FieldKinds.Parse("rating", unknown: true));
+        Assert.Equal(FieldKind.Text, FieldKinds.Parse("text", unknown: true));
+        Assert.Null(FieldKinds.Parse("markdown", unknown: true));
+        Assert.Null(FieldKinds.Parse(" ", unknown: true));
+        Assert.False(FieldKind.Unknown.IsSmall());
+        Assert.False(FieldKind.Unknown.IsContent());
+    }
+
+    [Fact]
+    public void AnUnknownKindsValue_IsShownAsWritten_NeverTyped()
+    {
+        Assert.Equal("4/5", FieldValue.Display(FieldKind.Unknown, "4/5"));
+        Assert.False(FieldValue.Parse(FieldKind.Unknown, "4/5").IsValid);
     }
 }

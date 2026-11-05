@@ -1,6 +1,7 @@
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
+using Kofrenot.Core;
 using Kofrenot.Core.Browse;
 using Kofrenot.Core.Graph;
 using Kofrenot.Core.Input;
@@ -78,10 +79,12 @@ public sealed partial class HomePage : UserControl, IPage
             return;
         }
 
-        // Notes and files are edited here; a reader edits nothing.
+        // Notes and files are edited here; a reader, or a kofrenot older than the vault, edits nothing.
         ReadOnlyBanner.IsVisible = _shell.Services.Session.IsReadOnly;
         AddFilesButton.IsVisible = !_shell.Services.Session.IsReadOnly;
-        ReadOnlyText.Text = "Shared with you to read only.";
+        ReadOnlyText.Text = _shell.Services.Session.NeedsNewerKofrenotToWrite
+            ? $"{VaultFormat.ReadOnlyMessage} {ProjectLinks.Releases}"
+            : "Shared with you to read only.";
         SyncChanged();
         ShowTabs(vault);
         ShowList(vault);

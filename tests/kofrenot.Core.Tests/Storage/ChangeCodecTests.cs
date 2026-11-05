@@ -3,7 +3,7 @@ using System.Text;
 
 namespace Kofrenot.Core.Tests.Storage;
 
-public sealed class ChangeCodecTests
+public sealed partial class ChangeCodecTests
 {
     private static readonly DateTimeOffset At = new(2026, 10, 16, 9, 12, 0, TimeSpan.Zero);
 

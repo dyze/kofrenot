@@ -23,12 +23,14 @@ public sealed partial class Vault
     private readonly Dictionary<Guid, Change> _read = [];
     private readonly HashSet<Guid> _reportedUnreadable = [];
 
+    // Change files of a newer kofrenot this one does not know: not read again until it is updated, never kept in the snapshot.
+    private readonly HashSet<Guid> _unknown = [];
+
     private Vault(string folder, VaultHeader header, KeyRing keys, string? cacheFolder, ILog? log, IContentFetcher? fetcher)
     {
         _folder = folder;
         _fetcher = fetcher;
         Id = header.Id;
-        Format = header.Format;
         _log = log ?? NullLog.Instance;
         _box = new KeyedBox(keys);
         _codec = new ChangeCodec(_box);
@@ -36,6 +38,7 @@ public sealed partial class Vault
         Datasets = new DatasetFiles(folder, _box);
         Thumbnails = new ThumbnailFiles(folder, _box, _log);
         _snapshot = cacheFolder is null ? null : new SnapshotStore(SnapshotOf(cacheFolder, Id), _box, Id, _log);
+        Written(header.Format, header.OldestWriter ?? header.Format);
     }
 
     public Guid Id { get; }
@@ -86,7 +89,7 @@ public sealed partial class Vault
         var path = VaultFolder.ChangeFileOf(_folder, change.Id);
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
         AtomicFile.Write(path, _codec.Encode(change), overwrite: false);
-        Written(VaultFormat.Current);
+        Written(VaultFormat.Current, VaultFormat.Current);
         _read[change.Id] = change;
         Graph.Apply(change);
         _log.Debug(Category, $"Change {change.Id} written");
@@ -192,12 +195,12 @@ public sealed partial class Vault
             return 0;
         }
 
-        Written(snapshot.HighestFormat);
+        Written(snapshot.HighestFormat, snapshot.OldestWriter);
         Apply(snapshot.Changes);
         return snapshot.Changes.Count;
     }
 
-    private void SaveSnapshot() => _snapshot?.Save(_read.Values, Format);
+    private void SaveSnapshot() => _snapshot?.Save(_read.Values, Format, OldestWriter);
 
     private void Apply(IEnumerable<Change> changes)
     {
@@ -217,30 +220,42 @@ public sealed partial class Vault
             return changes;
         }
 
+        var unknown = _unknown.Count;
+
         foreach (var path in Directory.EnumerateFiles(folder, "*", SearchOption.AllDirectories))
         {
             // Skips files being written (.tmp) and anything else put there.
             if (Path.GetExtension(path) == VaultFolder.ChangeExtension
                 && Guid.TryParseExact(Path.GetFileNameWithoutExtension(path), "N", out var id)
-                && !_read.ContainsKey(id)
+                && !_read.ContainsKey(id) && !_unknown.Contains(id)
                 && TryRead(id, path) is { } change)
             {
                 changes.Add(change);
             }
         }
 
+        if (_unknown.Count > unknown)
+        {
+            _log.Debug(Category, $"{_unknown.Count - unknown} changes of a newer kofrenot skipped");
+        }
+
         return changes;
     }
 
     // An unreadable file is tried again at each refresh (the sync tool may still be copying it), and reported once.
-    // A newer format is not unreadable: NewerVaultFormatException goes up.
+    // A newer format is not unreadable: NewerVaultFormatException goes up, or the change is skipped when this kofrenot may read the file.
     private Change? TryRead(Guid id, string path)
     {
         try
         {
-            var (change, format) = _codec.DecodeWithFormat(id, File.ReadAllBytes(path));
-            Written(format);
-            return change;
+            var decoded = _codec.DecodeWithFormat(id, File.ReadAllBytes(path));
+            Written(decoded.Format, decoded.OldestWriter);
+            if (decoded.Change is null)
+            {
+                _unknown.Add(id);
+            }
+
+            return decoded.Change;
         }
         catch (Exception ex) when (ex is InvalidDataException or IOException or UnauthorizedAccessException)
         {

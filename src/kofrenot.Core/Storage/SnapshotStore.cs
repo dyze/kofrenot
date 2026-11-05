@@ -4,17 +4,22 @@ using Kofrenot.Core.Logging;
 
 namespace Kofrenot.Core.Storage;
 
-/// <summary>The changes of a vault kept on this device, and the highest vault format of their files (<see cref="Vault.Format"/>).</summary>
-public sealed record Snapshot(IReadOnlyList<Change> Changes, int HighestFormat);
+/// <summary>
+/// The changes of a vault kept on this device, the highest vault format of their files
+/// (<see cref="Vault.Format"/>), and the newest of the oldest formats that may write to it (<see cref="Vault.OldestWriter"/>).
+/// </summary>
+public sealed record Snapshot(IReadOnlyList<Change> Changes, int HighestFormat, int OldestWriter);
 
 /// <summary>
 /// Keeps the changes of a vault read on this device in a local file, so each change file is read
 /// once per device. Sealed with the vault's key (<see cref="SealKind.Snapshot"/>), bound to the vault id. Only a cache:
-/// when it is missing or unreadable, every change is read again.
+/// when it is missing or unreadable, every change is read again. It keeps the changes as this
+/// kofrenot read them: one of a newer format lost what this version does not know, so a newer
+/// kofrenot than the one that saved it reads every change again (<see cref="SnapshotData.SavedBy"/>).
 /// </summary>
 public sealed class SnapshotStore(string path, KeyedBox box, Guid vault, ILog? log = null)
 {
-    public const int Format = 4;
+    public const int Format = 5;
 
     private readonly ILog _log = log ?? NullLog.Instance;
 
@@ -31,10 +36,19 @@ public sealed class SnapshotStore(string path, KeyedBox box, Guid vault, ILog? l
             var json = box.Open(SealKind.Snapshot, File.ReadAllBytes(path), vault.ToByteArray());
             // The format first: an older snapshot has another shape.
             if (JsonSerializer.Deserialize<FormatOnly>(json, ChangeCodec.Json) is { Format: Format }
-                && JsonSerializer.Deserialize<SnapshotData>(json, ChangeCodec.Json) is { Changes: { } changes, HighestFormat: >= 1 and var highest })
+                && JsonSerializer.Deserialize<SnapshotData>(json, ChangeCodec.Json) is
+                    { Changes: { } changes, HighestFormat: >= 1 and var highest, OldestWriter: >= 1 and var oldestWriter, SavedBy: >= 1 and var savedBy })
             {
-                VaultFormat.EnsureSupported(highest);
-                return new Snapshot(changes.Select(stored => stored.Change?.ToChange(stored.Id) ?? throw new InvalidDataException("A change is empty")).ToList(), highest);
+                if (savedBy != VaultFormat.Current && highest > Math.Min(savedBy, VaultFormat.Current))
+                {
+                    _log.Info("Vault", $"The local snapshot was saved by a kofrenot of format {savedBy}, with changes of format {highest}: every change is read again");
+                    return null;
+                }
+
+                return new Snapshot(
+                    changes.Select(stored => stored.Change?.ToChange(stored.Id, unknownKinds: true) ?? throw new InvalidDataException("A change is empty")).ToList(),
+                    highest,
+                    oldestWriter);
             }
 
             _log.Info("Vault", "The local snapshot has another format: every change is read again");
@@ -51,10 +65,13 @@ public sealed class SnapshotStore(string path, KeyedBox box, Guid vault, ILog? l
         return null;
     }
 
-    /// <summary>Saves the changes, and the highest vault format of their files. A failure is logged only: the snapshot is a cache.</summary>
-    public void Save(IReadOnlyCollection<Change> changes, int highestFormat)
+    /// <summary>
+    /// Saves the changes, the highest vault format of their files, and the newest of the oldest
+    /// formats that may write to it. A failure is logged only: the snapshot is a cache.
+    /// </summary>
+    public void Save(IReadOnlyCollection<Change> changes, int highestFormat, int oldestWriter)
     {
-        var data = new SnapshotData(Format, changes.Select(change => new StoredChange(change.Id, ChangeData.From(change))).ToList(), highestFormat);
+        var data = new SnapshotData(Format, changes.Select(change => new StoredChange(change.Id, ChangeData.From(change))).ToList(), highestFormat, oldestWriter, VaultFormat.Current);
         try
         {
             Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(path))!);
@@ -69,7 +86,8 @@ public sealed class SnapshotStore(string path, KeyedBox box, Guid vault, ILog? l
 
     internal sealed record FormatOnly(int Format);
 
-    internal sealed record SnapshotData(int Format, List<StoredChange>? Changes, int HighestFormat);
+    /// <summary>The snapshot as saved; <see cref="SavedBy"/> is the vault format of the kofrenot that saved it.</summary>
+    internal sealed record SnapshotData(int Format, List<StoredChange>? Changes, int HighestFormat, int OldestWriter, int SavedBy);
 
     internal sealed record StoredChange(Guid Id, ChangeData? Change);
 }

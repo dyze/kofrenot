@@ -41,6 +41,7 @@ Both apps share the same vaults and the same core; each shows its own set of fea
 | Account: sign up, sign in | ✔ | sign in only |
 | Account's pass phrase, recovery key | ✔ | used, not set |
 | Sync status, sync now | ✔ | ✔ while the app is shown |
+| A vault changed by a newer kofrenot: read only, when it allows it | ✔ **Read only** in the title bar | ✔ a banner |
 | **Browse** | | |
 | Search names, pinned and recent nodes | ✔ | ✔ |
 | Search field values | ✔ | ✔ |
@@ -125,6 +126,7 @@ A vault holds your nodes, notes and files, encrypted. There are two kinds:
 - **Privacy screen** (on by default, Settings > General): when the window is hidden or minimized, the open vault is covered, also in the taskbar preview; shown again, it opens on a plain screen until you click **Show** (or press Enter), so nothing shows by mistake while sharing your screen. Unlike the padlock, no pass phrase is asked.
 - **Share** a server vault: Settings > Vault > *Members* > *Share...*, with the other person's email, once you both read the same key **fingerprint** (by phone or in person). Removing a member changes the vault's key.
 - **Sync status** is in the title bar: a green dot when synced, amber offline, red when you must sign in. A click syncs now.
+- **A vault changed by a newer kofrenot** opens **read only** when that version allows it: you see and search it, without what this version does not know, and change nothing; *Read only* in the title bar leads to the latest kofrenot. Otherwise it stays closed until you update.
 
 ## On Android
 

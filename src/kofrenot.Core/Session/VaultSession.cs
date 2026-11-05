@@ -135,12 +135,16 @@ public sealed partial class VaultSession : IDisposable
         }
     }
 
-    /// <summary>Reads the changes other apps have added. A change written by a newer kofrenot closes the vault.</summary>
+    /// <summary>
+    /// Reads the changes other apps have added. A change written by a newer kofrenot closes the
+    /// vault, or makes it read only when this one may read it (<see cref="Vault.IsReadOnly"/>).
+    /// </summary>
     public void Refresh()
     {
         try
         {
-            if (Current?.Refresh() > 0)
+            var wasReadOnly = Current?.IsReadOnly;
+            if (Current?.Refresh() > 0 || Current?.IsReadOnly != wasReadOnly)
             {
                 KeepName();
                 KeepRole();

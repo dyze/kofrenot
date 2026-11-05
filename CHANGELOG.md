@@ -8,6 +8,10 @@ It covers kofrenot on Windows and on Android; versions before 0.9 ran on Windows
 
 ## [Unreleased]
 
+### Added
+- **Both**
+  - **A vault changed by a newer kofrenot opens read only**, when that newer version says it may: you see and search it, with what this version does not know left out, and change nothing until you update (*Read only* in the title bar on Windows, a click opening the releases; a banner on Android). A vault it may not read still stays closed, as before. This is what lets the next vault format (qualifiers, [ROADMAP](ROADMAP.md#later)) be read by this version ([Format](docs/ARCHITECTURE.md#format)).
+
 ## [0.14] - 2026-11-04
 
 *Graph views and the clipboard: family trees and relations drawn, files and images pasted, nodes and cards put in place by dragging.*

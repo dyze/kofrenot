@@ -36,11 +36,12 @@ public sealed class SnapshotStoreTests : IDisposable
             new NodeRetyped(Guid.NewGuid(), Start.AddMinutes(4), dune.Id, "note", [dune.Id]),
         ];
 
-        Store().Save(changes, highestFormat: 3);
+        Store().Save(changes, highestFormat: 3, oldestWriter: 3);
         var snapshot = Store().Load();
 
         Assert.NotNull(snapshot);
         Assert.Equal(3, snapshot.HighestFormat);
+        Assert.Equal(3, snapshot.OldestWriter);
         var loaded = snapshot.Changes;
         Assert.Equal(changes.Select(change => (change.Id, change.GetType())), loaded.Select(change => (change.Id, change.GetType())));
         Assert.Equal(dune, Assert.IsType<NodeAdded>(loaded[0]).Node);
@@ -53,7 +54,7 @@ public sealed class SnapshotStoreTests : IDisposable
     [Fact]
     public void TheFile_IsEncrypted_WithNoTemporaryFileLeft()
     {
-        Store().Save([new NodeAdded(Guid.NewGuid(), Start, new Node(Guid.NewGuid(), "generic", "Dune", Start))], VaultFormat.Current);
+        Store().Save([new NodeAdded(Guid.NewGuid(), Start, new Node(Guid.NewGuid(), "generic", "Dune", Start))], VaultFormat.Current, VaultFormat.Current);
 
         Assert.DoesNotContain("Dune", Encoding.UTF8.GetString(File.ReadAllBytes(FilePath)));
         Assert.Single(Directory.GetFiles(Path.GetDirectoryName(FilePath)!));
@@ -62,7 +63,7 @@ public sealed class SnapshotStoreTests : IDisposable
     [Fact]
     public void ASnapshotOfAnotherVault_IsNotUsed()
     {
-        Store().Save([], VaultFormat.Current);
+        Store().Save([], VaultFormat.Current, VaultFormat.Current);
 
         Assert.Null(new SnapshotStore(FilePath, _box, Guid.NewGuid(), _log).Load());
         Assert.Contains(_log.Entries, entry => entry.Level == LogLevel.Warning);
@@ -82,6 +83,9 @@ public sealed class SnapshotStoreTests : IDisposable
     [InlineData("{\"format\":3}")]
     [InlineData("{\"format\":3,\"changes\":[]}")]
     [InlineData("{\"format\":4,\"changes\":[]}")]
+    [InlineData("{\"format\":4,\"highestFormat\":4,\"changes\":[]}")]
+    [InlineData("{\"format\":5,\"highestFormat\":4,\"changes\":[]}")]
+    [InlineData("{\"format\":5,\"highestFormat\":4,\"oldestWriter\":4,\"changes\":[]}")]
     [InlineData("{\"format\":3,\"changes\":[{\"id\":\"3f2504e0-4f89-11d3-9a0c-0305e82c3301\"}]}")]
     [InlineData("{\"format\":3,\"changes\":[{\"id\":\"3f2504e0-4f89-11d3-9a0c-0305e82c3301\",\"change\":{\"format\":2,\"op\":\"unknown\",\"at\":\"2026-10-16T09:12:00Z\"}}]}")]
     [InlineData("null")]
@@ -106,19 +110,65 @@ public sealed class SnapshotStoreTests : IDisposable
     [Fact]
     public void ASnapshotHoldingANewerFormat_IsNotUsed()
     {
-        WriteSnapshot("{\"format\":4,\"highestFormat\":4,\"changes\":[{\"id\":\"3f2504e0-4f89-11d3-9a0c-0305e82c3301\",\"change\":{\"format\":99,\"op\":\"addNode\",\"at\":\"2026-10-16T09:12:00Z\"}}]}");
+        WriteSnapshot($"{{\"format\":5,\"highestFormat\":4,\"oldestWriter\":4,\"savedBy\":{VaultFormat.Current},\"changes\":[{{\"id\":\"3f2504e0-4f89-11d3-9a0c-0305e82c3301\",\"change\":{{\"format\":99,\"op\":\"addNode\",\"at\":\"2026-10-16T09:12:00Z\"}}}}]}}");
 
         Assert.Null(Store().Load());
         Assert.Contains(_log.Entries, entry => entry.Message.Contains("newer format"));
     }
 
     [Fact]
-    public void ASnapshotOfANewerVaultFormat_IsNotUsed()
+    public void ASnapshotOfANewerKofrenot_IsNotUsed()
     {
-        WriteSnapshot("{\"format\":4,\"highestFormat\":99,\"changes\":[]}");
+        WriteSnapshot($"{{\"format\":5,\"highestFormat\":{VaultFormat.Current + 1},\"oldestWriter\":1,\"savedBy\":{VaultFormat.Current + 1},\"changes\":[]}}");
 
         Assert.Null(Store().Load());
-        Assert.Contains(_log.Entries, entry => entry.Message.Contains("newer format (99)"));
+        Assert.Contains(_log.Entries, entry => entry.Message.Contains($"saved by a kofrenot of format {VaultFormat.Current + 1}"));
+    }
+
+    [Fact]
+    public void ASnapshotOfThisKofrenot_HoldingChangesOfANewerFormat_IsUsed()
+    {
+        WriteSnapshot($"{{\"format\":5,\"highestFormat\":{VaultFormat.Current + 1},\"oldestWriter\":{VaultFormat.Current + 1},\"savedBy\":{VaultFormat.Current},\"changes\":[]}}");
+
+        var snapshot = Store().Load();
+
+        Assert.NotNull(snapshot);
+        Assert.Equal((VaultFormat.Current + 1, VaultFormat.Current + 1), (snapshot.HighestFormat, snapshot.OldestWriter));
+    }
+
+    // An older kofrenot skipped what it did not know of them: this one reads them again, whole.
+    [Fact]
+    public void ASnapshotOfAnOlderKofrenot_HoldingChangesNewerThanIt_IsNotUsed()
+    {
+        WriteSnapshot($"{{\"format\":5,\"highestFormat\":{VaultFormat.Current},\"oldestWriter\":1,\"savedBy\":{VaultFormat.Current - 1},\"changes\":[]}}");
+
+        Assert.Null(Store().Load());
+        Assert.Contains(_log.Entries, entry => entry.Level == LogLevel.Info && entry.Message.Contains("every change is read again"));
+    }
+
+    [Fact]
+    public void ASnapshotOfAnOlderKofrenot_HoldingOnlyChangesItKnew_IsUsed()
+    {
+        WriteSnapshot($"{{\"format\":5,\"highestFormat\":{VaultFormat.Current - 1},\"oldestWriter\":1,\"savedBy\":{VaultFormat.Current - 1},\"changes\":[]}}");
+
+        Assert.NotNull(Store().Load());
+    }
+
+    [Fact]
+    public void AFieldOfAnUnknownKind_IsKeptInTheSnapshot()
+    {
+        var node = Guid.NewGuid();
+        Change[] changes =
+        [
+            new NodeTypeDefined(Guid.NewGuid(), Start, "book", "Book", null, null, [new FieldDefinition("stars", "Stars", FieldKind.Unknown)], []),
+            new FieldSet(Guid.NewGuid(), Start, node, "own", "stars", "Stars", FieldKind.Unknown, "4/5", []),
+        ];
+
+        Store().Save(changes, VaultFormat.Current + 1, VaultFormat.Current + 1);
+        var loaded = Store().Load()!.Changes;
+
+        Assert.Equal(FieldKind.Unknown, Assert.Single(Assert.IsType<NodeTypeDefined>(loaded[0]).Fields).Kind);
+        Assert.Equal((FieldKind.Unknown, "4/5"), (Assert.IsType<FieldSet>(loaded[1]).Kind, ((FieldSet)loaded[1]).Value));
     }
 
     [Fact]
@@ -127,7 +177,7 @@ public sealed class SnapshotStoreTests : IDisposable
         // A folder where the file should be: it cannot be written.
         Directory.CreateDirectory(FilePath);
 
-        Store().Save([], VaultFormat.Current);
+        Store().Save([], VaultFormat.Current, VaultFormat.Current);
 
         Assert.Contains(_log.Entries, entry => entry.Level == LogLevel.Warning && entry.Message.Contains("cannot be saved"));
     }
