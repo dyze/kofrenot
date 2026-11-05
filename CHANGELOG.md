@@ -8,6 +8,10 @@ It covers kofrenot on Windows and on Android; versions before 0.9 ran on Windows
 
 ## [Unreleased]
 
+## [0.15] - 2026-11-05
+
+*Compatibility levels: a vault changed by a newer kofrenot opens read only, instead of staying closed.*
+
 ### Added
 - **Both**
   - **A vault changed by a newer kofrenot opens read only**, when that newer version says it may: you see and search it, with what this version does not know left out, and change nothing until you update (*Read only* in the title bar on Windows, a click opening the releases; a banner on Android). A vault it may not read still stays closed, as before. This is what lets the next vault format (qualifiers, [ROADMAP](ROADMAP.md#later)) be read by this version ([Format](docs/ARCHITECTURE.md#format)).
@@ -412,7 +416,8 @@ It covers kofrenot on Windows and on Android; versions before 0.9 ran on Windows
 - **Update check** once a day against GitHub releases, switchable in About.
 - **Installer and portable zip** (`build\installer.cmd`), self-contained.
 
-[Unreleased]: https://github.com/dyze/kofrenot/compare/0.14...HEAD
+[Unreleased]: https://github.com/dyze/kofrenot/compare/0.15...HEAD
+[0.15]: https://github.com/dyze/kofrenot/compare/0.14...0.15
 [0.14]: https://github.com/dyze/kofrenot/compare/0.13...0.14
 [0.13]: https://github.com/dyze/kofrenot/compare/0.12...0.13
 [0.12]: https://github.com/dyze/kofrenot/compare/0.11...0.12
