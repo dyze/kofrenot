@@ -89,6 +89,18 @@ public sealed class QualifierSearchTests
         Assert.Null(LinkSearch.Find(_graph, text));
 
     [Fact]
+    public void AVagueDate_IsInTheRangesItBelongsTo()
+    {
+        var link = new Link(Guid.NewGuid(), "wrote", _ursula.Id, _dune.Id, Start);
+        _graph.Apply(new LinkAdded(Guid.NewGuid(), Start, link));
+        _graph.Apply(new FieldSet(Guid.NewGuid(), Start, link, "wrote", Date.Id, Date.Name, FieldKind.Date, "1966", []));
+
+        Assert.Contains("Ursula K. Le Guin wrote Dune > Ursula K. Le Guin", Found("wrote, Date 1966..1967"));
+        Assert.DoesNotContain("Ursula K. Le Guin wrote Dune > Ursula K. Le Guin", Found("wrote, Date 1967.."));
+        Assert.Contains("Ursula K. Le Guin wrote Dune > Ursula K. Le Guin", Found("wrote, Date 1966"));
+    }
+
+    [Fact]
     public void AFieldWithoutValue_MatchesNothing() =>
         Assert.False(ValueQuery.Matches(new NodeField("wrote", "date", "Date", FieldKind.Date, [], "wrote", "Date", Values: null), string.Empty));
 

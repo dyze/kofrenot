@@ -51,20 +51,25 @@ public sealed partial class NodePage
                 ShowCalendar(planner, node, field);
                 break;
             default:
-                var typed = await _shell.AskText(field.Label, field.Value ?? string.Empty, "Save", text => planner.Set(node, field, text).Error, text => planner.Set(node, field, text).Problem != FieldProblem.Invalid);
-                if (typed is not null)
-                {
-                    WriteField(planner.Set(node, field, typed), typed.Trim().Length == 0 ? "Field value cleared" : "Field value set");
-                }
-
+                await TypeValueAsync(planner, node, field);
                 break;
+        }
+    }
+
+    // A value typed; empty clears it.
+    private async Task TypeValueAsync(FieldPlanner planner, FieldHolder node, NodeField field)
+    {
+        var typed = await _shell.AskText(field.Label, field.Value ?? string.Empty, "Save", text => planner.Set(node, field, text).Error, text => planner.Set(node, field, text).Problem != FieldProblem.Invalid);
+        if (typed is not null)
+        {
+            WriteField(planner.Set(node, field, typed), typed.Trim().Length == 0 ? "Field value cleared" : "Field value set");
         }
     }
 
     // A calendar instead of a date typed, as on Windows; None clears it. Written as typed ones are: 2026-10-27.
     private void ShowCalendar(FieldPlanner planner, FieldHolder node, NodeField field)
     {
-        var shown = DateTime.TryParseExact(field.Value, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var date) ? date : (DateTime?)null;
+        var shown = FieldValue.FirstDayOf(field.Value)?.ToDateTime(TimeOnly.MinValue);
         var calendar = new Avalonia.Controls.Calendar { SelectedDate = shown, DisplayDate = shown ?? DateTime.Today, HorizontalAlignment = HorizontalAlignment.Center };
         calendar.SelectedDatesChanged += (_, _) =>
         {
@@ -74,7 +79,11 @@ public sealed partial class NodePage
                 WriteField(planner.Set(node, field, chosen.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)), "Field value set");
             }
         };
-        _shell.ShowSheet(field.Label, calendar, [new SheetChoice("None", () => WriteField(planner.Clear(node, field), "Field value cleared"), IsCurrent: !field.HasValue)]);
+        _shell.ShowSheet(field.Label, calendar,
+        [
+            new SheetChoice("Type it: a month or a year…", () => _shell.Run(() => TypeValueAsync(planner, node, field))),
+            new SheetChoice("None", () => WriteField(planner.Clear(node, field), "Field value cleared"), IsCurrent: !field.HasValue),
+        ]);
     }
 
     /// <summary>A field of the node's own, or a qualifier of a link's own (<paramref name="holder"/> the link).</summary>

@@ -2,6 +2,7 @@ using System.Globalization;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using Kofrenot.Core.Browse;
+using Kofrenot.Core.Fields;
 using Kofrenot.Core.Graph;
 
 namespace Kofrenot.UI.Views;
@@ -19,7 +20,7 @@ public partial class NodeDetailsPanel
             return;
         }
 
-        var shown = DateTime.TryParseExact(field.Value, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var date) ? date : (DateTime?)null;
+        var shown = FieldValue.FirstDayOf(field.Value)?.ToDateTime(TimeOnly.MinValue);
         var calendar = new System.Windows.Controls.Calendar { SelectedDate = shown, DisplayDate = shown ?? DateTime.Today };
         var popup = new Popup { PlacementTarget = box, Placement = PlacementMode.Bottom, StaysOpen = false, Child = calendar };
         calendar.SelectedDatesChanged += (_, _) =>

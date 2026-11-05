@@ -215,4 +215,5 @@ Taken with the owner for 0.16:
 | Shown qualifier | The first with a value, in the type's list first; no mark |
 | Several links of a type between two nodes | Now: `addLink` with `separate` ([Separate links](#separate-links-addlink--separate)) |
 | Built-in link types | Their qualifiers are defined too, in Settings > Link types ([Definitions](#definitions-definelinktype--fields)) |
+| Vague dates | A date field takes a month (`1965-08`) or a year (`1965`) too, in format 11 |
 | Scope | All of this concept in 0.16, events excepted |

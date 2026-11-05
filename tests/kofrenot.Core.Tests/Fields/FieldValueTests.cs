@@ -67,10 +67,46 @@ public sealed class FieldValueTests
         Assert.Equal("2026-10-27", Parsed(FieldKind.Date, "27/10/2026", French));
     }
 
+    [Theory]
+    [InlineData("1965", "1965")]
+    [InlineData(" 1965-08 ", "1965-08")]
+    [InlineData("8/1965", "1965-08")]
+    [InlineData("08.1965", "1965-08")]
+    [InlineData("August 1965", "1965-08")]
+    public void AVagueDate_KeepsOnlyItsMonthOrYear(string typed, string written) =>
+        Assert.Equal(written, Parsed(FieldKind.Date, typed));
+
+    [Fact]
+    public void AMonthInTheCulture_IsNotReadAsADay() =>
+        Assert.Equal("1965-08", Parsed(FieldKind.Date, "08/1965", French));
+
+    [Theory]
+    [InlineData("1965", true)]
+    [InlineData("1965-08", true)]
+    [InlineData("1965-08-01", true)]
+    [InlineData("1965-8", false)]
+    [InlineData("1965-13", false)]
+    [InlineData("65", false)]
+    public void ADateRead_IsADayAMonthOrAYear_AsWritten(string value, bool isValid) =>
+        Assert.Equal(isValid, FieldValue.IsValid(FieldKind.Date, value));
+
+    [Theory]
+    [InlineData("1965", "1965-01-01")]
+    [InlineData("1965-08", "1965-08-01")]
+    [InlineData("1965-08-20", "1965-08-20")]
+    public void AVagueDate_OpensACalendarOnItsFirstDay(string value, string day) =>
+        Assert.Equal(DateOnly.Parse(day, CultureInfo.InvariantCulture), FieldValue.FirstDayOf(value));
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("soon")]
+    public void NoDate_OpensACalendarOnNoDay(string? value) =>
+        Assert.Null(FieldValue.FirstDayOf(value));
+
     [Fact]
     public void NotADate_IsRefused()
     {
-        Assert.Equal("Type a date, like 2026-10-27", FieldValue.Parse(FieldKind.Date, "soon", culture: English).Error);
+        Assert.Equal("Type a date, like 2026-10-27, or a month (2026-10) or a year (2026)", FieldValue.Parse(FieldKind.Date, "soon", culture: English).Error);
     }
 
     [Theory]

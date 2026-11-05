@@ -14,12 +14,20 @@ public sealed record FieldInput(string? Value, string? Error)
 
 /// <summary>
 /// The values of the small field kinds, written as text in the vault the same way on every device,
-/// whatever its language: a number as "1234.5", a date as "2026-10-27", a checkbox as "true" or
-/// "false", a choice as one of its options.
+/// whatever its language: a number as "1234.5", a date as "2026-10-27", or as vague as known, its
+/// month "2026-10" or its year "2026" (since format 11), a checkbox as "true" or "false", a choice as one of its options.
 /// </summary>
 public static class FieldValue
 {
     private const string DateFormat = "yyyy-MM-dd";
+
+    // A date as written: a day, a month or a year, the most precise first.
+    private static readonly string[] DateFormats = [DateFormat, "yyyy-MM", "yyyy"];
+
+    // A month typed in the user's way: 10/2026, 10.2026, 10-2026.
+    private static readonly string[] MonthFormats = ["M/yyyy", "M.yyyy", "M-yyyy"];
+
+    private const string DateHint = "Type a date, like 2026-10-27, or a month (2026-10) or a year (2026)";
     private const string True = "true";
     private const string False = "false";
 
@@ -65,7 +73,7 @@ public static class FieldValue
     {
         FieldKind.Text or FieldKind.Address or FieldKind.Choice => value.Length > 0,
         FieldKind.Number => ParseNumber(value, CultureInfo.InvariantCulture).Value == value,
-        FieldKind.Date => DateOnly.TryParseExact(value, DateFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out _),
+        FieldKind.Date => DateFormats.Any(format => IsWritten(value, format)),
         FieldKind.Url => ParseUrl(value).Value == value,
         FieldKind.Email => ParseEmail(value).Value == value,
         FieldKind.Checkbox => value is True or False,
@@ -95,11 +103,39 @@ public static class FieldValue
             ? FieldInput.Of(number.ToString("0.############################", CultureInfo.InvariantCulture))
             : FieldInput.Refused("Type a number, like 1234.5");
 
-    private static FieldInput ParseDate(string typed, CultureInfo culture) =>
-        DateOnly.TryParseExact(typed, DateFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out var date)
-        || DateOnly.TryParse(typed, culture, DateTimeStyles.None, out date)
+    /// <summary>
+    /// The first day of a date's value ("2026-10" is 2026-10-01, "2026" 2026-01-01), where a calendar opens; null
+    /// for none, or a value that is no date.
+    /// </summary>
+    public static DateOnly? FirstDayOf(string? value) =>
+        value is not null && DateFormats.FirstOrDefault(format => IsWritten(value, format)) is { } written
+            ? DateOnly.ParseExact(value, written, CultureInfo.InvariantCulture)
+            : null;
+
+    // As written in the vault: a day, a month or a year, ISO; then a month typed in the user's way
+    // (before a whole date, which would read "10/2026" as a day); then a day in the user's way.
+    private static FieldInput ParseDate(string typed, CultureInfo culture)
+    {
+        if (DateFormats.FirstOrDefault(format => IsWritten(typed, format)) is { } written)
+        {
+            return FieldInput.Of(typed);
+        }
+
+        if (DateOnly.TryParseExact(typed, MonthFormats, culture, DateTimeStyles.None, out var month)
+            || DateOnly.TryParseExact(typed, culture.DateTimeFormat.YearMonthPattern, culture, DateTimeStyles.None, out month))
+        {
+            return FieldInput.Of(month.ToString("yyyy-MM", CultureInfo.InvariantCulture));
+        }
+
+        return DateOnly.TryParse(typed, culture, DateTimeStyles.None, out var date)
             ? FieldInput.Of(date.ToString(DateFormat, CultureInfo.InvariantCulture))
-            : FieldInput.Refused("Type a date, like 2026-10-27");
+            : FieldInput.Refused(DateHint);
+    }
+
+    // Whether a text is a date written in this format, as it would be written back ("2026-1" is not "2026-01").
+    private static bool IsWritten(string text, string format) =>
+        DateOnly.TryParseExact(text, format, CultureInfo.InvariantCulture, DateTimeStyles.None, out var date)
+        && date.ToString(format, CultureInfo.InvariantCulture) == text;
 
     // An address with its scheme, or a web address without it ("example.com" is https://example.com/).
     private static FieldInput ParseUrl(string typed)

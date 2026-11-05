@@ -47,7 +47,7 @@ public sealed class FieldPlannerTests
         var plan = Planner.Set(_frank, Field("Born"), "soon");
 
         Assert.Equal((FieldProblem.Invalid, false), (plan.Problem, plan.CanApply));
-        Assert.Equal("Type a date, like 2026-10-27", plan.Status);
+        Assert.Equal("Type a date, like 2026-10-27, or a month (2026-10) or a year (2026)", plan.Status);
         Assert.Equal(FieldProblem.Invalid, Planner.Set(_frank, Field("Genre"), "Poem").Problem);
     }
 

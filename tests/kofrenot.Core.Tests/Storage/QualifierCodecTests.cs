@@ -33,6 +33,16 @@ public sealed class QualifierCodecTests
         Assert.True(decoded.Holder.IsLink);
     }
 
+    [Theory]
+    [InlineData("1965")]
+    [InlineData("1965-08")]
+    public void AVagueDate_RoundTrips(string value)
+    {
+        var change = new FieldSet(Guid.NewGuid(), At, FieldHolder.OfLink(Guid.NewGuid()), "wrote", "date", "Date", FieldKind.Date, value, []);
+
+        Assert.Equal(value, Assert.IsType<FieldSet>(_codec.Decode(change.Id, _codec.Encode(change))).Value);
+    }
+
     [Fact]
     public void AQualifier_IsWrittenOnItsLink_WithoutNode_SoAnOlderKofrenotSkipsIt()
     {

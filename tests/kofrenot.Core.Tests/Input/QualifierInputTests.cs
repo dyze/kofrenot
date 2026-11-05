@@ -120,7 +120,7 @@ public sealed class QualifierInputTests
 
         Assert.Equal(LinkProblem.QualifierInvalid, plan.Problem);
         Assert.False(plan.CanAdd);
-        Assert.Equal("Date: Type a date, like 2026-10-27", Preview("Dune written by Frank Herbert, Date soon"));
+        Assert.Equal("Date: Type a date, like 2026-10-27, or a month (2026-10) or a year (2026)", Preview("Dune written by Frank Herbert, Date soon"));
     }
 
     [Fact]
