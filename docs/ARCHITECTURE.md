@@ -138,6 +138,15 @@ App.OnStartup
   The path counts, not only the build: a portable copy keeps its data in its own folder. The settings are read first, for the theme of these dialogs.
 - **Start with Windows**: the per-user Run key `HKCU\Software\Microsoft\Windows\CurrentVersion\Run`, value `kofrenot` = `"<exe>" --hidden` (`AutoStartCommand`, `IAutoStart` in Core; `RegistryAutoStart` in App). Written by the setup task `autostart` (ticked by default) or by Settings > General, which shows it ticked only when the value starts this exe (`AutoStartStatus`: Off, ThisCopy, OtherCopy). Uninstall removes the value when it points at the installed exe.
 - **Privacy screen** (`MainWindow.Privacy`, `SettingsStore.PrivacyScreen`, on by default): with a vault open, every hide (Esc, close, a vault hotkey) and minimize covers the window's content first (`PrivacyCover` over `MainArea`, hidden, so it takes no focus), then hides or minimizes it once the cover is drawn, so the taskbar and Alt+Tab pictures show the cover. A minimize is caught as `WM_SYSCOMMAND`/`SC_MINIMIZE`; one that comes another way still covers, after. The image window closes. Shown again, the window focuses **Show**; only Esc works besides it. The vault stays open.
+- **Auto-lock** (`MainWindow.AutoLock`, decided by `Core`'s `PrivacyGuard`): a 5 s timer reads the idle time (`GetLastInputInfo`, input in any program) and asks the guard for the next step; `SystemEvents` (session locked, suspend) make a hide or a lock due at once (`OnWindowsLock`), the suspend waiting up to 2 s for it.
+
+  | Step | When | What |
+  | --- | --- | --- |
+  | Cover | `CoverAfterMinutes` without input, the vault on screen | `CoverNow`, even with the privacy screen off |
+  | Hide | Once, after Windows locked or slept, set to `Hide` (the default) | `CoverNow`, then hide the window; the dialogs stay |
+  | Lock | `LockAfterMinutes` without input, or due since Windows locked or slept, set to `Lock` | cover, close the dialogs (innermost first; Settings without its question), then `VaultSession.Lock` |
+
+  A lock comes before a hide, and stays due until the vault is closed: refused by `QuitRefusal` (a note not saved, an import), it waits, covered, and is retried each tick; the wait is logged once.
 - Settings is a modal dialog over the main window. The log window can be opened in front of it and stays open after it closes.
 
 ## Portable copy

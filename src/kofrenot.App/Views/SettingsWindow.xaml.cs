@@ -103,12 +103,15 @@ public partial class SettingsWindow : Window
         LinkTypes.Session = session;
         NodeTypes.Session = session;
         NodeTypes.Log = _log;
-        // A node type being changed is asked about before Settings closes.
-        Closing += (_, e) => e.Cancel = !NodeTypes.LeaveForm();
+        // A node type being changed is asked about before Settings closes, unless the vault locks.
+        Closing += (_, e) => e.Cancel = !_closingForLock && !NodeTypes.LeaveForm();
         session.Changed += ShowVault;
         Closed += (_, _) => session.Changed -= ShowVault;
 
         ThemeComboBox.ItemsSource = ThemeOptions;
+        OnWindowsLockComboBox.ItemsSource = OnWindowsLockOptions;
+        CoverAfterComboBox.ItemsSource = IdleOptions;
+        LockAfterComboBox.ItemsSource = IdleOptions;
         PositionComboBox.ItemsSource = PositionOptions;
         WebSearchComboBox.ItemsSource = WebSearchOptions;
         ShowAbout(files);
@@ -297,6 +300,7 @@ public partial class SettingsWindow : Window
         WebSearchComboBox.SelectedItem = WebSearchOptions.First(option => option.Value == _settings.WebSearch);
         ShowAutoStart();
         PrivacyScreenCheckBox.IsChecked = _settings.PrivacyScreen;
+        ShowAutoLock();
         _loading = false;
     }
 

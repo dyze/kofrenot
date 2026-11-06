@@ -58,10 +58,13 @@ public partial class MainWindow
     // Below the render priority: runs once the window is drawn.
     private void AfterDrawn(Action action) => Dispatcher.BeginInvoke(DispatcherPriority.ContextIdle, action);
 
-    /// <summary>Covers an open vault, when the privacy screen is on; true when it was not covered yet. The image window closes.</summary>
-    private bool Cover()
+    /// <summary>Covers an open vault, when the privacy screen is on; true when it was not covered yet.</summary>
+    private bool Cover() => _settings.PrivacyScreen && CoverNow("privacy screen");
+
+    /// <summary>Covers an open vault (<paramref name="why"/>); true when it was not covered yet. The image window closes.</summary>
+    private bool CoverNow(string why)
     {
-        if (Covered || !_settings.PrivacyScreen || _session.Current is null)
+        if (Covered || _session.Current is null)
         {
             return false;
         }
@@ -69,15 +72,20 @@ public partial class MainWindow
         MainArea.Visibility = Visibility.Hidden;
         PrivacyCover.Visibility = Visibility.Visible;
         _imageWindow?.Close();
-        _log.Debug("Window", "Covered (privacy screen)");
+        _log.Debug("Window", $"Covered ({why})");
         return true;
+    }
+
+    private void Uncover()
+    {
+        PrivacyCover.Visibility = Visibility.Collapsed;
+        MainArea.Visibility = Visibility.Visible;
     }
 
     private void PrivacyShowButton_Click(object sender, RoutedEventArgs e)
     {
         _log.Info("Action", "Show the vault (privacy screen)");
-        PrivacyCover.Visibility = Visibility.Collapsed;
-        MainArea.Visibility = Visibility.Visible;
+        Uncover();
         FocusWork();
     }
 }

@@ -27,6 +27,8 @@ public static class SettingsCatalog
     public const string MainWindowPositionId = "MainWindowPosition";
     public const string AutoStartId = "AutoStart";
     public const string PrivacyScreenId = "PrivacyScreen";
+    public const string OnWindowsLockId = "OnWindowsLock";
+    public const string IdleId = "Idle";
     public const string WebSearchId = "WebSearch";
     public const string KeyBindingsId = "KeyBindings";
     public const string VaultsId = "Vaults";
@@ -50,6 +52,8 @@ public static class SettingsCatalog
         new(MainWindowPositionId, GeneralTab, "Main window position", ["place", "where", "mouse", "center", "centre", "monitor", "screen", "window"]),
         new(AutoStartId, GeneralTab, "Start kofrenot with Windows", ["auto", "startup", "boot", "launch", "session", "tray"]),
         new(PrivacyScreenId, GeneralTab, "Cover the vault when the window is hidden", ["privacy", "screen sharing", "minimize", "hide", "show", "private"]),
+        new(OnWindowsLockId, GeneralTab, "When Windows locks or sleeps: hide or lock the vault", ["privacy", "padlock", "security", "sleep", "win+l", "away"]),
+        new(IdleId, GeneralTab, "Cover or lock the vault after a while without input", ["privacy", "idle", "inactive", "timeout", "away", "minutes", "padlock", "security"]),
         new(WebSearchId, GeneralTab, "Search engine for a node's name on the web", ["google", "duckduckgo", "bing", "internet", "browser", "web", "search"]),
         new(KeyBindingsId, KeyBindingsTab, "Key bindings: every shortcut", ["keys", "keyboard", "hotkey", "ctrl", "alt", "esc", "enter"]),
         new(VaultsId, VaultTab, "Vaults: name, folder, remembered pass phrase", [

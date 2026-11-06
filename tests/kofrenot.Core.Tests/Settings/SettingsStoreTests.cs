@@ -241,6 +241,55 @@ public sealed class SettingsStoreTests : IDisposable
         Assert.True(new SettingsStore(FilePath).PrivacyScreen);
     }
 
+    [Fact]
+    public void ByDefault_TheVaultHidesWithWindows_IsCoveredAfterFiveMinutes_NotLockedWhenIdle()
+    {
+        var store = new SettingsStore(FilePath);
+
+        Assert.Equal(WindowsLockAction.Hide, store.OnWindowsLock);
+        Assert.Equal(SettingsStore.DefaultCoverAfterMinutes, store.CoverAfterMinutes);
+        Assert.Equal(0, store.LockAfterMinutes);
+    }
+
+    [Fact]
+    public void TheLockAndCoverSettings_ArePersisted()
+    {
+        var store = new SettingsStore(FilePath);
+        store.SetOnWindowsLock(WindowsLockAction.Lock);
+        store.SetCoverAfterMinutes(0);
+        store.SetLockAfterMinutes(30);
+
+        var reloaded = new SettingsStore(FilePath);
+
+        Assert.Equal(WindowsLockAction.Lock, reloaded.OnWindowsLock);
+        Assert.Equal(0, reloaded.CoverAfterMinutes);
+        Assert.Equal(30, reloaded.LockAfterMinutes);
+    }
+
+    [Theory]
+    [InlineData(-1)]
+    [InlineData(SettingsStore.MaxIdleMinutes + 1)]
+    public void MinutesOutOfRange_AreRefused(int minutes)
+    {
+        var store = new SettingsStore(FilePath);
+
+        Assert.Throws<ArgumentOutOfRangeException>(() => store.SetCoverAfterMinutes(minutes));
+        Assert.Throws<ArgumentOutOfRangeException>(() => store.SetLockAfterMinutes(minutes));
+    }
+
+    [Fact]
+    public void ValuesOutOfRangeInTheFile_AreTheDefaults()
+    {
+        Directory.CreateDirectory(_directory);
+        File.WriteAllText(FilePath, """{"CoverAfterMinutes":-3,"LockAfterMinutes":100000,"OnWindowsLock":"Explode"}""");
+
+        var store = new SettingsStore(FilePath);
+
+        Assert.Equal(WindowsLockAction.Hide, store.OnWindowsLock);
+        Assert.Equal(SettingsStore.DefaultCoverAfterMinutes, store.CoverAfterMinutes);
+        Assert.Equal(0, store.LockAfterMinutes);
+    }
+
     [Theory]
     [InlineData(ThemeChoice.Light)]
     [InlineData(ThemeChoice.Dark)]

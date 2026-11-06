@@ -13,6 +13,18 @@ public enum ThemeChoice
     Dark,
 }
 
+/// <summary>What happens to the open vault when Windows locks or goes to sleep.</summary>
+public enum WindowsLockAction
+{
+    Nothing,
+
+    /// <summary>Covered, the window hidden: shown again, it opens on the cover. No pass phrase asked.</summary>
+    Hide,
+
+    /// <summary>Locked: its pass phrase is asked, even when remembered.</summary>
+    Lock,
+}
+
 /// <summary>Where the main window appears each time it is shown. Always kept fully on screen.</summary>
 public enum MainWindowPosition
 {
@@ -28,11 +40,16 @@ public enum MainWindowPosition
 
 /// <summary>
 /// User settings persisted as JSON: the theme, the web search engine, where the main window appears, whether the log
-/// records debug entries, whether to check for updates, whether a hidden window is covered, the registered vaults and the one selected,
+/// records debug entries, whether to check for updates, whether a hidden window is covered, when the vault is locked or covered on its own, the registered vaults and the one selected,
 /// the hotkey, and the Settings tab shown last. A missing, corrupt or partial file means defaults for whatever cannot be read.
 /// </summary>
 public sealed class SettingsStore
 {
+    public const int DefaultCoverAfterMinutes = 5;
+
+    /// <summary>The longest time without input that can be set: a day.</summary>
+    public const int MaxIdleMinutes = 24 * 60;
+
     private readonly string _path;
 
     /// <param name="mirrorOf">The local mirror of a server vault's store; null keeps the folder saved.</param>
@@ -50,6 +67,11 @@ public sealed class SettingsStore
             : WebSearchEngine.Google;
         CheckForUpdates = data?.CheckForUpdates ?? true;
         PrivacyScreen = data?.PrivacyScreen ?? true;
+        OnWindowsLock = Enum.TryParse<WindowsLockAction>(data?.OnWindowsLock, ignoreCase: true, out var onLock) && Enum.IsDefined(onLock)
+            ? onLock
+            : WindowsLockAction.Hide;
+        CoverAfterMinutes = IdleMinutesOf(data?.CoverAfterMinutes, DefaultCoverAfterMinutes);
+        LockAfterMinutes = IdleMinutesOf(data?.LockAfterMinutes, 0);
         MainWindowPosition = Enum.TryParse<MainWindowPosition>(data?.MainWindowPosition, ignoreCase: true, out var position) && Enum.IsDefined(position)
             ? position
             : MainWindowPosition.Centered;
@@ -77,6 +99,15 @@ public sealed class SettingsStore
 
     /// <summary>When on, the main window is covered while hidden or minimized, and shown again on a plain screen with a Show button. On by default.</summary>
     public bool PrivacyScreen { get; private set; }
+
+    /// <summary>What happens to the open vault when Windows locks or goes to sleep. Hidden by default.</summary>
+    public WindowsLockAction OnWindowsLock { get; private set; }
+
+    /// <summary>The minutes without input after which the vault shown is covered; 0 for never. <see cref="DefaultCoverAfterMinutes"/> by default.</summary>
+    public int CoverAfterMinutes { get; private set; }
+
+    /// <summary>The minutes without input after which the open vault is locked; 0 for never, the default.</summary>
+    public int LockAfterMinutes { get; private set; }
 
     /// <summary>The registered vaults, in the user's order.</summary>
     public VaultList Vaults { get; private set; }
@@ -132,6 +163,26 @@ public sealed class SettingsStore
     public void SetPrivacyScreen(bool enabled)
     {
         PrivacyScreen = enabled;
+        Save();
+    }
+
+    public void SetOnWindowsLock(WindowsLockAction action)
+    {
+        OnWindowsLock = action;
+        Save();
+    }
+
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="minutes"/> is not from 0 to <see cref="MaxIdleMinutes"/>.</exception>
+    public void SetCoverAfterMinutes(int minutes)
+    {
+        CoverAfterMinutes = CheckedIdleMinutes(minutes);
+        Save();
+    }
+
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="minutes"/> is not from 0 to <see cref="MaxIdleMinutes"/>.</exception>
+    public void SetLockAfterMinutes(int minutes)
+    {
+        LockAfterMinutes = CheckedIdleMinutes(minutes);
         Save();
     }
 
@@ -209,6 +260,9 @@ public sealed class SettingsStore
             Server = Server is { } server ? new ServerData(server.Server.ToString(), server.Email) : null,
             SettingsTab = SettingsTab,
             PrivacyScreen = PrivacyScreen,
+            OnWindowsLock = OnWindowsLock.ToString(),
+            CoverAfterMinutes = CoverAfterMinutes,
+            LockAfterMinutes = LockAfterMinutes,
             WebSearch = WebSearch.ToString(),
         };
         File.WriteAllText(_path, JsonSerializer.Serialize(data));
@@ -252,6 +306,16 @@ public sealed class SettingsStore
             ? new VaultLocation(mirrorOf?.Invoke(store) ?? vault.Folder!, new StoreAddress(server, store))
             : new VaultLocation(vault.Folder!);
 
+    private static int IdleMinutesOf(int? stored, int fallback) =>
+        stored is { } minutes and >= 0 and <= MaxIdleMinutes ? minutes : fallback;
+
+    private static int CheckedIdleMinutes(int minutes)
+    {
+        ArgumentOutOfRangeException.ThrowIfNegative(minutes);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(minutes, MaxIdleMinutes);
+        return minutes;
+    }
+
     private static SettingsData? Load(string path)
     {
         try
@@ -284,6 +348,12 @@ public sealed class SettingsStore
         public string? SettingsTab { get; init; }
 
         public bool? PrivacyScreen { get; init; }
+
+        public string? OnWindowsLock { get; init; }
+
+        public int? CoverAfterMinutes { get; init; }
+
+        public int? LockAfterMinutes { get; init; }
 
         public string? WebSearch { get; init; }
     }

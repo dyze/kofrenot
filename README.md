@@ -36,6 +36,7 @@ Both apps share the same vaults and the same core; each shows its own set of fea
 | Server vaults: add from the server, open, remove from the device | ✔ | ✔ |
 | Lock the open vault (padlock) | ✔ | — |
 | Privacy screen: the vault covered while hidden | ✔ | out of screenshots and recent apps, unless turned off in Settings > General |
+| Hide or lock the vault when the computer locks or sleeps; cover or lock it after a while without input | ✔ | — |
 | Server vaults: create, move from a folder, delete | ✔ | — |
 | Folder vaults | ✔ | *never* |
 | Account: sign up, sign in | ✔ | sign in only |
@@ -130,6 +131,7 @@ A vault holds your nodes, notes and files, encrypted. There are two kinds:
 - **Recovery key**: shown once when the vault (or the account's pass phrase) is created. Keep it with the pass phrase: **if both are lost, the vault cannot be read**.
 - **Several vaults**: one is open at a time, switched in the title bar (or **Ctrl+1** to **Ctrl+9**); each can have its own hotkey. The **padlock** (**Ctrl+L**) locks the open one until its pass phrase is typed again.
 - **Privacy screen** (on by default, Settings > General): when the window is hidden or minimized, the open vault is covered, also in the taskbar preview; shown again, it opens on a plain screen until you click **Show** (or press Enter), so nothing shows by mistake while sharing your screen. Unlike the padlock, no pass phrase is asked.
+- **Hidden, covered or locked on its own** (Settings > General): when Windows locks (Win+L, the screen saver) or goes to sleep, the open vault is **hidden** (the default: covered and the window hidden, it opens again on the cover, no pass phrase asked), **locked** (its pass phrase asked again, even when remembered), or left as it is. After a while without keyboard or mouse input, in any program, the vault shown is **covered** (5 minutes by default), and can be **locked** too (never by default). A lock closes the dialogs open, as Cancel (the changes to a node type in Settings are dropped); while a note is not saved or a file imported, the vault stays covered and locks once it can.
 - **Share** a server vault: Settings > Vault > *Members* > *Share...*, with the other person's email, once you both read the same key **fingerprint** (by phone or in person). Removing a member changes the vault's key.
 - **Sync status** is in the title bar: a green dot when synced, amber offline, red when you must sign in. A click syncs now.
 - **A vault changed by a newer kofrenot** opens **read only** when that version allows it: you see and search it, without what this version does not know, and change nothing; *Read only* in the title bar leads to the latest kofrenot. Otherwise it stays closed until you update.
@@ -255,7 +257,7 @@ Gear button in the title bar, or tray menu > Settings. Changes are saved at once
 
 | Tab          | Description                                                                           |
 | ------------ | ------------------------------------------------------------------------------------- |
-| General      | The hotkey that shows kofrenot; where the main window appears; the web search engine; start with Windows; privacy screen |
+| General      | The hotkey that shows kofrenot; where the main window appears; the web search engine; start with Windows; privacy screen; hide or lock when Windows locks, cover or lock after a while without input |
 | Key bindings | Every shortcut                                                                        |
 | Vault        | Your vaults: add, remove, order, rename, hotkey, pass phrase, members                 |
 | Server       | Your account on a Kofre server: sign up, sign in, password, the account's pass phrase |

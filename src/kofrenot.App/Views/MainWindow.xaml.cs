@@ -62,6 +62,7 @@ public partial class MainWindow : Window
         _tabList = new TabList(tabs);
         _createSettings = createSettings;
         _createImageWindow = createImageWindow;
+        _guard = new PrivacyGuard(settings, log);
 
         InitializeComponent();
         InputBox.GraphOf = () => _session.Current?.Graph;
@@ -71,6 +72,7 @@ public partial class MainWindow : Window
         StateChanged += (_, _) => FitMaximized();
         FitMaximized();
         AttachPrivacyScreen();
+        AttachAutoLock();
         DetailsPanel.Log = log;
         DetailsPanel.Rename = rename => _session.Rename(Ask, rename);
         DetailsPanel.Write = (change, action) => _session.Write(Ask, change, action);

@@ -81,7 +81,10 @@ public class SettingsCatalogTests
     [InlineData("summon", SettingsCatalog.HotkeyId)]
     [InlineData("startup", SettingsCatalog.AutoStartId)]
     [InlineData("with windows", SettingsCatalog.AutoStartId)]
-    [InlineData("privacy", SettingsCatalog.PrivacyScreenId)]
+    [InlineData("screen sharing", SettingsCatalog.PrivacyScreenId)]
+    [InlineData("win+l", SettingsCatalog.OnWindowsLockId)]
+    [InlineData("sleeps", SettingsCatalog.OnWindowsLockId)]
+    [InlineData("idle", SettingsCatalog.IdleId)]
     [InlineData("bindings", SettingsCatalog.KeyBindingsId)]
     [InlineData("dropbox", SettingsCatalog.VaultsId)]
     [InlineData("password", SettingsCatalog.VaultsId)]
@@ -94,6 +97,14 @@ public class SettingsCatalogTests
     public void Find_FindsTheVaultHotkeyAndLinkTypeSettings(string query, string id)
     {
         Assert.Equal(id, Assert.Single(SettingsCatalog.Find(query)).Id);
+    }
+
+    [Fact]
+    public void Find_Privacy_ListsTheCoverAndTheLocks()
+    {
+        Assert.Equal(
+            [SettingsCatalog.PrivacyScreenId, SettingsCatalog.OnWindowsLockId, SettingsCatalog.IdleId],
+            SettingsCatalog.Find("privacy").Select(entry => entry.Id));
     }
 
     [Fact]

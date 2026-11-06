@@ -24,6 +24,8 @@ It covers kofrenot on Windows and on Android; versions before 0.9 ran on Windows
   - **A link type's qualifiers**, in Settings > **Link types** > **Qualifiers**: a list of fields, as a node type's, for any link type, the built-in ones included (their names kept); one taken out stays on its links, with its value, as their own (asked first) ([README](README.md#node-types-and-fields)).
   - **Several links of a type between two nodes**: with qualifiers typed for nodes linked already, the input box lists their links (*married to Bob · 1995*, *married to Bob · 2015*) and **+ a new link**; **Up/Down** or a click chooses which one is updated, or adds another beside them ([README](README.md#input-box)).
   - **A tree sorted by a qualifier** of its links: *Sorted by* in its definition, its children by that value (books by date), those without one after, by name ([README](README.md#views)).
+  - **The vault hidden or locked with Windows**: when Windows locks or goes to sleep, the open vault is hidden (by default: covered, the window hidden) or locked, its pass phrase asked again even when remembered, as set in Settings > General ([README](README.md#vaults)).
+  - **The vault covered, or locked, after a while without input**: covered after 5 minutes by default, locked after a time you choose (never by default), in Settings > General ([README](README.md#vaults)).
 
 ### Changed
 - **Both**
