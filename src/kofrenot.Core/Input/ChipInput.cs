@@ -37,6 +37,9 @@ public sealed class ChipInput(string? fixedLeft = null)
 
     private bool IsFixed => _fixedLeft is not null;
 
+    // A query (?person:): text only, proposed by QueryCompletion; never labels.
+    private bool IsQueryText => !IsFixed && Labels.FirstOrDefault() is null && QueryParser.IsQuery(Tail);
+
     private IEnumerable<string> Labels => new[] { _left, _linkType, _right }.OfType<string>();
 
     /// <summary>
@@ -58,7 +61,7 @@ public sealed class ChipInput(string? fixedLeft = null)
             return false;
         }
 
-        var labelled = _linkType is null && Recognize(graph.Types);
+        var labelled = _linkType is null && !IsQueryText && Recognize(graph.Types);
         while (_linkType is not null && RecognizeQualifier(graph))
         {
             labelled = true;
@@ -110,6 +113,11 @@ public sealed class ChipInput(string? fixedLeft = null)
             return null;
         }
 
+        if (IsQueryText)
+        {
+            return QueryCompletion.Propose(graph, Tail);
+        }
+
         if (_linkType is null)
         {
             return _fixedLeft is { } left
@@ -132,6 +140,13 @@ public sealed class ChipInput(string? fixedLeft = null)
         if (Proposal(graph) is not { } proposal)
         {
             return false;
+        }
+
+        if (proposal.IsQueryText)
+        {
+            // Text added: the next word is proposed at once.
+            Tail += proposal.Rest;
+            return true;
         }
 
         if (proposal.IsQualifier)
@@ -176,6 +191,14 @@ public sealed class ChipInput(string? fixedLeft = null)
         (_left, _linkType, _right) = (_fixedLeft, null, null);
         _qualifiers.Clear();
         _typedAtEnd = false;
+    }
+
+    /// <summary>A way to start a query chosen (<see cref="QueryStart"/>): the box holds its text, what follows it proposed.</summary>
+    public void Replace(string text)
+    {
+        Clear();
+        Tail = text;
+        _typedAtEnd = true;
     }
 
     public void Clear()

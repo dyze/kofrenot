@@ -413,6 +413,52 @@ public sealed class InputPresenterTests
     }
 
     [Fact]
+    public void AQuery_ListsTheNodesFound_AndAddsNothing()
+    {
+        var (dune, ideas) = (Add("Dune"), new Node(Guid.NewGuid(), TypeCatalog.Note.Id, "Ideas", Start));
+        _graph.Add(ideas);
+        _graph.Add(new Link(Guid.NewGuid(), TypeCatalog.Contains.Id, dune.Id, ideas.Id, Start));
+
+        _input.Update(_graph, "?note:");
+
+        Assert.Null(_input.Request);
+        Assert.Null(_input.Plan);
+        Assert.Equal([new ResultRow("Ideas", false, false, ideas, Visual: NodeVisual.Of(_graph, ideas))], _input.Rows);
+        Assert.Equal("1 node found. Down, then Enter to see its details.", _input.Preview);
+
+        _input.Update(_graph, "?contained by Dune");
+        _input.MoveSelection(1);
+
+        Assert.Equal(ideas, _input.SelectedRow?.Node);
+        Assert.Equal("Enter to see the details of “Ideas”. Up/Down: another one.", _input.Preview);
+    }
+
+    [Fact]
+    public void TheMarkAlone_ListsTheWaysToStartAQuery_UpDownSelectingOne()
+    {
+        Add("Dune");
+
+        _input.Update(_graph, "?");
+
+        Assert.Null(_input.Plan);
+        Assert.Equal(QueryCompletion.Hint, _input.Preview);
+        Assert.Equal(new ResultRow("?Generic:", false, false, Detail: "1 node", Insert: "?Generic: "), _input.Rows[0]);
+        Assert.All(_input.Rows, row => Assert.NotNull(row.Insert));
+
+        Assert.True(_input.MoveSelection(1));
+        Assert.Equal("?Generic: ", _input.SelectedRow?.Insert);
+        Assert.Equal("Tab or Enter to type “?Generic:”. Up/Down: another one.", _input.Preview);
+    }
+
+    [Fact]
+    public void WithoutTheMark_AQuerysWords_AddAsBefore()
+    {
+        _input.Update(_graph, "note:");
+
+        Assert.Equal(new NodeRequest("note:"), _input.Request);
+    }
+
+    [Fact]
     public void ATypedText_ListsNoRecentNodes()
     {
         var dune = Add("Dune");

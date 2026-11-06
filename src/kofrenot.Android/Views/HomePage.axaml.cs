@@ -113,10 +113,26 @@ public sealed partial class HomePage : UserControl, IPage
             return;
         }
 
-        if (text.Length > 0 && LinkSearch.Find(graph, text) is { } links)
+        if (text.Length > 0 && !QueryParser.IsQuery(text) && LinkSearch.Find(graph, text) is { } links)
         {
             List.ItemsSource = links.Select(hit => NodeRow.Of(graph, hit.Found, detail: $"{hit.From.Name} {hit.Verb?.Name} {hit.To.Name} · {hit.Field.Label}: {hit.Field.Display}")).ToList();
             ShowMessage(links.Count == 0 ? "No link has this qualifier." : null);
+            return;
+        }
+
+        // A query (person:, contained by Kitchen, changed: this week), as the input box on Windows.
+        if (QueryParser.Parse(text, graph.Types) is { IsEmpty: true })
+        {
+            List.ItemsSource = QueryCompletion.Starts(graph).Select(start => new QueryStartRow(start.Insert.Trim(), start.Detail, start.Insert)).ToList();
+            ShowMessage(QueryCompletion.Hint);
+            return;
+        }
+
+        if (QueryParser.Parse(text, graph.Types) is { } query)
+        {
+            var found = NodeQuerySearch.Find(graph, query, _shell.Services.Recent.Of(vault.Id), DateTimeOffset.UtcNow, TimeZoneInfo.Local);
+            List.ItemsSource = found.Hits.Select(hit => NodeRow.Of(graph, hit.Node, detail: hit.Detail)).ToList();
+            ShowMessage(found.Problem ?? (found.Total == 0 ? "No node found." : null));
             return;
         }
 
@@ -207,7 +223,8 @@ public sealed partial class HomePage : UserControl, IPage
     // The search tab's text read as the input box reads it: what it adds, offered under the box.
     private void ShowAdd(KnowledgeGraph graph, string text)
     {
-        _adding = _tab.IsSearch && !_shell.Services.Session.IsReadOnly && InputParser.Parse(text, graph) is { } request
+        _adding = _tab.IsSearch && !_shell.Services.Session.IsReadOnly && QueryParser.Parse(text, graph.Types) is null
+            && InputParser.Parse(text, graph) is { } request
             ? new CreationForm(graph, request)
             : null;
         AddButton.IsVisible = _adding is { CanAdd: true };
@@ -232,13 +249,24 @@ public sealed partial class HomePage : UserControl, IPage
 
     private void List_SelectionChanged(object? sender, SelectionChangedEventArgs e)
     {
-        var node = List.SelectedItem switch
+        var selected = List.SelectedItem;
+        var node = selected switch
         {
             NodeRow row => row.Node,
             TreeRow row => row.Item.Node,
             _ => null,
         };
         List.SelectedItem = null;
+        if (selected is QueryStartRow start && Vault is { } vault)
+        {
+            _shell.Services.Log.Info("Action", "Start a query from the list");
+            _chips.Replace(start.Insert);
+            SetSearchText(_chips.Tail);
+            ShowList(vault);
+            SearchBox.Focus();
+            return;
+        }
+
         if (node is not null)
         {
             _shell.Push(new NodePage(_shell, node));

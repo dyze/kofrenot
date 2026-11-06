@@ -29,10 +29,12 @@ public static class InputCompletion
     public static Proposal? ProposeLinkTypeAfter(TypeCatalog types, string left, string typed) =>
         typed.Trim().Length == 0 ? null : LinkTypeProposal(types, $"{left} {typed.TrimStart()}", only: InputParser.Words(left).Length);
 
-    private static Proposal? NodeProposal(KnowledgeGraph graph, string typed) =>
+    /// <summary>The rest of the shortest node's name starting with the text typed; of those <paramref name="kept"/> only, when given.</summary>
+    internal static Proposal? NodeProposal(KnowledgeGraph graph, string typed, Func<Node, bool>? kept = null) =>
         graph.NodesByKey.Values
-            .Where(nodes => nodes.Count > 0)
-            .Select(nodes => nodes[0].Name)
+            .Select(nodes => nodes.FirstOrDefault(node => kept?.Invoke(node) ?? true))
+            .OfType<Node>()
+            .Select(node => node.Name)
             .Where(name => name.Length > typed.Length && name.StartsWith(typed, StringComparison.OrdinalIgnoreCase))
             .OrderBy(name => name.Length)
             .ThenBy(name => name, StringComparer.OrdinalIgnoreCase)

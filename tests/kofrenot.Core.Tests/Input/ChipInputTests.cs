@@ -324,6 +324,34 @@ public sealed class ChipInputTests
         Assert.Empty(input.Chips(_graph, plan: null));
     }
 
+    [Fact]
+    public void AQuery_IsText_ItsProposalsAddedAsText_WithTheNextOneAtOnce()
+    {
+        Add("Kitchen");
+
+        Assert.False(TypeEach("?Kitchen contains "));
+        Assert.Empty(_input.Chips(_graph, plan: null));
+
+        _input.Clear();
+        TypeEach("?ch");
+        Assert.True(_input.Proposal(_graph)?.IsQueryText);
+        Assert.True(_input.Accept(_graph));
+        Assert.Equal("?changed: ", _input.Tail);
+        Assert.Equal("today", _input.Proposal(_graph)?.Rest);
+        Assert.Empty(_input.Chips(_graph, plan: null));
+    }
+
+    [Fact]
+    public void AQueryStarted_ReplacesTheText_AndProposesWhatFollows()
+    {
+        TypeEach("Dune");
+
+        _input.Replace("?opened: ");
+
+        Assert.Equal("?opened: ", _input.Text);
+        Assert.Equal("today", _input.Proposal(_graph)?.Rest);
+    }
+
     private bool TypeEach(string text) => TypeEach(_input, text);
 
     // Types the text one character at a time after the current one, as the input box does; true when labels formed.

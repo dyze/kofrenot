@@ -103,6 +103,15 @@ public partial class ChipBox : UserControl
         Update();
     }
 
+    /// <summary>A way to start a query chosen: the box holds its text, the caret at its end, what follows it proposed.</summary>
+    public void Replace(string text)
+    {
+        Input.Replace(text);
+        Update();
+        Box.Focus();
+        Box.CaretIndex = Box.Text.Length;
+    }
+
     /// <summary>All of it as text, selected, so typing replaces it: labels included.</summary>
     public void UnlabelAndSelect()
     {

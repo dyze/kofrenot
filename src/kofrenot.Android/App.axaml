@@ -60,6 +60,12 @@
     <DataTemplate DataType="views:HeaderRow">
       <TextBlock Classes="caption" Text="{Binding Text}" Margin="16,10,16,2" />
     </DataTemplate>
+    <DataTemplate DataType="views:QueryStartRow">
+      <StackPanel Margin="16,6" MinHeight="{StaticResource TouchTarget}" VerticalAlignment="Center">
+        <TextBlock Text="{Binding Text}" FontSize="{StaticResource BodySize}" />
+        <TextBlock Classes="caption" Text="{Binding Detail}" />
+      </StackPanel>
+    </DataTemplate>
     <DataTemplate DataType="views:NodeRow">
       <Grid ColumnDefinitions="Auto,*" Margin="{Binding Indent}" MinHeight="{StaticResource TouchTarget}">
         <views:NodePicture Item="{Binding}" Width="32" Height="32" VerticalAlignment="Center" />

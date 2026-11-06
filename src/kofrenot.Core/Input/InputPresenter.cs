@@ -9,21 +9,23 @@ namespace Kofrenot.Core.Input;
 /// <see cref="IsChosen"/>: the homonym chosen, or the row selected. A header (<see cref="IsHeader"/>)
 /// names the rows under it, while the input box is empty. A node row has its <see cref="Visual"/>.
 /// <see cref="LinkOption"/>: with qualifiers typed for nodes linked already, a link they may update, or
-/// (past the last) a new one beside them (<see cref="LinkPlan.LinkChoice"/>).
+/// (past the last) a new one beside them (<see cref="LinkPlan.LinkChoice"/>). After <c>?</c> alone, a way to start a
+/// query: <see cref="Insert"/> is the text it puts in the box (<see cref="QueryStart"/>).
 /// </summary>
-public sealed record ResultRow(string Text, bool IsLink, bool IsChosen, Node? Node = null, Node? From = null, bool IsHeader = false, NodeVisual? Visual = null, string? Detail = null, int? LinkOption = null)
+public sealed record ResultRow(string Text, bool IsLink, bool IsChosen, Node? Node = null, Node? From = null, bool IsHeader = false, NodeVisual? Visual = null, string? Detail = null, int? LinkOption = null, string? Insert = null)
 {
-    internal RowKey? Key => Node is null ? null : new RowKey(From?.Id, Node.Id);
+    internal RowKey? Key => Node is not null ? new RowKey(From?.Id, Node.Id) : Insert is not null ? new RowKey(null, Guid.Empty, Insert) : null;
 }
 
-/// <summary>Tells a row apart from the others: a node row has no <see cref="From"/>.</summary>
-internal readonly record struct RowKey(Guid? From, Guid Node);
+/// <summary>Tells a row apart from the others: a node row has no <see cref="From"/>, a way to start a query its <see cref="Insert"/>.</summary>
+internal readonly record struct RowKey(Guid? From, Guid Node, string? Insert = null);
 
 /// <summary>
 /// What the main window shows for the text of the input box: the request and the plan Enter opens
 /// in the creation screen, its preview, and the nodes found. For a link, the side being typed (Tab
 /// switches) is the one searched, and Up/Down choose among its homonyms. Otherwise Up/Down select
-/// a node or one of its links, whose details Enter opens instead.
+/// a node or one of its links, whose details Enter opens instead. A query (<see cref="QueryParser"/>) lists
+/// the nodes it finds, and adds nothing.
 /// </summary>
 public sealed class InputPresenter
 {
@@ -39,6 +41,8 @@ public sealed class InputPresenter
     private bool _rightActive;
     private RowKey? _selected;
     private IReadOnlyList<LinkHit>? _linkHits;
+    private QueryResult? _found;
+    private bool _queryStarts;
 
     /// <summary>What the text asks for, or null when it is empty.</summary>
     public InputRequest? Request { get; private set; }
@@ -83,8 +87,11 @@ public sealed class InputPresenter
 
         _graph = graph;
         _text = text;
-        _linkHits = LinkSearch.Find(graph, text);
-        Request = _linkHits is null ? InputParser.Parse(text, graph) : null;
+        var query = QueryParser.Parse(text, graph.Types);
+        _queryStarts = query is { IsEmpty: true };
+        _found = query is { IsEmpty: false } ? NodeQuerySearch.Find(graph, query, Recent, Clock.GetUtcNow(), Clock.LocalTimeZone) : null;
+        _linkHits = query is null ? LinkSearch.Find(graph, text) : null;
+        Request = query is null && _linkHits is null ? InputParser.Parse(text, graph) : null;
         if (Request is LinkRequest link)
         {
             KeepChoices(link);
@@ -98,7 +105,11 @@ public sealed class InputPresenter
 
         Plan = Request is null ? null : new AddPlanner(graph).Plan(Request, Choices);
         ColumnStarts = [0];
-        Rows = _linkHits is { } hits ? HitRows(graph, hits) : Plan is null ? StartRows(graph) : RowsOf(graph, Plan);
+        Rows = _linkHits is { } hits ? HitRows(graph, hits)
+            : _queryStarts ? QueryStartRows(graph)
+            : _found is { } found ? QueryRows(graph, found)
+            : Plan is null ? StartRows(graph)
+            : RowsOf(graph, Plan);
         if (SelectedRow is null)
         {
             _selected = null;
@@ -289,6 +300,16 @@ public sealed class InputPresenter
             return $"Enter to see the details of “{text.NodeLabel(selected)}”. Up/Down: another one.";
         }
 
+        if (SelectedRow?.Insert is { } insert)
+        {
+            return $"Tab or Enter to type “{insert.Trim()}”. Up/Down: another one.";
+        }
+
+        if (_queryStarts)
+        {
+            return QueryCompletion.Hint;
+        }
+
         if (_linkHits is { } hits)
         {
             return hits.Count switch
@@ -297,6 +318,11 @@ public sealed class InputPresenter
                 1 => "1 link found. Down, then Enter to see its details.",
                 _ => $"{hits.Count} links found. Up/Down, then Enter to see the details of one.",
             };
+        }
+
+        if (_found is { } found)
+        {
+            return found.Summary;
         }
 
         if (plan is null)
@@ -396,6 +422,23 @@ public sealed class InputPresenter
                 hit.Found == hit.From ? hit.To : hit.From,
                 Visual: NodeVisual.Of(graph, hit.Found),
                 Detail: $"{hit.Field.Label}: {hit.Field.Display}"))
+            .Select(row => row with { IsChosen = row.Key == _selected })
+            .ToList();
+    }
+
+    // After "?" alone: the ways to start a query, each putting its text in the box.
+    private List<ResultRow> QueryStartRows(KnowledgeGraph graph) =>
+        QueryCompletion.Starts(graph)
+            .Select(start => new ResultRow(start.Insert.Trim(), IsLink: false, IsChosen: false, Detail: start.Detail, Insert: start.Insert))
+            .Select(row => row with { IsChosen = row.Key == _selected })
+            .ToList();
+
+    // The nodes a query found (by a time, with when), each opening its details.
+    private List<ResultRow> QueryRows(KnowledgeGraph graph, QueryResult found)
+    {
+        var text = new PlanText(graph);
+        return found.Hits
+            .Select(hit => NodeRow(graph, text, hit.Node, chosen: false) with { Detail = hit.Detail })
             .Select(row => row with { IsChosen = row.Key == _selected })
             .ToList();
     }

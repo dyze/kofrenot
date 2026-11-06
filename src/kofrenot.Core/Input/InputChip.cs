@@ -17,6 +17,7 @@ public sealed record InputChip(string Text, bool IsLinkType, bool IsNew = false,
 /// <summary>
 /// What Tab would add after the text (<see cref="InputCompletion"/>): <see cref="Rest"/> is shown in
 /// grey, <see cref="Label"/> becomes a label. A link type comes after the first <see cref="WordsBefore"/> words.
-/// A qualifier's name (<see cref="IsQualifier"/>) comes after the last <c>,</c>.
+/// A qualifier's name (<see cref="IsQualifier"/>) comes after the last <c>,</c>. In a query (<see cref="IsQueryText"/>,
+/// <see cref="QueryCompletion"/>), <see cref="Rest"/> is added as text.
 /// </summary>
-public sealed record Proposal(string Rest, string Label, bool IsLinkType, int WordsBefore = 0, bool IsQualifier = false);
+public sealed record Proposal(string Rest, string Label, bool IsLinkType, int WordsBefore = 0, bool IsQualifier = false, bool IsQueryText = false);

@@ -47,6 +47,7 @@ Both apps share the same vaults and the same core; each shows its own set of fea
 | Search names, pinned and recent nodes | ✔ | ✔ |
 | Search field values | ✔ | ✔ |
 | Search links by a qualifier (`written by, Date 1965`, `, Source isfdb`); ranges of dates and numbers (`Born 1900..1950`) | ✔ | ✔ |
+| Queries: by type (`?person:`), linked to a node (`?contained by Kitchen`), by time (`?changed: this week`), with proposals; `?` alone lists how to start one | ✔ | ✔ |
 | A link's first qualifier shown after its other node | ✔ in its row; beside its name in a graph | ✔ in its row |
 | Recent: opened here or changed on any device (last 7 days) | ✔ empty input box, as many as the window fits, in columns when wide | ✔ home, the 10 newest |
 | Node details, links | ✔ the Link box with labels and proposals, as the input box | ✔ |
@@ -170,8 +171,13 @@ Type in the box at the top of the main window; the line under it says what Enter
 | `Dune is a novel` | a link from *Dune* to *novel* |
 | `Dune written by Frank Herbert, Date 1965, Source isfdb.org` | the link with its **qualifiers**; typed again for a link already there, it updates them (*Date: 1965 → 1966*); `, Date` with no value takes one out |
 | `written by, Date 1965` · `Frank Herbert wrote, Date 1960..1970` · `, Source isfdb` | nothing: it **finds the links** of that type, of that node, or any, with that value or in that range, each opening the node it leads to |
+| `?person:` · `?person: Frank` | nothing: it **lists the nodes of a type**, or those of it whose name matches, by name |
+| `?contained by Kitchen` · `?written by Frank Herbert` · `?written by` | nothing: it **lists the nodes linked so** to that node (while none has the name typed, to those whose names match it), or to any |
+| `?changed: this week` · `?added: 2025-08` · `?opened: today` · `?changed: 2025-01..2025-03` | nothing: it **lists the nodes by when** they last changed, were added, or were last opened on this device, newest first, each with when; a period is `today`, `yesterday`, `this week`, `this month`, `this year`, a date, a month, a year or a range of them, none for any time |
+| `?book: written by Frank Herbert` · `?note: changed: this week` | a type in front narrows a link or a time |
 
 - Matching nodes are listed as you type; **Tab** accepts the rest of a name proposed in grey.
+- A **query** starts with **?**: then a type's name and **:**, a link phrase, or `changed:`, `added:`, `opened:`. Each word is proposed in grey (**Tab** adds it), then a period after a time, a node after a link phrase; `?` alone lists every way to start one (a type with its number of nodes, a time, a link phrase): **Up/Down** then **Tab** or **Enter**, or a click, puts it in the box. A query lists at most 200 nodes and adds nothing: **Up/Down** selects one, **Enter** opens it. `?changed:` reads as a time even if a node type has that name.
 - **Qualifiers** come after a complete link: **,** then a qualifier's name of its link type (or its first letters, the rest proposed in grey) makes it a label; what follows is its value, until the next **,** and name. A **,** not followed by a qualifier's name stays in the name (*Herbert, Frank*). The link type's qualifiers are set in Settings > Link types; the creation screen shows them to fill. With qualifiers typed for nodes linked so already, the list offers their links (*married to Bob · 1995*) and **+ a new link**: **Up/Down** or a click chooses which one is updated, or adds another beside them.
 - **Enter** shows the creation screen first: the type of each new node (generic, note, dataset or view), a note's text, a dataset's file.
 - With the box empty, your **pinned** nodes are listed, then your **recent** ones, as many as the window fits (in two or three columns when it is wide, **Left/Right** going from one to the next): the newest you opened on this computer or that changed on any device in the last 7 days, each node once, with its latest activity (*changed 5 min ago*, *opened yesterday*): a change made on your phone is at hand here. Pins are synced; the nodes opened are this computer's.

@@ -8,6 +8,9 @@ namespace Kofrenot.Phone.Views;
 /// <summary>A header between the rows of a list (Pinned, Recent).</summary>
 public sealed record HeaderRow(string Text);
 
+/// <summary>After <c>?</c> alone, a way to start a query: a tap puts its text in the search box (<see cref="Kofrenot.Core.Input.QueryStart"/>).</summary>
+public sealed record QueryStartRow(string Text, string Detail, string Insert);
+
 /// <summary>
 /// A node in a list: its picture (<see cref="NodePicture"/>: its thumbnail, else its icon and colour), its name
 /// and, as on Windows, a detail only where it says more than its icon (a recent node's activity, the field a search

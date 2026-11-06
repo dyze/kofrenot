@@ -283,6 +283,7 @@ public partial class MainWindow : Window
 
         e.Handled = e.Key switch
         {
+            Key.Enter or Key.Tab when _input.SelectedRow is { Insert: { } insert } => StartQuery(insert),
             Key.Enter when _input.SelectedRow is { Node: { } node } row => OpenDetails(node, row.From),
             Key.Enter => AddInput(),
             Key.Up => Presented(_input.MoveChoice(-1) || _input.MoveSelection(-1)),
@@ -297,6 +298,12 @@ public partial class MainWindow : Window
     /// <summary>A click selects a row, as Up/Down would (or chooses a homonym); a double-click opens its details.</summary>
     private void Result_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
+        if (sender is FrameworkElement { DataContext: ResultRow { Insert: { } insert } })
+        {
+            e.Handled = StartQuery(insert);
+            return;
+        }
+
         if (sender is not FrameworkElement { DataContext: ResultRow { Node: { } node } row })
         {
             return;
@@ -312,6 +319,14 @@ public partial class MainWindow : Window
         }
 
         e.Handled = true;
+    }
+
+    /// <summary>A way to start a query chosen (after <c>?</c> alone): its text in the input box.</summary>
+    private bool StartQuery(string insert)
+    {
+        _log.Info("Action", "Start a query from the list");
+        InputBox.Replace(insert);
+        return true;
     }
 
     private void OpenResult_Click(object sender, RoutedEventArgs e)
