@@ -26,7 +26,7 @@
       <!-- The note editor: takes room only for a note. -->
       <RowDefinition x:Name="NoteRow" Height="Auto" />
       <RowDefinition Height="Auto" />
-      <!-- The links: no room kept when there are none, so a note takes it. -->
+      <!-- The links: no room kept when there are none, nor under a note, which takes it (NodeDetailsPanel.LinksArea). -->
       <RowDefinition x:Name="LinksRow" Height="*" />
     </Grid.RowDefinitions>
 
@@ -349,7 +349,43 @@
       <TextBlock x:Name="LinkPreviewText" Margin="2,4,0,0" Opacity="0.7" TextWrapping="Wrap" Visibility="Collapsed" />
     </StackPanel>
 
-    <ScrollViewer Grid.Row="4" VerticalScrollBarVisibility="Auto" Focusable="False">
+    <!-- Under a note with links, in the gap above them: drags their height (NodeDetailsPanel.LinksArea). -->
+    <Thumb x:Name="LinksSplitter"
+           Grid.Row="3"
+           Height="10"
+           Margin="0,4,0,0"
+           VerticalAlignment="Top"
+           Cursor="SizeNS"
+           Focusable="False"
+           ToolTip="Drag to resize the links"
+           Visibility="Collapsed"
+           DragDelta="LinksSplitter_DragDelta"
+           DragCompleted="LinksSplitter_DragCompleted">
+      <Thumb.Template>
+        <ControlTemplate TargetType="Thumb">
+          <Border Background="Transparent">
+            <Border x:Name="Grip"
+                    Width="40"
+                    Height="3"
+                    CornerRadius="1.5"
+                    Opacity="0.35"
+                    Background="{DynamicResource ControlStrokeColorDefaultBrush}" />
+          </Border>
+          <ControlTemplate.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+              <Setter TargetName="Grip" Property="Opacity" Value="1" />
+              <Setter TargetName="Grip" Property="Background" Value="{DynamicResource AccentFillColorDefaultBrush}" />
+            </Trigger>
+            <Trigger Property="IsDragging" Value="True">
+              <Setter TargetName="Grip" Property="Opacity" Value="1" />
+              <Setter TargetName="Grip" Property="Background" Value="{DynamicResource AccentFillColorDefaultBrush}" />
+            </Trigger>
+          </ControlTemplate.Triggers>
+        </ControlTemplate>
+      </Thumb.Template>
+    </Thumb>
+
+    <ScrollViewer x:Name="LinksScroll" Grid.Row="4" VerticalScrollBarVisibility="Auto" Focusable="False">
       <ItemsControl x:Name="LinksList" Grid.IsSharedSizeScope="True">
         <ItemsControl.ItemTemplate>
           <DataTemplate>

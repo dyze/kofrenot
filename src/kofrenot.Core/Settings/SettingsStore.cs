@@ -81,6 +81,7 @@ public sealed class SettingsStore
             : null;
         Hotkey = Hotkey.TryParse(data?.Hotkey, out var hotkey) ? hotkey : Hotkey.Default;
         SettingsTab = data?.SettingsTab is { } tab && SettingsCatalog.Tabs.Contains(tab) ? tab : SettingsCatalog.GeneralTab;
+        NoteLinksHeight = data?.NoteLinksHeight is { } height && IsHeight(height) ? height : null;
     }
 
     /// <summary>When on, the log also records detailed (debug) entries. Off by default.</summary>
@@ -123,6 +124,9 @@ public sealed class SettingsStore
 
     /// <summary>The Settings tab shown last, where Settings opens again. General by default, or for a tab no longer there.</summary>
     public string SettingsTab { get; private set; }
+
+    /// <summary>The height of a note's links, as last dragged (device-independent pixels); null until then.</summary>
+    public double? NoteLinksHeight { get; private set; }
 
     public void SetServer(ServerAccount? server)
     {
@@ -233,6 +237,23 @@ public sealed class SettingsStore
         }
     }
 
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="height"/> is not a positive, finite number.</exception>
+    public void SetNoteLinksHeight(double height)
+    {
+        if (!IsHeight(height))
+        {
+            throw new ArgumentOutOfRangeException(nameof(height), height, "Not a height");
+        }
+
+        if (height != NoteLinksHeight)
+        {
+            NoteLinksHeight = height;
+            Save();
+        }
+    }
+
+    private static bool IsHeight(double height) => double.IsFinite(height) && height > 0;
+
     public void SetHotkey(Hotkey hotkey)
     {
         Hotkey = hotkey;
@@ -264,6 +285,7 @@ public sealed class SettingsStore
             CoverAfterMinutes = CoverAfterMinutes,
             LockAfterMinutes = LockAfterMinutes,
             WebSearch = WebSearch.ToString(),
+            NoteLinksHeight = NoteLinksHeight,
         };
         File.WriteAllText(_path, JsonSerializer.Serialize(data));
     }
@@ -356,6 +378,9 @@ public sealed class SettingsStore
         public int? LockAfterMinutes { get; init; }
 
         public string? WebSearch { get; init; }
+
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public double? NoteLinksHeight { get; init; }
     }
 
     /// <param name="Folder">Missing in a damaged file: the entry is skipped.</param>

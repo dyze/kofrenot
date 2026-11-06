@@ -29,9 +29,16 @@ public partial class NodeDetailsPanel : UserControl
         InitializeComponent();
         AttachLinkBox();
         DatasetBox.ViewChanged += FitDatasetRow;
-        SizeChanged += (_, _) => FitPropertiesRow();
-        Breadcrumb.SizeChanged += (_, _) => FitPropertiesRow();
-        LinksBar.SizeChanged += (_, _) => FitPropertiesRow();
+        SizeChanged += (_, _) => FitRows();
+        Breadcrumb.SizeChanged += (_, _) => FitRows();
+        LinksBar.SizeChanged += (_, _) => FitRows();
+        PropertiesScroll.SizeChanged += (_, _) => FitNoteLinksHeight();
+    }
+
+    private void FitRows()
+    {
+        FitPropertiesRow();
+        FitNoteLinksHeight();
     }
 
     /// <summary>
@@ -101,8 +108,6 @@ public partial class NodeDetailsPanel : UserControl
         ModifiedText.Text = Browser.Graph is { } graph ? DateOf(NodeFacts.Of(graph, details.Node).Modified) : string.Empty;
         LinksHeader.Text = details.Links.Count == 0 ? "No links" : $"Links ({details.Links.Count})";
         LinksList.ItemsSource = details.Links;
-        LinksRow.Height = details.Links.Count == 0 ? GridLength.Auto : new GridLength(1, GridUnitType.Star);
-        FitPropertiesRow();
         ConflictNames.ItemsSource = details.NameConflict;
         ShowPinAndOffline(details);
         ConflictPanel.Visibility = details.NameConflict.Count > 0 && !_editing ? Visibility.Visible : Visibility.Collapsed;

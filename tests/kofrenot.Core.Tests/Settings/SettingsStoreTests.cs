@@ -43,6 +43,29 @@ public sealed class SettingsStoreTests : IDisposable
     }
 
     [Fact]
+    public void TheNoteLinksHeight_IsPersisted_NoneByDefault()
+    {
+        var store = new SettingsStore(FilePath);
+        Assert.Null(store.NoteLinksHeight);
+
+        store.SetNoteLinksHeight(180);
+        store.SetNoteLinksHeight(180);
+
+        Assert.Equal(180, new SettingsStore(FilePath).NoteLinksHeight);
+        Assert.Throws<ArgumentOutOfRangeException>(() => store.SetNoteLinksHeight(0));
+        Assert.Throws<ArgumentOutOfRangeException>(() => store.SetNoteLinksHeight(double.NaN));
+    }
+
+    [Fact]
+    public void ANoteLinksHeightNotAHeight_IsIgnored()
+    {
+        Directory.CreateDirectory(_directory);
+        File.WriteAllText(FilePath, """{"NoteLinksHeight":-5}""");
+
+        Assert.Null(new SettingsStore(FilePath).NoteLinksHeight);
+    }
+
+    [Fact]
     public void TheVaults_AndTheSelectedOne_ArePersisted()
     {
         var first = new RegisteredVault(new VaultLocation(@"D:\Sync\private"), Guid.NewGuid(), new Hotkey(HotkeyModifiers.Ctrl | HotkeyModifiers.Alt, "I"));

@@ -207,7 +207,7 @@ A node has one or several **types**, each with its **fields**: *Frank Herbert* c
 - **Qualifiers** are fields on links (a date, a source, a place), of the same kinds. Settings > **Link types** > **Qualifiers** gives a link type its list, as a node type its fields, the built-in ones (*relates to*, *contains*, *is a*) included; one taken out stays on its links, with its value, as their own (asked first). A link can also have qualifiers of its own. They hang on the link, so *Dune written by Frank Herbert* and *Frank Herbert wrote Dune* show the same ones; a link changed to another type keeps them.
 
 ### Notes
-A note is Markdown text, saved as a new version each time (**Ctrl+S**, or by leaving it). **Checkboxes** on its toolbar turns its lines into a task list. Its checked items are collapsed at its bottom under their count (**▸ 3 checked**): a click shows them, or hides them again.
+A note is Markdown text, saved as a new version each time (**Ctrl+S**, or by leaving it). **Checkboxes** on its toolbar turns its lines into a task list. Its checked items are collapsed at its bottom under their count (**▸ 3 checked**): a click shows them, or hides them again. On Windows the note takes the room, its links under it only as tall as their rows, up to a third of the window: the grip above **Links** drags that height, kept for every note.
 
 ### Datasets
 A dataset holds one file: drop it on the creation screen or on the dataset. Texts and images are shown in kofrenot (decrypted in memory only), others are exported (**Export…**, or drag the file out). **Open** (Ctrl+O, or a double-click on a file that is not an image) opens the file with the app Windows associates with it: a decrypted copy, deleted at kofrenot's next start. Each import is a new version.

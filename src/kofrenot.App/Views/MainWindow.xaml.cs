@@ -95,6 +95,8 @@ public partial class MainWindow : Window
         DetailsPanel.ChangeTypes = plan => _session.ChangeTypes(Ask, plan);
         DetailsPanel.Restore = plan => _session.Restore(Ask, plan);
         DetailsPanel.WebSearchEngine = () => _settings.WebSearch;
+        DetailsPanel.NoteLinksHeight = _settings.NoteLinksHeight;
+        DetailsPanel.SaveNoteLinksHeight = _settings.SetNoteLinksHeight;
         DetailsPanel.WriteChanges = (changes, action) => _session.Write(Ask, changes, action);
         DetailsPanel.IsReadOnly = () => _session.IsReadOnly;
         DetailsPanel.AddLink = (request, choices) => RecordRecent(_session.Create(Ask, request, choices)) is not null;
