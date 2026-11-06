@@ -54,9 +54,18 @@ public sealed class InputPresenter
     /// <summary>The clock the recent nodes' activity is measured against; the system's, but in tests.</summary>
     public TimeProvider Clock { get; set; } = TimeProvider.System;
 
+    /// <summary>
+    /// The room the rows have on screen: while the text is empty, as many recent nodes as fit, in columns
+    /// (<see cref="ColumnStarts"/>). Null: <see cref="StartNodes.MaxRecent"/> of them, in one column.
+    /// </summary>
+    public HomeRoom? Room { get; set; }
+
     public string Preview { get; private set; } = Hint;
 
     public IReadOnlyList<ResultRow> Rows { get; private set; } = [];
+
+    /// <summary>The first row of each column (<see cref="HomeColumns"/>): only the empty box's rows have more than one.</summary>
+    public IReadOnlyList<int> ColumnStarts { get; private set; } = [0];
 
     /// <summary>The row selected with Up/Down (Enter opens the details of its <see cref="ResultRow.Node"/>), or null.</summary>
     public ResultRow? SelectedRow => _selected is null ? null : Rows.FirstOrDefault(row => row.Key == _selected);
@@ -88,6 +97,7 @@ public sealed class InputPresenter
         }
 
         Plan = Request is null ? null : new AddPlanner(graph).Plan(Request, Choices);
+        ColumnStarts = [0];
         Rows = _linkHits is { } hits ? HitRows(graph, hits) : Plan is null ? StartRows(graph) : RowsOf(graph, Plan);
         if (SelectedRow is null)
         {
@@ -123,6 +133,28 @@ public sealed class InputPresenter
         }
 
         _selected = next;
+        Update(_graph, _text);
+        return true;
+    }
+
+    /// <summary>
+    /// Left / Right, with the rows in columns: selects the row level with the selected one in the
+    /// column beside it (<see cref="HomeColumns.Beside"/>). False when it changed nothing.
+    /// </summary>
+    public bool MoveColumn(int step)
+    {
+        if (_graph is null || SelectedRow is not { } selected)
+        {
+            return false;
+        }
+
+        var keys = Rows.Select(row => row.Key).ToList();
+        if (HomeColumns.Beside(ColumnStarts, keys.Select(key => key is not null).ToList(), keys.IndexOf(selected.Key), step) is not { } next)
+        {
+            return false;
+        }
+
+        _selected = keys[next];
         Update(_graph, _text);
         return true;
     }
@@ -291,16 +323,25 @@ public sealed class InputPresenter
 
     /// <summary>
     /// While the input box is empty: the pinned nodes, then the recent ones (opened here or changed on
-    /// any device, with their latest activity), each under a header (<see cref="StartNodes"/>).
+    /// any device, with their latest activity), each under a header (<see cref="StartNodes"/>). With a
+    /// <see cref="Room"/>, every pinned node, and the recent ones that fit, in columns.
     /// </summary>
     private List<ResultRow> StartRows(KnowledgeGraph graph)
     {
         var text = new PlanText(graph);
         var rows = new List<ResultRow>();
-        var start = StartNodes.Of(graph, Recent, Clock.GetUtcNow());
+        var start = StartNodes.Of(graph, Recent, Clock.GetUtcNow(), Room?.MaxRows ?? StartNodes.MaxRecent);
         AddSection(rows, "Pinned", start.Pinned.Select(node => NodeRow(graph, text, node, chosen: false)));
+        var pinned = rows.Count;
         AddSection(rows, "Recent", start.Recent.Select(recent => NodeRow(graph, text, recent.Node, chosen: false) with { Detail = recent.Detail }));
-        return rows;
+        if (Room is not { } room)
+        {
+            return rows;
+        }
+
+        var columns = HomeColumns.Of(rows.Select(row => row.IsHeader).ToList(), room, kept: pinned);
+        ColumnStarts = columns.Starts;
+        return rows.Take(columns.Shown).ToList();
     }
 
     private void AddSection(List<ResultRow> rows, string header, IEnumerable<ResultRow> section)

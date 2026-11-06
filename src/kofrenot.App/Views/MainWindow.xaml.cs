@@ -263,13 +263,15 @@ public partial class MainWindow : Window
     private void ShowPresented()
     {
         PreviewText.Text = _input.Preview;
+        ColumnFlowPanel.SetStarts(ResultsList, _input.ColumnStarts);
         ResultsList.ItemsSource = _input.Rows;
         InputBox.ShowChips();
+        FitHomeLater();
     }
 
     /// <summary>
     /// Enter opens the selected node's details, or else adds; Up/Down choose among homonyms
-    /// while a link is typed, or else select a node; Tab accepts the proposal, or else switches the
+    /// while a link is typed, or else select a node; Left/Right select one in the column beside; Tab accepts the proposal, or else switches the
     /// side of a link; Right at the end accepts the proposal; Backspace at the start unlabels.
     /// </summary>
     private void InputBox_PreviewKeyDown(object sender, KeyEventArgs e)
@@ -285,6 +287,8 @@ public partial class MainWindow : Window
             Key.Enter => AddInput(),
             Key.Up => Presented(_input.MoveChoice(-1) || _input.MoveSelection(-1)),
             Key.Down => Presented(_input.MoveChoice(1) || _input.MoveSelection(1)),
+            Key.Left => Presented(_input.MoveColumn(-1)),
+            Key.Right => Presented(_input.MoveColumn(1)),
             Key.Tab => InputBox.AcceptProposal() || Presented(_input.SwitchSide()),
             _ => false,
         };

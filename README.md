@@ -48,7 +48,7 @@ Both apps share the same vaults and the same core; each shows its own set of fea
 | Search field values | ✔ | ✔ |
 | Search links by a qualifier (`written by, Date 1965`, `, Source isfdb`); ranges of dates and numbers (`Born 1900..1950`) | ✔ | ✔ |
 | A link's first qualifier shown after its other node | ✔ in its row; beside its name in a graph | ✔ in its row |
-| Recent: opened here or changed on any device (last 7 days) | ✔ empty input box | ✔ home |
+| Recent: opened here or changed on any device (last 7 days) | ✔ empty input box, as many as the window fits, in columns when wide | ✔ home, the 10 newest |
 | Node details, links | ✔ the Link box with labels and proposals, as the input box | ✔ |
 | Node types and fields shown | ✔ | ✔ (an image's thumbnail, **Open**) |
 | Views: trees and lists, as tabs | ✔ rows, cards (as tall as their content, pinned first, arranged by dragging), details; tabs reordered by dragging, **▾** lists those that do not fit | ✔ rows; **▾** lists every tab, **⋮** of a view tab closes it |
@@ -174,7 +174,7 @@ Type in the box at the top of the main window; the line under it says what Enter
 - Matching nodes are listed as you type; **Tab** accepts the rest of a name proposed in grey.
 - **Qualifiers** come after a complete link: **,** then a qualifier's name of its link type (or its first letters, the rest proposed in grey) makes it a label; what follows is its value, until the next **,** and name. A **,** not followed by a qualifier's name stays in the name (*Herbert, Frank*). The link type's qualifiers are set in Settings > Link types; the creation screen shows them to fill. With qualifiers typed for nodes linked so already, the list offers their links (*married to Bob · 1995*) and **+ a new link**: **Up/Down** or a click chooses which one is updated, or adds another beside them.
 - **Enter** shows the creation screen first: the type of each new node (generic, note, dataset or view), a note's text, a dataset's file.
-- With the box empty, your **pinned** nodes are listed, then your **recent** ones: the 10 newest you opened on this computer or that changed on any device in the last 7 days, each node once, with its latest activity (*changed 5 min ago*, *opened yesterday*): a change made on your phone is at hand here. Pins are synced; the nodes opened are this computer's.
+- With the box empty, your **pinned** nodes are listed, then your **recent** ones, as many as the window fits (in two or three columns when it is wide, **Left/Right** going from one to the next): the newest you opened on this computer or that changed on any device in the last 7 days, each node once, with its latest activity (*changed 5 min ago*, *opened yesterday*): a change made on your phone is at hand here. Pins are synced; the nodes opened are this computer's.
 - **Keep offline** (the arrow beside the pin, in a server vault's node details): its content (a note's text, a dataset's file) is downloaded ahead and kept on this computer, so it opens offline. Each device chooses its own: nothing is written to the vault. The tooltip says *kept offline* once it is here.
 
 ### Node details
@@ -243,7 +243,7 @@ The main ones on Windows; every shortcut is listed in Settings > **Key bindings*
 | --- | --- |
 | Any program | **Ctrl+Alt+K** shows kofrenot |
 | Main window | **Ctrl+1** to **Ctrl+9** switch vault · **Ctrl+L** locks it |
-| Input box | **Tab** accepts the proposal · **Enter** adds or opens · **Backspace** unlabels · **Esc** clears |
+| Input box | **Tab** accepts the proposal · **Enter** adds or opens · **Up/Down** select a row, **Left/Right** one in the column beside (empty box) · **Backspace** unlabels · **Esc** clears |
 | Node details | **F2** renames · **Ctrl+K** links · **Ctrl+Del** deletes · **Esc** goes back |
 | Note | **Ctrl+S** saves |
 | Dataset | **Ctrl+I** imports · **Ctrl+E** exports · **Ctrl+O** opens in its app |

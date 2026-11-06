@@ -8,7 +8,7 @@ namespace Kofrenot.Core.Browse;
 /// </summary>
 public sealed class RecentNodes(string path, ILog? log = null, TimeProvider? clock = null)
 {
-    public const int Max = 10;
+    public const int Max = 50;
 
     private readonly NodeListsFile<OpenedNode> _file = new(path, "Recent", "recent nodes", log);
     private readonly TimeProvider _clock = clock ?? TimeProvider.System;

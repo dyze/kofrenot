@@ -30,6 +30,8 @@ It covers kofrenot on Windows and on Android; versions before 0.9 ran on Windows
 ### Changed
 - **Both**
   - **A link changed to another type or way keeps its qualifiers**, those of its old type as its own.
+- **Windows**
+  - **The home fits the window**: with the input box empty, as many recent nodes as the window's height holds (10 before), in two or three columns when it is wide, **Left/Right** selecting the row beside; every pinned node is still listed; their latest activity (*changed 5 min ago*) dimmer ([README](README.md#input-box)).
 
 ## [0.15] - 2026-11-05
 

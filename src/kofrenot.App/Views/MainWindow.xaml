@@ -293,8 +293,14 @@
            nodes under a header. Each node has its picture (NodeVisualView). A row is highlighted
            when hovered; a click selects it (as Up/Down), a double-click or › opens its node's
            details, a right click offers to delete it. Nothing is focusable: typing stays in the input box. -->
-      <ScrollViewer x:Name="ResultsArea" Grid.Row="3" Margin="0,10,0,0" VerticalScrollBarVisibility="Auto" Focusable="False">
+      <ScrollViewer x:Name="ResultsArea" Grid.Row="3" Margin="0,10,0,0" VerticalScrollBarVisibility="Auto" Focusable="False" SizeChanged="ResultsArea_SizeChanged">
         <ItemsControl x:Name="ResultsList" FontSize="{StaticResource BodyFontSize}">
+          <!-- While the box is empty, as many rows as the window fits, in columns when it is wide (HomeColumns). -->
+          <ItemsControl.ItemsPanel>
+            <ItemsPanelTemplate>
+              <local:ColumnFlowPanel />
+            </ItemsPanelTemplate>
+          </ItemsControl.ItemsPanel>
           <ItemsControl.ItemTemplate>
             <DataTemplate>
               <Border x:Name="Frame" Margin="0,1" Style="{StaticResource RowFrame}" MouseLeftButtonDown="Result_MouseLeftButtonDown" MouseRightButtonUp="Result_MouseRightButtonUp">
@@ -312,7 +318,7 @@
                       <!-- A recent node: its latest activity, in grey. -->
                       <Run Text="{Binding Detail, Mode=OneWay, StringFormat={}  · {0}}"
                            FontSize="{StaticResource CaptionFontSize}"
-                           Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                           Foreground="{DynamicResource TextFillColorTertiaryBrush}" />
                     </TextBlock>
                     <Button x:Name="OpenButton" Grid.Column="2" Style="{StaticResource OpenRowButton}" Click="OpenResult_Click" />
                   </Grid>

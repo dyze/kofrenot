@@ -98,6 +98,17 @@ public sealed class StartNodesTests
         Assert.Equal("Node 0", recent[0].Node.Name);
     }
 
+    [Fact]
+    public void MoreThan_MaxRecent_AreListed_WhenAsked()
+    {
+        for (var i = 0; i < StartNodes.MaxRecent + 5; i++)
+        {
+            Add($"Node {i}", Now.AddMinutes(-i));
+        }
+
+        Assert.Equal(StartNodes.MaxRecent + 3, StartNodes.Of(_graph, [], Now, maxRecent: StartNodes.MaxRecent + 3).Recent.Count);
+    }
+
     private Node Add(string name, DateTimeOffset created)
     {
         var node = new Node(Guid.NewGuid(), TypeCatalog.Generic.Id, name, created);

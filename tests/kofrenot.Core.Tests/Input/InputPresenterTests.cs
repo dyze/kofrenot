@@ -363,6 +363,56 @@ public sealed class InputPresenterTests
     }
 
     [Fact]
+    public void WithARoom_AnEmptyText_ListsTheRecentNodesThatFit_InColumns()
+    {
+        var dune = Add("Dune");
+        _graph.Apply(new NodePinned(Guid.NewGuid(), Start, dune.Id));
+        var nodes = Enumerable.Range(1, 20).Select(i => Add($"Node {i}")).ToList();
+        _input.Recent = nodes.Select(node => new OpenedNode(node.Id, null)).ToList();
+        // Two columns of 4 node rows (or a header and 3 of them).
+        _input.Room = new HomeRoom(Width: 700, Height: 160, RowHeight: 40, HeaderHeight: 40);
+
+        _input.Update(_graph, "");
+
+        Assert.Equal(["Pinned", "Dune", "Recent", "Node 1", "Node 2", "Node 3", "Node 4", "Node 5"], _input.Rows.Select(row => row.Text));
+        Assert.Equal([0, 4], _input.ColumnStarts);
+    }
+
+    [Fact]
+    public void WithARoom_LeftAndRight_SelectTheRowLevelInTheColumnBeside()
+    {
+        var dune = Add("Dune");
+        _graph.Apply(new NodePinned(Guid.NewGuid(), Start, dune.Id));
+        var nodes = Enumerable.Range(1, 20).Select(i => Add($"Node {i}")).ToList();
+        _input.Recent = nodes.Select(node => new OpenedNode(node.Id, null)).ToList();
+        _input.Room = new HomeRoom(Width: 700, Height: 160, RowHeight: 40, HeaderHeight: 40);
+        _input.Update(_graph, "");
+
+        Assert.False(_input.MoveColumn(1));
+        _input.MoveSelection(1);
+
+        Assert.True(_input.MoveColumn(1));
+        Assert.Equal("Node 3", _input.SelectedRow?.Text);
+        Assert.False(_input.MoveColumn(1));
+        Assert.True(_input.MoveColumn(-1));
+        Assert.Equal("Dune", _input.SelectedRow?.Text);
+    }
+
+    [Fact]
+    public void WithARoom_ATypedText_IsInOneColumn()
+    {
+        var dune = Add("Dune");
+        _graph.Apply(new NodePinned(Guid.NewGuid(), Start, dune.Id));
+        _input.Room = new HomeRoom(Width: 700, Height: 10, RowHeight: 40, HeaderHeight: 40);
+
+        _input.Update(_graph, "");
+        Assert.Equal([0, 1], _input.ColumnStarts);
+
+        _input.Update(_graph, "Dune");
+        Assert.Equal([0], _input.ColumnStarts);
+    }
+
+    [Fact]
     public void ATypedText_ListsNoRecentNodes()
     {
         var dune = Add("Dune");

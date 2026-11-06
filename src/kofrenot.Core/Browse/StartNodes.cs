@@ -9,7 +9,7 @@ public sealed record RecentNode(Node Node, string? Detail);
 /// What the empty input box (on the phone, the home) lists: the pinned nodes, then the recent ones,
 /// each node once. A recent node was opened on this device (<see cref="RecentNodes"/>), or changed on
 /// any device in the last <see cref="ChangedWithin"/>: newest first by the later of both, at most
-/// <see cref="MaxRecent"/>. Changes are read from the vault, which every device has: nothing more is stored or synced.
+/// <c>maxRecent</c> (<see cref="MaxRecent"/> unless the screen fits more). Changes are read from the vault, which every device has: nothing more is stored or synced.
 /// </summary>
 public sealed record StartNodes(IReadOnlyList<Node> Pinned, IReadOnlyList<RecentNode> Recent)
 {
@@ -17,7 +17,7 @@ public sealed record StartNodes(IReadOnlyList<Node> Pinned, IReadOnlyList<Recent
 
     public static readonly TimeSpan ChangedWithin = TimeSpan.FromDays(7);
 
-    public static StartNodes Of(KnowledgeGraph graph, IReadOnlyList<OpenedNode> opened, DateTimeOffset now)
+    public static StartNodes Of(KnowledgeGraph graph, IReadOnlyList<OpenedNode> opened, DateTimeOffset now, int maxRecent = MaxRecent)
     {
         var pinned = graph.PinnedNodes;
         var pinnedIds = pinned.Select(node => node.Id).ToHashSet();
@@ -28,7 +28,7 @@ public sealed record StartNodes(IReadOnlyList<Node> Pinned, IReadOnlyList<Recent
             .OrderByDescending(activity => activity.At.HasValue)
             .ThenByDescending(activity => activity.At)
             .ThenBy(activity => activity.Order)
-            .Take(MaxRecent)
+            .Take(maxRecent)
             .Select(activity => new RecentNode(activity.Node, activity.Detail(now)))
             .ToList();
         return new StartNodes(pinned, recent);
