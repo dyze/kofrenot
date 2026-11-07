@@ -61,7 +61,7 @@ public partial class NodeDetailsPanel
     private Grid FieldBlockOf(NodeField field, IReadOnlyList<NodeField> fields, bool canEdit, FieldHolder holder)
     {
         var block = new Grid();
-        block.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(110) });
+        block.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto, MinWidth = 110, MaxWidth = 180, SharedSizeGroup = "FieldLabels" });
         block.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star), MaxWidth = 420 });
         block.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto, SharedSizeGroup = "FieldButtons" });
         block.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
@@ -73,7 +73,7 @@ public partial class NodeDetailsPanel
             Opacity = 0.7,
             Text = field.Label,
             TextTrimming = TextTrimming.CharacterEllipsis,
-            ToolTip = field.TypeName is { } type ? $"A {(holder.IsLink ? "qualifier" : "field")} of {type}" : holder.IsLink ? "A qualifier of this link's own" : "A field of this node's own",
+            ToolTip = $"{field.Label}: " + (field.TypeName is { } type ? $"a {(holder.IsLink ? "qualifier" : "field")} of {type}" : holder.IsLink ? "a qualifier of this link's own" : "a field of this node's own"),
         };
         Place(block, label, 0, 0);
         Place(block, EditorOf(field, canEdit, holder), 0, 1);

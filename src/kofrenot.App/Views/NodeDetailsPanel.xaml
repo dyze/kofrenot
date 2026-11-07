@@ -69,7 +69,8 @@
       <!-- Scrolls alone when the fields are too many: its height is capped (NodeDetailsPanel.FitPropertiesRow) so the links keep room;
            the wheel scrolls it even over a field's box. -->
       <ScrollViewer x:Name="PropertiesScroll" VerticalScrollBarVisibility="Auto" Focusable="False" PreviewMouseWheel="PropertiesScroll_PreviewMouseWheel">
-      <StackPanel VerticalAlignment="Top">
+      <!-- One scope: field labels and the Type, Created, Shows labels share one width (FieldLabels). -->
+      <StackPanel VerticalAlignment="Top" Grid.IsSharedSizeScope="True">
         <!-- The name: a click or F2 edits it in place (Enter or leaving it renames, Esc cancels). Under it, a conflict
              between names given on two devices, each name offered to keep. -->
         <StackPanel Margin="2,14,0,0">
@@ -209,7 +210,7 @@
 
         <Grid Margin="2,8,0,0">
           <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="110" />
+            <ColumnDefinition Width="Auto" MinWidth="110" MaxWidth="180" SharedSizeGroup="FieldLabels" />
             <ColumnDefinition Width="Auto" />
             <ColumnDefinition Width="Auto" />
             <ColumnDefinition Width="*" />
@@ -284,7 +285,7 @@
           <!-- A tab per type, then Its own, for a node of several (NodeDetailsPanel.Tabs). -->
           <WrapPanel x:Name="DetailTabs" Margin="-8,2,0,2" Visibility="Collapsed" />
           <!-- A block per field (NodeDetailsPanel.FieldBlockOf), in columns; their buttons one width in all. -->
-          <local:FieldColumnsPanel x:Name="FieldColumns" Grid.IsSharedSizeScope="True" />
+          <local:FieldColumnsPanel x:Name="FieldColumns" />
           <TextBlock x:Name="FieldStatus"
                      Margin="110,2,0,0"
                      Foreground="{DynamicResource SystemFillColorCautionBrush}"
