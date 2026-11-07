@@ -26,10 +26,13 @@
         </ListBox.ItemContainerStyle>
         <ListBox.ItemTemplate>
           <DataTemplate>
-            <StackPanel>
-              <TextBlock FontWeight="SemiBold" Text="{Binding Title}" />
-              <TextBlock Opacity="0.7" Text="{Binding Folder}" TextTrimming="CharacterEllipsis" />
-            </StackPanel>
+            <DockPanel>
+              <local:IconView DockPanel.Dock="Left" Margin="0,2,8,0" VerticalAlignment="Top" Size="16" Kind="{Binding Icon}" />
+              <StackPanel>
+                <TextBlock FontWeight="SemiBold" Text="{Binding Title}" />
+                <TextBlock Opacity="0.7" Text="{Binding Folder}" TextTrimming="CharacterEllipsis" />
+              </StackPanel>
+            </DockPanel>
           </DataTemplate>
         </ListBox.ItemTemplate>
       </ListBox>

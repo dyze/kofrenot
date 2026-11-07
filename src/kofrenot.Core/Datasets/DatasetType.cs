@@ -17,6 +17,7 @@ public enum DatasetCategory
     Image,
     Text,
     Code,
+    Data,
     Audio,
     Video,
     Archive,
@@ -41,9 +42,10 @@ public sealed record DatasetType(string Extension, DatasetCategory Category, Dat
         (DatasetCategory.Text, ["txt", "md", "csv", "tsv", "log", "rtf"]),
         (DatasetCategory.Code,
         [
-            "json", "xml", "html", "htm", "yaml", "yml", "ini", "toml", "cs", "py", "js", "ts", "css", "sql",
+            "html", "htm", "cs", "py", "js", "ts", "css", "sql",
             "sh", "cmd", "ps1", "java", "c", "cpp", "h", "go", "rs",
         ]),
+        (DatasetCategory.Data, ["json", "xml", "yaml", "yml", "ini", "toml"]),
         (DatasetCategory.Audio, ["wav", "mp3", "flac", "ogg", "m4a", "aac", "wma"]),
         (DatasetCategory.Video, ["mp4", "mkv", "avi", "mov", "webm", "wmv"]),
         (DatasetCategory.Archive, ["zip", "7z", "rar", "tar", "gz", "bz2", "xz"]),
@@ -62,7 +64,7 @@ public sealed record DatasetType(string Extension, DatasetCategory Category, Dat
         var viewer = category switch
         {
             DatasetCategory.Image when DecodedImages.Contains(extension) => DatasetViewer.Image,
-            DatasetCategory.Text or DatasetCategory.Code => DatasetViewer.Text,
+            DatasetCategory.Text or DatasetCategory.Code or DatasetCategory.Data => DatasetViewer.Text,
             _ => DatasetViewer.None,
         };
         return new DatasetType(extension, category, viewer);

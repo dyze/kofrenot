@@ -21,8 +21,9 @@ public static class IconPaths
     /// <summary>The path data of an icon; the <see cref="Fallback"/>'s for a name not known.</summary>
     public static string PathOf(string name) => Paths.Value.GetValueOrDefault(name) ?? Paths.Value[Fallback];
 
-    /// <summary>The icon of what a node holds.</summary>
-    public static string NameOf(NodeIcon icon) => icon.ToString().ToLowerInvariant();
+    /// <summary>The icon of what a node holds, its words joined by hyphens (<c>DataObject</c> → <c>data-object</c>).</summary>
+    public static string NameOf(NodeIcon icon) =>
+        string.Concat(icon.ToString().Select((letter, index) => index > 0 && char.IsUpper(letter) ? $"-{letter}" : $"{letter}")).ToLowerInvariant();
 
     /// <summary>The icon of a node type's icon (<see cref="TypeIcons"/>, <c>Contact</c> → <c>contact</c>); null for none, or one this version does not know.</summary>
     public static string? NameOfType(string? icon) => TypeIcons.Find(icon)?.ToLowerInvariant();

@@ -60,6 +60,27 @@ public sealed class NodeVisualTests
     }
 
     [Fact]
+    public void ATypeIcon_IsShownWithSpaces_ForItsHyphens()
+    {
+        Assert.Equal("Birthday cake", TypeIcons.LabelOf("Birthday-cake"));
+        Assert.Equal("Car", TypeIcons.LabelOf("Car"));
+        Assert.Equal(TypeIcons.All.Count, TypeIcons.All.Distinct().Count());
+    }
+
+    [Fact]
+    public void AFlatView_IsAList_ATreeOrAGraphView_AView()
+    {
+        var flat = Add("view");
+        _graph.Apply(new ViewEdited(Guid.NewGuid(), Start, flat.Id, new FlatDefinition("book"), []));
+        var tree = Add("view");
+        _graph.Apply(new ViewEdited(Guid.NewGuid(), Start, tree.Id, new TreeDefinition(Guid.NewGuid(), "contains"), []));
+
+        Assert.Equal(NodeIcon.List, NodeVisual.Of(_graph, flat).Icon);
+        Assert.Equal(NodeIcon.View, NodeVisual.Of(_graph, tree).Icon);
+        Assert.Equal("list", IconPaths.NameOf(NodeIcon.List));
+    }
+
+    [Fact]
     public void ATypeAlone_HasItsIcon() =>
         Assert.Equal(
             [NodeIcon.Generic, NodeIcon.Note, NodeIcon.File, NodeIcon.View],
@@ -76,7 +97,8 @@ public sealed class NodeVisualTests
     }
 
     [Theory]
-    [InlineData("data.json", NodeIcon.Code)]
+    [InlineData("data.json", NodeIcon.DataObject)]
+    [InlineData("tool.py", NodeIcon.Code)]
     [InlineData("notes.md", NodeIcon.Text)]
     [InlineData("song.mp3", NodeIcon.Audio)]
     [InlineData("clip.mp4", NodeIcon.Video)]

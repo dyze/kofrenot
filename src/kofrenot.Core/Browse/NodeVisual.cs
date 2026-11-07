@@ -3,7 +3,7 @@ using Kofrenot.Core.Graph;
 
 namespace Kofrenot.Core.Browse;
 
-/// <summary>The icon of a node: by its type, and for a dataset by its file's category.</summary>
+/// <summary>The icon of a node: by its type, for a dataset by its file's category, for a view by how it shows (a flat one as a list).</summary>
 public enum NodeIcon
 {
     Generic,
@@ -12,11 +12,13 @@ public enum NodeIcon
     Image,
     Text,
     Code,
+    DataObject,
     Audio,
     Video,
     Archive,
     Pdf,
     View,
+    List,
 }
 
 /// <summary>
@@ -39,6 +41,7 @@ public sealed record NodeVisual(NodeIcon Icon, Guid? Thumbnail = null, NodeColor
             var ofType = type is null ? OfType(node.Type) : Of(type);
             return ofType with
             {
+                Icon = IsFlatView(graph, node) ? NodeIcon.List : ofType.Icon,
                 Thumbnail = ImageFieldOf(graph, node),
                 Color = color == NodeColor.None ? ofType.Color : color,
             };
@@ -47,6 +50,10 @@ public sealed record NodeVisual(NodeIcon Icon, Guid? Thumbnail = null, NodeColor
         var file = versions[^1].File;
         return new NodeVisual(IconOf(DatasetType.Of(file).Category), DatasetType.HasThumbnail(file) ? versions[^1].Id : ImageFieldOf(graph, node), color);
     }
+
+    // A view whose latest definition lists the nodes of a type.
+    private static bool IsFlatView(KnowledgeGraph graph, Node node) =>
+        node.Type == TypeCatalog.View.Id && graph.ViewVersionsOf(node.Id) is [.., { Definition: FlatDefinition }];
 
     // The fields are ordered only for a node with an image: most have none, and every row asks.
     private static Guid? ImageFieldOf(KnowledgeGraph graph, Node node) =>
@@ -71,6 +78,7 @@ public sealed record NodeVisual(NodeIcon Icon, Guid? Thumbnail = null, NodeColor
         DatasetCategory.Image => NodeIcon.Image,
         DatasetCategory.Text => NodeIcon.Text,
         DatasetCategory.Code => NodeIcon.Code,
+        DatasetCategory.Data => NodeIcon.DataObject,
         DatasetCategory.Audio => NodeIcon.Audio,
         DatasetCategory.Video => NodeIcon.Video,
         DatasetCategory.Archive => NodeIcon.Archive,

@@ -8,10 +8,16 @@ public static class TypeIcons
 {
     public static IReadOnlyList<string> All { get; } =
     [
-        "Contact", "People", "Book", "Home", "Place", "Calendar", "Flag", "Tag", "Heart", "Star",
-        "Idea", "Work", "Music", "Movie", "Shop", "Globe", "Airplane", "Game", "Code",
+        "Contact", "People", "Doctor", "Gender", "Gender-female", "Gender-male", "Gender-neutral",
+        "Book", "Bookmark", "Home", "Place", "Calendar", "Birthday-cake", "Gift", "Flag", "Tag", "Heart", "Star",
+        "Idea", "Work", "Tool", "Chart", "Music", "Movie", "Shop", "Card", "Package", "Cook", "Pills",
+        "Dog", "Flower", "Tree", "Globe", "Airplane", "Car", "Bike", "Motorbike",
+        "Phone", "Device", "Chat", "Cloud", "Game", "Code", "Bug",
     ];
 
     /// <summary>The icon of this name, or null when this version does not know it.</summary>
     public static string? Find(string? name) => All.FirstOrDefault(icon => icon == name);
+
+    /// <summary>How an icon's name is shown: <c>Birthday-cake</c> as "Birthday cake".</summary>
+    public static string LabelOf(string icon) => icon.Replace('-', ' ');
 }

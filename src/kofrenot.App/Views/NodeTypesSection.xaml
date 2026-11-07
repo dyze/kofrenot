@@ -60,10 +60,8 @@
               </StackPanel>
               <StackPanel Grid.Column="2" VerticalAlignment="Center">
                 <TextBlock Opacity="0.7" TextWrapping="Wrap" Text="{Binding Fields}" />
-                <TextBlock Foreground="{DynamicResource SystemFillColorCautionBrush}"
-                           TextWrapping="Wrap"
-                           Text="Changed on two devices: change it to settle which to keep."
-                           Visibility="{Binding Type.IsConflict, Converter={StaticResource VisibleWhen}}" />
+                <local:CautionText Text="Changed on two devices: change it to settle which to keep."
+                                   Visibility="{Binding Type.IsConflict, Converter={StaticResource VisibleWhen}}" />
               </StackPanel>
               <StackPanel Grid.Column="3" Orientation="Horizontal">
                 <Button Style="{StaticResource LineButton}" ToolTip="Change this node type" Click="EditType_Click">

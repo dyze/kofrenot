@@ -40,6 +40,7 @@ public sealed class IconPathsTests
     {
         Assert.Equal("contact", IconPaths.NameOf(new NodeVisual(NodeIcon.Note, TypeIcon: "Contact")));
         Assert.Equal("note", IconPaths.NameOf(new NodeVisual(NodeIcon.Note)));
+        Assert.Equal("data-object", IconPaths.NameOf(new NodeVisual(NodeIcon.DataObject)));
         Assert.Equal("note", IconPaths.NameOf(new NodeVisual(NodeIcon.Note, TypeIcon: "Unicorn")));
     }
 
@@ -47,6 +48,7 @@ public sealed class IconPathsTests
     public void ATypeIcon_IsNamedInLowerCase_NoneOrUnknownHasNone()
     {
         Assert.Equal("airplane", IconPaths.NameOfType("Airplane"));
+        Assert.Equal("birthday-cake", IconPaths.NameOfType("Birthday-cake"));
         Assert.Null(IconPaths.NameOfType(null));
         Assert.Null(IconPaths.NameOfType("Unicorn"));
     }

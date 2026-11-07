@@ -318,7 +318,7 @@ One number for the whole vault, `VaultFormat.Current`, written in the header and
 | 8 | 0.11 | `defineNodeType`, `addNodeType`, `removeNodeType`, `setField` ([Types and fields](#types-and-fields)): a 0.10 app cannot read them |
 | 9 | 0.13 | the field kinds `email` and `address` ([Types and fields](#types-and-fields)): a 0.12 app would drop a node type with such a field, and its values |
 | 10 | 0.14 | `editView` with `"display": "graph"` and `placeNodes` ([Views](#views)): a 0.13 app cannot read them |
-| 11 | 0.16 | **read-only compatible**, `oldestReader` 10, `oldestWriter` 11: qualifiers, `setField` on a `link` and `defineLinkType` with `fields`, of any link type, built-in ones included ([Types and fields](#types-and-fields), [User link types](#user-link-types)); `addLink` with `"separate": true`; a tree's `order` ([Views](#views)); a date as vague as known, its month `1965-08` or its year `1965` (`FieldValue`). A 0.15 app skips the qualifiers and a vague date's value, ignores `fields`, `separate` and `order` (a separate link then shows as a copy, the oldest), and would drop the qualifiers of a link type it renames: so it only reads. Every file 0.16 writes carries both levels, the header too |
+| 11 | 0.16 | **read-only compatible**, `oldestReader` 10, `oldestWriter` 11: the field kind `phone` (a 0.15 app keeps it as `FieldKind.Unknown`, its value shown as text); qualifiers, `setField` on a `link` and `defineLinkType` with `fields`, of any link type, built-in ones included ([Types and fields](#types-and-fields), [User link types](#user-link-types)); `addLink` with `"separate": true`; a tree's `order` ([Views](#views)); a date as vague as known, its month `1965-08` or its year `1965` (`FieldValue`). A 0.15 app skips the qualifiers and a vague date's value, ignores `fields`, `separate` and `order` (a separate link then shows as a copy, the oldest), and would drop the qualifiers of a link type it renames: so it only reads. Every file 0.16 writes carries both levels, the header too |
 
 #### Compatibility levels
 Since 0.15, a file of a newer format can say what an older kofrenot may still do with it. Both are optional, the file's format when missing (every file written up to format 10):
@@ -525,7 +525,7 @@ removeNodeType ── takes out by the changes          owner "own", or a field 
 
 | Part | How |
 | --- | --- |
-| Field kinds (`FieldKind`, `FieldKinds`) | Small: text, number, date, url, email, address, checkbox, choice (metadata, in the change); a url, an email and an address open their link (`FieldValue.LinkOf`: itself, `mailto:`, a Google Maps search). Image: described in the change, its file and thumbnail stored as a dataset version's (`OfTypes`: what a type's field can be). Content: markdown, file, view (a note's, a dataset's, a view's own changes) |
+| Field kinds (`FieldKind`, `FieldKinds`) | Small: text, number, date, url, email, address, phone, checkbox, choice (metadata, in the change); a url, an email, an address and a phone open their link (`FieldValue.LinkOf`: itself, `mailto:`, a Google Maps search, `tel:` with its digits and leading +). Image: described in the change, its file and thumbnail stored as a dataset version's (`OfTypes`: what a type's field can be). Content: markdown, file, view (a note's, a dataset's, a view's own changes) |
 | Values (`FieldValue`) | Text, written the same everywhere: number `1234.5`, date `2026-10-27`, or only its month `2026-10` or its year `2026` (since format 11; ISO text, so ranges and sorting compare them as written; `FirstDayOf` opens a calendar on it), url with its scheme, checkbox `true`/`false`, choice as its option. Typed numbers and dates are also read in the user's culture; a value read is checked against its kind, else the change is refused |
 | Built-in types (`TypeCatalog`) | *generic* (none), *note* (Body: markdown), *dataset* (File: file), *view* (Definition: view) |
 | User types (`CustomNodeTypes`) | `defineNodeType` (`NodeTypeDefined`), its id the first definition's; later ones replace it, two made apart are a conflict (latest shown); removed with all its definitions by `remove`. A definition of a built-in id is ignored |
@@ -654,7 +654,8 @@ files  ──FileImportPlanner.Preview──► ImportPreview(a row per file or 
 | Image | png, jpg, jpeg, gif, bmp, tif, tiff, ico, webp | Image: in its own window (`ImageWindow`), decoded by WPF (`BitmapImage`), up to `DatasetType.MaxImageSize` (64 MB); webp through Windows' codec (Webp Image Extensions, in Windows 11), else said not shown |
 | Image | svg, heic, raw | None |
 | Text | txt, md, csv, tsv, log, rtf | Text: its first `TextPreview.MaxChars` (256 K) characters, UTF-8 unless a byte order mark says otherwise |
-| Code | json, xml, html, htm, yaml, yml, ini, toml, cs, py, js, ts, css, sql, sh, cmd, ps1, java, c, cpp, h, go, rs | Text (HTML as text, not rendered) |
+| Code | html, htm, cs, py, js, ts, css, sql, sh, cmd, ps1, java, c, cpp, h, go, rs | Text (HTML as text, not rendered) |
+| Data | json, xml, yaml, yml, ini, toml | Text |
 | Audio, Video, Archive, Pdf | wav, mp3, flac, ogg, m4a, aac, wma; mp4, mkv, avi, mov, webm, wmv; zip, 7z, rar, tar, gz, bz2, xz; pdf | None: "export it to open it" |
 | Other | the others | None |
 
@@ -665,7 +666,7 @@ files  ──FileImportPlanner.Preview──► ImportPreview(a row per file or 
 
 ```
 import ──Vault.WriteDataset──► image the viewer shows (≤ 64 MB)? ──IThumbnailMaker.Make (WpfThumbnailMaker)──► content/<id>.kft
-row    ──NodeVisual.Of(graph, node)──► Icon (type, or the file's category) + Thumbnail (latest version id, for an image)
+row    ──NodeVisual.Of(graph, node)──► Icon (type, the file's category, a flat view's list) + Thumbnail (latest version id, for an image)
        ──NodeVisualView──► icon at once ──ThumbnailCache.Get (off the UI thread)──► the thumbnail, once read
 ```
 
@@ -673,7 +674,7 @@ row    ──NodeVisual.Of(graph, node)──► Icon (type, or the file's categ
 - The thumbnail is written before the content file and the change (`Vault.WriteDataset`, off the UI thread), so a device seeing the change normally finds it. A missing one shows the icon: not synced yet, or a version without thumbnail; a server vault downloads it when shown ([Content on demand](#server-vaults)). Keeping a version from a conflict makes its thumbnail again from its content.
 - `.kft` files are sealed with the master key ("KFT1", bound to the version id), like note content: a thumbnail shows the data, so it is content. Never logged, never in the snapshot.
 - `ThumbnailCache.Shared` keeps the 100 latest decoded thumbnails in memory, for the open vault only (`Use`, at each vault change), read through `Vault.ReadThumbnail`, so typing in the input box does not read them again.
-- **Icons**, the same on both apps: the SVGs of `src/kofrenot.Core/Icons` (24×24, one filled path each, embedded in Core), by name (`delete`, `note`, `contact`…). `IconPaths` reads their paths once and names a node's (`NameOf`: its type's icon, else that of what it holds; `NameOfType`). Windows draws one with `IconView` (`Kind`, `Size`, in the inherited foreground; geometries parsed once, frozen); Android adds each as a resource `icon.{name}` at start (`IconResources`), shown by `PathIcon`. A pinned node, or one kept offline, shows the `-filled` icon in the accent. Replacing an icon is replacing its SVG.
+- **Icons**, the same on both apps: the SVGs of `src/kofrenot.Core/Icons` (24×24, one filled path each, embedded in Core), by name (`delete`, `note`, `contact`…). `IconPaths` reads their paths once and names a node's (`NameOf`: its type's icon, else that of what it holds, a `NodeIcon` in lower case with hyphens between its words, `DataObject` → `data-object`; `NameOfType`: a `TypeIcons` name in lower case, `Birthday-cake` → `birthday-cake`, shown as *Birthday cake*, `TypeIcons.LabelOf`). A type icon added is a new name in `TypeIcons.All`: an older kofrenot shows no icon for it, so the vault format does not change. The vaults are pictured by `vault` (a folder) or `cloud` (a server), a restore by `refresh`, a value set on two devices by `alert` (Windows' `CautionText`). Windows draws one with `IconView` (`Kind`, `Size`, in the inherited foreground; geometries parsed once, frozen); Android adds each as a resource `icon.{name}` at start (`IconResources`), shown by `PathIcon`. A pinned node, or one kept offline, shows the `-filled` icon in the accent. Replacing an icon is replacing its SVG.
 
 ### Views
 A view is a node of type `view`. Its definition is in `editView` versions, as a dataset's file description: the change holds it, so it is in the graph and the snapshot, and a view works offline. Versions replace one another as for notes (`NodeVersions`, `KnowledgeGraph.ViewVersionsOf`).

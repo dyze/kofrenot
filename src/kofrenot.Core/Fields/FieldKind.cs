@@ -16,6 +16,7 @@ public enum FieldKind
     Url,
     Email,
     Address,
+    Phone,
     Checkbox,
     Choice,
     Image,
@@ -30,7 +31,7 @@ public static class FieldKinds
 {
     /// <summary>The kinds whose value is in the change: typed, chosen or ticked.</summary>
     public static IReadOnlyList<FieldKind> Small { get; } =
-        [FieldKind.Text, FieldKind.Number, FieldKind.Date, FieldKind.Url, FieldKind.Email, FieldKind.Address, FieldKind.Checkbox, FieldKind.Choice];
+        [FieldKind.Text, FieldKind.Number, FieldKind.Date, FieldKind.Url, FieldKind.Email, FieldKind.Address, FieldKind.Phone, FieldKind.Checkbox, FieldKind.Choice];
 
     /// <summary>The kinds a field of a type of the user's can have: the small ones and an image.</summary>
     public static IReadOnlyList<FieldKind> OfTypes { get; } = [.. Small, FieldKind.Image];

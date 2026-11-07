@@ -28,6 +28,9 @@ public static class FieldValue
     private static readonly string[] MonthFormats = ["M/yyyy", "M.yyyy", "M-yyyy"];
 
     private const string DateHint = "Type a date, like 2026-10-27, or a month (2026-10) or a year (2026)";
+    private const string TelScheme = "tel:";
+    private const int MinPhoneDigits = 3;
+    private const string PhoneExample = "+33 6 12 34 56 78";
     private const string True = "true";
     private const string False = "false";
 
@@ -52,6 +55,7 @@ public static class FieldValue
             FieldKind.Url => ParseUrl(typed),
             FieldKind.Email => ParseEmail(typed),
             FieldKind.Address => FieldInput.Of(typed),
+            FieldKind.Phone => ParsePhone(typed),
             FieldKind.Checkbox => ParseCheckbox(typed),
             FieldKind.Choice => ParseChoice(typed, choices ?? []),
             FieldKind.Image => FieldInput.Refused("An image is chosen, not typed in"),
@@ -76,19 +80,22 @@ public static class FieldValue
         FieldKind.Date => DateFormats.Any(format => IsWritten(value, format)),
         FieldKind.Url => ParseUrl(value).Value == value,
         FieldKind.Email => ParseEmail(value).Value == value,
+        FieldKind.Phone => ParsePhone(value).Value == value,
         FieldKind.Checkbox => value is True or False,
         _ => false,
     };
 
     /// <summary>
     /// What a value opens: a web address itself, an email address a new mail to it (<c>mailto:</c>), a
-    /// postal address its place on a map (a Google Maps search); null for the other kinds.
+    /// postal address its place on a map (a Google Maps search), a phone number a call to it (<c>tel:</c>,
+    /// its digits and leading +); null for the other kinds.
     /// </summary>
     public static Uri? LinkOf(FieldKind kind, string value) => kind switch
     {
         FieldKind.Url when Uri.TryCreate(value, UriKind.Absolute, out var url) => url,
         FieldKind.Email => new Uri($"mailto:{value}"),
         FieldKind.Address => new Uri($"https://www.google.com/maps/search/?api=1&query={Uri.EscapeDataString(value)}"),
+        FieldKind.Phone => new Uri($"{TelScheme}{DialedOf(value)}"),
         _ => null,
     };
 
@@ -169,6 +176,28 @@ public static class FieldValue
     private static bool LooksLikeEmail(string text) =>
         text.Split('@') is [{ Length: > 0 } name, { Length: > 0 } domain] && !text.Any(char.IsWhiteSpace) && !name.Contains(':')
         && domain.Contains('.') && !domain.StartsWith('.') && !domain.EndsWith('.');
+
+    // A phone number as typed, or after tel: ("tel:+33 6 12" is +33 6 12): digits, a leading +, and the
+    // separators people write (spaces, - . / and brackets); at least 3 digits.
+    private static FieldInput ParsePhone(string typed)
+    {
+        var number = typed.StartsWith(TelScheme, StringComparison.OrdinalIgnoreCase) ? typed[TelScheme.Length..].Trim() : typed;
+        if (number.Count(char.IsAsciiDigit) >= MinPhoneDigits && number.LastIndexOf('+') <= 0 && number.All(IsPhoneCharacter))
+        {
+            return FieldInput.Of(number);
+        }
+
+        return FieldInput.Refused(LooksLikeEmail(typed)
+            ? $"An email address goes in an email field: type a phone number, like {PhoneExample}"
+            : $"Type a phone number, like {PhoneExample}");
+    }
+
+    private static bool IsPhoneCharacter(char character) =>
+        char.IsAsciiDigit(character) || character is '+' or ' ' or '-' or '.' or '/' or '(' or ')';
+
+    // What is dialed: the digits, and the + of an international number.
+    private static string DialedOf(string number) =>
+        string.Concat(number.Where(character => char.IsAsciiDigit(character) || character == '+'));
 
     private static FieldInput ParseCheckbox(string typed) => typed.ToLowerInvariant() switch
     {

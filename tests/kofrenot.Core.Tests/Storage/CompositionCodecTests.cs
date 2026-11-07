@@ -128,6 +128,7 @@ public sealed class CompositionCodecTests
     [InlineData(FieldKind.Checkbox, "true")]
     [InlineData(FieldKind.Email, "ann@example.com")]
     [InlineData(FieldKind.Address, "12 rue de la Paix, Vendôme")]
+    [InlineData(FieldKind.Phone, "+33 6 12 34 56 78")]
     [InlineData(FieldKind.Text, null)]
     public void AFieldValue_RoundTrips(FieldKind kind, string? value)
     {

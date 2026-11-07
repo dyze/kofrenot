@@ -13,7 +13,11 @@ using Kofrenot.Core.Storage;
 namespace Kofrenot.UI.Views;
 
 /// <summary>A row of the list: a registered vault, its name (marked when open) and where it is: its folder, or its server and sync.</summary>
-public sealed record VaultRow(RegisteredVault Vault, string Title, string Folder);
+public sealed record VaultRow(RegisteredVault Vault, string Title, string Folder)
+{
+    /// <summary>A cloud for a vault on the server, else a vault in its folder.</summary>
+    public string Icon => Vault.Location.Store is null ? "vault" : "cloud";
+}
 
 /// <summary>
 /// Settings > Vault: the registered vaults, added, removed and ordered here, and for the one chosen

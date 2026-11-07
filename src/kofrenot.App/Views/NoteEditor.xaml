@@ -19,9 +19,7 @@
       </Grid.RowDefinitions>
 
       <StackPanel x:Name="ConflictPanel" Margin="0,0,0,4" Visibility="Collapsed">
-        <TextBlock Foreground="{DynamicResource SystemFillColorCautionBrush}"
-                   TextWrapping="Wrap"
-                   Text="Edited on two devices before they synced. Keep a version, or merge them below and save:" />
+        <local:CautionText Text="Edited on two devices before they synced. Keep a version, or merge them below and save:" />
         <ItemsControl x:Name="ConflictVersions">
           <ItemsControl.ItemsPanel>
             <ItemsPanelTemplate>

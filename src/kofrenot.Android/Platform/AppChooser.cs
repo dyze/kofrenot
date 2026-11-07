@@ -23,7 +23,7 @@ public sealed class AppChooser(Context context)
         Choose(new Intent(Intent.ActionView).SetDataAndType(uri, type), "Open with");
     }
 
-    /// <summary>Opens a link with the app Android picks for it: a browser, a mail app, a map.</summary>
+    /// <summary>Opens a link with the app Android picks for it: a browser, a mail app, a map, the dialer.</summary>
     public void OpenLink(Uri link) =>
         context.StartActivity(new Intent(Intent.ActionView, Android.Net.Uri.Parse(link.AbsoluteUri)).AddFlags(ActivityFlags.NewTask));
 

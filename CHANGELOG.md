@@ -8,9 +8,9 @@ It covers kofrenot on Windows and on Android; versions before 0.9 ran on Windows
 
 ## [Unreleased]
 
-> ⚠ **Vault format 11** (for qualifiers, and links added beside others). Consequences:
+> ⚠ **Vault format 11** (for qualifiers, links added beside others, and phone number fields). Consequences:
 > - Each vault asks once, when it opens, to be upgraded; until you agree, this kofrenot does not use it.
-> - Once upgraded, **kofrenot 0.15 opens it read only, on Windows and Android**: it shows the links without their qualifiers, and changes nothing. **kofrenot 0.14 and older no longer open it.** Update kofrenot on all your devices, and ask the members of a shared vault to update theirs, before upgrading.
+> - Once upgraded, **kofrenot 0.15 opens it read only, on Windows and Android**: it shows the links without their qualifiers, a phone number as plain text, and changes nothing. **kofrenot 0.14 and older no longer open it.** Update kofrenot on all your devices, and ask the members of a shared vault to update theirs, before upgrading.
 > - There is no way back to format 10 ([Format](docs/ARCHITECTURE.md#format)).
 
 ### Added
@@ -21,6 +21,8 @@ It covers kofrenot on Windows and on Android; versions before 0.9 ran on Windows
   - **Vague dates**: a date field takes only a month (`1965-08`, `08/1965`, *August 1965*) or a year (`1965`) when the day is not known, for a node's fields and a link's qualifiers; its calendar opens on its first day, and on Android the calendar sheet has *Type it: a month or a year…* ([README](README.md#node-types-and-fields)).
   - **Ranges** for dates and numbers, in a link's qualifiers and a node's fields: `Born 1900..1950`, `Date 1965-08..`, `Pages ..300` ([README](README.md#node-types-and-fields)).
   - **Queries** in the input box (Windows) or the search box (Android), starting with `?`, offline, adding nothing: `?person:` lists the nodes of a type (`?person: Frank` those matching), `?contained by Kitchen` the nodes linked so to a node, `?changed: this week`, `?added: 2025-08` or `?opened: today` the nodes by when, newest first, each with when; a type in front narrows the others (`?book: written by Frank Herbert`). Each word is proposed in grey as you type, and `?` alone lists every way to start one ([README](README.md#input-box)).
+  - **Phone number fields**: a new kind of field, typed as people write it (`+33 6 12 34 56 78`, `(555) 123-4567`; `tel:` dropped). It calls the number: **↗** opens the app Windows uses for calls, a phone icon opens the phone's dialer, its number filled in ([README](README.md#node-types-and-fields)).
+  - **25 more node type icons** (44 in all): doctor, genders, birthday cake, gift, bookmark, tool, chart, card, package, cook, pills, dog, flower, tree, car, bike, motorbike, phone, device, chat, cloud, bug. Chosen in Settings > Node types (Windows), shown on both; an older kofrenot shows no icon for them ([README](README.md#node-types-and-fields)).
 - **Windows**
   - **A link type's qualifiers**, in Settings > **Link types** > **Qualifiers**: a list of fields, as a node type's, for any link type, the built-in ones included (their names kept); one taken out stays on its links, with its value, as their own (asked first) ([README](README.md#node-types-and-fields)).
   - **Several links of a type between two nodes**: with qualifiers typed for nodes linked already, the input box lists their links (*married to Bob · 1995*, *married to Bob · 2015*) and **+ a new link**; **Up/Down** or a click chooses which one is updated, or adds another beside them ([README](README.md#input-box)).
@@ -33,6 +35,7 @@ It covers kofrenot on Windows and on Android; versions before 0.9 ran on Windows
 - **Both**
   - **A link changed to another type or way keeps its qualifiers**, those of its old type as its own.
   - **A new node's name can be changed on the creation screen**, also when it was typed in the input box (Windows) or the search box (Android); a link's names still cannot ([README](README.md#input-box)).
+  - **More icons**: data files (json, xml, yaml, ini, toml) have their own, no longer code's; a flat view shows a list; a value set on two devices is marked with an alert, and **Restore** in a history with its own icon; a vault on the server with a cloud (the vaults on Windows, those to add from the server on Android), and **☰** > *Vaults…* on Android with a vault.
 - **Windows**
   - **The creation screen's node types scroll**: their list is about 7 rows high, the name at the top beside it, so the screen no longer grows past the window.
   - **The home fits the window**: with the input box empty, as many recent nodes as the window's height holds (10 before), in two or three columns when it is wide, **Left/Right** selecting the row beside; every pinned node is still listed; their latest activity (*changed 5 min ago*) dimmer ([README](README.md#input-box)).

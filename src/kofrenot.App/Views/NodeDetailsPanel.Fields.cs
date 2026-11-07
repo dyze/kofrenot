@@ -103,11 +103,10 @@ public partial class NodeDetailsPanel
         if (field.Values is { IsConflict: true } values && canEdit)
         {
             var keep = new WrapPanel { Margin = new Thickness(0, 2, 0, 0) };
-            keep.Children.Add(new TextBlock
+            keep.Children.Add(new CautionText
             {
                 Margin = new Thickness(0, 0, 8, 0),
                 VerticalAlignment = VerticalAlignment.Center,
-                Foreground = (System.Windows.Media.Brush)FindResource("SystemFillColorCautionBrush"),
                 Text = "Set on two devices. Keep:",
             });
             foreach (var (version, shown) in values.Current.Zip(field.Conflict))
@@ -173,10 +172,11 @@ public partial class NodeDetailsPanel
     {
         FieldKind.Email => "Write a mail to this address",
         FieldKind.Address => "Show this address on a map",
+        FieldKind.Phone => "Call this number",
         _ => "Open this address",
     };
 
-    // A web address, a mail to write or a map: the link is the user's, it is not logged.
+    // A web address, a mail to write, a map or a call: the link is the user's, it is not logged.
     private void OpenLink(Uri link)
     {
         try

@@ -165,12 +165,43 @@ public sealed class FieldValueTests
         Assert.Equal("12 rue de la Paix, Vendôme", Parsed(FieldKind.Address, " 12 rue de la Paix, Vendôme "));
     }
 
+    [Theory]
+    [InlineData(" +33 6 12 34 56 78 ", "+33 6 12 34 56 78")]
+    [InlineData("(555) 123-4567", "(555) 123-4567")]
+    [InlineData("06.12.34.56.78", "06.12.34.56.78")]
+    [InlineData("0612/345678", "0612/345678")]
+    [InlineData("TEL: +33612345678", "+33612345678")]
+    [InlineData("112", "112")]
+    public void APhoneNumber_IsWrittenAsTyped_WithoutTel(string typed, string written)
+    {
+        Assert.Equal(written, Parsed(FieldKind.Phone, typed));
+    }
+
+    [Theory]
+    [InlineData("12")]
+    [InlineData("call me")]
+    [InlineData("06 12 34 ext 5")]
+    [InlineData("33+6 12 34")]
+    [InlineData("++33 6 12")]
+    [InlineData("tel:")]
+    public void NotAPhoneNumber_IsRefused(string typed)
+    {
+        Assert.Equal("Type a phone number, like +33 6 12 34 56 78", FieldValue.Parse(FieldKind.Phone, typed).Error);
+    }
+
     [Fact]
-    public void AValue_OpensItsLink_AWebAddress_AMail_OrAMap()
+    public void AnEmailTypedAsAPhoneNumber_IsRefused_WithWhereItGoes()
+    {
+        Assert.Equal("An email address goes in an email field: type a phone number, like +33 6 12 34 56 78", FieldValue.Parse(FieldKind.Phone, "ann@example.com").Error);
+    }
+
+    [Fact]
+    public void AValue_OpensItsLink_AWebAddress_AMail_AMap_OrACall()
     {
         Assert.Equal(new Uri("https://example.com/dune"), FieldValue.LinkOf(FieldKind.Url, "https://example.com/dune"));
         Assert.Equal(new Uri("mailto:ann@example.com"), FieldValue.LinkOf(FieldKind.Email, "ann@example.com"));
         Assert.Equal("https://www.google.com/maps/search/?api=1&query=12%20rue%20de%20la%20Paix%2C%20Vend%C3%B4me", FieldValue.LinkOf(FieldKind.Address, "12 rue de la Paix, Vendôme")!.AbsoluteUri);
+        Assert.Equal("tel:+33612345678", FieldValue.LinkOf(FieldKind.Phone, "+33 (6) 12-34.56/78")!.OriginalString);
         Assert.Null(FieldValue.LinkOf(FieldKind.Url, "not a link"));
         Assert.Null(FieldValue.LinkOf(FieldKind.Text, "Dune"));
     }
@@ -239,6 +270,8 @@ public sealed class FieldValueTests
     [InlineData(FieldKind.Email, "mailto:ann@example.com", false)]
     [InlineData(FieldKind.Address, "Vendôme", true)]
     [InlineData(FieldKind.Address, "", false)]
+    [InlineData(FieldKind.Phone, "+33 6 12 34 56 78", true)]
+    [InlineData(FieldKind.Phone, "tel:+33612345678", false)]
     [InlineData(FieldKind.Checkbox, "true", true)]
     [InlineData(FieldKind.Checkbox, "yes", false)]
     [InlineData(FieldKind.Choice, "Removed option", true)]

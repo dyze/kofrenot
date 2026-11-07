@@ -85,9 +85,7 @@
       </WrapPanel>
 
       <StackPanel x:Name="ConflictPanel" Grid.Row="2" Margin="0,8,0,0" Visibility="Collapsed">
-        <TextBlock Foreground="{DynamicResource SystemFillColorCautionBrush}"
-                   TextWrapping="Wrap"
-                   Text="Imported on two devices before they synced. Keep:" />
+        <local:CautionText Text="Imported on two devices before they synced. Keep:" />
         <ItemsControl x:Name="ConflictVersions">
           <ItemsControl.ItemsPanel>
             <ItemsPanelTemplate>

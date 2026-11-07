@@ -28,16 +28,17 @@ public sealed record FileRow(DatasetEdited Version, string Name, string Size, bo
 /// <summary>A field shown on a node's page: its label, its value as shown, an image field's image and thumbnail, and the field it shows.</summary>
 public sealed record FieldLine(string Label, string Value, DatasetEdited? Image = null, Bitmap? Thumbnail = null, NodeField? Field = null)
 {
-    /// <summary>What its value opens: a web address, a mail to write, a map (<see cref="FieldValue.LinkOf"/>); null for the other kinds.</summary>
+    /// <summary>What its value opens: a web address, a mail to write, a map, a call (<see cref="FieldValue.LinkOf"/>); null for the other kinds.</summary>
     public Uri? Link => Field is { Value: { } value } shown ? FieldValue.LinkOf(shown.Kind, value) : null;
 
     public bool HasLink => Link is not null;
 
-    /// <summary>Its button's icon, as Windows' tooltip says what it does: a mail to write, a place on a map, a page to open.</summary>
+    /// <summary>Its button's icon, as Windows' tooltip says what it does: a mail to write, a place on a map, a number to call, a page to open.</summary>
     public Geometry LinkIcon => PhoneTheme.Icon(Field?.Kind switch
     {
         FieldKind.Email => "mail",
         FieldKind.Address => "place",
+        FieldKind.Phone => "phone",
         _ => "open",
     });
 

@@ -126,6 +126,7 @@ public sealed partial class NodePage
         FieldKind.Url => "Web address",
         FieldKind.Email => "Email address",
         FieldKind.Address => "Postal address",
+        FieldKind.Phone => "Phone number",
         _ => kind.ToString(),
     };
 
@@ -213,7 +214,20 @@ public sealed partial class NodePage
 
     private void AddConflict(string text, IEnumerable<(string Label, Action Keep)> choices)
     {
-        Conflicts.Children.Add(new TextBlock { Text = text, Classes = { "error" } });
+        var caution = new DockPanel();
+        var alert = new PathIcon
+        {
+            Data = PhoneTheme.Icon("alert"),
+            Foreground = PhoneTheme.Brush("Error"),
+            Width = 16,
+            Height = 16,
+            Margin = new Avalonia.Thickness(0, 0, 8, 0),
+            VerticalAlignment = VerticalAlignment.Top,
+        };
+        DockPanel.SetDock(alert, Dock.Left);
+        caution.Children.Add(alert);
+        caution.Children.Add(new TextBlock { Text = text, Classes = { "error" } });
+        Conflicts.Children.Add(caution);
         var buttons = new WrapPanel();
         foreach (var (label, keep) in choices)
         {

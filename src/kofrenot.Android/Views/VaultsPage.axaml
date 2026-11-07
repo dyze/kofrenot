@@ -31,10 +31,13 @@
           </Grid>
         </DataTemplate>
         <DataTemplate DataType="views:StoreRow">
-          <StackPanel MinHeight="56" VerticalAlignment="Center" Margin="8,0">
-            <TextBlock Text="{Binding Name}" Classes="body" />
-            <TextBlock Classes="caption" Text="{Binding Detail}" />
-          </StackPanel>
+          <Grid ColumnDefinitions="Auto,*" MinHeight="56">
+            <PathIcon Data="{DynamicResource icon.cloud}" Width="20" Height="20" VerticalAlignment="Center" Margin="8,0,12,0" />
+            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+              <TextBlock Text="{Binding Name}" Classes="body" />
+              <TextBlock Classes="caption" Text="{Binding Detail}" />
+            </StackPanel>
+          </Grid>
         </DataTemplate>
       </ListBox.DataTemplates>
     </ListBox>

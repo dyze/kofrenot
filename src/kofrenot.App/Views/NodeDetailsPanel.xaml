@@ -128,15 +128,13 @@
                       CornerRadius="8">
                 <StackPanel>
                   <StackPanel x:Name="ColorSwatches" Orientation="Horizontal" />
-                  <TextBlock x:Name="ColorConflictText"
-                             MaxWidth="320"
-                             Margin="2,6,0,0"
-                             HorizontalAlignment="Left"
-                             FontSize="{StaticResource CaptionFontSize}"
-                             Foreground="{DynamicResource SystemFillColorCautionBrush}"
-                             TextWrapping="Wrap"
-                             Text="Chosen differently on two devices: choose one."
-                             Visibility="Collapsed" />
+                  <local:CautionText x:Name="ColorConflictText"
+                                     MaxWidth="320"
+                                     Margin="2,6,0,0"
+                                     HorizontalAlignment="Left"
+                                     TextElement.FontSize="{StaticResource CaptionFontSize}"
+                                     Text="Chosen differently on two devices: choose one."
+                                     Visibility="Collapsed" />
                 </StackPanel>
               </Border>
             </Popup>
@@ -192,9 +190,7 @@
           <TextBlock x:Name="RenameText" Margin="0,4,0,0" Opacity="0.8" TextWrapping="Wrap" Visibility="Collapsed" />
 
           <StackPanel x:Name="ConflictPanel" Margin="0,6,0,0" Visibility="Collapsed">
-            <TextBlock Foreground="{DynamicResource SystemFillColorCautionBrush}"
-                       TextWrapping="Wrap"
-                       Text="Renamed on two devices before they synced. Keep:" />
+            <local:CautionText Text="Renamed on two devices before they synced. Keep:" />
             <ItemsControl x:Name="ConflictNames">
               <ItemsControl.ItemsPanel>
                 <ItemsPanelTemplate>

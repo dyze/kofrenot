@@ -15,7 +15,12 @@
                 <TextBlock Classes="caption" Text="{Binding Heading}" />
                 <TextBlock Text="{Binding Label}" TextWrapping="Wrap" IsVisible="{Binding HasLabel}" />
               </StackPanel>
-              <Button Grid.Column="1" Content="Restore" Tag="{Binding}" IsVisible="{Binding CanRestore}" Click="Restore_Click" />
+              <Button Grid.Column="1" Tag="{Binding}" IsVisible="{Binding CanRestore}" Click="Restore_Click">
+                <StackPanel Orientation="Horizontal" Spacing="{StaticResource GapS}">
+                  <PathIcon Data="{DynamicResource icon.refresh}" Width="16" Height="16" />
+                  <TextBlock Text="Restore" VerticalAlignment="Center" />
+                </StackPanel>
+              </Button>
             </Grid>
           </DataTemplate>
         </ItemsControl.ItemTemplate>

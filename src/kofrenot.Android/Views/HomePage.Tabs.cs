@@ -51,8 +51,8 @@ public sealed partial class HomePage
         var closed = new TabList(_shell.Services.ViewTabs).Closed(vault.Graph, vault.Id);
         _shell.ShowSheet("Tabs",
         [
-            .. tabs.Select(tab => new SheetChoice(tab.Name, () => Select(tab), IsCurrent: tab == _tab, Icon: tab.IsSearch ? "home" : "view")),
-            new("Open a view…", () => _shell.ShowSheet("Open a view", closed.Select(view => new SheetChoice(view.Name, () => OpenTab(vault, view), Icon: "view"))),
+            .. tabs.Select(tab => new SheetChoice(tab.Name, () => Select(tab), IsCurrent: tab == _tab, Icon: tab.View is { } view ? IconPaths.NameOf(NodeVisual.Of(vault.Graph, view)) : "home")),
+            new("Open a view…", () => _shell.ShowSheet("Open a view", closed.Select(view => new SheetChoice(view.Name, () => OpenTab(vault, view), Icon: IconPaths.NameOf(NodeVisual.Of(vault.Graph, view))))),
                 IsEnabled: closed.Count > 0, Icon: "add"),
         ]);
     }

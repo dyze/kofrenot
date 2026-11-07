@@ -180,6 +180,7 @@ public partial class NodeDetailsPanel
         FieldKind.Url => "An address, like https://example.com",
         FieldKind.Email => "An email address, like ann@example.com",
         FieldKind.Address => "A postal address, like 12 rue de la Paix, Paris",
+        FieldKind.Phone => "A phone number, like +33 6 12 34 56 78",
         _ => "Its text",
     };
 
