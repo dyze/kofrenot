@@ -199,7 +199,11 @@ public partial class NodeTypesSection : UserControl
         }
     }
 
-    private void AddField_Click(object sender, RoutedEventArgs e) => _form?.AddField();
+    private void AddField_Click(object sender, RoutedEventArgs e)
+    {
+        _form?.AddField();
+        FieldsScroller.ScrollToEnd();
+    }
 
     private void RemoveField_Click(object sender, RoutedEventArgs e)
     {

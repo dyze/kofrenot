@@ -221,9 +221,9 @@
     <TextBlock Margin="0,10,0,4" FontWeight="SemiBold" Text="New link type" />
     <ContentControl x:Name="NewTypeLine" Focusable="False" />
 
-    <!-- The list scrolls on its own (FitListTo), so the new link type above stays in view. -->
-    <ScrollViewer x:Name="LineScroller"
-                  Margin="0,14,0,0"
+    <!-- The list scrolls on its own (ListFit), so the new link type above stays in view. -->
+    <ScrollViewer Margin="0,14,0,0"
+                  local:ListFit.Fills="True"
                   Focusable="False"
                   HorizontalScrollBarVisibility="Disabled"
                   VerticalScrollBarVisibility="Auto">

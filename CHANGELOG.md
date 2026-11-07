@@ -37,6 +37,7 @@ It covers kofrenot on Windows and on Android; versions before 0.9 ran on Windows
   - **The creation screen's node types scroll**: their list is about 7 rows high, the name at the top beside it, so the screen no longer grows past the window.
   - **The home fits the window**: with the input box empty, as many recent nodes as the window's height holds (10 before), in two or three columns when it is wide, **Left/Right** selecting the row beside; every pinned node is still listed; their latest activity (*changed 5 min ago*) dimmer ([README](README.md#input-box)).
   - **A note takes the room of its details**: its links under it only as tall as their rows (a third of the height before, even for one link), up to a third of the window, then scrolling; the grip above **Links** drags that height, kept for every note ([README](README.md#notes)).
+  - **Settings' lists scroll on their own**: the files in **About**, the node types and a type's **Fields**, the key bindings, the link types, a vault's details under the list of vaults and the server exchanges in **Logging** take the room the window leaves them, so the controls above and below stay in view.
 
 ## [0.15] - 2026-11-05
 

@@ -122,9 +122,15 @@ public partial class SettingsWindow : Window
 
         Loaded += (_, _) => FindBox.Focus();
 
-        // The link types' list scrolls on its own, in the room the page leaves it.
-        SectionsScroller.SizeChanged += (_, _) => FitLinkTypes();
-        LinkTypes.IsVisibleChanged += (_, _) => FitLinkTypes();
+        // Lists scroll on their own, in the room the page leaves them: given again when the page
+        // changes height (a tab shown, a form opened, the window resized), not when it scrolls.
+        SectionsScroller.ScrollChanged += (_, e) =>
+        {
+            if (e.OriginalSource == SectionsScroller && (e.ExtentHeightChange != 0 || e.ViewportHeightChange != 0))
+            {
+                FitLists();
+            }
+        };
     }
 
     /// <summary>The About tab: version, links, changelog, and a row per file with its path and a Show in folder button.</summary>
@@ -357,9 +363,9 @@ public partial class SettingsWindow : Window
     private void Window_SourceInitialized(object? sender, EventArgs e) =>
         NativeWindows.RemoveMinimizeMaximizeButtons(new System.Windows.Interop.WindowInteropHelper(this).Handle);
 
-    // Once laid out: the list's place on the page is known then.
-    private void FitLinkTypes() =>
-        Dispatcher.BeginInvoke(() => LinkTypes.FitListTo(SectionsScroller), DispatcherPriority.Loaded);
+    // Once laid out: the lists' places on the page are known then.
+    private void FitLists() =>
+        Dispatcher.BeginInvoke(() => ListFit.FitAll(SectionsScroller, searching: !string.IsNullOrWhiteSpace(FindBox.Text)), DispatcherPriority.Loaded);
 
     /// <summary>Shows one tab (<see cref="SettingsCatalog.Tabs"/>): the one asked, when Settings opens for it.</summary>
     public void SelectTab(string tab) => TabList.SelectedItem = tab;

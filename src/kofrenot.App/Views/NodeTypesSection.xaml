@@ -42,7 +42,8 @@
                 ToolTip="Copy node types from another of your vaults"
                 Click="CopyFrom_Click" />
       </StackPanel>
-      <ItemsControl x:Name="TypeList" Margin="0,10,12,0" Focusable="False">
+      <ScrollViewer Margin="0,10,0,0" local:ListFit.Fills="True" Focusable="False" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+      <ItemsControl x:Name="TypeList" Margin="0,0,12,0" Focusable="False">
         <ItemsControl.ItemTemplate>
           <DataTemplate DataType="{x:Type local:TypeLine}">
             <Grid Margin="0,3">
@@ -76,13 +77,15 @@
           </DataTemplate>
         </ItemsControl.ItemTemplate>
       </ItemsControl>
+      </ScrollViewer>
     </StackPanel>
 
     <!-- Another vault's types, each ticked to copy it here, with what copying does; in place of the list. -->
     <StackPanel x:Name="CopyPanel" Margin="0,10,12,0" Visibility="Collapsed">
       <TextBlock x:Name="CopyTitle" FontWeight="SemiBold" />
       <TextBlock Margin="0,4,0,0" Opacity="0.7" TextWrapping="Wrap" Text="Types are copied with their fields, not the values of their nodes. Copied again later, a type is updated." />
-      <ItemsControl x:Name="CopyList" Margin="0,8,0,0" Focusable="False">
+      <ScrollViewer Margin="0,8,0,0" local:ListFit.Fills="True" Focusable="False" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+      <ItemsControl x:Name="CopyList" Focusable="False">
         <ItemsControl.ItemTemplate>
           <DataTemplate DataType="{x:Type local:CopyLine}">
             <Grid Margin="0,3">
@@ -100,6 +103,7 @@
           </DataTemplate>
         </ItemsControl.ItemTemplate>
       </ItemsControl>
+      </ScrollViewer>
       <StackPanel Margin="0,10,0,0" Orientation="Horizontal">
         <Button Padding="16,4" Content="Copy" Style="{DynamicResource AccentButtonStyle}" Click="Copy_Click" />
         <Button Margin="6,0,0,0" Padding="16,4" Content="Cancel" Click="CancelCopy_Click" />
@@ -149,6 +153,8 @@
       </Grid>
 
       <TextBlock Margin="0,14,0,4" FontWeight="SemiBold" Text="Fields" />
+      <!-- Scrolls on its own (ListFit): the form above and Add field below stay in view. -->
+      <ScrollViewer x:Name="FieldsScroller" local:ListFit.Fills="True" Focusable="False" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
       <ItemsControl ItemsSource="{Binding Fields}" Focusable="False">
         <ItemsControl.ItemTemplate>
           <DataTemplate DataType="{x:Type local:FieldRow}">
@@ -172,6 +178,7 @@
           </DataTemplate>
         </ItemsControl.ItemTemplate>
       </ItemsControl>
+      </ScrollViewer>
       <Button Margin="0,4,0,0" Padding="10,2" HorizontalAlignment="Left" Content="Add field" Click="AddField_Click" />
     </StackPanel>
   </StackPanel>
