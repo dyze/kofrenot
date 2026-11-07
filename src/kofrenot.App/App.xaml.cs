@@ -110,7 +110,7 @@ public partial class App : Application
             createImageWindow: () =>
             {
                 var created = new ImageWindow { Log = log };
-                placer.Attach(created, "Image", RestoreMode.PositionAndSize);
+                placer.Attach(created, "Image", RestoreMode.PositionAndSize, near: () => _window);
                 return created;
             });
         var window = _window;

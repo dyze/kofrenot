@@ -213,6 +213,40 @@ public class PlacementRulesTests
         Assert.Equal(new ScreenRect(2560, 464, 640, 520), PlacementRules.CenterOnPoint(new ScreenPoint(3190, 980), 640, 520, Both));
     }
 
+    // The main window on the second monitor.
+    private static readonly ScreenRect MainOnSecond = new(2120, 100, 800, 600);
+
+    [Fact]
+    public void Near_SavedOnTheAnchorsMonitor_GivesTheSavedPositionBack()
+    {
+        var saved = new WindowPlacement(@"\\.\DISPLAY2", new ScreenRect(10, 20, 900, 650));
+
+        Assert.Equal(new ScreenRect(1930, 20, 900, 650), PlacementRules.Near(MainOnSecond, saved, 300, 200, Both));
+    }
+
+    [Fact]
+    public void Near_SavedOnAnotherMonitor_IsCenteredOnTheAnchorAtItsSavedSize()
+    {
+        var saved = new WindowPlacement(@"\\.\DISPLAY1", new ScreenRect(10, 20, 600, 400));
+
+        Assert.Equal(new ScreenRect(2220, 200, 600, 400), PlacementRules.Near(MainOnSecond, saved, 300, 200, Both));
+    }
+
+    [Fact]
+    public void Near_NeverSaved_IsCenteredOnTheAnchorAtTheGivenSize() =>
+        Assert.Equal(new ScreenRect(2370, 300, 300, 200), PlacementRules.Near(MainOnSecond, null, 300, 200, Both));
+
+    [Fact]
+    public void Near_LargerThanTheAnchor_StaysOnItsMonitor()
+    {
+        // 1000 x 900 centered on the main window would go past the top of the second monitor.
+        Assert.Equal(new ScreenRect(2020, 0, 1000, 900), PlacementRules.Near(MainOnSecond, null, 1000, 900, Both));
+    }
+
+    [Fact]
+    public void Near_NoMonitor_IsNull() =>
+        Assert.Null(PlacementRules.Near(MainOnSecond, null, 300, 200, []));
+
     [Fact]
     public void CenterOnPoint_NoMonitor_IsNull() =>
         Assert.Null(PlacementRules.CenterOnPoint(new ScreenPoint(0, 0), 640, 520, []));

@@ -56,6 +56,27 @@ public static class PlacementRules
         new(owner.Left + ((owner.Width - width) / 2), owner.Top + ((owner.Height - height) / 2), width, height);
 
     /// <summary>
+    /// Where to show a window that goes with another one, <paramref name="anchor"/> (the image window
+    /// with the main window): at its saved place when that is on the anchor's monitor, else centered
+    /// on the anchor at its saved size (else the given one), fully visible. Null when there is no monitor.
+    /// </summary>
+    public static ScreenRect? Near(ScreenRect anchor, WindowPlacement? saved, int width, int height, IReadOnlyList<MonitorInfo> monitors)
+    {
+        if (MonitorOf(anchor, monitors) is not { } monitor)
+        {
+            return null;
+        }
+
+        if (saved is not null && string.Equals(saved.Monitor, monitor.DeviceName, StringComparison.OrdinalIgnoreCase))
+        {
+            return Fit(saved, monitors);
+        }
+
+        var centered = CenterOn(anchor, saved?.Bounds.Width ?? width, saved?.Bounds.Height ?? height);
+        return Inside(monitor.WorkArea, centered);
+    }
+
+    /// <summary>
     /// A window of the given size in the middle of the monitor under <paramref name="pointer"/>
     /// (the main window's "Centered" position), shrunk if larger. Null when there is no monitor.
     /// </summary>

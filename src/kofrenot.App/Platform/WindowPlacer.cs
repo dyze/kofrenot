@@ -43,7 +43,11 @@ public sealed class WindowPlacer
     /// Call before the window is first shown. <paramref name="name"/> is its key in windows.json.
     /// </summary>
     /// <param name="columns">The columns of the window's list, whose widths are kept too.</param>
-    public void Attach(Window window, string name, RestoreMode mode, GridView? columns = null)
+    /// <param name="near">
+    /// The window it goes with (its size is kept): it opens on that window's monitor, where it was
+    /// left there, else centered on that window.
+    /// </param>
+    public void Attach(Window window, string name, RestoreMode mode, GridView? columns = null, Func<Window?>? near = null)
     {
         ScreenRect? lastNormal = null;
 
@@ -53,7 +57,12 @@ public sealed class WindowPlacer
             RestoreColumns(columns, saved?.Columns);
         }
 
-        if (mode == RestoreMode.SizeOverOwner)
+        if (near is not null)
+        {
+            window.WindowStartupLocation = WindowStartupLocation.Manual;
+            window.SourceInitialized += (_, _) => PlaceNear(window, name, saved, near());
+        }
+        else if (mode == RestoreMode.SizeOverOwner)
         {
             window.WindowStartupLocation = WindowStartupLocation.Manual;
             window.SourceInitialized += (_, _) => PlaceOverOwner(window, name, saved);
@@ -216,6 +225,41 @@ public sealed class WindowPlacer
         NativeWindows.SetWindowBounds(handle, bounds);
         NativeWindows.SetWindowBounds(handle, bounds);
         _log.Debug("Window", $"{name} opened over its owner at {bounds.Left},{bounds.Top} ({bounds.Width}x{bounds.Height})");
+    }
+
+    /// <summary>
+    /// Opens a window on the monitor of <paramref name="anchor"/>: where it was left when that is
+    /// there, else centered on it at its saved size. Without an anchor, it opens as it was left.
+    /// </summary>
+    private void PlaceNear(Window window, string name, WindowPlacement? saved, Window? anchor)
+    {
+        var handle = Handle(window);
+        if (anchor is null
+            || NativeWindows.VisibleBounds(Handle(anchor)) is not { } anchorBounds
+            || NativeWindows.WindowBounds(handle) is not { } current
+            || PlacementRules.Near(anchorBounds, saved, current.Width, current.Height, NativeWindows.Monitors()) is not { } bounds)
+        {
+            if (saved is null)
+            {
+                window.WindowStartupLocation = WindowStartupLocation.CenterScreen;
+            }
+            else
+            {
+                Restore(window, name, saved, keepSize: true);
+            }
+
+            return;
+        }
+
+        // Set twice: on a monitor with another scaling, the first move makes WPF resize the window.
+        NativeWindows.SetWindowBounds(handle, bounds);
+        NativeWindows.SetWindowBounds(handle, bounds);
+        if (saved?.Maximized == true)
+        {
+            window.WindowState = WindowState.Maximized;
+        }
+
+        _log.Debug("Window", $"{name} opened near its window at {bounds.Left},{bounds.Top} ({bounds.Width}x{bounds.Height})");
     }
 
     private void Restore(Window window, string name, WindowPlacement saved, bool keepSize)
