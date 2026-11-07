@@ -13,7 +13,7 @@ namespace Kofrenot.Core.Input;
 /// labels change how it shows, not what it means. With a fixed first node (the node of the details' Link
 /// box), it is the start of <see cref="Text"/>, never a label shown nor taken out, and only a link type is proposed after it.
 /// </summary>
-public sealed class ChipInput(string? fixedLeft = null)
+public sealed partial class ChipInput(string? fixedLeft = null)
 {
     private readonly string? _fixedLeft = fixedLeft;
     private string? _left = fixedLeft;
@@ -24,8 +24,16 @@ public sealed class ChipInput(string? fixedLeft = null)
     // The qualifiers' names, each with its value; the last one's is null while it is the text typed (Tail).
     private readonly List<(string Name, string? Value)> _qualifiers = [];
 
-    /// <summary>The text after the labels, as typed.</summary>
-    public string Tail { get; private set; } = string.Empty;
+    /// <summary>The text after the labels, as typed. Any change selects the first proposal again.</summary>
+    public string Tail
+    {
+        get;
+        private set
+        {
+            field = value;
+            _proposalIndex = 0;
+        }
+    } = string.Empty;
 
     public bool IsEmpty => (_left is null || IsFixed) && _linkType is null && Tail.Length == 0;
 
@@ -101,85 +109,6 @@ public sealed class ChipInput(string? fixedLeft = null)
         }
 
         Tail = last;
-        _typedAtEnd = false;
-        return true;
-    }
-
-    /// <summary>What Tab would add, shown in grey after the text; null after an edit that did not add text at the end.</summary>
-    public Proposal? Proposal(KnowledgeGraph graph)
-    {
-        if (!_typedAtEnd)
-        {
-            return null;
-        }
-
-        if (IsQueryText)
-        {
-            return QueryCompletion.Propose(graph, Tail);
-        }
-
-        if (_linkType is null)
-        {
-            return _fixedLeft is { } left
-                ? InputCompletion.ProposeLinkTypeAfter(graph.Types, left, Tail)
-                : InputCompletion.Propose(graph, Text, linkTypeTyped: false);
-        }
-
-        if (QualifierText.Proposed(Tail, QualifiersOf(graph), nodeTyped: _right is not null) is { } qualifier)
-        {
-            var typed = string.Join(' ', InputParser.Words(Tail[(Tail.LastIndexOf(',') + 1)..]));
-            return new Proposal(qualifier.Name[typed.Length..], qualifier.Name, IsLinkType: false, IsQualifier: true);
-        }
-
-        return _qualifiers.Count > 0 || Tail.Contains(',') ? null : InputCompletion.Propose(graph, _right is null ? Tail : $"{_right} {Tail}", linkTypeTyped: true);
-    }
-
-    /// <summary>Tab: the proposal becomes a label, replacing the side it completes. False when there is none.</summary>
-    public bool Accept(KnowledgeGraph graph)
-    {
-        if (Proposal(graph) is not { } proposal)
-        {
-            return false;
-        }
-
-        if (proposal.IsQueryText)
-        {
-            // Text added: the next word is proposed at once.
-            Tail += proposal.Rest;
-            return true;
-        }
-
-        if (proposal.IsQualifier)
-        {
-            StartQualifier(Tail[..Tail.LastIndexOf(',')], proposal.Label);
-        }
-        else if (proposal.IsLinkType)
-        {
-            _left = string.Join(' ', InputParser.Words(Text)[..proposal.WordsBefore]);
-            _linkType = proposal.Label;
-        }
-        else if (_linkType is null)
-        {
-            _left = proposal.Label;
-        }
-        else
-        {
-            _right = proposal.Label;
-        }
-
-        Tail = string.Empty;
-        _typedAtEnd = false;
-        return true;
-    }
-
-    /// <summary>Esc: hides the proposal until more is typed. False when there was none.</summary>
-    public bool Dismiss(KnowledgeGraph graph)
-    {
-        if (Proposal(graph) is null)
-        {
-            return false;
-        }
-
         _typedAtEnd = false;
         return true;
     }

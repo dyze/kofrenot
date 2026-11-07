@@ -12,8 +12,7 @@ Scope of each planned version. Implemented features move to [CHANGELOG.md](CHANG
 7. Windows · **Rotate key on demand**, not only when a member is removed ([Rotation](docs/SERVER-CONCEPT.md#rotation)).
 8. Windows · **Edit a label in place.** A click on a label of the input box turns it back into text there, not only the last one with Backspace.
 9. Windows · **Quote a name** containing a link phrase in the input box (`"This is a test"`), so such names can be typed.
-10. Windows · **Cycle through proposals.** Several proposals in grey, the next one with a key, instead of typing more to narrow it.
-11. Windows · **Propose node types** while typing, in the input box, instead of only on the creation screen.
-12. Both · **Faster transfers.** Many small files downloaded in one stream; big files uploaded in parts, resumable.
+10. Windows · **Propose node types** while typing, in the input box, instead of only on the creation screen.
+11. Both · **Faster transfers.** Many small files downloaded in one stream; big files uploaded in parts, resumable.
 
 

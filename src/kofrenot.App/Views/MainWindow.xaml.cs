@@ -285,6 +285,9 @@ public partial class MainWindow : Window
 
         e.Handled = e.Key switch
         {
+            Key.Enter or Key.Tab when InputBox.HasProposalList => InputBox.AcceptProposal(),
+            Key.Up when InputBox.HasProposalList => InputBox.MoveProposal(-1),
+            Key.Down when InputBox.HasProposalList => InputBox.MoveProposal(1),
             Key.Enter or Key.Tab when _input.SelectedRow is { Insert: { } insert } => StartQuery(insert),
             Key.Enter when _input.SelectedRow is { Node: { } node } row => OpenDetails(node, row.From),
             Key.Enter => AddInput(),

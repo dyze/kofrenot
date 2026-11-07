@@ -10,7 +10,7 @@ public sealed class InputCompletionTests
     [InlineData("")]
     [InlineData("   ")]
     public void NothingTyped_ProposesNothing(string typed) =>
-        Assert.Null(InputCompletion.Propose(_graph, typed, linkTypeTyped: false));
+        Assert.Empty(InputCompletion.Proposals(_graph, typed, linkTypeTyped: false));
 
     [Fact]
     public void ANodeName_IsCompleted_TheShortestFirst_InItsOwnCase()
@@ -19,8 +19,8 @@ public sealed class InputCompletionTests
         Add("Dune");
         Add("Frank Herbert");
 
-        Assert.Equal(new Proposal("ne", "Dune", IsLinkType: false), InputCompletion.Propose(_graph, " du", linkTypeTyped: false));
-        Assert.Equal(new Proposal(" Messiah", "Dune Messiah", IsLinkType: false), InputCompletion.Propose(_graph, "dune", linkTypeTyped: false));
+        Assert.Equal(new Proposal("ne", "Dune", IsLinkType: false), InputCompletion.Proposals(_graph, " du", linkTypeTyped: false).FirstOrDefault());
+        Assert.Equal(new Proposal(" Messiah", "Dune Messiah", IsLinkType: false), InputCompletion.Proposals(_graph, "dune", linkTypeTyped: false).FirstOrDefault());
     }
 
     [Fact]
@@ -29,7 +29,7 @@ public sealed class InputCompletionTests
         Add("obj2");
         Add("obj1");
 
-        Assert.Equal("obj1", InputCompletion.Propose(_graph, "ob", linkTypeTyped: false)?.Label);
+        Assert.Equal("obj1", InputCompletion.Proposals(_graph, "ob", linkTypeTyped: false).FirstOrDefault()?.Label);
     }
 
     [Fact]
@@ -37,7 +37,7 @@ public sealed class InputCompletionTests
     {
         Add("Dune");
 
-        Assert.Null(InputCompletion.Propose(_graph, "Dune", linkTypeTyped: true));
+        Assert.Empty(InputCompletion.Proposals(_graph, "Dune", linkTypeTyped: true));
     }
 
     [Theory]
@@ -47,26 +47,48 @@ public sealed class InputCompletionTests
     [InlineData("Knives contained b", "y", "contained by", 1)]
     [InlineData("Dune RELATES T", "o", "relates to", 1)]
     public void ALinkType_IsCompletedAfterAWord(string typed, string rest, string label, int wordsBefore) =>
-        Assert.Equal(new Proposal(rest, label, IsLinkType: true, wordsBefore), InputCompletion.Propose(_graph, typed, linkTypeTyped: false));
+        Assert.Equal(new Proposal(rest, label, IsLinkType: true, wordsBefore), InputCompletion.Proposals(_graph, typed, linkTypeTyped: false).FirstOrDefault());
 
     [Theory]
     [InlineData("is")]
     [InlineData("obj1 is a")]
     [InlineData("obj1 xyz")]
     public void NoLinkType_IsProposedForTheFirstWord_ACompleteOne_OrNoMatch(string typed) =>
-        Assert.Null(InputCompletion.Propose(_graph, typed, linkTypeTyped: false));
+        Assert.Empty(InputCompletion.Proposals(_graph, typed, linkTypeTyped: false));
 
     [Fact]
     public void ANode_IsProposedBeforeALinkType()
     {
         Add("Dune relics");
 
-        Assert.Equal("Dune relics", InputCompletion.Propose(_graph, "Dune rel", linkTypeTyped: false)?.Label);
+        Assert.Equal("Dune relics", InputCompletion.Proposals(_graph, "Dune rel", linkTypeTyped: false).FirstOrDefault()?.Label);
     }
 
     [Fact]
     public void OnceTheLinkTypeIsALabel_OnlyNodesAreProposed() =>
-        Assert.Null(InputCompletion.Propose(_graph, "obj1 i", linkTypeTyped: true));
+        Assert.Empty(InputCompletion.Proposals(_graph, "obj1 i", linkTypeTyped: true));
+
+    [Fact]
+    public void AllNamesStartingWithTheText_AreProposed_TheShortestFirst_ThenTheLinkTypes()
+    {
+        Add("Kitchen table");
+        Add("Kitchen");
+        Add("Kitchen drawer");
+        Add("Bathroom");
+
+        Assert.Equal(
+            ["Kitchen", "Kitchen table", "Kitchen drawer"],
+            InputCompletion.Proposals(_graph, "kit", linkTypeTyped: false).Select(proposal => proposal.Label));
+        Assert.Equal(
+            ["contains", "contained by"],
+            InputCompletion.Proposals(_graph, "Kitchen con", linkTypeTyped: false).Select(proposal => proposal.Label));
+    }
+
+    [Fact]
+    public void AfterAFixedNode_EachLinkTypeStartingWithTheText_IsProposed() =>
+        Assert.Equal(
+            ["contains", "contained by"],
+            InputCompletion.LinkTypeProposalsAfter(_graph.Types, "Old map", "con").Select(proposal => proposal.Label));
 
     private void Add(string name) => _graph.Add(new Node(Guid.NewGuid(), TypeCatalog.Generic.Id, name, Start));
 }

@@ -44,23 +44,22 @@ public static class QualifierText
         return request with { Right = request.Right[..start].Trim(), Qualifiers = qualifiers };
     }
 
-    /// <summary>The qualifier whose name starts with the last words typed after a <c>,</c>, longer than them; null when none.</summary>
+    /// <summary>The qualifiers whose name starts with the last words typed after a <c>,</c>, longer than them, the shortest first.</summary>
     /// <param name="afterLinkType">What follows the link type: the second node, and the qualifiers typed so far.</param>
     /// <param name="nodeTyped">The second node is typed before <paramref name="afterLinkType"/> already (a label).</param>
-    public static FieldDefinition? Proposed(string afterLinkType, IReadOnlyList<FieldDefinition> fields, bool nodeTyped = false)
+    public static IEnumerable<FieldDefinition> Proposed(string afterLinkType, IReadOnlyList<FieldDefinition> fields, bool nodeTyped = false)
     {
         var comma = afterLinkType.LastIndexOf(',');
         if (comma < 0 || (!nodeTyped && afterLinkType[..comma].Trim().Length == 0))
         {
-            return null;
+            return [];
         }
 
         var typed = Join(InputParser.Words(afterLinkType[(comma + 1)..]));
         return typed.Length == 0 || char.IsWhiteSpace(afterLinkType[^1])
-            ? null
+            ? []
             : fields.Where(field => field.Name.Length > typed.Length && field.Name.StartsWith(typed, StringComparison.CurrentCultureIgnoreCase))
-                .OrderBy(field => field.Name.Length)
-                .FirstOrDefault();
+                .OrderBy(field => field.Name.Length);
     }
 
     /// <summary>

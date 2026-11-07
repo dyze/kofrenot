@@ -9,8 +9,9 @@ namespace Kofrenot.UI.Views;
 
 /// <summary>
 /// A box typed as the input box (<see cref="ChipInput"/>): the labels over its start, the proposal in grey after
-/// its text. The box holds only the text after the labels. Right at the end of the text accepts the proposal,
-/// Backspace at its start unlabels; its host handles the other keys (Tab: <see cref="AcceptProposal"/>, Esc).
+/// its text, or several in a list (ChipBox.ProposalList). The box holds only the text after the labels. Right at the end
+/// of the text accepts the proposal, Backspace at its start unlabels; its host handles the other keys (Tab and Enter:
+/// <see cref="AcceptProposal"/>, Up/Down: <see cref="MoveProposal"/>, Esc).
 /// </summary>
 public partial class ChipBox : UserControl
 {
@@ -130,8 +131,7 @@ public partial class ChipBox : UserControl
         var graph = GraphOf?.Invoke();
         PlaceholderText.Visibility = Input.IsEmpty && graph is not null ? Visibility.Visible : Visibility.Collapsed;
         Chips.ItemsSource = graph is null ? null : Input.Chips(graph, PlanOf?.Invoke());
-        ProposalText.Text = graph is null ? string.Empty : Input.Proposal(graph)?.Rest ?? string.Empty;
-        PlaceProposal();
+        ShowProposals(graph);
     }
 
     private void Box_TextChanged(object sender, TextChangedEventArgs e)
@@ -193,17 +193,26 @@ public partial class ChipBox : UserControl
         ShowChips();
     }
 
-    // The proposal right after the text, while the caret is at its end.
+    // The proposal right after the text, while the caret is at its end: in grey, or the list of several while the box has the keyboard.
     private void PlaceProposal()
     {
         if (ProposalText.Text.Length == 0 || Box.Text.Length == 0 || !CaretAtEnd)
         {
             ProposalText.Visibility = Visibility.Collapsed;
+            ProposalList.IsOpen = false;
             return;
         }
 
         Box.UpdateLayout();
         var end = Box.GetRectFromCharacterIndex(Box.Text.Length - 1, trailingEdge: true);
+        if (_proposals.Count > 1 && Box.IsKeyboardFocused)
+        {
+            ProposalText.Visibility = Visibility.Collapsed;
+            OpenProposalList(end);
+            return;
+        }
+
+        ProposalList.IsOpen = false;
         ProposalText.Margin = new Thickness(end.Right, 0, 0, 0);
         ProposalText.Visibility = Visibility.Visible;
     }

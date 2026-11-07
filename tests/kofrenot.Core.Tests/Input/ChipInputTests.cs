@@ -352,6 +352,87 @@ public sealed class ChipInputTests
         Assert.Equal("today", _input.Proposal(_graph)?.Rest);
     }
 
+    [Fact]
+    public void Proposals_AreTheFirstFive_TheFirstSelected()
+    {
+        foreach (var name in new[] { "Kitchen", "Kitchen table", "Kitchen drawer", "Kitchen sink", "Kitchen shelf", "Kitchen window" })
+        {
+            Add(name);
+        }
+
+        TypeEach("kit");
+
+        Assert.Equal(["chen", "chen sink", "chen shelf", "chen table", "chen drawer"], _input.Proposals(_graph).Select(proposal => proposal.Rest));
+        Assert.Equal(0, _input.ProposalIndex(_graph));
+        Assert.Equal("Kitchen", _input.Proposal(_graph)?.Label);
+    }
+
+    [Fact]
+    public void MoveProposal_SelectsTheNextOrPrevious_AroundTheEnds()
+    {
+        Add("Dune");
+        Add("Dune Messiah");
+        Add("Dune relics");
+        TypeEach("du");
+
+        Assert.True(_input.MoveProposal(_graph, 1));
+        Assert.Equal("Dune relics", _input.Proposal(_graph)?.Label);
+        Assert.True(_input.MoveProposal(_graph, 1));
+        Assert.True(_input.MoveProposal(_graph, 1));
+        Assert.Equal(0, _input.ProposalIndex(_graph));
+        Assert.True(_input.MoveProposal(_graph, -1));
+        Assert.Equal("Dune Messiah", _input.Proposal(_graph)?.Label);
+    }
+
+    [Fact]
+    public void MoveProposal_NeedsTwoProposals()
+    {
+        Assert.False(_input.MoveProposal(_graph, 1));
+        Add("Dune");
+        TypeEach("du");
+
+        Assert.False(_input.MoveProposal(_graph, 1));
+        Assert.Equal(0, _input.ProposalIndex(_graph));
+    }
+
+    [Fact]
+    public void Accept_TakesTheProposalSelected()
+    {
+        Add("Dune");
+        Add("Dune Messiah");
+        TypeEach("du");
+        _input.MoveProposal(_graph, 1);
+
+        Assert.True(_input.Accept(_graph));
+        Assert.Equal(["Dune Messiah"], _input.Chips(_graph, plan: null).Select(chip => chip.Text));
+    }
+
+    [Fact]
+    public void TypingMore_SelectsTheFirstProposalAgain()
+    {
+        Add("Dune");
+        Add("Dune Messiah");
+        Add("Dune relics");
+        TypeEach("du");
+        _input.MoveProposal(_graph, 2);
+
+        TypeEach("n");
+
+        Assert.Equal("Dune", _input.Proposal(_graph)?.Label);
+    }
+
+    [Fact]
+    public void Dismiss_HidesAllTheProposals()
+    {
+        Add("Dune");
+        Add("Dune Messiah");
+        TypeEach("du");
+
+        Assert.True(_input.Dismiss(_graph));
+        Assert.Empty(_input.Proposals(_graph));
+        Assert.Equal(0, _input.ProposalIndex(_graph));
+    }
+
     private bool TypeEach(string text) => TypeEach(_input, text);
 
     // Types the text one character at a time after the current one, as the input box does; true when labels formed.

@@ -36,8 +36,8 @@ public static class QueryCompletion
         return [.. types, .. times, .. links];
     }
 
-    /// <summary>What Tab adds to a query; null when nothing is proposed.</summary>
-    public static Proposal? Propose(KnowledgeGraph graph, string text)
+    /// <summary>What Tab may add to a query, the first one first; none when nothing fits.</summary>
+    public static IEnumerable<Proposal> Proposals(KnowledgeGraph graph, string text)
     {
         var rest = QueryParser.AfterMark(text).TrimStart();
         if (TimePeriod(rest) is { } period)
@@ -59,35 +59,35 @@ public static class QueryCompletion
         if (QueryParser.LinkOf(rest, graph.Types) is { } link)
         {
             var node = link.Node.Length > 0 && char.IsWhiteSpace(rest[^1]) ? $"{link.Node} " : link.Node;
-            return node.Length == 0 ? null : AsQuery(InputCompletion.NodeProposal(graph, node));
+            return node.Length == 0 ? [] : AsQuery(InputCompletion.NodeProposals(graph, node));
         }
 
         if (rest.Length == 0)
         {
-            return null;
+            return [];
         }
 
         var words = (type is null ? graph.Types.NodeTypes.Select(nodeType => $"{nodeType.Name}: ") : [])
             .Concat(Times.Select(time => $"{time.Word}: "))
             .Concat(graph.Types.Verbs.SelectMany(verb => verb.Phrases).Select(phrase => $"{phrase} "));
-        return Of(words, rest, emptyToo: false)
-            ?? (type is { } nodeType ? AsQuery(InputCompletion.NodeProposal(graph, rest, node => graph.HasType(node.Id, nodeType.Id))) : null);
+        var nodes = type is { } nodeType ? AsQuery(InputCompletion.NodeProposals(graph, rest, node => graph.HasType(node.Id, nodeType.Id))) : [];
+        return Of(words, rest, emptyToo: false).Concat(nodes);
     }
 
     // After "changed:": the period typed so far, untrimmed at its end; null when the text is no time.
     private static string? TimePeriod(string text) =>
         text.IndexOf(':') is var colon and >= 0 && TimeQuery.KindOf(text[..colon]) is not null ? text[(colon + 1)..].TrimStart() : null;
 
-    // The shortest word starting with the text typed, that adds more than spaces.
-    private static Proposal? Of(IEnumerable<string> words, string typed, bool emptyToo) =>
+    // The words starting with the text typed, that add more than spaces, the shortest first.
+    private static IEnumerable<Proposal> Of(IEnumerable<string> words, string typed, bool emptyToo) =>
         typed.Length == 0 && !emptyToo
-            ? null
+            ? []
             : words
                 .Where(word => word.StartsWith(typed, StringComparison.OrdinalIgnoreCase) && word[typed.Length..].Trim().Length > 0)
+                .Distinct(StringComparer.OrdinalIgnoreCase)
                 .OrderBy(word => word.Length)
                 .ThenBy(word => word, StringComparer.OrdinalIgnoreCase)
-                .Select(word => new Proposal(word[typed.Length..], word, IsLinkType: false, IsQueryText: true))
-                .FirstOrDefault();
+                .Select(word => new Proposal(word[typed.Length..], word, IsLinkType: false, IsQueryText: true));
 
-    private static Proposal? AsQuery(Proposal? proposal) => proposal is null ? null : proposal with { IsQueryText = true };
+    private static IEnumerable<Proposal> AsQuery(IEnumerable<Proposal> proposals) => proposals.Select(proposal => proposal with { IsQueryText = true });
 }

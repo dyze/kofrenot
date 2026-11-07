@@ -12,6 +12,8 @@
              Padding="8,6"
              TextChanged="Box_TextChanged"
              SelectionChanged="Box_SelectionChanged"
+             GotKeyboardFocus="Box_KeyboardFocusChanged"
+             LostKeyboardFocus="Box_KeyboardFocusChanged"
              PreviewKeyDown="Box_PreviewKeyDown" />
     <ItemsControl x:Name="Chips"
                   Margin="8,0,0,0"
@@ -95,6 +97,45 @@
                VerticalAlignment="Center"
                IsHitTestVisible="False"
                Opacity="0.45" />
+    <!-- Several proposals (ChipBox.ProposalList): the rest of each, under one another from the caret; the one selected
+         on the line of the text, where the proposal in grey would be. -->
+    <Popup x:Name="ProposalList"
+           AllowsTransparency="True"
+           Placement="Relative"
+           PlacementTarget="{Binding ElementName=Box}"
+           StaysOpen="True">
+      <Border Padding="0,3"
+              Background="{DynamicResource SolidBackgroundFillColorBaseBrush}"
+              BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
+              BorderThickness="0,1,1,1"
+              CornerRadius="0,4,4,0"
+              TextElement.FontFamily="{Binding FontFamily, ElementName=Box}"
+              TextElement.FontSize="{Binding FontSize, ElementName=Box}">
+        <ItemsControl x:Name="ProposalItems" Focusable="False">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate>
+              <Border x:Name="Row"
+                      Height="{Binding Height}"
+                      Padding="0,0,10,0"
+                      Background="Transparent"
+                      Cursor="Hand"
+                      MouseLeftButtonDown="ProposalRow_MouseLeftButtonDown">
+                <TextBlock x:Name="RowText"
+                           VerticalAlignment="Center"
+                           Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                           Text="{Binding Rest}" />
+              </Border>
+              <DataTemplate.Triggers>
+                <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                  <Setter TargetName="Row" Property="Background" Value="{DynamicResource SubtleFillColorSecondaryBrush}" />
+                  <Setter TargetName="RowText" Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}" />
+                </DataTrigger>
+              </DataTemplate.Triggers>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </Border>
+    </Popup>
     <TextBlock x:Name="PlaceholderText"
                Margin="12,0,0,0"
                VerticalAlignment="Center"

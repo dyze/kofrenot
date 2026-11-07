@@ -60,7 +60,7 @@ Both apps share the same vaults and the same core; each shows its own set of fea
 | Keep offline (this device only: content downloaded ahead) | ✔ server vaults | ✔ |
 | **Change** | | |
 | Add nodes and links (input box, creation screen) | ✔ | ✔ the search box, then a creation screen, or **＋** > *Add a node…* (a view on Windows; a dataset with **＋**) |
-| Labels and proposals while typing (a name or link type becomes a label; the rest of a name proposed after it) | ✔ **Tab** accepts, **Backspace** unlabels, **Esc** clears | ✔ **Enter** or a tap on the proposal accepts, a tap on the last label or **Backspace** unlabels, **×** in the box clears its labels and text |
+| Labels and proposals while typing (a name or link type becomes a label; the rest of a name proposed after it) | ✔ up to 5 proposals listed, **Up/Down** select one, **Tab** or **Enter** accepts, **Backspace** unlabels, **Esc** clears | ✔ **Enter** or a tap on the proposal accepts, a tap on the last label or **Backspace** unlabels, **×** in the box clears its labels and text |
 | Rename, colour, pin; move and copy in a tree | ✔ | ✔ rename, colour, pin (**⋮**); not in a tree |
 | Delete a node, remove a link (asked first, naming what goes) | ✔ a node from its details (**Ctrl+Del**), a list (**Del**) or the search (right-click), a subtree in a tree (**Del**); a link with its broken-link button or right-click | ✔ a node (**⋮**), a link (long press) |
 | Types: add to a node, take out | ✔ | ✔ **⋮** (a view is made on Windows) |
@@ -176,7 +176,7 @@ Type in the box at the top of the main window; the line under it says what Enter
 | `?changed: this week` · `?added: 2025-08` · `?opened: today` · `?changed: 2025-01..2025-03` | nothing: it **lists the nodes by when** they last changed, were added, or were last opened on this device, newest first, each with when; a period is `today`, `yesterday`, `this week`, `this month`, `this year`, a date, a month, a year or a range of them, none for any time |
 | `?book: written by Frank Herbert` · `?note: changed: this week` | a type in front narrows a link or a time |
 
-- Matching nodes are listed as you type; **Tab** accepts the rest of a name proposed in grey.
+- Matching nodes are listed as you type; **Tab** accepts the rest of a name proposed in grey. When several fit, up to 5 are listed from the text, the one selected on its line: **Up/Down** select another, **Tab**, **Enter** or a click accepts it, **Esc** hides them (then **Enter** adds what is typed).
 - A **query** starts with **?**: then a type's name and **:**, a link phrase, or `changed:`, `added:`, `opened:`. Each word is proposed in grey (**Tab** adds it), then a period after a time, a node after a link phrase; `?` alone lists every way to start one (a type with its number of nodes, a time, a link phrase): **Up/Down** then **Tab** or **Enter**, or a click, puts it in the box. A query lists at most 200 nodes and adds nothing: **Up/Down** selects one, **Enter** opens it. `?changed:` reads as a time even if a node type has that name.
 - **Qualifiers** come after a complete link: **,** then a qualifier's name of its link type (or its first letters, the rest proposed in grey) makes it a label; what follows is its value, until the next **,** and name. A **,** not followed by a qualifier's name stays in the name (*Herbert, Frank*). The link type's qualifiers are set in Settings > Link types; the creation screen shows them to fill. With qualifiers typed for nodes linked so already, the list offers their links (*married to Bob · 1995*) and **+ a new link**: **Up/Down** or a click chooses which one is updated, or adds another beside them.
 - **Enter** shows the creation screen first: the type of each new node (generic, note, dataset or view), a note's text, a dataset's file. A new node's name can still be changed there; a link's names cannot.
@@ -249,7 +249,7 @@ The main ones on Windows; every shortcut is listed in Settings > **Key bindings*
 | --- | --- |
 | Any program | **Ctrl+Alt+K** shows kofrenot |
 | Main window | **Ctrl+1** to **Ctrl+9** switch vault · **Ctrl+L** locks it |
-| Input box | **Tab** accepts the proposal · **Enter** adds or opens · **Up/Down** select a row, **Left/Right** one in the column beside (empty box) · **Backspace** unlabels · **Esc** clears |
+| Input box | **Tab** accepts the proposal · **Up/Down** select one, **Enter** accepts it (several proposals listed) · **Enter** adds or opens · **Up/Down** select a row, **Left/Right** one in the column beside (empty box) · **Backspace** unlabels · **Esc** clears |
 | Node details | **F2** renames · **Ctrl+K** links · **Ctrl+Del** deletes · **Esc** goes back |
 | Note | **Ctrl+S** saves |
 | Dataset | **Ctrl+I** imports · **Ctrl+E** exports · **Ctrl+O** opens in its app |

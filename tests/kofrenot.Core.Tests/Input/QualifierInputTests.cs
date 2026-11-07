@@ -89,14 +89,18 @@ public sealed class QualifierInputTests
         Assert.Equal("Frank Herbert, Date 1965", Parse("Dune relates to Frank Herbert, Date 1965").Right);
 
     [Fact]
+    public void EachQualifierStartingWithTheText_IsProposed_TheShortestFirst() =>
+        Assert.Equal([Source, StartDate], QualifierText.Proposed("Frank Herbert, s", [StartDate, Date, Source]));
+
+    [Fact]
     public void AQualifierName_IsProposedAfterAComma()
     {
-        Assert.Equal(Source, QualifierText.Proposed("Frank Herbert, so", [Date, Source]));
-        Assert.Null(QualifierText.Proposed("Frank Herbert, Source", [Date, Source]));
-        Assert.Null(QualifierText.Proposed("Frank Herbert, so ", [Date, Source]));
-        Assert.Null(QualifierText.Proposed(", so", [Date, Source]));
-        Assert.Equal(Source, QualifierText.Proposed(", so", [Date, Source], nodeTyped: true));
-        Assert.Null(QualifierText.Proposed("Frank Herbert", [Date, Source]));
+        Assert.Equal(Source, QualifierText.Proposed("Frank Herbert, so", [Date, Source]).FirstOrDefault());
+        Assert.Empty(QualifierText.Proposed("Frank Herbert, Source", [Date, Source]));
+        Assert.Empty(QualifierText.Proposed("Frank Herbert, so ", [Date, Source]));
+        Assert.Empty(QualifierText.Proposed(", so", [Date, Source]));
+        Assert.Equal(Source, QualifierText.Proposed(", so", [Date, Source], nodeTyped: true).FirstOrDefault());
+        Assert.Empty(QualifierText.Proposed("Frank Herbert", [Date, Source]));
     }
 
     [Fact]

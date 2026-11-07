@@ -22,7 +22,7 @@ public sealed class QueryCompletionTests
     [InlineData("?contained b", "y ")]
     public void TheFirstWord_IsATypeATimeOrALinkPhrase_TheShortestFirst(string text, string rest)
     {
-        var proposal = QueryCompletion.Propose(_graph, text);
+        var proposal = QueryCompletion.Proposals(_graph, text).FirstOrDefault();
 
         Assert.Equal(rest, proposal?.Rest);
         Assert.True(proposal?.IsQueryText);
@@ -34,7 +34,7 @@ public sealed class QueryCompletionTests
     [InlineData("?opened: Y", "esterday")]
     [InlineData("?note: changed: to", "day")]
     public void AfterATime_IsAPeriod(string text, string rest) =>
-        Assert.Equal(rest, QueryCompletion.Propose(_graph, text)?.Rest);
+        Assert.Equal(rest, QueryCompletion.Proposals(_graph, text).FirstOrDefault()?.Rest);
 
     [Theory]
     [InlineData("?note: ch", "anged: ")]
@@ -44,10 +44,24 @@ public sealed class QueryCompletionTests
     [InlineData("?contained by Kitchen ", "table")]
     public void AfterATypeOrALinkPhrase_IsTheNextWord_OrANode(string text, string rest)
     {
-        var proposal = QueryCompletion.Propose(_graph, text);
+        var proposal = QueryCompletion.Proposals(_graph, text).FirstOrDefault();
 
         Assert.Equal(rest, proposal?.Rest);
         Assert.True(proposal?.IsQueryText);
+    }
+
+    [Fact]
+    public void AfterATime_EachPeriodIsProposed() =>
+        Assert.Equal(
+            ["today", "this week", "this year", "yesterday", "this month"],
+            QueryCompletion.Proposals(_graph, "?changed: ").Select(proposal => proposal.Label));
+
+    [Fact]
+    public void AfterAType_TheNextWordsComeBeforeItsNodes()
+    {
+        Add("Contacts", TypeCatalog.Note);
+
+        Assert.Equal(["contains ", "contained by ", "Contacts"], QueryCompletion.Proposals(_graph, "?note: con").Select(proposal => proposal.Label));
     }
 
     [Theory]
@@ -59,7 +73,7 @@ public sealed class QueryCompletionTests
     [InlineData("?contained by ")]
     [InlineData("?contained by Nothing")]
     [InlineData("?xyz")]
-    public void NothingIsProposed_WhenNothingFits(string text) => Assert.Null(QueryCompletion.Propose(_graph, text));
+    public void NothingIsProposed_WhenNothingFits(string text) => Assert.Empty(QueryCompletion.Proposals(_graph, text));
 
     [Fact]
     public void TheStarts_AreEachType_WithItsNodes_EachTime_AndEachLinkPhrase()

@@ -54,13 +54,18 @@ public partial class NodeDetailsPanel
 
     /// <summary>
     /// While the link box has the focus: Enter adds, Tab accepts the proposal, Esc hides it, else clears the box,
-    /// then hides it; other keys are typed (Right and Backspace by the box).
+    /// then hides it; while several proposals are listed, Up/Down select one and Enter accepts it too; other keys
+    /// are typed (Right and Backspace by the box).
     /// </summary>
     private bool HandleLinkKey(Key key)
     {
         switch (key)
         {
+            case Key.Up or Key.Down when LinkBox.HasProposalList:
+                LinkBox.MoveProposal(key == Key.Up ? -1 : 1);
+                return true;
             case Key.Tab:
+            case Key.Enter when LinkBox.HasProposalList:
                 LinkBox.AcceptProposal();
                 return true;
             case Key.Enter:
