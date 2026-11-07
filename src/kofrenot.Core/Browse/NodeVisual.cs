@@ -36,11 +36,11 @@ public sealed record NodeVisual(NodeIcon Icon, Guid? Thumbnail = null, NodeColor
         if (versions.Count == 0)
         {
             var type = graph.NodeTypes.Find(node.Type)?.Type;
-            return OfType(node.Type) with
+            var ofType = type is null ? OfType(node.Type) : Of(type);
+            return ofType with
             {
                 Thumbnail = ImageFieldOf(graph, node),
-                Color = color == NodeColor.None && type is not null ? type.Color : color,
-                TypeIcon = TypeIcons.Find(type?.Icon),
+                Color = color == NodeColor.None ? ofType.Color : color,
             };
         }
 
@@ -54,7 +54,10 @@ public sealed record NodeVisual(NodeIcon Icon, Guid? Thumbnail = null, NodeColor
             ? NodeFields.Of(graph, node.Id).Select(field => field.Image?.Image?.Id).FirstOrDefault(image => image is not null)
             : null;
 
-    /// <summary>The icon of a node type alone (a node without file, or a type on the creation screen).</summary>
+    /// <summary>A node type as it is chosen (the creation screen, Add type…): its icon, and for a type of the user's its own icon and colour.</summary>
+    public static NodeVisual Of(NodeType type) => OfType(type.Id) with { TypeIcon = TypeIcons.Find(type.Icon), Color = type.Color };
+
+    /// <summary>The icon of a node type alone, by its id (a node without file).</summary>
     public static NodeVisual OfType(string typeId) => new(typeId switch
     {
         _ when typeId == TypeCatalog.Note.Id => NodeIcon.Note,

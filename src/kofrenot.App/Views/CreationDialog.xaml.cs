@@ -32,7 +32,7 @@ public partial class CreationDialog : Window
 
         TitleText.Text = form.Title;
         _typeChoices = form.Types.NodeTypes
-            .Select(type => new TypeChoice(type, NodeVisual.OfType(type.Id) with { TypeIcon = TypeIcons.Find(type.Icon), Color = type.Color }))
+            .Select(type => new TypeChoice(type, NodeVisual.Of(type)))
             .ToList();
         TypeBox.ItemsSource = _typeChoices;
         LinkTypeBox.ItemsSource = form.Types.Verbs;

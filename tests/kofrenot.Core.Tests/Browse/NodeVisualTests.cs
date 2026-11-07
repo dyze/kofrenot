@@ -65,6 +65,16 @@ public sealed class NodeVisualTests
             [NodeIcon.Generic, NodeIcon.Note, NodeIcon.File, NodeIcon.View],
             TypeCatalog.BuiltIn.NodeTypes.Select(type => NodeVisual.OfType(type.Id).Icon));
 
+    [Fact]
+    public void AType_HasItsBuiltInIcon_OrItsOwnIconAndColour()
+    {
+        Assert.Equal(new NodeVisual(NodeIcon.Note), NodeVisual.Of(TypeCatalog.Note));
+        Assert.Equal(
+            new NodeVisual(NodeIcon.Generic, null, NodeColor.Blue, "Contact"),
+            NodeVisual.Of(new NodeType("person", "Person", [], "Contact", NodeColor.Blue)));
+        Assert.Equal(new NodeVisual(NodeIcon.Generic), NodeVisual.Of(new NodeType("book", "Book", [])));
+    }
+
     [Theory]
     [InlineData("data.json", NodeIcon.Code)]
     [InlineData("notes.md", NodeIcon.Text)]

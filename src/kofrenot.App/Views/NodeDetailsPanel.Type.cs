@@ -39,7 +39,12 @@ public partial class NodeDetailsPanel
         var menu = new ContextMenu { PlacementTarget = AddTypeButton };
         foreach (var type in graph.Types.NodeTypes.Where(type => type != TypeCatalog.Generic && !graph.HasType(details.Node.Id, type.Id)))
         {
-            var item = new MenuItem { Header = type.Name };
+            // Drawn as on the creation screen: the type's icon, in its colour.
+            var item = new MenuItem
+            {
+                Header = type.Name,
+                Icon = new NodeVisualView { Width = 16, Height = 16, Visual = NodeVisual.Of(type) },
+            };
             var name = type.Name.ToLowerInvariant();
             item.Click += (_, _) => Change(new TypeSetPlanner(graph).Add(details.Node, type), $"Make “{details.Name}” a {name}?", $"Make it a {name}", alwaysAsk: false);
             menu.Items.Add(item);
