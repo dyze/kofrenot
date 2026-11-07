@@ -8,6 +8,10 @@ It covers kofrenot on Windows and on Android; versions before 0.9 ran on Windows
 
 ## [Unreleased]
 
+## [0.16] - 2026-11-07
+
+*Qualifiers: links that hold fields of their own, typed, searched and queried as sentences.*
+
 > ⚠ **Vault format 11** (for qualifiers, links added beside others, and phone number fields). Consequences:
 > - Each vault asks once, when it opens, to be upgraded; until you agree, this kofrenot does not use it.
 > - Once upgraded, **kofrenot 0.15 opens it read only, on Windows and Android**: it shows the links without their qualifiers, a phone number as plain text, and changes nothing. **kofrenot 0.14 and older no longer open it.** Update kofrenot on all your devices, and ask the members of a shared vault to update theirs, before upgrading.
@@ -464,7 +468,8 @@ It covers kofrenot on Windows and on Android; versions before 0.9 ran on Windows
 - **Update check** once a day against GitHub releases, switchable in About.
 - **Installer and portable zip** (`build\installer.cmd`), self-contained.
 
-[Unreleased]: https://github.com/dyze/kofrenot/compare/0.15...HEAD
+[Unreleased]: https://github.com/dyze/kofrenot/compare/0.16...HEAD
+[0.16]: https://github.com/dyze/kofrenot/compare/0.15...0.16
 [0.15]: https://github.com/dyze/kofrenot/compare/0.14...0.15
 [0.14]: https://github.com/dyze/kofrenot/compare/0.13...0.14
 [0.13]: https://github.com/dyze/kofrenot/compare/0.12...0.13
