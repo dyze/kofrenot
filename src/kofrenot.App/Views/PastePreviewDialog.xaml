@@ -24,14 +24,14 @@
     <Border x:Name="PictureFrame"
             Grid.Row="1"
             Margin="0,12,0,0"
-            HorizontalAlignment="Left"
+            HorizontalAlignment="Center"
             BorderBrush="{DynamicResource ControlStrongStrokeColorDefaultBrush}"
             BorderThickness="1"
             Visibility="Collapsed">
       <Image x:Name="Picture" MaxWidth="478" MaxHeight="240" Stretch="Uniform" />
     </Border>
 
-    <TextBlock x:Name="FileText" Grid.Row="2" Margin="0,10,0,0" Opacity="0.85" TextWrapping="Wrap" />
+    <TextBlock x:Name="FileText" Grid.Row="2" Margin="0,10,0,0" Opacity="0.85" TextAlignment="Center" TextWrapping="Wrap" />
 
     <StackPanel Grid.Row="3"
                 Margin="0,20,0,0"

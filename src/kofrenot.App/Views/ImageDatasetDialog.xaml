@@ -19,15 +19,22 @@
   <StackPanel Margin="20,18,20,16">
     <TextBlock x:Name="Heading" Style="{StaticResource HeadingText}" />
     <TextBox x:Name="SearchBox" Margin="0,10,0,8" TextChanged="SearchBox_TextChanged" PreviewKeyDown="SearchBox_PreviewKeyDown" />
-    <ListBox x:Name="ImageList" Height="260" MouseDoubleClick="ImageList_MouseDoubleClick">
+    <ListBox x:Name="ImageList" Height="300" MouseDoubleClick="ImageList_MouseDoubleClick">
+      <!-- Compact rows: the theme's are sized for touch. -->
+      <ListBox.ItemContainerStyle>
+        <Style TargetType="ListBoxItem" BasedOn="{StaticResource {x:Type ListBoxItem}}">
+          <Setter Property="MinHeight" Value="0" />
+          <Setter Property="Padding" Value="8,3" />
+        </Style>
+      </ListBox.ItemContainerStyle>
       <ListBox.ItemTemplate>
         <DataTemplate>
           <!-- Its thumbnail (its type's icon until read), its name, then its file's. -->
-          <StackPanel Margin="0,2" Orientation="Horizontal">
-            <local:NodeVisualView Width="40" Height="40" Visual="{Binding Visual}" />
-            <StackPanel Margin="10,0,0,0" VerticalAlignment="Center">
-              <TextBlock Text="{Binding Choice.Node.Name}" />
-              <TextBlock FontSize="{StaticResource CaptionFontSize}" Opacity="0.7" Text="{Binding Choice.Image.File.Name}" />
+          <StackPanel Orientation="Horizontal">
+            <local:NodeVisualView Width="28" Height="28" Visual="{Binding Visual}" />
+            <StackPanel Margin="8,0,0,0" VerticalAlignment="Center">
+              <TextBlock Text="{Binding Choice.Node.Name}" TextTrimming="CharacterEllipsis" />
+              <TextBlock FontSize="{StaticResource FooterFontSize}" Opacity="0.7" Text="{Binding Choice.Image.File.Name}" TextTrimming="CharacterEllipsis" />
             </StackPanel>
           </StackPanel>
         </DataTemplate>
