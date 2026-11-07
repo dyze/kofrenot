@@ -29,7 +29,11 @@ public abstract class Bindable : INotifyPropertyChanged
 public sealed record IconChoice(string? Name, string? Icon, string Label)
 {
     public static IReadOnlyList<IconChoice> All { get; } =
-        [new(null, null, "No icon"), .. TypeIcons.All.Select(icon => new IconChoice(icon, IconPaths.NameOfType(icon), TypeIcons.LabelOf(icon)))];
+    [
+        new(null, null, "No icon"),
+        .. TypeIcons.All.Select(icon => new IconChoice(icon, IconPaths.NameOfType(icon), TypeIcons.LabelOf(icon)))
+            .OrderBy(choice => choice.Label, StringComparer.CurrentCultureIgnoreCase),
+    ];
 }
 
 /// <summary>A field typed in the node type form; <see cref="Choices"/> are a choice's options, separated by commas.</summary>
