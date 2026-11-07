@@ -1,11 +1,12 @@
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Threading;
+using Kofrenot.Core.Views;
 
 namespace Kofrenot.UI.Views;
 
 /// <summary>
-/// The tabs, left to right, as many as fit: the others are left out, listed by ▾ (<see cref="Hidden"/>).
+/// The tabs, left to right, as many as fit (<see cref="TabFit"/>): the others are left out, listed by ▾ (<see cref="Hidden"/>).
 /// The selected tab is always in sight, in place of the last ones that fit.
 /// </summary>
 public sealed class TabStripPanel : Panel
@@ -58,29 +59,10 @@ public sealed class TabStripPanel : Panel
         return finalSize;
     }
 
-    /// <summary>The first tabs that fit in <paramref name="width"/>; the selected one replaces the last of them if it is not one.</summary>
-    private static List<UIElement> Fitting(List<UIElement> tabs, double width)
+    private static IEnumerable<UIElement> Fitting(List<UIElement> tabs, double width)
     {
-        var fitting = new List<UIElement>();
-        var used = 0.0;
-        foreach (var tab in tabs.TakeWhile(tab => used + tab.DesiredSize.Width <= width))
-        {
-            fitting.Add(tab);
-            used += tab.DesiredSize.Width;
-        }
-
-        if (tabs.FirstOrDefault(IsSelected) is { } selected && !fitting.Contains(selected))
-        {
-            while (fitting.Count > 0 && used + selected.DesiredSize.Width > width)
-            {
-                used -= fitting[^1].DesiredSize.Width;
-                fitting.RemoveAt(fitting.Count - 1);
-            }
-
-            fitting.Add(selected);
-        }
-
-        return fitting;
+        var selected = tabs.FindIndex(IsSelected);
+        return TabFit.Fitting(tabs.Select(tab => tab.DesiredSize.Width).ToList(), selected, width).Select(index => tabs[index]);
     }
 
     private static bool IsSelected(UIElement tab) => tab is FrameworkElement { DataContext: TabRow { IsSelected: true } };

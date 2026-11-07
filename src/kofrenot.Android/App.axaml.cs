@@ -55,8 +55,12 @@ public sealed partial class App : Application
         }
     }
 
-    /// <summary>The app went to the background: no sync until it comes back.</summary>
-    public void Paused() => Services.Sync.Pause();
+    /// <summary>The app went to the background: the screen left (a note changed saved), then no sync until it comes back.</summary>
+    public void Paused()
+    {
+        _shell?.Paused();
+        Services.Sync.Pause();
+    }
 
     /// <summary>What another app shared, waiting until a vault is open (<see cref="Shell.AddShared"/>).</summary>
     public SharedContent? WaitingShare { get; private set; }

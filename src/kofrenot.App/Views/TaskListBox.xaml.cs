@@ -16,9 +16,8 @@ namespace Kofrenot.UI.Views;
 public partial class TaskListBox : UserControl
 {
     private readonly List<TextBox> _shownBoxes = [];
-    private List<TaskItem> _items = [];
+    private TaskListEditing _editing = new([]);
     private bool _isReadOnly;
-    private bool _showsChecked;
 
     public TaskListBox() => InitializeComponent();
 
@@ -39,8 +38,7 @@ public partial class TaskListBox : UserControl
     /// <summary>Shows <paramref name="items"/>, in place of those shown, the checked ones collapsed.</summary>
     public void Show(IReadOnlyList<TaskItem> items)
     {
-        _items = items.ToList();
-        _showsChecked = false;
+        _editing = new TaskListEditing(items);
         Build();
     }
 
@@ -59,26 +57,22 @@ public partial class TaskListBox : UserControl
         DoneRows.Children.Clear();
         _shownBoxes.Clear();
         _dropLines.Clear();
-        var shown = Enumerable.Range(0, _items.Count)
-            .Where(index => _showsChecked || !_items[index].IsDone)
-            .OrderBy(index => _items[index].IsDone)
-            .ToList();
-        foreach (var index in shown)
+        foreach (var index in _editing.Shown)
         {
-            (_items[index].IsDone ? DoneRows : OpenRows).Children.Add(RowOf(index, focusIndex == index));
+            (_editing.Items[index].IsDone ? DoneRows : OpenRows).Children.Add(RowOf(index, focusIndex == index));
         }
 
-        var doneCount = _items.Count(item => item.IsDone);
+        var doneCount = _editing.CheckedCount;
         CheckedCount.Text = doneCount == 1 ? "1 checked" : $"{doneCount} checked";
-        CheckedChevron.Kind = _showsChecked ? "chevron-down" : "chevron-right";
-        CheckedHeader.ToolTip = _showsChecked ? "Hide the checked items" : "Show the checked items";
+        CheckedChevron.Kind = _editing.ShowsChecked ? "chevron-down" : "chevron-right";
+        CheckedHeader.ToolTip = _editing.ShowsChecked ? "Hide the checked items" : "Show the checked items";
         CheckedHeader.Visibility = doneCount > 0 ? Visibility.Visible : Visibility.Collapsed;
         AddButton.Visibility = _isReadOnly ? Visibility.Collapsed : Visibility.Visible;
     }
 
     private Grid RowOf(int index, bool focus)
     {
-        var item = _items[index];
+        var item = _editing.Items[index];
         var check = new CheckBox
         {
             IsChecked = item.IsDone,
@@ -89,7 +83,7 @@ public partial class TaskListBox : UserControl
             VerticalAlignment = VerticalAlignment.Center,
             Focusable = false,
         };
-        check.Click += (_, _) => Change(index, _items[index] with { IsDone = check.IsChecked == true });
+        check.Click += (_, _) => Change(index, check.IsChecked == true);
 
         var box = new TextBox
         {
@@ -127,34 +121,30 @@ public partial class TaskListBox : UserControl
     }
 
     /// <summary>An item checked or unchecked: it moves to its part of the list.</summary>
-    private void Change(int index, TaskItem item)
+    private void Change(int index, bool isDone)
     {
-        _items[index] = item;
+        _editing.Check(index, isDone);
         Build();
-        Changed?.Invoke(_items);
+        Changed?.Invoke(_editing.Items);
     }
 
     /// <summary>An item typed in: the rows stay, so the caret does too.</summary>
     private void Edit(int index, string text)
     {
-        _items[index] = _items[index] with { Text = text };
-        Changed?.Invoke(_items);
+        _editing.Edit(index, text);
+        Changed?.Invoke(_editing.Items);
     }
 
     private void Insert(int index)
     {
-        _items.Insert(index, new TaskItem(string.Empty, false));
-        Build(focusIndex: index);
-        Changed?.Invoke(_items);
+        Build(focusIndex: _editing.Insert(index));
+        Changed?.Invoke(_editing.Items);
     }
 
-    private void Remove(int index, TextBox box)
+    private void Remove(int index)
     {
-        var before = _shownBoxes.IndexOf(box) - 1;
-        _items.RemoveAt(index);
-        int? focusIndex = before < 0 ? null : (int)_shownBoxes[before].Tag;
-        Build(focusIndex is { } shown && shown > index ? shown - 1 : focusIndex);
-        Changed?.Invoke(_items);
+        Build(focusIndex: _editing.Remove(index));
+        Changed?.Invoke(_editing.Items);
     }
 
     private void Item_PreviewKeyDown(object sender, KeyEventArgs e)
@@ -167,7 +157,7 @@ public partial class TaskListBox : UserControl
         // Alt+Up/Down come as a system key.
         if (Keyboard.Modifiers == ModifierKeys.Alt && e.Key == Key.System && e.SystemKey is Key.Up or Key.Down)
         {
-            MoveNextTo(index, box, e.SystemKey == Key.Up ? -1 : 1);
+            MoveNextTo(index, e.SystemKey == Key.Up ? -1 : 1);
             e.Handled = true;
             return;
         }
@@ -184,7 +174,7 @@ public partial class TaskListBox : UserControl
                 Insert(index + 1);
                 break;
             case Key.Back when box.Text.Length == 0:
-                Remove(index, box);
+                Remove(index);
                 break;
             case Key.Up when shownAt > 0:
                 FocusLater(_shownBoxes[shownAt - 1]);
@@ -199,11 +189,11 @@ public partial class TaskListBox : UserControl
         e.Handled = true;
     }
 
-    private void Add_Click(object sender, RoutedEventArgs e) => Insert(_items.Count);
+    private void Add_Click(object sender, RoutedEventArgs e) => Insert(_editing.Items.Count);
 
     private void CheckedHeader_Click(object sender, RoutedEventArgs e)
     {
-        _showsChecked = !_showsChecked;
+        _editing.ToggleChecked();
         Build();
     }
 

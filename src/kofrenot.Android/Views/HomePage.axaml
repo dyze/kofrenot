@@ -74,11 +74,9 @@
       <Border x:Name="ReadOnlyBanner" DockPanel.Dock="Top" Background="{StaticResource Banner}" Padding="16,6">
         <TextBlock x:Name="ReadOnlyText" Classes="caption" TextWrapping="Wrap" />
       </Border>
-      <!-- The tabs within the screen's width, ▾ always at its right: every tab in a sheet (HomePage.Tabs). -->
+      <!-- The tabs that fit whole, ▾ always at their right: the tabs left out, then the views to open (HomePage.Tabs). -->
       <Grid DockPanel.Dock="Top" ColumnDefinitions="*,Auto" Margin="8,4,4,4">
-        <ScrollViewer HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Disabled">
-          <StackPanel x:Name="Tabs" Orientation="Horizontal" Spacing="{StaticResource GapS}" />
-        </ScrollViewer>
+        <views:TabStripPanel x:Name="Tabs" ClipToBounds="True" />
         <Button Grid.Column="1" Classes="icon" Click="AllTabs_Click">
           <PathIcon Data="{DynamicResource icon.chevron-down}" />
         </Button>

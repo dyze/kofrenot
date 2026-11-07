@@ -12,16 +12,15 @@ namespace Kofrenot.Phone.Views;
 /// <summary>A screen of the app: refreshed when the vault or the account changes; told when a sync ends.</summary>
 public interface IPage
 {
-    /// <summary>Handles Back within the screen (a search cleared, a note not saved asked about); false to show the screen before.</summary>
+    /// <summary>Handles Back within the screen (a search cleared); false to show the screen before.</summary>
     bool GoBack();
 
     void Refresh();
 
-    /// <summary>
-    /// Leaving the screen loses something (a note not saved): asks, and calls <paramref name="leave"/>
-    /// once the user agrees. False when nothing is lost: the caller leaves itself.
-    /// </summary>
-    bool AsksBeforeLeaving(Action leave) => false;
+    /// <summary>The screen is left: another one shown, or the app in the background. Saves what it holds (a note changed).</summary>
+    void Leave()
+    {
+    }
 
     /// <summary>A sync ended (every 30 s): only where it stands is shown again, what it downloaded comes with <see cref="Refresh"/>.</summary>
     void SyncChanged();
@@ -124,6 +123,9 @@ public sealed partial class Shell : UserControl
     }
 
     /// <summary>Shows a screen, back going to the one shown now.</summary>
+    /// <summary>The app went to the background: the screen shown is left, as it may not come back (a note changed is saved).</summary>
+    public void Paused() => (PageHost.Content as IPage)?.Leave();
+
     public void Push(Control page)
     {
         _pages.Push(page);
@@ -132,6 +134,7 @@ public sealed partial class Shell : UserControl
 
     private void ShowPage(Control page, bool back)
     {
+        (PageHost.Content as IPage)?.Leave();
         ThumbnailCache.Shared.Use(Services.Session.Current);
         PageHost.IsTransitionReversed = back;
         PageHost.Content = page;
@@ -263,7 +266,7 @@ public sealed partial class Shell : UserControl
 
     /// <summary>
     /// Goes back to <paramref name="page"/>, one of the screens before (a chip of the trail), closing
-    /// those after it. One that would lose something is shown and asks first; kept, the jump stops there.
+    /// those after it (each left as it was hidden: a note changed is already saved).
     /// </summary>
     public void BackTo(Control page)
     {
@@ -274,12 +277,6 @@ public sealed partial class Shell : UserControl
 
         while (_pages.Peek() != page)
         {
-            if (_pages.Peek() is IPage closing && closing.AsksBeforeLeaving(() => BackTo(page)))
-            {
-                ShowPage(_pages.Peek(), back: true);
-                return;
-            }
-
             _pages.Pop();
         }
 

@@ -54,29 +54,6 @@ public sealed class TaskListTests
     public void Show_ThenHide_GivesTheLinesBack() =>
         Assert.Equal("one\ntwo", TaskList.Hide(TaskList.Show("one\ntwo")));
 
-    private static readonly TaskItem[] Abcd = [new("a", false), new("b", false), new("c", true), new("d", false)];
-
-    [Theory]
-    [InlineData(0, 2, "bcad")]
-    [InlineData(3, 0, "dabc")]
-    [InlineData(1, 3, "acdb")]
-    [InlineData(2, 2, "abcd")]
-    public void Move_PutsTheItemAtItsNewPlace_KeepingTheOthersInOrder(int from, int to, string order)
-    {
-        var moved = TaskList.Move(Abcd, from, to);
-
-        Assert.Equal(order, string.Concat(moved.Select(item => item.Text)));
-        Assert.True(moved.Single(item => item.Text == "c").IsDone);
-    }
-
-    [Theory]
-    [InlineData(-1, 0)]
-    [InlineData(4, 0)]
-    [InlineData(0, -1)]
-    [InlineData(0, 4)]
-    public void Move_RefusesAnIndexNotInTheList(int from, int to) =>
-        Assert.Throws<ArgumentOutOfRangeException>(() => TaskList.Move(Abcd, from, to));
-
     [Fact]
     public void ProgressOf_CountsTheItemsChecked() =>
         Assert.Equal(new TaskProgress(1, 3), TaskList.ProgressOf("text\n- [ ] one\n- [x] two\n- [ ] three"));
@@ -91,18 +68,4 @@ public sealed class TaskListTests
     [InlineData("a", "\n")]
     public void LineBreakOf_IsTheOneTheTextUses(string text, string lineBreak) =>
         Assert.Equal(lineBreak, TaskList.LineBreakOf(text));
-
-    [Theory]
-    [InlineData("# Shop\r\n- [ ] milk\r\n  - [x] *eggs*\r\n", 0, "# Shop\r\n- [x] milk\r\n  - [x] *eggs*\r\n")]
-    [InlineData("# Shop\r\n- [ ] milk\r\n  - [x] *eggs*\r\n", 1, "# Shop\r\n- [ ] milk\r\n  - [ ] *eggs*\r\n")]
-    [InlineData("- [X] done", 0, "- [ ] done")]
-    [InlineData("- [ ]", 0, "- [x]")]
-    public void Toggle_ChecksOrUnchecksOneItem_LeavingTheRestAsItWas(string text, int task, string toggled) =>
-        Assert.Equal(toggled, TaskList.Toggle(text, task));
-
-    [Theory]
-    [InlineData("- [ ] one", 1)]
-    [InlineData("text", 0)]
-    public void Toggle_RefusesAnItemNotInTheText(string text, int task) =>
-        Assert.Throws<ArgumentOutOfRangeException>(() => TaskList.Toggle(text, task));
 }

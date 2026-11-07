@@ -65,6 +65,7 @@ public sealed partial class NodePage : UserControl, IPage
         _shell = shell;
         _nodeId = node.Id;
         InitializeComponent();
+        TaskEditor.Changed += TaskEditor_Changed;
         if (Vault is { } vault)
         {
             _browser.Open(vault.Graph, node);
@@ -82,8 +83,8 @@ public sealed partial class NodePage : UserControl, IPage
     /// <summary>The node's name, told from its homonyms, for the trail.</summary>
     public string Label => _browser.Trail.FirstOrDefault() ?? string.Empty;
 
-    // A note changed and not saved: asked before leaving.
-    public bool GoBack() => AsksBeforeLeaving(() => _shell.Back());
+    // Back leaves the screen: a note changed is saved (Leave).
+    public bool GoBack() => false;
 
     public void SyncChanged()
     {
@@ -153,7 +154,10 @@ public sealed partial class NodePage : UserControl, IPage
     {
         NoteBox.IsVisible = ContentText.IsVisible = Files.IsVisible = ImportButton.IsVisible = OpenViewButton.IsVisible = ThumbnailFrame.IsVisible = false;
         var graph = vault.Graph;
-        if (graph.NoteVersionsOf(node.Id).Count > 0 || node.Type == TypeCatalog.Note.Id)
+        // No longer a note (its type changed): nothing to save when left.
+        var isNote = graph.NoteVersionsOf(node.Id).Count > 0 || node.Type == TypeCatalog.Note.Id;
+        _note = isNote ? _note : null;
+        if (isNote)
         {
             ShowNote(vault, node, color);
         }

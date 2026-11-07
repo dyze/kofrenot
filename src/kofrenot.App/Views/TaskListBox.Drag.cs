@@ -105,14 +105,12 @@ public partial class TaskListBox
     private void Row_Drop(object sender, DragEventArgs e)
     {
         HideDropLines();
-        if (DropOf(sender, e) is not { } drop)
+        if (DropOf(sender, e) is { } drop && _editing.Drop(drop.From, drop.Target, drop.Before) is { } moved)
         {
-            return;
+            Build(focusIndex: moved);
+            Changed?.Invoke(_editing.Items);
         }
 
-        // Where it is put among the items before it is taken out, then once taken out.
-        var place = drop.Before ? drop.Target : drop.Target + 1;
-        Move(drop.From, place > drop.From ? place - 1 : place);
         e.Handled = true;
     }
 
@@ -120,8 +118,7 @@ public partial class TaskListBox
     private (int From, int Target, bool Before)? DropOf(object sender, DragEventArgs e) =>
         sender is Grid { Tag: int target } row
         && e.Data.GetData(DragFormat) is int from
-        && from < _items.Count && target < _items.Count
-        && _items[from].IsDone == _items[target].IsDone
+        && _editing.CanDrop(from, target)
             ? (from, target, e.GetPosition(row).Y < row.ActualHeight / 2)
             : null;
 
@@ -134,24 +131,12 @@ public partial class TaskListBox
     }
 
     /// <summary>Alt+Up/Down: the item typed in takes the place of the one before or after it, in its own part.</summary>
-    private void MoveNextTo(int index, TextBox box, int step)
+    private void MoveNextTo(int index, int step)
     {
-        var shownAt = _shownBoxes.IndexOf(box) + step;
-        if (shownAt >= 0 && shownAt < _shownBoxes.Count && _shownBoxes[shownAt].Tag is int neighbour && _items[neighbour].IsDone == _items[index].IsDone)
+        if (_editing.Neighbour(index, step) is { } neighbour && _editing.Move(index, neighbour))
         {
-            Move(index, neighbour);
+            Build(focusIndex: neighbour);
+            Changed?.Invoke(_editing.Items);
         }
-    }
-
-    private void Move(int from, int to)
-    {
-        if (from == to)
-        {
-            return;
-        }
-
-        _items = TaskList.Move(_items, from, to).ToList();
-        Build(focusIndex: to);
-        Changed?.Invoke(_items);
     }
 }

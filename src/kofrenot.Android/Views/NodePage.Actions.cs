@@ -75,7 +75,7 @@ public sealed partial class NodePage
 
     private void ShowHistory()
     {
-        if (_browser.Details?.Node is { } node && !AsksBeforeLeaving(ShowHistory))
+        if (_browser.Details?.Node is { } node)
         {
             _shell.Push(new HistoryPage(_shell, node));
         }
@@ -122,7 +122,7 @@ public sealed partial class NodePage
 
     private async Task DeleteAsync()
     {
-        if (Vault is not { } vault || _browser.Details?.Node is not { } node || AsksBeforeLeaving(() => _shell.Run(DeleteAsync)))
+        if (Vault is not { } vault || _browser.Details?.Node is not { } node)
         {
             return;
         }

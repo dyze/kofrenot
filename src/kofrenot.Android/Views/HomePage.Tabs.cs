@@ -1,6 +1,6 @@
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
-using Avalonia.Threading;
 using Kofrenot.Core.Browse;
 using Kofrenot.Core.Graph;
 using Kofrenot.Core.Logging;
@@ -10,13 +10,16 @@ using Kofrenot.Core.Views;
 namespace Kofrenot.Phone.Views;
 
 /// <summary>
-/// The tabs: the search, then the views opened on this phone, within the screen's width, the selected
-/// one kept in sight. ▾, always at their right, lists
-/// them all in a sheet, to reach one among dozens, then the views to open. A view tab has its bar under
+/// The tabs: the search, then the views opened on this phone, as many as fit whole, the selected one
+/// always in sight (<see cref="TabStripPanel"/>), as on Windows. ▾, always at their right, lists the
+/// tabs left out, then the views to open. A view tab has its bar under
 /// the tabs: how many nodes it shows, and ⋮ for its actions (a tree's unlinked nodes, Close view).
 /// </summary>
 public sealed partial class HomePage
 {
+    // Room between two tabs.
+    private const double TabGap = 4;
+
     private void ShowTabs(Vault vault)
     {
         var tabs = new TabList(_shell.Services.ViewTabs).Of(vault.Graph, vault.Id);
@@ -26,20 +29,21 @@ public sealed partial class HomePage
         }
 
         Tabs.Children.Clear();
-        Button? selected = null;
         foreach (var tab in tabs)
         {
-            var button = new Button { Content = tab.Name, Tag = tab, Classes = { "tab", tab == _tab ? "accent" : "flat" } };
+            var button = new Button { Content = tab.Name, Tag = tab, Margin = new Thickness(0, 0, TabGap, 0), Classes = { "tab", tab == _tab ? "accent" : "flat" } };
             button.Click += (_, _) => Select(tab);
             Tabs.Children.Add(button);
-            selected = tab == _tab ? button : selected;
+            if (tab == _tab)
+            {
+                Tabs.Selected = button;
+            }
         }
 
         ViewBar.IsVisible = !_tab.IsSearch;
-        Dispatcher.UIThread.Post(() => selected?.BringIntoView(), DispatcherPriority.Loaded);
     }
 
-    // ▾: every tab open, the current one marked; then the views not open as a tab, from a second sheet.
+    // ▾: the tabs left out of the strip; then the views not open as a tab, from a second sheet.
     private void AllTabs_Click(object? sender, RoutedEventArgs e)
     {
         if (Vault is not { } vault)
@@ -47,11 +51,11 @@ public sealed partial class HomePage
             return;
         }
 
-        var tabs = new TabList(_shell.Services.ViewTabs).Of(vault.Graph, vault.Id);
+        var hidden = Tabs.Hidden.Select(button => button.Tag).OfType<Tab>();
         var closed = new TabList(_shell.Services.ViewTabs).Closed(vault.Graph, vault.Id);
         _shell.ShowSheet("Tabs",
         [
-            .. tabs.Select(tab => new SheetChoice(tab.Name, () => Select(tab), IsCurrent: tab == _tab, Icon: tab.View is { } view ? IconPaths.NameOf(NodeVisual.Of(vault.Graph, view)) : "home")),
+            .. hidden.Select(tab => new SheetChoice(tab.Name, () => Select(tab), Icon: tab.View is { } view ? IconPaths.NameOf(NodeVisual.Of(vault.Graph, view)) : "home")),
             new("Open a view…", () => _shell.ShowSheet("Open a view", closed.Select(view => new SheetChoice(view.Name, () => OpenTab(vault, view), Icon: IconPaths.NameOf(NodeVisual.Of(vault.Graph, view))))),
                 IsEnabled: closed.Count > 0, Icon: "add"),
         ]);

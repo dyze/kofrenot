@@ -16,7 +16,7 @@
       <Setter Property="IsHitTestVisible" Value="False" />
       <Setter Property="FontWeight" Value="SemiBold" />
     </Style>
-    <!-- An action's icon before its name: Open, Export…, Share…, Import…, Edit. -->
+    <!-- An action's icon before its name: Open, Export…, Share…, Import…, a note's Add item and n checked. -->
     <Style Selector="StackPanel.iconLabel">
       <Setter Property="Orientation" Value="Horizontal" />
       <Setter Property="Spacing" Value="6" />
@@ -98,12 +98,12 @@
           <ItemsControl.ItemTemplate>
             <DataTemplate DataType="views:FieldLine">
               <!-- Its label on the line of its value; its action an icon on the right, as on Windows. -->
-              <Grid ColumnDefinitions="120,*,Auto" Margin="0,2">
-                <Border MinHeight="{StaticResource TouchTarget}" VerticalAlignment="Top">
+              <Grid ColumnDefinitions="120,*,Auto">
+                <Border MinHeight="{StaticResource FieldRowHeight}" VerticalAlignment="Top">
                   <TextBlock Classes="caption" Text="{Binding Label}" TextWrapping="Wrap" VerticalAlignment="Center" />
                 </Border>
                 <StackPanel Grid.Column="1" Spacing="{StaticResource GapS}">
-                  <Button Classes="flat" Padding="0" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
+                  <Button Classes="flat" Padding="0" MinHeight="{StaticResource FieldRowHeight}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
                           Tag="{Binding}" Click="Field_Click">
                     <TextBlock Text="{Binding Value}" TextWrapping="Wrap" />
                   </Button>
@@ -111,10 +111,10 @@
                 </StackPanel>
                 <StackPanel Grid.Column="2" VerticalAlignment="Top">
                   <!-- A web address opened, a mail written, an address shown on a map (NodePage.Fields). -->
-                  <Button Classes="icon" Tag="{Binding}" IsVisible="{Binding HasLink}" Click="OpenLink_Click">
+                  <Button Classes="icon" Height="{StaticResource FieldRowHeight}" Tag="{Binding}" IsVisible="{Binding HasLink}" Click="OpenLink_Click">
                     <PathIcon Data="{Binding LinkIcon}" />
                   </Button>
-                  <Button Classes="icon" Tag="{Binding}" IsVisible="{Binding HasImage}" Click="OpenImage_Click">
+                  <Button Classes="icon" Height="{StaticResource FieldRowHeight}" Tag="{Binding}" IsVisible="{Binding HasImage}" Click="OpenImage_Click">
                     <PathIcon Data="{DynamicResource icon.open}" />
                   </Button>
                 </StackPanel>
@@ -124,23 +124,26 @@
         </ItemsControl>
         <!-- A name, colour or value set on two devices: each offered to keep (NodePage.Fields). -->
         <StackPanel x:Name="Conflicts" Spacing="{StaticResource GapS}" IsVisible="False" />
+        <!-- A note, always editable as on Windows: its Markdown, or its items when its lines are all
+             tasks; saved by the save icon and when it is left (NodePage.Note). -->
         <Border x:Name="NoteBox" CornerRadius="8" Padding="12" IsVisible="False">
           <StackPanel Spacing="{StaticResource Gap}">
-            <StackPanel x:Name="Note" Spacing="{StaticResource GapS}" />
-            <TextBox x:Name="NoteEditor" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="160" IsVisible="False"
-                     PlaceholderText="Markdown: # heading, - item, - [ ] task" />
-            <views:TaskListEditor x:Name="TaskEditor" IsVisible="False" />
-            <StackPanel Orientation="Horizontal" Spacing="{StaticResource Gap}" HorizontalAlignment="Right">
-              <Button x:Name="CheckboxesButton" Content="Checkboxes" IsVisible="False" Click="Checkboxes_Click" />
-              <Button x:Name="EditNoteButton" Click="EditNote_Click">
-                <StackPanel Classes="iconLabel">
-                  <PathIcon Data="{DynamicResource icon.rename}" />
-                  <TextBlock Text="Edit" />
-                </StackPanel>
-              </Button>
-              <Button x:Name="CancelNoteButton" Content="Cancel" IsVisible="False" Click="CancelNote_Click" />
-              <Button x:Name="SaveNoteButton" Classes="accent" Content="Save" IsVisible="False" Click="SaveNote_Click" />
+            <!-- Edited on two devices before they synced: a version kept, or merged below and saved. -->
+            <StackPanel x:Name="NoteConflict" Spacing="{StaticResource GapS}" IsVisible="False">
+              <TextBlock Classes="caption" TextWrapping="Wrap"
+                         Text="Edited on two devices before they synced. Keep a version, or merge them below and save:" />
+              <WrapPanel x:Name="ConflictVersions" ItemSpacing="{StaticResource GapS}" LineSpacing="{StaticResource GapS}" />
             </StackPanel>
+            <TextBox x:Name="NoteEditor" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="160" TextChanged="NoteEditor_TextChanged"
+                     PlaceholderText="Markdown: **bold**, *italic*, # heading, - list, [link](url)" />
+            <views:TaskListEditor x:Name="TaskEditor" IsVisible="False" />
+            <Grid ColumnDefinitions="*,Auto,Auto">
+              <TextBlock x:Name="NoteStatus" Classes="caption" TextWrapping="Wrap" VerticalAlignment="Center" />
+              <Button x:Name="CheckboxesButton" Grid.Column="1" Classes="flat" Content="Checkboxes" Click="Checkboxes_Click" />
+              <Button x:Name="SaveNoteButton" Grid.Column="2" Classes="icon" Click="SaveNote_Click">
+                <PathIcon Data="{DynamicResource icon.save}" />
+              </Button>
+            </Grid>
           </StackPanel>
         </Border>
         <TextBlock x:Name="ContentText" TextWrapping="Wrap" IsVisible="False" />
