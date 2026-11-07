@@ -19,7 +19,7 @@ public sealed partial class CreationForm
     public static CreationForm NewNode(KnowledgeGraph graph, NodeType? type = null, ParentLink? under = null, string? name = null, TimeProvider? clock = null) =>
         new(graph, new NodeRequest(name?.Trim() ?? string.Empty), new AddChoices(LeftType: type), clock)
         {
-            IsNameEditable = true,
+            StartsOnName = true,
             IsTypeFixed = type is not null,
             Under = under,
         };
@@ -27,14 +27,17 @@ public sealed partial class CreationForm
     /// <summary>The node the new node is linked to, or null.</summary>
     public ParentLink? Under { get; private init; }
 
-    /// <summary>The name is typed on the creation screen (<see cref="Name"/>).</summary>
-    public bool IsNameEditable { get; private init; }
+    /// <summary>The name can be typed, or retyped, on the creation screen (<see cref="Name"/>): a node's, not a link's.</summary>
+    public bool IsNameEditable => _request is NodeRequest;
+
+    /// <summary>The name is typed first: nothing was typed before the creation screen (a view's New, a dropped file).</summary>
+    public bool StartsOnName { get; private init; }
 
     /// <summary>The new node's type is given: the creation screen does not offer to change it.</summary>
     public bool IsTypeFixed { get; private init; }
 
     /// <summary>The new node's name, while it is typed (trimmed).</summary>
-    /// <exception cref="InvalidOperationException">Set when the name comes from the request.</exception>
+    /// <exception cref="InvalidOperationException">Set on a link request.</exception>
     public string Name
     {
         get => NameOf(Side.Left);
@@ -42,7 +45,7 @@ public sealed partial class CreationForm
         {
             if (!IsNameEditable)
             {
-                throw new InvalidOperationException("The name comes from the request.");
+                throw new InvalidOperationException("A link's names come from the request.");
             }
 
             Replan(new NodeRequest(value.Trim()), _choices);

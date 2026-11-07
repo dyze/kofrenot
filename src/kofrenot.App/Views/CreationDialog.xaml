@@ -40,7 +40,7 @@
           <ColumnDefinition Width="*" />
           <ColumnDefinition Width="160" />
         </Grid.ColumnDefinitions>
-        <StackPanel VerticalAlignment="Center">
+        <StackPanel VerticalAlignment="Top">
           <TextBlock x:Name="NodeName" Style="{StaticResource TitleText}" />
           <TextBox x:Name="NameBox"
                    Margin="0,0,12,4"
@@ -49,10 +49,12 @@
                    TextChanged="NameBox_TextChanged" />
           <TextBlock x:Name="NewText" Style="{StaticResource SecondaryText}" Text="New node" />
         </StackPanel>
-        <!-- The node types, each with its icon: Up/Down or a click choose one. -->
+        <!-- The node types, each with its icon: Up/Down or a click choose one; scrolls past about 7. -->
         <ListBox x:Name="TypeBox"
                  Grid.Column="1"
+                 MaxHeight="320"
                  VerticalAlignment="Top"
+                 ScrollViewer.VerticalScrollBarVisibility="Auto"
                  FontSize="{StaticResource BodyFontSize}"
                  SelectionChanged="TypeBox_SelectionChanged">
           <ListBox.ItemTemplate>

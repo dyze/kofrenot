@@ -71,7 +71,7 @@ public sealed partial class CreationPage : UserControl, IPage
         }
     }
 
-    // A new node: its name (typed here when started from ＋), its type (fixed by a list), and for a note its text.
+    // A new node: its name (typed here when started from ＋, retyped otherwise), its type (fixed by a list), and for a note its text.
     private void ShowSide(Side side)
     {
         var text = new TextBox { AcceptsReturn = true, TextWrapping = Avalonia.Media.TextWrapping.Wrap, MinHeight = 120, PlaceholderText = "Its text: Markdown, - [ ] task", Text = _form.ContentOf(side), IsVisible = _form.IsNote(side) };
@@ -91,7 +91,11 @@ public sealed partial class CreationPage : UserControl, IPage
             _form.Name = name.Text ?? string.Empty;
             ShowStatus();
         };
-        name.AttachedToVisualTree += (_, _) => name.Focus();
+        if (_form.StartsOnName)
+        {
+            name.AttachedToVisualTree += (_, _) => name.Focus();
+        }
+
         return name;
     }
 

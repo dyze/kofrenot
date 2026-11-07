@@ -45,7 +45,7 @@ public partial class CreationDialog : Window
         ContentBox.Edited += ContentBox_Edited;
         Loaded += (_, _) =>
         {
-            // A name given (a dropped file's) is typed already, selected to be replaced at once.
+            // A name given (a dropped file's, the input box's) is typed already; selected to be replaced at once when the name comes first.
             NameBox.Text = form.IsNameEditable ? form.Name : string.Empty;
             ShowStep();
         };
@@ -86,7 +86,7 @@ public partial class CreationDialog : Window
         {
             LinkTypeBox.Focus();
         }
-        else if (_form.IsNameEditable)
+        else if (_form.StartsOnName)
         {
             NameBox.Focus();
             NameBox.SelectAll();

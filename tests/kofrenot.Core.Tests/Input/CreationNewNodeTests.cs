@@ -11,6 +11,7 @@ public sealed class CreationNewNodeTests
         var form = CreationForm.NewNode(_graph, clock: _clock);
 
         Assert.True(form.IsNameEditable);
+        Assert.True(form.StartsOnName);
         Assert.False(form.IsTypeFixed);
         Assert.Equal(string.Empty, form.Name);
         Assert.False(form.CanAdd);
@@ -94,12 +95,26 @@ public sealed class CreationNewNodeTests
     }
 
     [Fact]
-    public void ANameFromTheRequest_CannotBeTyped()
+    public void ANameFromTheRequest_CanBeRetyped()
     {
         var form = new CreationForm(_graph, new NodeRequest("Dune"), clock: _clock);
 
+        Assert.True(form.IsNameEditable);
+        Assert.False(form.StartsOnName);
+
+        form.Name = " Arrakis ";
+
+        Assert.Equal("Arrakis", form.Name);
+        Assert.Equal("Arrakis", Assert.IsType<NodeAdded>(Assert.Single(form.Plan.Changes)).Node.Name);
+    }
+
+    [Fact]
+    public void ALinksNames_CannotBeTyped()
+    {
+        var form = new CreationForm(_graph, new LinkRequest("Dune", TypeCatalog.RelatesTo.Forward, "Arrakis"), clock: _clock);
+
         Assert.False(form.IsNameEditable);
-        Assert.Throws<InvalidOperationException>(() => form.Name = "Arrakis");
+        Assert.Throws<InvalidOperationException>(() => form.Name = "Caladan");
     }
 
     [Fact]
