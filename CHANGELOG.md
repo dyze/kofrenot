@@ -42,12 +42,16 @@ It covers kofrenot on Windows and on Android; versions before 0.9 ran on Windows
   - **A note takes the room of its details**: its links under it only as tall as their rows (a third of the height before, even for one link), up to a third of the window, then scrolling; the grip above **Links** drags that height, kept for every note ([README](README.md#notes)).
   - **Add type… shows each type's icon**, in its colour, as the creation screen does.
   - **Settings' lists scroll on their own**: the files in **About**, the node types and a type's **Fields**, the key bindings, the link types, a vault's details under the list of vaults and the server exchanges in **Logging** take the room the window leaves them, so the controls above and below stay in view.
+  - **Denser image choice**: an image field's list of images has smaller thumbnails and rows, about twice as many in view; a pasted image's preview is centered.
 - **Android**
   - **Notes as on Windows**: always editable, no more **Edit** and **Cancel**; saved when you leave them (another screen, Back, the app in the background) or by the save icon, the status saying *Saved.* or *Not saved*, after how many items are done. A task list shows its open items first, **Add item** after them, the checked ones collapsed under *n checked* until tapped; **✕** shows on the item typed in, and **Backspace** in an empty item removes it. A conflict's versions are dated, to keep one or merge them by hand. Notes are no longer shown rendered: their Markdown is edited as text ([README](README.md#on-android)).
   - **Tabs as on Windows**: only those that fit whole are shown, the selected one always in sight; **▾** lists the others, then *Open a view…*.
   - **Denser node details**: a field's row is 40 dp high, no longer 52.
 
 ### Fixed
+- **Windows**
+  - **An image opens on the main window's monitor**: where it was left when that is there, else centered on the main window, no longer on the primary monitor.
+  - **Long field names are no longer cut** in node details: their column grows to the longest one, up to a limit, the full name in its tooltip.
 - **Android**
   - **The last tab is no longer cut** at the screen's edge.
   - **Add item adds at the end of the items not checked**, no longer among them when checked items come first in the note.
