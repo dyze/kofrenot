@@ -32,11 +32,17 @@ public sealed class TypeCatalog
     /// <summary>A way to look at the graph: a tree or a list (<see cref="ViewDefinition"/>).</summary>
     public static NodeType View { get; } = new("view", "View", [new FieldDefinition("definition", "Definition", FieldKind.View)]);
 
-    public static TypeCatalog BuiltIn { get; } = new([Generic, Note, Dataset, View], [RelatesTo, Contains, IsA]);
+    /// <summary>How records of a file are imported as nodes (<see cref="MappingDefinition"/>): made in Imports, never chosen for a node.</summary>
+    public static NodeType Mapping { get; } = new("mapping", "Mapping");
+
+    public static TypeCatalog BuiltIn { get; } = new([Generic, Note, Dataset, View, Mapping], [RelatesTo, Contains, IsA]);
 
     public IReadOnlyList<NodeType> NodeTypes { get; }
 
     public IReadOnlyList<LinkType> LinkTypes { get; }
+
+    /// <summary>The node types a node can be given (the creation screen, Add type…): all but <see cref="Mapping"/>.</summary>
+    public IReadOnlyList<NodeType> Chosen => NodeTypes.Where(type => type != Mapping).ToList();
 
     /// <summary>Every link type, each way it reads: what the creation screen offers.</summary>
     public IReadOnlyList<LinkVerb> Verbs => LinkTypes.SelectMany(type => type.Verbs).ToList();

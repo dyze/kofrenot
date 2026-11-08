@@ -11,7 +11,7 @@ namespace Kofrenot.Core.Storage;
 public static class VaultFormat
 {
     /// <summary>The newest format this version reads, and the one it writes.</summary>
-    public const int Current = 11;
+    public const int Current = 12;
 
     /// <summary>The oldest format that reads what this one writes, skipping what it does not know (<c>oldestReader</c>).</summary>
     public const int OldestReader = 10;
@@ -24,7 +24,7 @@ public static class VaultFormat
     private const string FirstLevelsVersion = "0.15";
 
     // The first kofrenot writing each format, from format 1.
-    private static readonly string[] FirstVersions = ["0.1", "0.2", "0.3", "0.4", "0.5", "0.7", "0.8", "0.11", "0.13", "0.14", "0.16"];
+    private static readonly string[] FirstVersions = ["0.1", "0.2", "0.3", "0.4", "0.5", "0.7", "0.8", "0.11", "0.13", "0.14", "0.16", "0.17"];
 
     /// <summary>The first kofrenot writing <paramref name="format"/> ("0.4").</summary>
     public static string Since(int format) =>

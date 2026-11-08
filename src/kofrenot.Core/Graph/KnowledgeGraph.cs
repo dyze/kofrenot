@@ -28,6 +28,7 @@ public sealed class KnowledgeGraph
     private readonly NodeVersions<NoteEdited> _notes = new();
     private readonly NodeVersions<DatasetEdited> _datasets = new();
     private readonly NodeVersions<ViewEdited> _views = new();
+    private readonly NodeVersions<MappingEdited> _mappings = new();
     private readonly NodeVersions<NodeColored> _colors = new();
     private readonly NodePlacements _placements;
     private readonly Dictionary<Guid, VaultNamed> _vaultNames = [];
@@ -93,6 +94,7 @@ public sealed class KnowledgeGraph
         NoteEdited version => _notes.Add(version),
         DatasetEdited version => _datasets.Add(version),
         ViewEdited version => _views.Add(version),
+        MappingEdited version => _mappings.Add(version),
         NodeColored color => _colors.Add(color),
         NodesPlaced placed => _placements.Add(placed),
         VaultNamed name => _vaultNames.TryAdd(name.Id, name),
@@ -118,9 +120,12 @@ public sealed class KnowledgeGraph
     /// <summary>The current definitions of a view, oldest first, as <see cref="NoteVersionsOf"/>.</summary>
     public IReadOnlyList<ViewEdited> ViewVersionsOf(Guid node) => _views.Current(node);
 
-    /// <summary>Every content version of a node (its texts, files or view definitions), whatever they replace: its history.</summary>
+    /// <summary>The current definitions of a mapping, oldest first, as <see cref="NoteVersionsOf"/>.</summary>
+    public IReadOnlyList<MappingEdited> MappingVersionsOf(Guid node) => _mappings.Current(node);
+
+    /// <summary>Every content version of a node (its texts, files, view or mapping definitions), whatever they replace: its history.</summary>
     public IEnumerable<ContentEdited> ContentHistoryOf(Guid node) =>
-        _notes.Of(node).Concat<ContentEdited>(_datasets.Of(node)).Concat(_views.Of(node));
+        _notes.Of(node).Concat<ContentEdited>(_datasets.Of(node)).Concat(_views.Of(node)).Concat(_mappings.Of(node));
 
     /// <summary>
     /// The current names of the vault, oldest first: none before it is named, one, or several when

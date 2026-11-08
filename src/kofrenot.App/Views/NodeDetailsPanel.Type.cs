@@ -37,7 +37,7 @@ public partial class NodeDetailsPanel
         }
 
         var menu = new ContextMenu { PlacementTarget = AddTypeButton };
-        foreach (var type in graph.Types.NodeTypes.Where(type => type != TypeCatalog.Generic && !graph.HasType(details.Node.Id, type.Id)))
+        foreach (var type in graph.Types.Chosen.Where(type => type != TypeCatalog.Generic && !graph.HasType(details.Node.Id, type.Id)))
         {
             // Drawn as on the creation screen: the type's icon, in its colour.
             var item = new MenuItem

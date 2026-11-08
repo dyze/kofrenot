@@ -134,8 +134,8 @@ public sealed record NodePinned(Guid Id, DateTimeOffset At, Guid Node) : Change(
 
 /// <summary>
 /// A new version of the content of <see cref="Node"/>: a note's text or a dataset's file, kept in a
-/// file of its own named by <see cref="Change.Id"/> and read only when needed; a view's definition,
-/// small, kept in the change. <see cref="Replaces"/>
+/// file of its own named by <see cref="Change.Id"/> and read only when needed; a view's or a mapping's
+/// definition, small, kept in the change. <see cref="Replaces"/>
 /// are the versions it was written over (none for the first). Two versions replacing the same one,
 /// neither knowing the other (two devices before syncing), make a conflict.
 /// </summary>
@@ -151,6 +151,10 @@ public sealed record DatasetEdited(Guid Id, DateTimeOffset At, Guid Node, Datase
 
 /// <summary>A new version of a view's definition, held by the change: a view works offline.</summary>
 public sealed record ViewEdited(Guid Id, DateTimeOffset At, Guid Node, ViewDefinition Definition, IReadOnlyList<Guid> Replaces)
+    : ContentEdited(Id, At, Node, Replaces);
+
+/// <summary>A new version of a mapping's definition (how it imports records), held by the change, as a view's (since format 12).</summary>
+public sealed record MappingEdited(Guid Id, DateTimeOffset At, Guid Node, MappingDefinition Definition, IReadOnlyList<Guid> Replaces)
     : ContentEdited(Id, At, Node, Replaces);
 
 /// <summary>

@@ -10,7 +10,7 @@ namespace Kofrenot.Core.Storage;
 /// <see cref="OldestReader"/> and <see cref="OldestWriter"/> are the oldest formats that may read it and write
 /// to its vault (<see cref="VaultFormat"/>); its format when null.
 /// </summary>
-internal sealed record ChangeData(
+internal sealed partial record ChangeData(
     int Format,
     string Op,
     DateTimeOffset At,
@@ -34,6 +34,7 @@ internal sealed record ChangeData(
     ChangeData.RemoveTypeData? RemoveType = null,
     ChangeData.FieldData? Field = null,
     ChangeData.PlaceData? Place = null,
+    ChangeData.MappingData? Mapping = null,
     int? OldestReader = null,
     int? OldestWriter = null)
 {
@@ -46,6 +47,7 @@ internal sealed record ChangeData(
     private const string NoteEditedOp = "editNote";
     private const string DatasetEditedOp = "editDataset";
     private const string ViewEditedOp = "editView";
+    private const string MappingEditedOp = "editMapping";
     private const string VaultNamedOp = "nameVault";
     private const string NodeRetypedOp = "retypeNode";
     private const string MemberAddedOp = "addMember";
@@ -73,6 +75,7 @@ internal sealed record ChangeData(
         NoteEdited note => new(VaultFormat.Current, NoteEditedOp, note.At, Note: new NoteData(note.Node, [.. note.Replaces])),
         DatasetEdited dataset => new(VaultFormat.Current, DatasetEditedOp, dataset.At, Dataset: new DatasetData(dataset.Node, FileData.From(dataset.File), [.. dataset.Replaces])),
         ViewEdited view => new(VaultFormat.Current, ViewEditedOp, view.At, View: ViewData.From(view)),
+        MappingEdited mapping => new(VaultFormat.Current, MappingEditedOp, mapping.At, Mapping: MappingData.From(mapping)),
         VaultNamed name => new(VaultFormat.Current, VaultNamedOp, name.At, Vault: new VaultNameData(name.Name, [.. name.Replaces])),
         NodeRetyped retype => new(VaultFormat.Current, NodeRetypedOp, retype.At, Retype: new RetypeData(retype.Node, retype.Type, [.. retype.Replaces])),
         MemberAdded added => new(VaultFormat.Current, MemberAddedOp, added.At, Member: MemberData.From(added)),
@@ -124,6 +127,7 @@ internal sealed record ChangeData(
                 => new DatasetEdited(id, At, Dataset.Node, file.ToFile(), replaces),
             ViewEditedOp when View is { Replaces: { } replaces } && View.Node != Guid.Empty && View.ToDefinition() is { } definition
                 => new ViewEdited(id, At, View.Node, definition, replaces),
+            MappingEditedOp when Mapping?.ToChange(id, At) is { } mapping => mapping,
             VaultNamedOp when Vault is { Name: { } name, Replaces: { } replaces } && !string.IsNullOrWhiteSpace(name)
                 => new VaultNamed(id, At, name, replaces),
             NodeRetypedOp when Retype is { Type: { Length: > 0 } type, Replaces: { Count: > 0 } replaces } && Retype.Node != Guid.Empty

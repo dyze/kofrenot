@@ -19,6 +19,7 @@ public enum NodeIcon
     Pdf,
     View,
     List,
+    Import,
 }
 
 /// <summary>
@@ -70,6 +71,7 @@ public sealed record NodeVisual(NodeIcon Icon, Guid? Thumbnail = null, NodeColor
         _ when typeId == TypeCatalog.Note.Id => NodeIcon.Note,
         _ when typeId == TypeCatalog.Dataset.Id => NodeIcon.File,
         _ when typeId == TypeCatalog.View.Id => NodeIcon.View,
+        _ when typeId == TypeCatalog.Mapping.Id => NodeIcon.Import,
         _ => NodeIcon.Generic,
     });
 

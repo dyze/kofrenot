@@ -74,7 +74,8 @@ public static class NodeHistory
 
     private static IEnumerable<HistoryEntry> Contents(KnowledgeGraph graph, Node node)
     {
-        var current = graph.NoteVersionsOf(node.Id).Concat<ContentEdited>(graph.DatasetVersionsOf(node.Id)).Concat(graph.ViewVersionsOf(node.Id)).Select(version => version.Id).ToHashSet();
+        var current = graph.NoteVersionsOf(node.Id).Concat<ContentEdited>(graph.DatasetVersionsOf(node.Id)).Concat(graph.ViewVersionsOf(node.Id)).Concat(graph.MappingVersionsOf(node.Id))
+            .Select(version => version.Id).ToHashSet();
         return graph.ContentHistoryOf(node.Id).Select(version => Entry(version, version.Id, version.At, KindOf(version), field: null, LabelOf(version, graph), current));
     }
 
@@ -116,6 +117,7 @@ public static class NodeHistory
     {
         DatasetEdited dataset => $"{dataset.File.Name}, {ByteSize.Format(dataset.File.Size)}",
         ViewEdited view => ViewDraft.Describe(view.Definition, graph),
+        MappingEdited mapping => $"Records as {graph.Types.NodeTypeName(mapping.Definition.NodeType)}",
         _ => string.Empty,
     };
 

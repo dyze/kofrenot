@@ -35,6 +35,7 @@ public sealed class RestorePlanner(KnowledgeGraph graph, TimeProvider? clock = n
             NoteEdited => new NoteEdited(id, at, node.Id, graph.NoteVersionsOf(node.Id).Select(current => current.Id).ToList()),
             DatasetEdited dataset => new DatasetEdited(id, at, node.Id, dataset.File, graph.DatasetVersionsOf(node.Id).Select(current => current.Id).ToList()),
             ViewEdited view => new ViewEdited(id, at, node.Id, view.Definition, graph.ViewVersionsOf(node.Id).Select(current => current.Id).ToList()),
+            MappingEdited mapping => new MappingEdited(id, at, node.Id, mapping.Definition, graph.MappingVersionsOf(node.Id).Select(current => current.Id).ToList()),
             _ => throw new ArgumentOutOfRangeException(nameof(entry), entry.Kind, "Unknown version"),
         };
         IReadOnlyList<ContentCopy> contents = entry.Version is NoteEdited or DatasetEdited

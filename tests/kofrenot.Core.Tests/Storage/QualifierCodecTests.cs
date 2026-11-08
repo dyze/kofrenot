@@ -101,7 +101,7 @@ public sealed class QualifierCodecTests
     public void ANewerLinkType_WithAFieldOfAnUnknownKind_KeepsIt() =>
         Assert.Equal(
             FieldKind.Unknown,
-            Assert.Single(Assert.IsType<LinkTypeDefined>(Decode("{\"format\":12,\"oldestReader\":11,\"at\":\"2026-10-16T09:12:00Z\",\"op\":\"defineLinkType\","
+            Assert.Single(Assert.IsType<LinkTypeDefined>(Decode($"{{\"format\":{VaultFormat.Current + 1},\"oldestReader\":{VaultFormat.Current},\"at\":\"2026-10-16T09:12:00Z\",\"op\":\"defineLinkType\","
                 + "\"linkType\":{\"id\":\"wrote\",\"name\":\"wrote\",\"fields\":[{\"id\":\"s\",\"name\":\"Stars\",\"kind\":\"rating\"}],\"replaces\":[]}}")).Fields).Kind);
 
     [Theory]

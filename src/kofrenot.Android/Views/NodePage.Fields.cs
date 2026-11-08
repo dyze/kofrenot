@@ -149,7 +149,7 @@ public sealed partial class NodePage
     // ⋮ > Add type: the node types it has not, a view's excepted (what it shows is chosen on Windows).
     private SheetChoice AddTypeChoice(KnowledgeGraph graph, NodeDetails details)
     {
-        var types = graph.Types.NodeTypes
+        var types = graph.Types.Chosen
             .Where(type => type != TypeCatalog.Generic && type != TypeCatalog.View && !details.Types.Contains(type))
             .Select(type => new SheetChoice(type.Name, () => ChangeTypes(new TypeSetPlanner(graph).Add(details.Node, type))))
             .ToList();

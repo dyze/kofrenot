@@ -47,7 +47,7 @@ public sealed partial class CreationPage : UserControl, IPage
     }
 
     private IReadOnlyList<NodeType> Types =>
-        _form.Types.NodeTypes.Where(type => type != TypeCatalog.View && type != TypeCatalog.Dataset).ToList();
+        _form.Types.Chosen.Where(type => type != TypeCatalog.View && type != TypeCatalog.Dataset).ToList();
 
     private void ShowSides()
     {

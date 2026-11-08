@@ -31,7 +31,7 @@ public partial class CreationDialog : Window
         _form = form;
 
         TitleText.Text = form.Title;
-        _typeChoices = form.Types.NodeTypes
+        _typeChoices = form.Types.Chosen
             .Select(type => new TypeChoice(type, NodeVisual.Of(type)))
             .ToList();
         TypeBox.ItemsSource = _typeChoices;

@@ -83,7 +83,7 @@ public sealed class NodeVisualTests
     [Fact]
     public void ATypeAlone_HasItsIcon() =>
         Assert.Equal(
-            [NodeIcon.Generic, NodeIcon.Note, NodeIcon.File, NodeIcon.View],
+            [NodeIcon.Generic, NodeIcon.Note, NodeIcon.File, NodeIcon.View, NodeIcon.Import],
             TypeCatalog.BuiltIn.NodeTypes.Select(type => NodeVisual.OfType(type.Id).Icon));
 
     [Fact]
