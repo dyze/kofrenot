@@ -6,8 +6,9 @@ using Kofrenot.UI.Platform;
 namespace Kofrenot.UI.Views;
 
 /// <summary>
-/// The preview of an import (<see cref="RecordPlan"/>): its records by group, each to choose, the
-/// values not imported and the rules left out. Nothing is written here: the choices are returned.
+/// The preview of an import: of a file's records (<see cref="RecordPlan"/>) or of another vault's nodes
+/// (<see cref="VaultImportPlan"/>). Its rows by group, each to choose, then what is not imported. Nothing
+/// is written here: the choices are returned.
 /// </summary>
 public partial class RecordImportDialog : Window
 {
@@ -20,51 +21,59 @@ public partial class RecordImportDialog : Window
         (RecordOutcome.Unchanged, "Unchanged"),
     ];
 
-    private readonly RecordPlan _plan;
-    private readonly Dictionary<RecordItem, RecordImportView> _rows;
+    private readonly Func<int> _count;
 
-    private RecordImportDialog(Window owner, string mapping, string file, RecordPlan plan)
+    private RecordImportDialog(Window owner, string heading, IReadOnlyList<RecordImportView> rows, Func<int> count, IReadOnlyList<string> notes)
     {
         InitializeComponent();
         Owner = owner;
-        _plan = plan;
-        _rows = plan.Items.ToDictionary(item => item, item => new RecordImportView(item));
-        foreach (var row in _rows.Values)
+        _count = count;
+        foreach (var row in rows)
         {
             row.Changed += ShowCount;
         }
 
-        HeadingText.Text = $"Import “{mapping}” · {file}";
+        HeadingText.Text = heading;
         var groups = Groups
-            .Select(group => new RecordGroupView(group.Title, plan.Of(group.Outcome).Select(item => _rows[item]).ToList(), group.Outcome != RecordOutcome.Unchanged))
+            .Select(group => new RecordGroupView(group.Title, rows.Where(row => row.Outcome == group.Outcome).ToList(), group.Outcome != RecordOutcome.Unchanged))
             .Where(group => group.Rows.Count > 0)
             .ToList();
         GroupList.ItemsSource = groups;
         CountList.ItemsSource = groups;
-        var problems = plan.Warnings.Concat(plan.Items.SelectMany(item => item.ValueProblems.Select(problem => $"{_rows[item].Name} · {problem}"))).ToList();
-        ProblemsText.Text = problems.Count == 0 ? string.Empty : $"Not imported: {string.Join("\n", problems)}";
-        ProblemsText.Visibility = problems.Count == 0 ? Visibility.Collapsed : Visibility.Visible;
+        ProblemsText.Text = string.Join("\n", notes);
+        ProblemsText.Visibility = notes.Count == 0 ? Visibility.Collapsed : Visibility.Visible;
         ShowCount();
     }
 
-    /// <summary>The choices made, by record; null when cancelled.</summary>
+    /// <summary>The choices made for a file's records; null when cancelled.</summary>
     public static Func<RecordItem, RecordChoice>? Ask(Window owner, string mapping, string file, RecordPlan plan)
     {
-        var dialog = new RecordImportDialog(owner, mapping, file, plan);
+        var problems = plan.Warnings.Concat(plan.Items.SelectMany(item => item.ValueProblems.Select(problem => $"{RecordImportView.Of(item).Name} · {problem}"))).ToList();
+        return Ask(owner, $"Import “{mapping}” · {file}", plan.Items, RecordImportView.Of, plan.CountFor, problems.Count == 0 ? [] : [$"Not imported: {string.Join("\n", problems)}"]);
+    }
+
+    /// <summary>The choices made for another vault's nodes; null when cancelled.</summary>
+    public static Func<VaultImportItem, RecordChoice>? Ask(Window owner, string vault, string query, VaultImportPlan plan) =>
+        Ask(owner, $"Import from “{vault}” · {query}", plan.Items, RecordImportView.Of, plan.CountFor, plan.Summary);
+
+    private static Func<T, RecordChoice>? Ask<T>(Window owner, string heading, IReadOnlyList<T> items, Func<T, RecordImportView> viewOf, Func<Func<T, RecordChoice>, int> count, IReadOnlyList<string> notes)
+        where T : notnull
+    {
+        var rows = items.ToDictionary(item => item, viewOf);
+        RecordChoice Choose(T item) => rows[item].Choice;
+        var dialog = new RecordImportDialog(owner, heading, [.. rows.Values], () => count(Choose), notes);
         if (dialog.ShowDialog() != true)
         {
             return null;
         }
 
-        var choices = dialog._rows.ToDictionary(pair => pair.Key, pair => pair.Value.Choice);
+        var choices = rows.ToDictionary(pair => pair.Key, pair => pair.Value.Choice);
         return item => choices[item];
     }
 
-    private Func<RecordItem, RecordChoice> Choose => item => _rows[item].Choice;
-
     private void ShowCount()
     {
-        var count = _plan.CountFor(Choose);
+        var count = _count();
         ImportButton.Content = $"Import {count}";
         ImportButton.IsEnabled = count > 0;
     }

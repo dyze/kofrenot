@@ -47,6 +47,33 @@ public partial class ImportsWindow : Window
         MappingList.ItemsSource = rows;
         EmptyText.Visibility = rows.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
         NewButton.IsEnabled = CanWrite;
+        FromVaultButton.IsEnabled = CanWrite && _session.Vaults.Count > 1;
+    }
+
+    // Another vault's nodes found by a query, planned (VaultImportPlanner), previewed, then written as chosen.
+    private async void FromVault_Click(object sender, RoutedEventArgs e)
+    {
+        if (_session.Current is not { } vault || VaultImportDialog.Ask(this, _session) is not { } request)
+        {
+            _log.Info("Action", "Import from a vault cancelled");
+            return;
+        }
+
+        var plan = new VaultImportPlanner(vault.Graph, VaultContent.Of(vault))
+            .Plan(request.Source.Graph, VaultContent.Of(request.Source), request.VaultName, request.Hits, request.SubtreeLinkType);
+        _log.Info("Action", $"Import from vault {request.Source.Id} previewed ({plan.Items.Count} nodes)");
+        if (RecordImportDialog.Ask(this, request.VaultName, request.Query, plan) is not { } choose)
+        {
+            _log.Info("Action", "Import from a vault cancelled");
+            return;
+        }
+
+        var write = plan.WriteFor(choose);
+        var (written, added) = (plan.CountFor(choose), plan.AddedFor(choose));
+        if (_session.Current == vault && await _session.ImportFromVault(_ask, request.Source, write, $"Nodes imported from vault {request.Source.Id} ({added} new, {written - added} updated)"))
+        {
+            MessageDialog.Inform(this, $"{written} written: {added} new, {written - added} updated.");
+        }
     }
 
     private MappingRow RowOf(KnowledgeGraph graph, Node node)

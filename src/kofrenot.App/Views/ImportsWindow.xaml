@@ -11,7 +11,8 @@
         WindowStartupLocation="CenterOwner"
         SourceInitialized="Window_SourceInitialized">
   <!-- The vault's mappings: how a file's records are imported as nodes. Each row: Import… (a file, then
-       the preview), Edit…, Delete… (asked first; the nodes it imported stay). New… adds one. -->
+       the preview), Edit…, Delete… (asked first; the nodes it imported stay). New… adds one.
+       From a vault… imports the nodes a query finds in another vault, through the same preview. -->
   <Window.Resources>
     <ResourceDictionary Source="SharedStyles.xaml" />
   </Window.Resources>
@@ -58,6 +59,8 @@
 
     <DockPanel Grid.Row="3" Margin="0,20,0,0">
       <Button x:Name="NewButton" MinWidth="90" Padding="12,4" Content="New…" DockPanel.Dock="Left" Click="New_Click" />
+      <Button x:Name="FromVaultButton" MinWidth="90" Margin="8,0,0,0" Padding="12,4" Content="From a vault…" DockPanel.Dock="Left" Click="FromVault_Click"
+              ToolTip="Import the nodes a query finds in another of your vaults" />
       <Button MinWidth="90" Padding="12,4" HorizontalAlignment="Right" Content="Close" IsCancel="True" />
     </DockPanel>
   </Grid>

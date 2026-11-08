@@ -4,30 +4,36 @@ using Kofrenot.Core.Imports;
 namespace Kofrenot.UI.Views;
 
 /// <summary>
-/// A record of the preview: its name and what it does (<see cref="RecordItem.Details"/>), ticked when
-/// added or updated, or one of three choices when to check. <see cref="Changed"/> tells the dialog the
-/// count to write changed.
+/// A row of the preview, a record of a file or a node of another vault: its name and what it does
+/// (its reason, else its details), ticked when added or updated, or one of three choices when to check.
+/// <see cref="Changed"/> tells the dialog the count to write changed.
 /// </summary>
-public sealed class RecordImportView(RecordItem item) : INotifyPropertyChanged
+public sealed class RecordImportView(string name, RecordOutcome outcome, string? reason, IReadOnlyList<string> details, string choiceGroup) : INotifyPropertyChanged
 {
-    private RecordChoice _choice = item.IsChosen ? RecordChoice.Import : RecordChoice.Skip;
+    private RecordChoice _choice = outcome is RecordOutcome.New or RecordOutcome.Updated or RecordOutcome.ToCheck ? RecordChoice.Import : RecordChoice.Skip;
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
     public event Action? Changed;
 
-    public RecordItem Item { get; } = item;
+    public static RecordImportView Of(RecordItem item) =>
+        new(item.Name ?? $"Record {item.Record.Number}", item.Outcome, item.Reason, item.Details, $"record-{item.Record.Number}");
 
-    public string Name => Item.Name ?? $"Record {Item.Record.Number}";
+    public static RecordImportView Of(VaultImportItem item) =>
+        new(item.Source.Name, item.Outcome, item.Reason, item.Details, $"node-{item.Source.Id:N}");
 
-    public string Details => Item.Reason ?? string.Join("\n", Item.Details);
+    public string Name { get; } = name;
 
-    public bool HasCheck => Item.Outcome is RecordOutcome.New or RecordOutcome.Updated;
+    public RecordOutcome Outcome { get; } = outcome;
 
-    public bool HasChoice => Item.Outcome == RecordOutcome.ToCheck;
+    public string Details => reason ?? string.Join("\n", details);
 
-    /// <summary>The group of its choices: one per record.</summary>
-    public string ChoiceGroup => $"record-{Item.Record.Number}";
+    public bool HasCheck => Outcome is RecordOutcome.New or RecordOutcome.Updated;
+
+    public bool HasChoice => Outcome == RecordOutcome.ToCheck;
+
+    /// <summary>The group of its choices: one per row.</summary>
+    public string ChoiceGroup { get; } = choiceGroup;
 
     public RecordChoice Choice => _choice;
 
