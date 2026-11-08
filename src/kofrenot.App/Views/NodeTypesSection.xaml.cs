@@ -154,6 +154,19 @@ public partial class NodeTypesSection : UserControl
         Show();
     }
 
+    private void SelectAll_Click(object sender, RoutedEventArgs e) => TickCopies(true);
+
+    private void DeselectAll_Click(object sender, RoutedEventArgs e) => TickCopies(false);
+
+    // Every type that copying would write, ticked or not; the others stay as they are.
+    private void TickCopies(bool isChecked)
+    {
+        foreach (var line in _copies?.Where(line => line.CanCopy) ?? [])
+        {
+            line.IsChecked = isChecked;
+        }
+    }
+
     private NodeTypePlan? PlanType(NodeTypeForm form)
     {
         if (Graph is not { } graph)

@@ -247,6 +247,10 @@
                  Opacity="0.7"
                  TextWrapping="Wrap"
                  Text="Link types are copied with their qualifiers and aliases, not their links. Copied again later, a link type is updated." />
+      <StackPanel Margin="0,6,0,0" Orientation="Horizontal">
+        <Button Padding="8,2" Content="Select all" Style="{StaticResource FlatButton}" Click="SelectAll_Click" />
+        <Button Margin="6,0,0,0" Padding="8,2" Content="Deselect all" Style="{StaticResource FlatButton}" Click="DeselectAll_Click" />
+      </StackPanel>
       <ScrollViewer Margin="0,8,0,0" local:ListFit.Fills="True" Focusable="False" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
         <ItemsControl x:Name="CopyList" Focusable="False">
           <ItemsControl.ItemTemplate>
