@@ -19,3 +19,4 @@ Scope of each planned version. Implemented features move to [CHANGELOG.md](CHANG
 11. Both · **Faster transfers.** Many small files downloaded in one stream; big files uploaded in parts, resumable.
 12. Windows · **Import contacts (vCard)** with a mapping ([IMPORT-CONCEPT.md](docs/IMPORT-CONCEPT.md#later)).
 13. Windows · **Export to JSON** with a mapping ([IMPORT-CONCEPT.md](docs/IMPORT-CONCEPT.md#later)).
+14. Windows · **Import images** with a mapping: a book's cover from a local file named in the JSON ([IMPORT-CONCEPT.md](docs/IMPORT-CONCEPT.md#later)).

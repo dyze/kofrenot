@@ -58,7 +58,7 @@ Sample `books.json`, for the mapping above:
 
 - **JSON shape:** the file is an array of objects (`[{…}, {…}]`). A key's value is text, a number or a boolean; an array gives several values (a link rule's names; a field takes the first, the others listed as not imported).
 - **Values** are read as the field's kind (`FieldValue`): a date `1965-08-01`, `1965-08` or `1965`; a number; a url. A value that does not fit is not imported, and listed.
-- **Not in 0.17:** image fields (a JSON file holds no picture; a URL would need the network), several node types per mapping.
+- **Not in 0.17:** image fields ([Later](#later)), several node types per mapping.
 - At creation, rules are suggested by name: a key matching a field's name (case and accents ignored) goes to it.
 
 ## Finding the node
@@ -196,6 +196,7 @@ The file is read and planned again on each **Import…**, so the preview always 
 `System.Text.Json` reads the file: no new dependency. Tests: reader, planner (new, updated, found by another name, name key fallback, to check, ambiguous, values that do not fit), mapping versions, the format 12 change read by a format 11 reader; Core coverage ≥ 95%.
 
 ## Later
+- **Images** (a book's cover): a key giving the path of a local image file, relative to the JSON file (`"cover": "covers/dune.jpg"`) → an image field, written as a pasted image is (`FieldPlanner.SetImage`, `VaultSession.SaveImage`): no new vault format. On a re-run, the same SHA-256 as the node's image is unchanged. A missing file, not an image or over `DatasetType.MaxImageSize`: not imported, listed. URLs are not read: they would need the network and tell a site which books you have.
 - **vCard** (`.vcf`, 3.0 and 4.0) as a second source: `FN`/`N` → name, `EMAIL`, `TEL`, `ADR`, `URL`, `ORG`, `NOTE`, `BDAY` (without a year: not imported), `PHOTO` → an image field; match on `UID` or the name. vCard 2.1 refused.
 - **Export** with a mapping: the type's nodes → records → a `.json` file; the rules read backwards, a link rule giving the linked nodes' names.
 - Android.
