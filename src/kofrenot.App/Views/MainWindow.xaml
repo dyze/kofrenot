@@ -106,8 +106,19 @@
         </Button>
       </StackPanel>
 
-      <!-- Settings, before Windows' own buttons (minimize, maximize, close), whose room is kept. -->
+      <!-- Imports and Settings, before Windows' own buttons (minimize, maximize, close), whose room is kept. -->
       <Grid Grid.Column="2" Margin="0,0,8,0" VerticalAlignment="Center" WindowChrome.IsHitTestVisibleInChrome="True">
+        <Button x:Name="ImportsButton"
+                Width="40"
+                Height="36"
+                Margin="0,0,44,0"
+                Padding="0"
+                HorizontalAlignment="Right"
+                Style="{StaticResource FlatButton}"
+                ToolTip="Imports: records of a JSON file as nodes"
+                Click="ImportsButton_Click">
+          <local:IconView Size="{StaticResource ActionIconSize}" Kind="import" />
+        </Button>
         <Button x:Name="SettingsButton"
                 Width="40"
                 Height="36"

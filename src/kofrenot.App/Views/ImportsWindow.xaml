@@ -1,0 +1,64 @@
+<Window x:Class="Kofrenot.UI.Views.ImportsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Imports"
+        Icon="/Assets/kofrenot.ico"
+        Width="620"
+        SizeToContent="Height"
+        MaxHeight="640"
+        ResizeMode="NoResize"
+        ShowInTaskbar="False"
+        WindowStartupLocation="CenterOwner"
+        SourceInitialized="Window_SourceInitialized">
+  <!-- The vault's mappings: how a file's records are imported as nodes. Each row: Import… (a file, then
+       the preview), Edit…, Delete… (asked first; the nodes it imported stay). New… adds one. -->
+  <Window.Resources>
+    <ResourceDictionary Source="SharedStyles.xaml" />
+  </Window.Resources>
+
+  <Grid Margin="20,18,20,16">
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="*" />
+      <RowDefinition Height="Auto" />
+    </Grid.RowDefinitions>
+
+    <TextBlock Style="{StaticResource HeadingText}" Text="Imports" />
+    <TextBlock x:Name="EmptyText"
+               Grid.Row="1"
+               Margin="0,8,0,0"
+               Style="{StaticResource SecondaryText}"
+               TextWrapping="Wrap"
+               Text="No mapping yet. A mapping imports the records of a JSON file as nodes of one of your types, and updates them when imported again." />
+
+    <ScrollViewer Grid.Row="2" Margin="0,12,0,0" VerticalScrollBarVisibility="Auto" Focusable="False">
+      <ItemsControl x:Name="MappingList" Focusable="False">
+        <ItemsControl.ItemTemplate>
+          <DataTemplate>
+            <Grid Margin="0,4">
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+              </Grid.ColumnDefinitions>
+              <StackPanel VerticalAlignment="Center">
+                <TextBlock FontWeight="SemiBold" Text="{Binding Name}" TextTrimming="CharacterEllipsis" />
+                <TextBlock Style="{StaticResource SecondaryText}" Text="{Binding Description}" TextTrimming="CharacterEllipsis" />
+              </StackPanel>
+              <StackPanel Grid.Column="1" Orientation="Horizontal">
+                <Button Margin="8,0,0,0" Padding="10,3" Content="Import…" IsEnabled="{Binding CanImport}" Tag="{Binding}" Click="Import_Click" />
+                <Button Margin="6,0,0,0" Padding="10,3" Content="Edit…" IsEnabled="{Binding CanWrite}" Tag="{Binding}" Style="{StaticResource FlatButton}" Click="Edit_Click" />
+                <Button Margin="6,0,0,0" Padding="10,3" Content="Delete…" IsEnabled="{Binding CanWrite}" Tag="{Binding}" Style="{StaticResource FlatButton}" Click="Delete_Click" />
+              </StackPanel>
+            </Grid>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+    </ScrollViewer>
+
+    <DockPanel Grid.Row="3" Margin="0,20,0,0">
+      <Button x:Name="NewButton" MinWidth="90" Padding="12,4" Content="New…" DockPanel.Dock="Left" Click="New_Click" />
+      <Button MinWidth="90" Padding="12,4" HorizontalAlignment="Right" Content="Close" IsCancel="True" />
+    </DockPanel>
+  </Grid>
+</Window>
