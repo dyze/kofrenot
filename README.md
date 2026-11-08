@@ -72,6 +72,7 @@ Both apps share the same vaults and the same core; each shows its own set of fea
 | Qualifiers: fill, add your own, take out, resolve a conflict, history | ✔ the chevron at the right of a link's row; a click on a line of a graph | ✔ a tap on a link with qualifiers (its sheet), a long press to add one of its own |
 | Several links of a type between two nodes (*married to Bob · 1995*, *· 2015*) | ✔ the input box asks which one, or **+ a new link** | ✔ shown, the first one updated |
 | A link type's qualifiers, built-in link types included (Settings > Link types) | ✔ | — (defined on Windows) |
+| Link types, their qualifiers and aliases: copy from another vault (Settings > Link types) | ✔ | — |
 | History: a node's versions (text, file, view, names, colours, field values) | ✔ listed, restored | ✔ listed, restored |
 | Notes: edit | ✔ editor with a Markdown toolbar and a task list editor, checked items collapsed | ✔ Markdown text (no toolbar), task list editor, checked items collapsed (no reordering) |
 | Notes: resolve a conflict | ✔ keep one, or merge by hand | ✔ keep one, or merge by hand |
@@ -207,6 +208,7 @@ A node has one or several **types**, each with its **fields**: *Frank Herbert* c
 - A value set on two devices before they synced shows both, to keep one.
 - The input box also finds a node by its values: *Frank Herbert — Birthplace: Tacoma*, after the nodes found by name. A field's name and a range finds the nodes whose date or number is in it: `Born 1900..1950`, `Born 1965-08..`, `Pages ..300` (a year or a month as an end includes all of it).
 - **Qualifiers** are fields on links (a date, a source, a place), of the same kinds. Settings > **Link types** > **Qualifiers** gives a link type its list, as a node type its fields, the built-in ones (*relates to*, *contains*, *is a*) included; one taken out stays on its links, with its value, as their own (asked first). A link can also have qualifiers of its own. They hang on the link, so *Dune written by Frank Herbert* and *Frank Herbert wrote Dune* show the same ones; a link changed to another type keeps them.
+- **Copy from…** (Settings > Link types) copies link types from another of your vaults, as for node types: your link types with their qualifiers, the qualifiers given to built-in ones, and the aliases of both. Each line says what copying does (*Adds it*, *Updates it*, *Adds its qualifiers*, *Adds 2 aliases*, *Already the same here*), or refuses a link type when one of its names is a phrase of another link type here; an alias another link type here already reads is left out, and said so. Links are not copied; copied again later, a link type is updated, not added twice, and an alias already here is not added again.
 
 ### Notes
 A note is Markdown text, saved as a new version each time (**Ctrl+S**, or by leaving it). **Checkboxes** on its toolbar turns its lines into a task list. Its checked items are collapsed at its bottom under their count (**▸ 3 checked**): a click shows them, or hides them again. On Windows the note takes the room, its links under it only as tall as their rows, up to a third of the window: the grip above **Links** drags that height, kept for every note.
@@ -297,7 +299,7 @@ Gear button in the title bar, or tray menu > Settings. Changes are saved at once
 | Vault        | Your vaults: add, remove, order, rename, hotkey, pass phrase, members                 |
 | Server       | Your account on a Kofre server: sign up, sign in, password, the account's pass phrase |
 | Node types   | Your node types: name, icon, colour and fields                                        |
-| Link types   | The link types and their aliases; your own link types                                 |
+| Link types   | The link types and their aliases; your own link types; copy them from another vault   |
 | Appearance   | Light, dark, or as Windows                                                            |
 | Logging      | Debug logging, the log window; exchanges with the server per day (30 days), to copy   |
 | About        | Version, update check, changelog, kofrenot's files                                    |

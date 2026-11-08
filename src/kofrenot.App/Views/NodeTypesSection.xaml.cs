@@ -115,7 +115,7 @@ public partial class NodeTypesSection : UserControl
     private void ReadTypes(RegisteredVault vault)
     {
         var window = Window.GetWindow(this)!;
-        if (_session is null || Graph is not { } graph || _session.NodeTypesOf(new WpfQuestions(window), vault) is not { } types)
+        if (_session is null || Graph is not { } graph || _session.GraphOf(new WpfQuestions(window), vault)?.NodeTypes.All is not { } types)
         {
             return;
         }

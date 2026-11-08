@@ -26,6 +26,25 @@ public sealed record WayLine(VerbPhrases Phrases, bool IsOtherWay, bool IsBothWa
     public string QualifierNames => Fields is { Count: > 0 } fields ? $"Qualifiers: {string.Join(", ", fields.Select(qualifier => qualifier.Name))}" : string.Empty;
 }
 
+/// <summary>A link type of another vault, ticked to copy it here with its aliases unless copying writes nothing.</summary>
+public sealed class LinkCopyLine(LinkTypeCopy copy) : Bindable
+{
+    private bool _isChecked = copy.Changes.Count > 0;
+
+    public LinkTypeCopy Copy { get; } = copy;
+
+    /// <summary>"wrote / written by", or "relates to (both ways)".</summary>
+    public string Name => Copy.Type.Reverse is { } reverse ? $"{Copy.Type.Name} / {reverse.Name}" : $"{Copy.Type.Name} (both ways)";
+
+    public bool CanCopy => Copy.Changes.Count > 0;
+
+    public bool IsChecked
+    {
+        get => _isChecked;
+        set => Set(ref _isChecked, value);
+    }
+}
+
 /// <summary>A line being typed in: its plan is shown as it changes, and applied by Enter or its button.</summary>
 public abstract class LineEditor : INotifyPropertyChanged
 {

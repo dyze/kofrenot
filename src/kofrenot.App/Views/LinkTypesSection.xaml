@@ -5,7 +5,7 @@
   <!-- Settings > Link types: one list of the link types, built-in then the user's, a line per way
        each reads, with its phrases. "Add alias" opens a box under a line, × removes one; the user's link
        types are renamed in place (✎) or removed (×). A new link type is typed above the list, which
-       scrolls on its own. Stored in the vault. -->
+       scrolls on its own; Copy from… lists another vault's, to copy them here. Stored in the vault. -->
   <UserControl.Resources>
     <ResourceDictionary>
       <ResourceDictionary.MergedDictionaries>
@@ -218,16 +218,57 @@
   <StackPanel>
     <TextBlock x:Name="StateText" Margin="0,10,0,0" Opacity="0.7" TextWrapping="Wrap" />
 
-    <TextBlock Margin="0,10,0,4" FontWeight="SemiBold" Text="New link type" />
-    <ContentControl x:Name="NewTypeLine" Focusable="False" />
+    <StackPanel x:Name="ListPanel">
+      <DockPanel Margin="0,10,12,4">
+        <Button x:Name="CopyFromButton"
+                DockPanel.Dock="Right"
+                Padding="12,4"
+                Content="Copy from…"
+                ToolTip="Copy link types and aliases from another of your vaults"
+                Click="CopyFrom_Click" />
+        <TextBlock VerticalAlignment="Bottom" FontWeight="SemiBold" Text="New link type" />
+      </DockPanel>
+      <ContentControl x:Name="NewTypeLine" Focusable="False" />
 
-    <!-- The list scrolls on its own (ListFit), so the new link type above stays in view. -->
-    <ScrollViewer Margin="0,14,0,0"
-                  local:ListFit.Fills="True"
-                  Focusable="False"
-                  HorizontalScrollBarVisibility="Disabled"
-                  VerticalScrollBarVisibility="Auto">
-      <ItemsControl x:Name="LineList" Margin="0,0,12,0" Grid.IsSharedSizeScope="True" />
-    </ScrollViewer>
+      <!-- The list scrolls on its own (ListFit), so the new link type above stays in view. -->
+      <ScrollViewer Margin="0,14,0,0"
+                    local:ListFit.Fills="True"
+                    Focusable="False"
+                    HorizontalScrollBarVisibility="Disabled"
+                    VerticalScrollBarVisibility="Auto">
+        <ItemsControl x:Name="LineList" Margin="0,0,12,0" Grid.IsSharedSizeScope="True" />
+      </ScrollViewer>
+    </StackPanel>
+
+    <!-- Another vault's link types, each ticked to copy it here with its aliases, with what copying does; in place of the list. -->
+    <StackPanel x:Name="CopyPanel" Margin="0,10,12,0" Visibility="Collapsed">
+      <TextBlock x:Name="CopyTitle" FontWeight="SemiBold" />
+      <TextBlock Margin="0,4,0,0"
+                 Opacity="0.7"
+                 TextWrapping="Wrap"
+                 Text="Link types are copied with their qualifiers and aliases, not their links. Copied again later, a link type is updated." />
+      <ScrollViewer Margin="0,8,0,0" local:ListFit.Fills="True" Focusable="False" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+        <ItemsControl x:Name="CopyList" Focusable="False">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate DataType="{x:Type local:LinkCopyLine}">
+              <Grid Margin="0,3">
+                <Grid.ColumnDefinitions>
+                  <ColumnDefinition Width="Auto" />
+                  <ColumnDefinition Width="Auto" />
+                  <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <CheckBox MinWidth="0" VerticalAlignment="Center" IsChecked="{Binding IsChecked}" IsEnabled="{Binding CanCopy}" />
+                <TextBlock Grid.Column="1" Margin="0,0,16,0" VerticalAlignment="Center" FontWeight="SemiBold" Text="{Binding Name}" />
+                <TextBlock Grid.Column="2" VerticalAlignment="Center" Opacity="0.7" TextWrapping="Wrap" Text="{Binding Copy.Status}" />
+              </Grid>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </ScrollViewer>
+      <StackPanel Margin="0,10,0,0" Orientation="Horizontal">
+        <Button Padding="16,4" Content="Copy" Style="{DynamicResource AccentButtonStyle}" Click="Copy_Click" />
+        <Button Margin="6,0,0,0" Padding="16,4" Content="Cancel" Click="CancelCopy_Click" />
+      </StackPanel>
+    </StackPanel>
   </StackPanel>
 </UserControl>

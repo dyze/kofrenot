@@ -2,7 +2,7 @@ using System.Text.Json.Nodes;
 
 namespace Kofrenot.Core.Tests.Session;
 
-/// <summary>Another registered vault read without switching to it: its node types, to copy them.</summary>
+/// <summary>Another registered vault read without switching to it: its types, to copy them.</summary>
 public sealed class OtherVaultTests : IDisposable
 {
     private static readonly DateTimeOffset Start = new(2026, 10, 1, 12, 0, 0, TimeSpan.Zero);
@@ -31,24 +31,24 @@ public sealed class OtherVaultTests : IDisposable
     [Fact]
     public void AnotherVaultsTypes_AreRead_AfterItsPassPhrase_WithoutSwitching()
     {
-        var types = Session.NodeTypesOf(Ask, _first);
+        var types = Session.GraphOf(Ask, _first)!.NodeTypes.All;
 
-        var person = Assert.Single(types!);
+        var person = Assert.Single(types);
         Assert.Equal(("person", "Person"), (person.Type.Id, person.Type.Name));
         Assert.Equal([nameof(ScriptedQuestions.AskPassPhrase)], Ask.Asked);
         Assert.Empty(_device.Vault.Graph.NodeTypes.All);
         Assert.NotEqual(_first.Location, Session.Selected!.Location);
-        Assert.Contains(_device.Log.Entries, entry => entry.Message.StartsWith("Node types read from vault", StringComparison.Ordinal));
+        Assert.Contains(_device.Log.Entries, entry => entry.Message.EndsWith("read to copy its types", StringComparison.Ordinal));
     }
 
     [Fact]
     public void ItsPassPhrase_IsRemembered_WhenAsked_AndUsedNextTime()
     {
         Ask.Remember = true;
-        Session.NodeTypesOf(Ask, _first);
+        Session.GraphOf(Ask, _first);
         Ask.Asked.Clear();
 
-        Assert.Single(Session.NodeTypesOf(Ask, _first)!);
+        Assert.Single(Session.GraphOf(Ask, _first)!.NodeTypes.All);
         Assert.Empty(Ask.Asked);
     }
 
@@ -57,13 +57,13 @@ public sealed class OtherVaultTests : IDisposable
     {
         Ask.Cancels = true;
 
-        Assert.Null(Session.NodeTypesOf(Ask, _first));
+        Assert.Null(Session.GraphOf(Ask, _first));
     }
 
     [Fact]
     public void TheOpenVault_IsNotReadThisWay()
     {
-        Assert.Throws<ArgumentException>(() => Session.NodeTypesOf(Ask, Session.Selected!));
+        Assert.Throws<ArgumentException>(() => Session.GraphOf(Ask, Session.Selected!));
     }
 
     [Fact]
@@ -71,7 +71,7 @@ public sealed class OtherVaultTests : IDisposable
     {
         File.WriteAllText(VaultFolder.HeaderOf(_first.Location.Folder), "not a header");
 
-        Assert.Null(Session.NodeTypesOf(Ask, _first));
+        Assert.Null(Session.GraphOf(Ask, _first));
         Assert.Contains(Ask.Told, told => told.StartsWith("The vault in", StringComparison.Ordinal));
     }
 
@@ -87,7 +87,7 @@ public sealed class OtherVaultTests : IDisposable
 
         File.WriteAllText(header, json.ToJsonString());
 
-        Assert.Null(Session.NodeTypesOf(Ask, _first));
+        Assert.Null(Session.GraphOf(Ask, _first));
         Assert.Contains("This vault was written by a newer kofrenot: update kofrenot to read it.", Ask.Told);
     }
 }

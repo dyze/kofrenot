@@ -11,7 +11,7 @@ namespace Kofrenot.UI.Views;
 /// Settings > Link types: lists the link types of the open vault, a line per way each reads; adds
 /// or removes aliases (<see cref="AliasPlanner"/>), adds, renames or removes the user's link
 /// types (<see cref="LinkTypePlanner"/>), each typed in place, and changes the qualifiers of any
-/// link type, built-in ones included (<see cref="QualifiersEditor"/>).
+/// link type, built-in ones included (<see cref="QualifiersEditor"/>). Copy from… is in LinkTypesSection.Copy.cs.
 /// </summary>
 public partial class LinkTypesSection : UserControl
 {
@@ -49,6 +49,7 @@ public partial class LinkTypesSection : UserControl
             ? "Open a vault to see and edit its link types and aliases."
             : "Type a link with any of these phrases. Your link types and aliases are stored in the vault, so every device shares them.";
         NewTypeLine.IsEnabled = graph is not null;
+        ShowCopy(graph);
         if (_renameEditor is { Renamed: { } renamed })
         {
             _renameEditor.Renamed = graph?.LinkTypes.Find(renamed.Type.Id);

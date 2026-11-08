@@ -6,22 +6,22 @@ using Kofrenot.Core.Storage;
 namespace Kofrenot.Core.Session;
 
 /// <summary>
-/// Reads another registered vault without switching to it: to copy its node types into the open
-/// one. It is opened from its folder (a server vault: as last synced), unlocked as when it is
+/// Reads another registered vault without switching to it: to copy its node and link types into
+/// the open one. It is opened from its folder (a server vault: as last synced), unlocked as when it is
 /// opened, and never written to.
 /// </summary>
 public sealed partial class VaultSession
 {
     /// <summary>
-    /// The user's node types of <paramref name="vault"/>, another registered vault; null when it
-    /// cannot be read (the user is told) or its unlock is cancelled.
+    /// The graph of <paramref name="vault"/>, another registered vault, to read its types; null when
+    /// it cannot be read (the user is told) or its unlock is cancelled.
     /// </summary>
     /// <exception cref="ArgumentException"><paramref name="vault"/> is the open vault.</exception>
-    public IReadOnlyList<CustomNodeType>? NodeTypesOf(ISessionQuestions ask, RegisteredVault vault)
+    public KnowledgeGraph? GraphOf(ISessionQuestions ask, RegisteredVault vault)
     {
         if (vault.Location == _settings.SelectedVault)
         {
-            throw new ArgumentException("The open vault's node types are in its graph", nameof(vault));
+            throw new ArgumentException("The open vault's graph is its own", nameof(vault));
         }
 
         var folder = vault.Location.Folder;
@@ -39,8 +39,8 @@ public sealed partial class VaultSession
             }
 
             var read = Vault.Open(folder, header, unlocked.Access.Keys, _files.Cache, _log);
-            _log.Info("Action", $"Node types read from vault {header.Id}: {read.Graph.NodeTypes.All.Count}");
-            return read.Graph.NodeTypes.All;
+            _log.Info("Action", $"Vault {header.Id} read to copy its types");
+            return read.Graph;
         }
         catch (NewerVaultFormatException ex)
         {
