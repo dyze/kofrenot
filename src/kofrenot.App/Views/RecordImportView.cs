@@ -55,22 +55,6 @@ public sealed class RecordImportView(RecordItem item) : INotifyPropertyChanged
         set => Choose(RecordChoice.Skip, value);
     }
 
-    /// <summary>A record in one line, for a sample: <i>Dune: new</i>, <i>Record 3: not imported, no “title”</i>.</summary>
-    public static string Summary(RecordItem item)
-    {
-        var name = item.Name ?? $"Record {item.Record.Number}";
-        var outcome = item.Outcome switch
-        {
-            RecordOutcome.ToCheck => "to check",
-            RecordOutcome.New => "new",
-            RecordOutcome.Updated => "updated",
-            RecordOutcome.Unchanged => "unchanged",
-            _ => "not imported",
-        };
-        var more = item.Reason ?? (item.Details.Count > 0 ? string.Join(" · ", item.Details) : null);
-        return more is null ? $"{name}: {outcome}" : $"{name}: {outcome}, {more}";
-    }
-
     // A radio button unchecked says nothing: the one checked says the choice.
     private void Choose(RecordChoice choice, bool isChecked = true)
     {
@@ -87,6 +71,23 @@ public sealed class RecordImportView(RecordItem item) : INotifyPropertyChanged
 
         Changed?.Invoke();
     }
+}
+
+/// <summary>A row of a mapping's sample table: a record, what importing it would do, and its details, a line each.</summary>
+public sealed record SampleRow(int Number, string Name, string Result, string Details)
+{
+    public static SampleRow Of(RecordItem item) => new(
+        item.Record.Number,
+        item.Name ?? string.Empty,
+        item.Outcome switch
+        {
+            RecordOutcome.ToCheck => "To check",
+            RecordOutcome.New => "New",
+            RecordOutcome.Updated => "Updated",
+            RecordOutcome.Unchanged => "Unchanged",
+            _ => "Not imported",
+        },
+        string.Join("\n", (item.Reason is { } reason ? [reason] : item.Details).Concat(item.ValueProblems.Select(problem => $"not imported: {problem}"))));
 }
 
 /// <summary>A group of the preview (to check, new, updated, not imported, unchanged), open but for the unchanged.</summary>

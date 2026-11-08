@@ -156,14 +156,14 @@ public partial class MappingDialog : Window
             return;
         }
 
-        if (Built(out var error) is not { } definition)
-        {
-            TryText.Text = error;
-            return;
-        }
-
-        var plan = new ImportPlanner(_graph).Plan(definition, _sample with { Records = _sample.Records.Take(SampleSize).ToList() });
-        TryText.Text = plan.Refusal ?? string.Join("\n", plan.Warnings.Concat(plan.Items.Select(RecordImportView.Summary)));
+        var plan = Built(out var error) is { } definition
+            ? new ImportPlanner(_graph).Plan(definition, _sample with { Records = _sample.Records.Take(SampleSize).ToList() })
+            : null;
+        var message = error ?? plan!.Refusal ?? string.Join("\n", plan.Warnings);
+        TryText.Text = message;
+        TryText.Visibility = message.Length > 0 ? Visibility.Visible : Visibility.Collapsed;
+        SampleGrid.ItemsSource = plan?.Items.Select(SampleRow.Of).ToList();
+        SampleGrid.Visibility = plan is { Refusal: null } ? Visibility.Visible : Visibility.Collapsed;
     }
 
     private void Save_Click(object sender, RoutedEventArgs e)

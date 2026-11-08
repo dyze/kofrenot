@@ -94,6 +94,31 @@
           <TextBlock Style="{StaticResource HeadingText}" FontSize="{StaticResource SecondaryFontSize}" Text="Sample" />
         </DockPanel>
         <TextBlock x:Name="TryText" Margin="0,4,0,0" Style="{StaticResource SecondaryText}" TextWrapping="Wrap" Text="Choose a sample file to see its first records as they would be imported." />
+        <DataGrid x:Name="SampleGrid"
+                  Margin="0,6,0,0"
+                  MaxHeight="300"
+                  AutoGenerateColumns="False"
+                  CanUserAddRows="False"
+                  CanUserDeleteRows="False"
+                  CanUserReorderColumns="False"
+                  GridLinesVisibility="Horizontal"
+                  HeadersVisibility="Column"
+                  IsReadOnly="True"
+                  SelectionMode="Single"
+                  Visibility="Collapsed">
+          <DataGrid.Columns>
+            <DataGridTextColumn Width="36" Binding="{Binding Number}" Header="#" />
+            <DataGridTextColumn Width="160" Binding="{Binding Name}" Header="Name" />
+            <DataGridTextColumn Width="100" Binding="{Binding Result}" Header="Result" />
+            <DataGridTextColumn Width="*" Binding="{Binding Details}" Header="Details">
+              <DataGridTextColumn.ElementStyle>
+                <Style TargetType="TextBlock">
+                  <Setter Property="TextWrapping" Value="Wrap" />
+                </Style>
+              </DataGridTextColumn.ElementStyle>
+            </DataGridTextColumn>
+          </DataGrid.Columns>
+        </DataGrid>
       </StackPanel>
     </ScrollViewer>
 
