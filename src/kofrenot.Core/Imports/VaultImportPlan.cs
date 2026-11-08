@@ -19,8 +19,11 @@ public sealed record VaultImportItem(Node Source, RecordOutcome Outcome, Node? F
     /// <summary>Whether the user may choose for it: a node is added or updated.</summary>
     public bool IsChosen => Outcome is RecordOutcome.New or RecordOutcome.Updated or RecordOutcome.ToCheck;
 
-    /// <summary>Its types in the other vault: a node type copied is written only when a node written has it.</summary>
+    /// <summary>The node types it needs (its own, and its mapping's): a node type copied is written only when a node written needs it.</summary>
     internal IReadOnlyList<string> Types { get; init; } = [];
+
+    /// <summary>The link types its mapping's definition names: copied when it is written.</summary>
+    internal IReadOnlyList<string> LinkTypes { get; init; } = [];
 
     /// <summary>What adding it writes: a node with its id in the other vault.</summary>
     internal NodeWrite AsNew { get; init; } = NodeWrite.None;
@@ -114,7 +117,7 @@ public sealed record VaultImportPlan(
         IReadOnlyList<Change> changes =
         [
             .. NodeTypeChanges.Where(change => types.Contains(change.NodeType)),
-            .. LinkTypeChanges.Where(pair => links.Types.Contains(pair.Key)).SelectMany(pair => pair.Value),
+            .. LinkTypeChanges.Where(pair => links.Types.Contains(pair.Key) || written.Any(item => item.LinkTypes.Contains(pair.Key))).SelectMany(pair => pair.Value),
             .. nodes,
             .. links.Changes,
         ];

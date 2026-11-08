@@ -282,8 +282,9 @@ A value that does not fit its field (`"c. 1984"` for a date), or a field's extra
 | New | Added with its types, colour, fields (images included), latest note or file and links |
 | Updated | Only what differs: a rename, a type added, a value, a new version of its note or file (the old one stays in its history), a link added; nothing is cleared |
 | Types | Node and link types missing here are copied with it; one whose name another type has here is not: rename one first |
+| Mappings | Found by `?Mapping:`: copied with their definition (a changed one as a new version), and the node and link types it names, so it imports here as there |
 | Links | Kept when the other node is imported too or already here, with their qualifiers; the others are left out, counted under the groups |
-| Not imported | Views, mappings, a node whose note, file or image is not on this computer in a folder vault (sync it first), or cannot be downloaded from a server vault (then nothing is written); history, pins and positions stay there |
+| Not imported | Views, a node whose note, file or image is not on this computer in a folder vault (sync it first), or cannot be downloaded from a server vault (then nothing is written); history, pins and positions stay there |
 
 ### Keyboard shortcuts
 The main ones on Windows; every shortcut is listed in Settings > **Key bindings**.

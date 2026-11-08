@@ -225,10 +225,11 @@ The classes and how they work together: [ARCHITECTURE.md](ARCHITECTURE.md#import
 | --- | --- |
 | Finding the node in B | 1. the **same id** (a node imported before keeps its id): that node; 2. else its name (case and accents ignored), among the nodes of its first type: another node of the same name is **unchanged** when importing would change nothing in it (its links lead to it), else **to check**; several: ambiguous, not imported; 3. none: new, **with A's id** |
 | Types | Node and link types B lacks are copied first, with their ids (`TypeCopyPlanner`, `LinkTypeCopyPlanner`); a name taken by another type in B: not imported, listed |
+| Mappings | Imported as nodes: the latest definition (`editMapping`), a changed one as a new version; the node types and link types it names are copied with it. A type that cannot be copied: not imported |
 | New node | Its types, colour, field values (images included), latest note or dataset version, links |
 | Updated node | Only what differs: a rename, types added, field values (`setField` replacing), a changed note or file as a **new version** (history kept in B), links added. Nothing cleared or removed |
 | Links | Kept when the other node is imported too or already in B (by id); otherwise left out and counted. Qualifiers come with them |
-| Left out | History, pins, card order, graph positions, offline marks; views and mappings |
+| Left out | History, pins, card order, graph positions, offline marks; views (their root is a node of the other vault) |
 | Content not here | A note, file or image of a server vault not on this computer: downloaded on import (*downloaded on import* in the preview), cached in its local copy as when opened there; a failure writes nothing, told. In a folder vault: that node is not imported, listed (*sync it, then import again*) |
 
 Only existing changes are written (`addNode`, `addNodeType`, `renameNode`, `colorNode`, `setField`, `addLink`, `editNote`, `editDataset`, `defineNodeType`, `defineLinkType`, `addAlias`): **no new vault format**. Windows only.

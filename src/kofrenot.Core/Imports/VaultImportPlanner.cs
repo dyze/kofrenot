@@ -24,22 +24,30 @@ public sealed class VaultImportPlanner(KnowledgeGraph target, VaultContent targe
         var at = _clock.GetUtcNow();
         var nodes = NodesOf(source, hits, subtreeLinkType);
         var ids = nodes.Select(node => node.Id).ToHashSet();
+        var needs = nodes.ToDictionary(node => node.Id, node => TypesNeeded(source, node));
+        var neededTypes = needs.Values.SelectMany(need => need.NodeTypes).ToHashSet();
         var typeCopies = new TypeCopyPlanner(target, _clock)
-            .Plan(source.NodeTypes.All.Where(custom => nodes.Any(node => source.HasType(node.Id, custom.Type.Id))).ToList());
-        var taken = typeCopies.Where(copy => copy.Outcome == TypeCopyOutcome.NameTaken).Select(copy => copy.Type.Type.Id).ToHashSet();
-        var writes = new VaultNodeWrites(source, sourceContent, sourceName, target, targetContent, at);
-        var items = WithoutDuplicates(nodes.Select(node => PlanNode(source, node, ids, taken, writes)).ToList());
-
+            .Plan(source.NodeTypes.All.Where(custom => neededTypes.Contains(custom.Type.Id)).ToList());
         var linkTypeCopies = new LinkTypeCopyPlanner(target, _clock).Plan(source)
             .Where(copy => !copy.IsBuiltIn && copy.Outcome is LinkTypeCopyOutcome.Adds or LinkTypeCopyOutcome.NameTaken)
             .ToDictionary(copy => copy.Type.Id);
+        var taken = new TakenTypes(
+            typeCopies.Where(copy => copy.Outcome == TypeCopyOutcome.NameTaken).Select(copy => copy.Type.Type.Id).ToHashSet(),
+            linkTypeCopies.Values.Where(copy => copy.Outcome == LinkTypeCopyOutcome.NameTaken).Select(copy => copy.Type.Id).ToHashSet());
+        var writes = new VaultNodeWrites(source, sourceContent, sourceName, target, targetContent, at);
+        var items = WithoutDuplicates(nodes.Select(node => PlanNode(source, node, needs[node.Id], ids, taken, writes)).ToList());
+
         var links = new VaultLinkPlanner(source, target, sourceContent, linkTypeCopies).Plan(items);
-        var chosenTypes = links.Items.Where(item => item.IsChosen).SelectMany(item => item.Types).ToHashSet();
+        var chosen = links.Items.Where(item => item.IsChosen).ToList();
+        var chosenTypes = chosen.SelectMany(item => item.Types).ToHashSet();
         var addedTypes = typeCopies.Where(copy => copy.Outcome == TypeCopyOutcome.Adds).ToList();
+        var addedLinkTypes = links.TypesAdded
+            .Concat(chosen.SelectMany(item => item.LinkTypes).Where(type => linkTypeCopies.TryGetValue(type, out var copy) && copy.Outcome == LinkTypeCopyOutcome.Adds))
+            .Distinct();
         return new VaultImportPlan(
             links.Items,
             addedTypes.Where(copy => chosenTypes.Contains(copy.Type.Type.Id)).Select(copy => copy.Type.Type.Name).ToList(),
-            links.TypesAdded.Select(type => new LinkVerb(linkTypeCopies[type].Type, IsReverse: false).Name).ToList(),
+            addedLinkTypes.Select(type => new LinkVerb(linkTypeCopies[type].Type, IsReverse: false).Name).ToList(),
             links.LeftOut,
             links.Problems)
         {
@@ -66,18 +74,37 @@ public sealed class VaultImportPlanner(KnowledgeGraph target, VaultContent targe
         return nodes;
     }
 
-    private VaultImportItem PlanNode(KnowledgeGraph source, Node node, IReadOnlySet<Guid> ids, IReadOnlySet<string> takenTypes, VaultNodeWrites writes)
+    // The types a node needs here: its own, and those its mapping's definition names.
+    private static TypeNeeds TypesNeeded(KnowledgeGraph source, Node node)
     {
         var types = source.TypeIdsOf(node.Id);
-        var item = new VaultImportItem(node, RecordOutcome.NotImported, null, null, []) { Types = types };
-        if (new[] { TypeCatalog.View, TypeCatalog.Mapping }.FirstOrDefault(type => source.HasType(node.Id, type.Id)) is { } left)
+        if (source.MappingVersionsOf(node.Id) is not [.., var latest])
         {
-            return item with { Reason = $"a {left.Name.ToLowerInvariant()} is not imported" };
+            return new TypeNeeds(types, []);
         }
 
-        if (types.FirstOrDefault(takenTypes.Contains) is { } taken)
+        var definition = latest.Definition;
+        return new TypeNeeds(
+            [.. types.Append(definition.NodeType).Concat(definition.Links.Select(rule => rule.NodeType)).Distinct()],
+            [.. definition.Links.Select(rule => rule.LinkType).Distinct()]);
+    }
+
+    private VaultImportItem PlanNode(KnowledgeGraph source, Node node, TypeNeeds needs, IReadOnlySet<Guid> ids, TakenTypes taken, VaultNodeWrites writes)
+    {
+        var item = new VaultImportItem(node, RecordOutcome.NotImported, null, null, []) { Types = needs.NodeTypes, LinkTypes = needs.LinkTypes };
+        if (source.HasType(node.Id, TypeCatalog.View.Id))
         {
-            return item with { Reason = $"its type “{source.Types.NodeTypeName(taken)}” has the name of another type here: rename one first" };
+            return item with { Reason = "a view is not imported" };
+        }
+
+        if (needs.NodeTypes.FirstOrDefault(taken.NodeTypes.Contains) is { } type)
+        {
+            return item with { Reason = $"its type “{source.Types.NodeTypeName(type)}” has the name of another type here: rename one first" };
+        }
+
+        if (needs.LinkTypes.FirstOrDefault(taken.LinkTypes.Contains) is { } linkType)
+        {
+            return item with { Reason = $"its link type “{source.Types.FindLinkType(linkType)!.Name}” has a phrase of another link type here: rename one first" };
         }
 
         var found = Find(source, node, ids);
@@ -135,3 +162,9 @@ public sealed class VaultImportPlanner(KnowledgeGraph target, VaultContent targe
             : item).ToList();
     }
 }
+
+/// <summary>The node types and link types a node of the other vault needs here: its own types, and those its mapping's definition names.</summary>
+internal sealed record TypeNeeds(IReadOnlyList<string> NodeTypes, IReadOnlyList<string> LinkTypes);
+
+/// <summary>The types of the other vault that cannot be copied here: another type here has their name.</summary>
+internal sealed record TakenTypes(IReadOnlySet<string> NodeTypes, IReadOnlySet<string> LinkTypes);

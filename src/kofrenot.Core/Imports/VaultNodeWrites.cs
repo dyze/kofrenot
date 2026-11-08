@@ -49,6 +49,8 @@ internal sealed class VaultNodeWrites(KnowledgeGraph source, VaultContent source
             plan.Details.Add(latest is DatasetEdited dataset ? $"file: {dataset.File.Name}" : "note");
         }
 
+        AddDefinition(plan, node, node.Id, []);
+
         return plan.Result;
     }
 
@@ -89,7 +91,21 @@ internal sealed class VaultNodeWrites(KnowledgeGraph source, VaultContent source
             UpdateContent(plan, latest, found);
         }
 
+        AddDefinition(plan, node, found.Id, target.MappingVersionsOf(found.Id));
+
         return plan.Result;
+    }
+
+    // A mapping's latest definition, as a new version over those here, unless the one here is the same.
+    private void AddDefinition(Builder plan, Node node, Guid nodeHere, IReadOnlyList<MappingEdited> here)
+    {
+        if (source.MappingVersionsOf(node.Id) is not [.., var latest] || (here is [var current] && current.Definition.Equals(latest.Definition)))
+        {
+            return;
+        }
+
+        plan.Changes.Add(new MappingEdited(Guid.NewGuid(), At, nodeHere, latest.Definition, here.Select(version => version.Id).ToList()));
+        plan.Details.Add(here.Count == 0 ? "definition" : "definition changed");
     }
 
     // A new note or file version when the latest here is another; a note not here is replaced.

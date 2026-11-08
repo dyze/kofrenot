@@ -219,16 +219,16 @@ public sealed class VaultImportPlannerTests
     }
 
     [Fact]
-    public void ViewsMappings_AndATypeWhoseNameIsTaken_AreNotImported()
+    public void AView_AndATypeWhoseNameIsTaken_AreNotImported()
     {
         _vaults.DefineBook(Source);
         Target.Apply(new NodeTypeDefined(Guid.NewGuid(), TwoVaults.Start, "livre", "Book", null, null, [], []));
-        var (view, mapping, dune) = (TwoVaults.Add(Source, "Shelf", "view"), TwoVaults.Add(Source, "Books (JSON)", "mapping"), TwoVaults.Add(Source, "Dune", "book"));
+        var (view, dune) = (TwoVaults.Add(Source, "Shelf", "view"), TwoVaults.Add(Source, "Dune", "book"));
 
-        var plan = _vaults.Plan([view, mapping, dune]);
+        var plan = _vaults.Plan([view, dune]);
 
         Assert.Equal(
-            ["a view is not imported", "a mapping is not imported", "its type “Book” has the name of another type here: rename one first"],
+            ["a view is not imported", "its type “Book” has the name of another type here: rename one first"],
             plan.Items.Select(item => item.Reason));
     }
 
