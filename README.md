@@ -84,6 +84,7 @@ Both apps share the same vaults and the same core; each shows its own set of fea
 | Datasets: open in another app, export, share | ✔ **Open**, **Export…**, drag out (several at once, with their tree as folders) | ✔ **Open**, **Export…**, **Share…** (Android's share sheet) |
 | Views: create, edit (a tree sorted by a qualifier of its links) | ✔ | — |
 | Import a JSON file's records as nodes, with a mapping kept in the vault (**Imports**) | ✔ | — (a mapping shown as a node) |
+| Import nodes of another vault found by a query (**Imports** > **From a vault…**) | ✔ | — |
 | **Share** | | |
 | Members, roles, share, leave | ✔ | ✔ share, change a role, leave (Settings > Vault > **Members…**); a member removed on Windows |
 | **App** | | |
@@ -272,6 +273,17 @@ A record finds its node by its match value (one node of the type with this ISBN)
 | Unchanged | Folded, for information |
 
 A value that does not fit its field (`"c. 1984"` for a date), or a field's extra values, is listed under the groups; the rest of the record is imported. Images are not imported yet ([ROADMAP](ROADMAP.md)).
+
+**From a vault…** imports nodes of another of your vaults: choose it (its pass phrase asked when not remembered), type a query as in the input box (`?Book:`, `?written by Frank Herbert`, `?added: last month`; **Tab** completes), tick **With their subtree by** *contains* (or another link type) to bring the nodes under each, then **Preview…** shows the same groups. That vault is only read: a server vault as last synced, its notes, files and images not on this computer yet downloaded on import (*downloaded on import* in the preview; signed in to its server).
+
+| | What happens |
+| --- | --- |
+| Finding the node here | The same node, imported before (it keeps its id); else one of the same name and first type: unchanged when importing would change nothing in it (its links then lead to it), else **to check**: **Update** it, **Add as new** or **Skip**; several: not imported |
+| New | Added with its types, colour, fields (images included), latest note or file and links |
+| Updated | Only what differs: a rename, a type added, a value, a new version of its note or file (the old one stays in its history), a link added; nothing is cleared |
+| Types | Node and link types missing here are copied with it; one whose name another type has here is not: rename one first |
+| Links | Kept when the other node is imported too or already here, with their qualifiers; the others are left out, counted under the groups |
+| Not imported | Views, mappings, a node whose note, file or image is not on this computer in a folder vault (sync it first), or cannot be downloaded from a server vault (then nothing is written); history, pins and positions stay there |
 
 ### Keyboard shortcuts
 The main ones on Windows; every shortcut is listed in Settings > **Key bindings**.

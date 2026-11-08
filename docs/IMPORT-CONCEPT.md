@@ -1,6 +1,6 @@
 # kofrenot: import concept
 
-**Import records** (a list of books, of contacts) from a file as nodes of one of the user's node types, through a **mapping** kept in the vault, and run again whenever the file changes: new records are added, nodes already there are updated. **JSON import is implemented** (Windows, unreleased: [CHANGELOG.md](../CHANGELOG.md#unreleased); how to use it: [README.md](../README.md#imports)); images, vCard and export are not ([Later](#later)).
+**Import records** (a list of books, of contacts) from a file as nodes of one of the user's node types, through a **mapping** kept in the vault, and run again whenever the file changes: new records are added, nodes already there are updated. **JSON import and import from a vault ([From a vault](#from-a-vault)) are implemented** (Windows, unreleased: [CHANGELOG.md](../CHANGELOG.md#unreleased); how to use them: [README.md](../README.md#imports)); images, vCard and export are not ([Later](#later)).
 
 ```
                  ┌──────── Mapping node "Books (JSON)" ───────────┐
@@ -185,6 +185,53 @@ The file is read and planned again on each **Import…**, so the preview always 
 ## Code
 
 The classes and how they work together: [ARCHITECTURE.md](ARCHITECTURE.md#imports). `System.Text.Json` reads the file: no new dependency.
+
+## From a vault
+
+**Implemented** (Windows, unreleased; internals: [ARCHITECTURE.md](ARCHITECTURE.md#from-a-vault)). Nodes of another of your vaults, picked by a query, imported into the open one through the same preview. One-off: nothing is kept in the Imports list; run it again to update.
+
+```
+ Vault B (open) ── Imports › From a vault… ── vault [Work ▾] · query [?Book: ____] · [✓] with their subtree by [contains ▾]
+        │                                                     12 nodes found
+        ▼
+ read A (unlocked as Settings › Copy from…, never written) ─► NodeQuerySearch on A ─► VaultImportPlanner ─► preview ─► Import n
+                                                                                  │
+                                                         content decrypted from A, sealed again with B's keys
+```
+
+- **Query:** the input box's `?` syntax and completion, run on A's graph, without the 200 limit; the count shows before the preview. **With their subtree** adds each result's descendants by the link type chosen (*contains* by default).
+- **Preview:** the groups of [Preview](#preview); its bottom also lists the types it adds and the links left out.
+
+```
+┌ Import from “Work” · ?Book: ───────────────────────────────────────┐
+│ [1 to check] [9 new] [2 updated] [1 not imported] [4 unchanged]    │
+├────────────────────────────────────────────────────────────────────┤
+│ ▼ To check                                                         │
+│   Dune        same name, another node here  (• Update)(Add)(Skip)  │
+│ ▼ New                                                              │
+│   [✓] Neuromancer   Book · note · 2 fields · wrote: William Gibson │
+│ ▼ Updated                                                          │
+│   [✓] Foundation    Published: 1950 → 1951 · note changed          │
+│ ▼ Not imported                                                     │
+│       Solaris       2 Books with this name here                    │
+├────────────────────────────────────────────────────────────────────┤
+│ Also adds node type Book · link type “written by”                  │
+│ 3 links left out: their other node is not here                     │
+│                                          [Import 12]   [Cancel]    │
+└────────────────────────────────────────────────────────────────────┘
+```
+
+| Topic | Rule |
+| --- | --- |
+| Finding the node in B | 1. the **same id** (a node imported before keeps its id): that node; 2. else its name (case and accents ignored), among the nodes of its first type: another node of the same name is **unchanged** when importing would change nothing in it (its links lead to it), else **to check**; several: ambiguous, not imported; 3. none: new, **with A's id** |
+| Types | Node and link types B lacks are copied first, with their ids (`TypeCopyPlanner`, `LinkTypeCopyPlanner`); a name taken by another type in B: not imported, listed |
+| New node | Its types, colour, field values (images included), latest note or dataset version, links |
+| Updated node | Only what differs: a rename, types added, field values (`setField` replacing), a changed note or file as a **new version** (history kept in B), links added. Nothing cleared or removed |
+| Links | Kept when the other node is imported too or already in B (by id); otherwise left out and counted. Qualifiers come with them |
+| Left out | History, pins, card order, graph positions, offline marks; views and mappings |
+| Content not here | A note, file or image of a server vault not on this computer: downloaded on import (*downloaded on import* in the preview), cached in its local copy as when opened there; a failure writes nothing, told. In a folder vault: that node is not imported, listed (*sync it, then import again*) |
+
+Only existing changes are written (`addNode`, `addNodeType`, `renameNode`, `colorNode`, `setField`, `addLink`, `editNote`, `editDataset`, `defineNodeType`, `defineLinkType`, `addAlias`): **no new vault format**. Windows only.
 
 ## Later
 - **Images** (a book's cover): a key giving the path of a local image file, relative to the JSON file (`"cover": "covers/dune.jpg"`) → an image field, written as a pasted image is (`FieldPlanner.SetImage`, `VaultSession.SaveImage`): no new vault format. On a re-run, the same SHA-256 as the node's image is unchanged. A missing file, not an image or over `DatasetType.MaxImageSize`: not imported, listed. URLs are not read: they would need the network and tell a site which books you have.
