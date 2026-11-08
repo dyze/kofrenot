@@ -320,7 +320,7 @@ One number for the whole vault, `VaultFormat.Current`, written in the header and
 | 9 | 0.13 | the field kinds `email` and `address` ([Types and fields](#types-and-fields)): a 0.12 app would drop a node type with such a field, and its values |
 | 10 | 0.14 | `editView` with `"display": "graph"` and `placeNodes` ([Views](#views)): a 0.13 app cannot read them |
 | 11 | 0.16 | **read-only compatible**, `oldestReader` 10, `oldestWriter` 11: the field kind `phone` (a 0.15 app keeps it as `FieldKind.Unknown`, its value shown as text); qualifiers, `setField` on a `link` and `defineLinkType` with `fields`, of any link type, built-in ones included ([Types and fields](#types-and-fields), [User link types](#user-link-types)); `addLink` with `"separate": true`; a tree's `order` ([Views](#views)); a date as vague as known, its month `1965-08` or its year `1965` (`FieldValue`). A 0.15 app skips the qualifiers and a vague date's value, ignores `fields`, `separate` and `order` (a separate link then shows as a copy, the oldest), and would drop the qualifiers of a link type it renames: so it only reads. Every file 0.16 writes carries both levels, the header too |
-| 12 | 0.17 | **compatible**, `oldestReader` 10, `oldestWriter` 11: `editMapping` and the built-in node type `mapping` ([Imports](#imports)). A 0.16 app skips `editMapping`, shows a mapping as a node of an unknown type, and still writes to the vault: it cannot drop a definition it does not see, kept in its own changes. A 0.15 app only reads, as for format 11 |
+| 12 | 0.17 | **compatible**, `oldestReader` 10, `oldestWriter` 11: `editMapping` and the built-in node type `mapping` ([Imports](#imports)); `editView` with `"display": "query"` ([Views](#views)). A 0.16 app skips `editMapping` and a query view's `editView` (the view shows with no definition), shows a mapping as a node of an unknown type, and still writes to the vault: it cannot drop a definition it does not see, kept in its own changes. A 0.15 app only reads, as for format 11 |
 
 #### Compatibility levels
 Since 0.15, a file of a newer format can say what an older kofrenot may still do with it. Both are optional, the file's format when missing (every file written up to format 10):
@@ -470,6 +470,10 @@ UTF-8 JSON before encryption:
   "mapping": { "node": "<node id>", "source": "json", "nodeType": "<node type id>", "name": ["title_fr", "title"], "match": "<field id>", "otherNames": ["<field id>"],
                "fields": [{ "key": "publisher.name", "field": "<field id>" }], "links": [{ "key": "authors", "nodeType": "<node type id>", "linkType": "wrote", "reverse": true }],
                "replaces": ["<version id>", "…"] } }
+{ "format": 12, "oldestReader": 10, "oldestWriter": 11, "at": "…", "op": "editView",
+  "view": { "node": "<node id>", "display": "query",
+            "query": { "linkType": "read", "nodeType": "<node type id>", "reverse": true, "node": "<node id>",
+                       "qualifiers": [{ "field": "<qualifier id>", "value": "2026" }], "columns": [{ "type": "wrote", "reverse": true }] }, "replaces": ["…"] } }
 { "format": 4, "at": "…", "op": "remove", "removes": ["<node, link, alias, link or node type definition, pin or placement id>", "…"] }
 ```
 
@@ -690,6 +694,7 @@ A view is a node of type `view`. Its definition is in `editView` versions, as a 
 | `TreeDefinition(root, linkType, order)` | `tree` | `TreeView`: `Root`, then `ChildrenOf(item)`, read when asked; sorted by a qualifier of the links when `order` names one (`QualifierOrder`, since format 11) |
 | `FlatDefinition(nodeType)` | `flat` | `FlatView.Nodes` |
 | `GraphDefinition(root, depth, layout, links, nodeTypes, fields)` | `graph` | `GraphView.Read`: the whole graph at once, laid out by `GraphLayout` ([Graphs](#graphs)) |
+| `QueryDefinition(nodeType, linkType, reverse, node, qualifiers, columns)` | `query` | `QueryView.Rows`: the nodes reading the link type to `node` (to any when none) through a link whose qualifiers match (`ValueQuery`), of `nodeType` (any when none), by name; each row's cells the names of the nodes its links of each column lead to (since format 12) |
 
 ```
 Projects ─contains─► Alpha ─contains─► Shared      TreeItem(node, path, canExpand)
@@ -711,7 +716,8 @@ MainWindow ── TabStrip (TabRow) ── Search: input box, results, details
 - The details opened from a view go back to it (`NodeDetailsPanel.HomeLabel` names it); selecting another tab leaves them (the note saved).
 - The creation screen's view step (`CreationForm.IsView`, `ViewDraft`): a tree needs its root, found by `ViewDraft.FindRoots` (the search, 8 nodes); `CanLeaveStep` and `CanAdd` wait for it. `ViewsToSave` gives each new view's first `editView`, appended after the plan's changes; the main window then opens it in a tab.
 - Editing a view later: `VaultSession.EditView` (from **Edit…** in the details, `NodeDetailsPanel.View`, or **⚙** on the selected tab, `MainWindow.Tabs`) loads it (`ViewPlanner.Load`: versions, latest definition, conflict), shows `ViewDialog` (its name, checked by `RenamePlanner`, and its definition), then saves `ViewPlanner.Save`: a version replacing every version loaded, or nothing when unchanged; and the rename, when the name changed. `ViewDraft.Of` turns a saved definition back into a draft (a root gone is to choose again; an unknown type kept by its id); `ViewDraft.Describe` says it in a sentence.
-- `ViewDefinitionEditor` (display, root search, link type, node type) is the one editor of a draft, on the creation screen and in `ViewDialog`.
+- `ViewDefinitionEditor` (display, root search, link type, node type, query and columns) is the one editor of a draft, on the creation screen and in `ViewDialog`.
+- A query view (`QueryDraft`): the query typed is read by `QueryParser` with its qualifiers, its node kept by id (one node of that name, or none for any; several or none of that name: a problem), so a rename changes nothing it finds; `QueryDraft.TextOf` writes it back with the names of the day. **Save as a view…** in the input box (`InputPresenter.CanSaveAsView`, `VaultSession.CreateQueryView`) opens the creation screen with it (`CreationForm.QueryView`).
 
 **Operations.** Each planner gives a plan to show first, then its changes; the tree's link type drives them, with the same children as the tree (`TreeLinks`).
 
