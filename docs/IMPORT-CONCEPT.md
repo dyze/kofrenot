@@ -1,6 +1,6 @@
 # kofrenot: import concept
 
-**Import records** (a list of books, of contacts) from a file as nodes of one of the user's node types, through a **mapping** kept in the vault, and run again whenever the file changes: new records are added, nodes already there are updated. Not implemented: planned, Windows only. JSON import comes first (0.17, [ROADMAP.md](../ROADMAP.md)); vCard and export later ([Later](#later)).
+**Import records** (a list of books, of contacts) from a file as nodes of one of the user's node types, through a **mapping** kept in the vault, and run again whenever the file changes: new records are added, nodes already there are updated. **JSON import is implemented** (Windows, unreleased: [CHANGELOG.md](../CHANGELOG.md#unreleased); how to use it: [README.md](../README.md#imports)); images, vCard and export are not ([Later](#later)).
 
 ```
                  ┌──────── Mapping node "Books (JSON)" ───────────┐
@@ -11,14 +11,14 @@
                  │ authors[] → Person, linked by "wrote"          │
                  └───────────────────────┬────────────────────────┘
 books.json ─► JsonRecordReader ─► records ─► ImportPlanner ─► preview ─► Import ─► changes
-                                             (new · updated · unchanged · not imported)
+                                             (to check · new · updated · unchanged · not imported)
 ```
 
 ## Principles
 - **A mapping is a node**, of the built-in type `mapping`, as a view is: its definition in versions (`editMapping`), so it syncs, has a history and is shared with the vault's members.
 - **Run as often as needed.** A record whose match value (an ISBN) is already on a node of the type **updates** that node; the others are added.
 - **Preview first.** Nothing is written before **Import**; **Cancel** writes nothing.
-- **Only what exists is written** for the nodes: `addNode`, `addNodeType`, `setField`, `addLink`.
+- **Only what exists is written** for the nodes: `addNode`, `renameNode`, `setField`, `addLink`.
 - **Windows only.** Android shows a mapping as a node, without running or editing it.
 
 ## Mapping
@@ -83,6 +83,7 @@ record { isbn: 978-0441569595, title_fr: "Neuromancien", title: "Neuromancer" }
 - A record without the match value goes straight to 2.
 - **To check** (same name, another ISBN): the preview asks, per record, **Update** it (ISBN *old → new*, the default), **Add as new** (another edition) or **Skip**.
 - Several nodes at step 1, or several candidates at step 2: not imported, listed as ambiguous.
+- Two records of the file for one node (found, or new with the same name or match value): neither is imported, each listed as *same node as record n*.
 - Without a match field, only step 2 runs.
 
 ## Updating existing nodes
@@ -173,7 +174,7 @@ Versions replace one another as a view's (`NodeVersions`); two made apart are a 
 | **To check** | same name, another match value ([Finding the node](#finding-the-node)): **Update** (default), **Add as new** or **Skip** |
 | **New** | each node with its fields and links; a linked node that does not exist yet says *(new Person)*; untick to leave it out |
 | **Updated** | only what differs: *old → new*, `+` for an added link, a rename; *found by …* when found through another name; untick to leave the node as it is |
-| **Not imported** | with its reason: no name, ambiguous; nothing to choose |
+| **Not imported** | with its reason: no name, ambiguous, twice in the file; nothing to choose |
 | **Unchanged** | collapsed, for information |
 | Values not imported | a value that does not fit its field, or a field's extra values: listed at the bottom, the rest of the record is imported |
 | **Import *n*** | *n* = nodes that will be written (ticked new and updated, to check not skipped); writes them in one go, then a summary (*15 written*) |
@@ -183,17 +184,7 @@ The file is read and planned again on each **Import…**, so the preview always 
 
 ## Code
 
-| Where | New | Role |
-| --- | --- | --- |
-| Core `Graph/` | `TypeCatalog.Mapping`, `MappingEdited` | the built-in type and its change |
-| Core `Imports/` | `MappingDefinition` | source, type, name keys, match, other names, field and link rules |
-| | `JsonRecordReader` | a `.json` file → `Record`s: keys (dotted paths) → values |
-| | `ImportPlanner` | records + mapping + graph → `ImportPlan`: new, updated (with their differences), to check, unchanged, not imported |
-| | `MappingPlanner` | loads and saves a mapping's versions, as `ViewPlanner` |
-| Core `Session/` | `VaultSession.ImportRecords` | writes the plan's changes |
-| App `Views/` | `ImportsWindow`, `MappingDialog`, `RecordImportDialog` | the list, the editor, the preview |
-
-`System.Text.Json` reads the file: no new dependency. Tests: reader, planner (new, updated, found by another name, name key fallback, to check, ambiguous, values that do not fit), mapping versions, the format 12 change read by a format 11 reader; Core coverage ≥ 95%.
+The classes and how they work together: [ARCHITECTURE.md](ARCHITECTURE.md#imports). `System.Text.Json` reads the file: no new dependency.
 
 ## Later
 - **Images** (a book's cover): a key giving the path of a local image file, relative to the JSON file (`"cover": "covers/dune.jpg"`) → an image field, written as a pasted image is (`FieldPlanner.SetImage`, `VaultSession.SaveImage`): no new vault format. On a re-run, the same SHA-256 as the node's image is unchanged. A missing file, not an image or over `DatasetType.MaxImageSize`: not imported, listed. URLs are not read: they would need the network and tell a site which books you have.

@@ -8,6 +8,15 @@ It covers kofrenot on Windows and on Android; versions before 0.9 ran on Windows
 
 ## [Unreleased]
 
+> ⚠ **Vault format 12** (for mappings, which import a file's records as nodes). Consequences:
+> - Each vault asks once, when it opens, to be upgraded; until you agree, this kofrenot does not use it.
+> - Once upgraded, **kofrenot 0.16 still opens and changes it, on Windows and Android**: it shows a mapping as a node, without its definition. **kofrenot 0.15 opens it read only; 0.14 and older no longer open it.** Update kofrenot on all your devices, and ask the members of a shared vault to update theirs, before upgrading.
+> - There is no way back to format 11 ([Format](docs/ARCHITECTURE.md#format)).
+
+### Added
+- **Windows**
+  - **Import from JSON**: **Imports**, beside Settings, lists the vault's mappings; each imports a `.json` file's records (an array of objects) as nodes of one of your types. A mapping names a node by the first of its name keys a record has (`title_fr`, else `title`), reads keys (`publisher.name` in nested objects) into fields, and links each name of a key to a node of another type, found by name or added (`authors` → *Person*, *written by*). Run again, it finds each record's node by its match field (an ISBN), else by its names, compared with the nodes' names and other-name fields (*Original title*): a book first imported in English is found and renamed in French. Nothing is written before the preview: new, updated (only what differs, never clearing a value nor removing a link), to check (same name, another ISBN: **Update**, **Add as new** or **Skip**), unchanged, not imported (no name, ambiguous, twice in the file), each new or updated one to untick, the values that do not fit listed. A sample file suggests the rules by name and shows its first records as they would be imported. A mapping is a node, synced, versioned and shared like a view ([README](README.md#imports)).
+
 ## [0.16] - 2026-11-07
 
 *Qualifiers: links that hold fields of their own, typed, searched and queried as sentences.*

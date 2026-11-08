@@ -26,6 +26,7 @@ A private knowledge system for Windows, and Android: notes, files and the links 
 - **Sync and share** through a Kofre server, as a reader or a writer.
 - **Versioned**: nothing is overwritten; a node's **history** restores any version, and edits made on two devices are shown, never lost.
 - **Quick capture**: drop files, or paste what you copied (files, a screenshot), on Windows; share from any app on Android.
+- **Import from JSON**: a list of books or contacts becomes nodes of your types, updated when imported again, after a preview (Windows).
 
 ### Windows and Android
 Both apps share the same vaults and the same core; each shows its own set of features. ✔ supported, — not yet ([ROADMAP](ROADMAP.md)), *never* not planned ([why](docs/ANDROID-CONCEPT.md#not-supported)); a note says how it differs.
@@ -81,6 +82,7 @@ Both apps share the same vaults and the same core; each shows its own set of fea
 | Datasets: view images and texts | ✔ | an image's thumbnail |
 | Datasets: open in another app, export, share | ✔ **Open**, **Export…**, drag out (several at once, with their tree as folders) | ✔ **Open**, **Export…**, **Share…** (Android's share sheet) |
 | Views: create, edit (a tree sorted by a qualifier of its links) | ✔ | — |
+| Import a JSON file's records as nodes, with a mapping kept in the vault (**Imports**) | ✔ | — (a mapping shown as a node) |
 | **Share** | | |
 | Members, roles, share, leave | ✔ | ✔ share, change a role, leave (Settings > Vault > **Members…**); a member removed on Windows |
 | **App** | | |
@@ -241,6 +243,33 @@ A view shows your vault another way, in a tab: **a tree** from a node, following
   | Add a node next to a card | Right-click it > **New node** > the link, e.g. *Anne parent of …* (of the view's node type when it keeps only one) |
   | Remove a link | Right-click its line > **Remove link…**, asked first; the nodes stay |
 - **Ctrl+F** finds a node in a tree, a list or a graph.
+
+### Imports
+**Imports** (beside Settings) imports a `.json` file holding an array of records (`[{ "title": "Dune", "year": 1965 }, …]`) as nodes of one of your types, through a **mapping** kept in the vault: synced, shared with the vault's members, with a history. Import the file again whenever it changes: new records are added, nodes already there are updated.
+
+| A mapping says | Example |
+| --- | --- |
+| The type its records become | *Book* |
+| The keys naming a node, in order: the first a record has | `title_fr`, else `title` |
+| The match field, finding a record's node before its names (optional) | *ISBN* |
+| The key read for each field (`publisher.name` reads a nested object); *Other name* marks a field holding another name of the node | `title` → *Original title* (other name), `year` → *Published* |
+| Links: a key whose values name nodes of a type, found by name or added | `authors` → *Person*, *written by* |
+
+**New…** creates one, **Edit…** changes it, **Delete…** deletes it (asked first; the nodes it imported stay). **Choose a sample file…** offers the file's keys, suggests each field the key of its name, and **Try on the sample** shows its first records as they would be imported.
+
+A record finds its node by its match value (one node of the type with this ISBN); else by its names, compared with each node's name and other-name fields, case and accents ignored. So a book first imported in English (*The Dispossessed*) is found by its original title when the French file comes, and renamed *Les Dépossédés*.
+
+**Import…** asks for the file, then shows what it does, writing nothing before **Import n**:
+
+| Group | What happens |
+| --- | --- |
+| To check | Same name as a node, another ISBN: **Update** it (the default), **Add as new** (another edition) or **Skip** |
+| New | Added with its fields and links; a linked node not there yet is added, marked *(new)*; untick to leave it out |
+| Updated | Only what differs is written (*Published: 1950 → 1951*, a rename, `+` a link); a value absent from the file is never cleared, a link never removed; untick to leave the node as it is |
+| Not imported | With why: no name, several nodes found (ambiguous), or twice in the file |
+| Unchanged | Folded, for information |
+
+A value that does not fit its field (`"c. 1984"` for a date), or a field's extra values, is listed under the groups; the rest of the record is imported. Images are not imported yet ([ROADMAP](ROADMAP.md)).
 
 ### Keyboard shortcuts
 The main ones on Windows; every shortcut is listed in Settings > **Key bindings**.
