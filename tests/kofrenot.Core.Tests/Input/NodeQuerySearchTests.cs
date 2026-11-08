@@ -105,6 +105,19 @@ public sealed class NodeQuerySearchTests
     }
 
     [Fact]
+    public void AnotherLimit_KeepsThatManyHits()
+    {
+        for (var i = 0; i < NodeQuerySearch.Limit + 5; i++)
+        {
+            Add($"Note {i:D3}", TypeCatalog.Note);
+        }
+
+        var found = NodeQuerySearch.Find(_graph, QueryParser.Parse("?note:", _graph.Types)!, [], Now, TimeZoneInfo.Utc, int.MaxValue);
+
+        Assert.Equal((NodeQuerySearch.Limit + 5, NodeQuerySearch.Limit + 5), (found.Hits.Count, found.Total));
+    }
+
+    [Fact]
     public void TheSummary_SaysHowManyWereFound()
     {
         Assert.Equal("No node found.", new QueryResult([], 0).Summary);

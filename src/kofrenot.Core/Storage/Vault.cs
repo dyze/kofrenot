@@ -149,19 +149,21 @@ public sealed partial class Vault
     /// It changes nothing in memory, so it can run off the thread using the vault; then append
     /// <see cref="CopyPlan.Changes"/>.
     /// </summary>
+    /// <param name="source">The vault the copied content is read from (decrypted with its keys): this one by default, another to import from it.</param>
     /// <exception cref="IOException">A file cannot be read or written.</exception>
-    public void WriteCopies(IEnumerable<ContentCopy> copies, IThumbnailMaker? thumbnails = null)
+    public void WriteCopies(IEnumerable<ContentCopy> copies, IThumbnailMaker? thumbnails = null, Vault? source = null)
     {
         EnsureCanWrite();
+        var from = source ?? this;
         foreach (var copy in copies)
         {
             switch (copy.To)
             {
                 case DatasetEdited dataset:
-                    WriteDataset(dataset, () => Datasets.OpenRead(copy.From.Id), thumbnails);
+                    WriteDataset(dataset, () => from.Datasets.OpenRead(copy.From.Id), thumbnails);
                     break;
                 default:
-                    Notes.Write(copy.To.Id, Notes.Read(copy.From.Id) ?? throw new IOException($"Note version {copy.From.Id} is not in the vault"));
+                    Notes.Write(copy.To.Id, from.Notes.Read(copy.From.Id) ?? throw new IOException($"Note version {copy.From.Id} is not in the vault"));
                     break;
             }
         }

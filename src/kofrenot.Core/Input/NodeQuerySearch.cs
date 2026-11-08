@@ -29,7 +29,8 @@ public static class NodeQuerySearch
 {
     public const int Limit = 200;
 
-    public static QueryResult Find(KnowledgeGraph graph, NodeQuery query, IReadOnlyList<OpenedNode> opened, DateTimeOffset now, TimeZoneInfo zone)
+    /// <param name="limit">How many hits are kept, the others only counted: <see cref="Limit"/> for the input box, all to import them.</param>
+    public static QueryResult Find(KnowledgeGraph graph, NodeQuery query, IReadOnlyList<OpenedNode> opened, DateTimeOffset now, TimeZoneInfo zone, int limit = Limit)
     {
         var nodes = query.Link is { } link ? Linked(graph, link) : graph.Nodes;
         if (query.Type is { } type)
@@ -45,7 +46,7 @@ public static class NodeQuerySearch
 
         if (query.Time is not { } time)
         {
-            return ResultOf(nodes.OrderBy(node => NameKey.Of(node.Name), StringComparer.Ordinal).ThenBy(node => node.Created).Select(node => new QueryHit(node, null)));
+            return ResultOf(limit, nodes.OrderBy(node => NameKey.Of(node.Name), StringComparer.Ordinal).ThenBy(node => node.Created).Select(node => new QueryHit(node, null)));
         }
 
         if (time.DaysAt(DayOf(now, zone)) is not { } days)
@@ -61,7 +62,7 @@ public static class NodeQuerySearch
         }
 
         // Opened before its time was kept: listed for any time only.
-        return ResultOf(nodes
+        return ResultOf(limit, nodes
             .Select(node => (Node: node, At: at(node)))
             .Where(found => found.At is { } when ? InDays(DayOf(when, zone), days) : days is (null, null))
             .OrderByDescending(found => found.At.HasValue)
@@ -70,10 +71,10 @@ public static class NodeQuerySearch
             .Select(found => new QueryHit(found.Node, found.At is { } when ? $"{time.Word} {TimeAgo.Of(when, now)}" : null)));
     }
 
-    private static QueryResult ResultOf(IEnumerable<QueryHit> hits)
+    private static QueryResult ResultOf(int limit, IEnumerable<QueryHit> hits)
     {
         var all = hits.ToList();
-        return new QueryResult(all.Take(Limit).ToList(), all.Count);
+        return new QueryResult(all.Take(limit).ToList(), all.Count);
     }
 
     // The nodes reading the link's verb to the node typed: those named so, else those whose names match; none typed, any.

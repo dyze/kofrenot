@@ -424,16 +424,17 @@ public sealed partial class VaultSession : IDisposable
     /// here) off the UI thread, then <paramref name="changes"/>. False when no vault is open, it
     /// closed meanwhile, or a file cannot be read or written (the user is told they cannot <paramref name="verb"/>).
     /// </summary>
-    private async Task<bool> WriteWithContents(ISessionQuestions ask, IReadOnlyList<ContentCopy> contents, IReadOnlyList<Change> changes, string verb, string action)
+    /// <param name="source">Another vault the content is read from (downloaded there first when needed); null: the open one.</param>
+    private async Task<bool> WriteWithContents(ISessionQuestions ask, IReadOnlyList<ContentCopy> contents, IReadOnlyList<Change> changes, string verb, string action, Vault? source = null)
     {
-        if (Current is not { } vault || !CanWrite(ask) || !await Fetch(ask, vault, contents.Select(copy => copy.From).ToList(), verb))
+        if (Current is not { } vault || !CanWrite(ask) || !await Fetch(ask, source ?? vault, contents.Select(copy => copy.From).ToList(), verb))
         {
             return false;
         }
 
         try
         {
-            await Task.Run(() => vault.WriteCopies(contents, _thumbnails));
+            await Task.Run(() => vault.WriteCopies(contents, _thumbnails, source));
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidDataException)
         {
@@ -487,8 +488,9 @@ public sealed partial class VaultSession : IDisposable
     }
 
     /// <summary>A server vault's notes and datasets are downloaded when needed, with the account's client while signed in to its server.</summary>
-    private ContentFetcher? FetcherOf(string folder) =>
-        Selected?.Location.Store is { } store
+    /// <param name="vault">The vault of <paramref name="folder"/>: the one selected by default.</param>
+    private ContentFetcher? FetcherOf(string folder, RegisteredVault? vault = null) =>
+        (vault ?? Selected)?.Location.Store is { } store
             ? new ContentFetcher(folder, store.Id, () => _server.Client is { Session: not null } client && _server.Account?.Server == store.Server ? client : null, _log)
             : null;
 

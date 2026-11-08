@@ -38,7 +38,30 @@ public sealed class OtherVaultTests : IDisposable
         Assert.Equal([nameof(ScriptedQuestions.AskPassPhrase)], Ask.Asked);
         Assert.Empty(_device.Vault.Graph.NodeTypes.All);
         Assert.NotEqual(_first.Location, Session.Selected!.Location);
-        Assert.Contains(_device.Log.Entries, entry => entry.Message.EndsWith("read to copy its types", StringComparison.Ordinal));
+        Assert.Contains(_device.Log.Entries, entry => entry.Message.EndsWith("read, not switched to", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public async Task NodesOfAnotherVault_AreImported_TheirNotesAndFilesSealedAgainHere()
+    {
+        var source = Session.VaultOf(Ask, _first)!;
+        var (ideas, survey) = (new Node(Guid.NewGuid(), "note", "Ideas", Start), new Node(Guid.NewGuid(), "dataset", "Survey", Start));
+        source.Append(new NodeAdded(Guid.NewGuid(), Start, ideas));
+        source.Append(new NodeAdded(Guid.NewGuid(), Start, survey));
+        source.Save(new NoteEdited(Guid.NewGuid(), Start, ideas.Id, []), "# Ideas");
+        var file = _device.Folder("survey.csv");
+        File.WriteAllText(file, "a,b\n");
+        source.Save(new DatasetEdited(Guid.NewGuid(), Start, survey.Id, DatasetFiles.Describe(file), []), () => File.OpenRead(file));
+        var plan = new VaultImportPlanner(_device.Vault.Graph, VaultContent.Of(_device.Vault)).Plan(source.Graph, VaultContent.Of(source), "first", [ideas, survey]);
+
+        Assert.True(await Session.ImportFromVault(Ask, source, plan.WriteFor(_ => RecordChoice.Import), "Nodes imported (2 new)"));
+
+        var here = _device.Vault;
+        Assert.Equal("# Ideas", here.Notes.Read(Assert.Single(here.Graph.NoteVersionsOf(ideas.Id)).Id));
+        var exported = _device.Folder("exported.csv");
+        here.Datasets.Export(Assert.Single(here.Graph.DatasetVersionsOf(survey.Id)).Id, exported);
+        Assert.Equal("a,b\n", File.ReadAllText(exported));
+        Assert.Contains(_device.Log.Entries, entry => entry.Message == "Nodes imported (2 new)");
     }
 
     [Fact]

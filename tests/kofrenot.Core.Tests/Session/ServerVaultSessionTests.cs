@@ -320,6 +320,30 @@ public sealed class ServerVaultSessionTests : IDisposable
     }
 
     [Fact]
+    public async Task NodesOfAServerVault_AreImported_TheirContentDownloadedThereFirst()
+    {
+        await CreateServerVaultAsync(_laptop);
+        var node = new Node(Guid.NewGuid(), TypeCatalog.Note.Id, "Ideas", Start);
+        var note = new NoteEdited(Guid.NewGuid(), Start, node.Id, []);
+        _laptop.Session.Write(_laptop.Ask, new NodeAdded(Guid.NewGuid(), Start, node), "Node added");
+        _laptop.Session.SaveNote(_laptop.Ask, note, "# Spice");
+        await _laptop.SyncAsync();
+        await _desktop.SignInAsync();
+        await _desktop.Session.AddFromServer(_desktop.Ask, (await _desktop.Session.StoresToAdd(_desktop.Ask))!.Single());
+        var server = _desktop.Session.Selected!;
+        _desktop.CreateFolderVault("here");
+        var source = _desktop.Session.VaultOf(_desktop.Ask, server)!;
+        Assert.False(source.HasContent(note));
+        var plan = new VaultImportPlanner(_desktop.Vault.Graph, VaultContent.Of(_desktop.Vault)).Plan(source.Graph, VaultContent.Of(source), "Personal", [node]);
+        Assert.Contains("downloaded on import: note", Assert.Single(plan.Of(RecordOutcome.New)).Details);
+
+        Assert.True(await _desktop.Session.ImportFromVault(_desktop.Ask, source, plan.WriteFor(_ => RecordChoice.Import), "Nodes imported (1 new)"));
+
+        var here = _desktop.Vault;
+        Assert.Equal("# Spice", here.Notes.Read(Assert.Single(here.Graph.NoteVersionsOf(node.Id)).Id));
+    }
+
+    [Fact]
     public async Task ANodeKeptOffline_HasItsContentDownloadedAhead_OnThisDeviceOnly()
     {
         await CreateServerVaultAsync(_laptop);

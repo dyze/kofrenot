@@ -1,4 +1,5 @@
 using Kofrenot.Core.Graph;
+using Kofrenot.Core.Imports;
 using Kofrenot.Core.Logging;
 using Kofrenot.Core.Settings;
 using Kofrenot.Core.Storage;
@@ -7,8 +8,8 @@ namespace Kofrenot.Core.Session;
 
 /// <summary>
 /// Reads another registered vault without switching to it: to copy its node and link types into
-/// the open one. It is opened from its folder (a server vault: as last synced), unlocked as when it is
-/// opened, and never written to.
+/// the open one, or import its nodes. It is opened from its folder (a server vault: as last synced),
+/// unlocked as when it is opened, and never written to (a server vault downloads the content it is asked, as when it is opened).
 /// </summary>
 public sealed partial class VaultSession
 {
@@ -17,7 +18,15 @@ public sealed partial class VaultSession
     /// it cannot be read (the user is told) or its unlock is cancelled.
     /// </summary>
     /// <exception cref="ArgumentException"><paramref name="vault"/> is the open vault.</exception>
-    public KnowledgeGraph? GraphOf(ISessionQuestions ask, RegisteredVault vault)
+    public KnowledgeGraph? GraphOf(ISessionQuestions ask, RegisteredVault vault) => VaultOf(ask, vault)?.Graph;
+
+    /// <summary>
+    /// <paramref name="vault"/>, another registered vault, opened to be read (its graph, and the
+    /// content downloaded there), never written; null when it cannot be read (the user is told) or
+    /// its unlock is cancelled.
+    /// </summary>
+    /// <exception cref="ArgumentException"><paramref name="vault"/> is the open vault.</exception>
+    public Vault? VaultOf(ISessionQuestions ask, RegisteredVault vault)
     {
         if (vault.Location == _settings.SelectedVault)
         {
@@ -38,9 +47,9 @@ public sealed partial class VaultSession
                 _keys.Remember(unlocked.Access);
             }
 
-            var read = Vault.Open(folder, header, unlocked.Access.Keys, _files.Cache, _log);
-            _log.Info("Action", $"Vault {header.Id} read to copy its types");
-            return read.Graph;
+            var read = Vault.Open(folder, header, unlocked.Access.Keys, _files.Cache, _log, FetcherOf(folder, vault));
+            _log.Info("Action", $"Vault {header.Id} read, not switched to");
+            return read;
         }
         catch (NewerVaultFormatException ex)
         {
@@ -55,4 +64,12 @@ public sealed partial class VaultSession
             return null;
         }
     }
+
+    /// <summary>
+    /// Writes nodes imported from <paramref name="source"/>, another vault read by <see cref="VaultOf"/>:
+    /// their notes, files and images read there (downloaded first when not there) and sealed again here, off the UI thread, then the
+    /// changes. False when no vault is open, it closed meanwhile, or a file cannot be read or written (the user is told).
+    /// </summary>
+    public Task<bool> ImportFromVault(ISessionQuestions ask, Vault source, VaultImportWrite write, string action) =>
+        WriteWithContents(ask, write.Contents, write.Changes, "import", action, source);
 }
