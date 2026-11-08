@@ -5,7 +5,9 @@
 ```
                  ┌──────── Mapping node "Books (JSON)" ───────────┐
                  │ source: json · type: Book · match: ISBN        │
-                 │ title → name · isbn → ISBN · year → Published  │
+                 │ title_fr, else title → name                    │
+                 │ title → Original title (an other name)         │
+                 │ isbn → ISBN · year → Published                 │
                  │ authors[] → Person, linked by "wrote"          │
                  └───────────────────────┬────────────────────────┘
 books.json ─► JsonRecordReader ─► records ─► ImportPlanner ─► preview ─► Import ─► changes
@@ -25,23 +27,70 @@ books.json ─► JsonRecordReader ─► records ─► ImportPlanner ─► pr
 | --- | --- | --- |
 | Source | `json` | the only one in 0.17 |
 | Node type | *Book* | one of the user's types |
-| Name | `title` | the key giving the node's name; a record without it is not imported |
-| Match | *ISBN*, or the name | how a record finds its node (below) |
-| Field rules | `isbn` → *ISBN*, `year` → *Published*, `publisher.name` → *Publisher* | a key (a dotted path into nested objects) → a small field of the type |
+| Name | `title_fr`, else `title` | the keys giving the node's name, in order: the first present wins; a record with none is not imported |
+| Match | *ISBN* | a field identifying a node; the names are always tried after it ([below](#finding-the-node)) |
+| Other names | *Original title* | fields also holding a name of the node: compared with the names when finding the node |
+| Field rules | `title` → *Original title*, `isbn` → *ISBN*, `year` → *Published*, `publisher.name` → *Publisher* | a key (a dotted path into nested objects) → a small field of the type; a key may give the name and a field |
 | Link rules | `authors` → *Person*, linked by *wrote* (from the person) | each value a node's name: found among the type's nodes (`NameKey`), else added |
+
+Sample `books.json`, for the mapping above:
+
+```json
+[
+  { "isbn": "978-0441013593", "title_fr": "Dune", "title": "Dune", "year": 1965,
+    "publisher": { "name": "Ace" }, "authors": ["Frank Herbert"] },
+  { "isbn": "978-0441569595", "title_fr": "Neuromancien", "title": "Neuromancer",
+    "year": "c. 1984", "authors": ["William Gibson"] },
+  { "title_fr": "De bons présages", "title": "Good Omens", "year": 1990,
+    "authors": ["Terry Pratchett", "Neil Gaiman"] },
+  { "title": "The Dispossessed", "year": 1974, "authors": ["Ursula K. Le Guin"] },
+  { "isbn": "978-0000000000", "year": 2001 }
+]
+```
+
+| Record | Read as |
+| --- | --- |
+| Dune | all rules apply; `publisher.name` reads the nested object |
+| Neuromancien | `year` does not fit a date: not imported, the rest is; no `publisher`: *Publisher* left as it is |
+| De bons présages | no `isbn`: found by its names only; two authors: two *wrote* links |
+| The Dispossessed | no `title_fr`: named by `title` (renamed when a later file gives the French one) |
+| last | no `title_fr` nor `title`: not imported |
 
 - **JSON shape:** the file is an array of objects (`[{…}, {…}]`). A key's value is text, a number or a boolean; an array gives several values (a link rule's names; a field takes the first, the others listed as not imported).
 - **Values** are read as the field's kind (`FieldValue`): a date `1965-08-01`, `1965-08` or `1965`; a number; a url. A value that does not fit is not imported, and listed.
 - **Not in 0.17:** image fields (a JSON file holds no picture; a URL would need the network), several node types per mapping.
 - At creation, rules are suggested by name: a key matching a field's name (case and accents ignored) goes to it.
 
+## Finding the node
+
+```
+record { isbn: 978-0441569595, title_fr: "Neuromancien", title: "Neuromancer" }
+   │
+   ├─ 1. match value: a Book has ISBN 978-0441569595 ──────► that node (no doubt)
+   │
+   ├─ 2. else names: one of the record's names               (NameKey)
+   │     "Neuromancien" · "Neuromancer"
+   │     equals one of a Book's names
+   │     its name · its Original title
+   │        without an ISBN ─────────────────────────────► that node; it gets the ISBN
+   │        with another ISBN ───────────────────────────► that node, to check in the preview
+   │
+   └─ 3. none ──────────────────────────────────────────► new node
+```
+
+- **The record's names:** its name (`title_fr`, else `title`) and its other names (`title`, read for *Original title*). **A Book's names:** its name and its *Original title*.
+- So a Book first imported in English ("Neuromancer") is found by the French file through its original title, and renamed to "Neuromancien" (shown in the preview, can be unticked).
+- A record without the match value goes straight to 2.
+- **To check** (same name, another ISBN): the preview asks, per record, **Update** it (ISBN *old → new*, the default), **Add as new** (another edition) or **Skip**.
+- Several nodes at step 1, or several candidates at step 2: not imported, listed as ambiguous.
+- Without a match field, only step 2 runs.
+
 ## Updating existing nodes
 
 ```
 record { isbn: 978-0441013593, title: "Dune", year: 1965, authors: ["Frank Herbert"] }
-   │ match: ISBN
-   ├─ no Book has it ─────────► new node: addNode, addNodeType, setField…, addLink…
-   └─ Book "Dune" has it ─────► updated: only what differs
+   ├─ no node found ──────────► new node: addNode, addNodeType, setField…, addLink…
+   └─ Book "Dune" found ──────► updated: only what differs
                                  Published: 1966 → 1965      setField (replaces the current values)
                                  wrote: + Frank Herbert      addLink (when missing)
 ```
@@ -52,9 +101,8 @@ record { isbn: 978-0441013593, title: "Dune", year: 1965, authors: ["Frank Herbe
 | A value is the same | nothing written |
 | A key absent or empty in the record | the field is left as it is: an import never clears |
 | A link missing | added; links already there are never removed |
-| The name differs | `renameNode`, shown in the preview |
-| Several nodes have the match value | not imported: listed as ambiguous |
-| Match by name | the first node of the type with that name (`NameKey`); homonyms are ambiguous |
+| The name differs (found by match value or another name) | `renameNode`, shown in the preview |
+| Several candidates | not imported: listed as ambiguous ([Finding the node](#finding-the-node)) |
 
 Each updated node can be unticked in the preview, to leave it as it is.
 
@@ -64,7 +112,8 @@ Each updated node can be unticked in the preview, to leave it as it is.
 
 ```json
 { "format": 12, "oldestReader": 10, "oldestWriter": 11, "at": "…", "op": "editMapping",
-  "mapping": { "node": "<node id>", "source": "json", "nodeType": "<type id>", "name": "title", "match": "<field id> or name",
+  "mapping": { "node": "<node id>", "source": "json", "nodeType": "<type id>", "name": ["title_fr", "title"], "match": "<field id> or null",
+               "otherNames": ["<field id>"],
                "fields": [{ "key": "isbn", "field": "<field id>" }],
                "links": [{ "key": "authors", "nodeType": "<type id>", "linkType": "wrote", "reverse": true }],
                "replaces": ["<version id>", "…"] } }
@@ -79,29 +128,72 @@ Versions replace one another as a view's (`NodeVersions`); two made apart are a 
                                                   │
 ┌ Imports ────────────────────────────────────────▼───────────────┐
 │ Books (JSON)       Book · match ISBN       [Import…] [Edit…]    │
-│ Films (JSON)       Film · match name       [Import…] [Edit…]    │
+│ Films (JSON)       Film · match by name    [Import…] [Edit…]    │
 │                                       [New…]          [Delete…] │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
 - **Imports** sits in the top bar, beside **Settings**.
-- **New… / Edit…**: the mapping's name, type, match, name key and rules; a sample file shows the first records as they would be imported.
-- **Import…**: a file picker, then the preview: *12 new · 3 updated · 40 unchanged · 1 not imported*, each updated node with what changes.
+- **New… / Edit…**: the mapping's name, type, match, name keys (in order), other names and rules; a sample file shows the first records as they would be imported.
+- **Import…**: a file picker, then the preview: *12 new · 3 updated · 1 to check · 40 unchanged · 1 not imported*, each updated node with what changes, each one to check with its choice.
 - **Delete…** asks first (`MessageDialog.Confirm`), naming the mapping; the nodes it imported stay.
+
+### Preview
+
+```
+┌ Import "Books (JSON)" · books.json ─────────────────────────────────┐
+│ [1 to check] [12 new] [3 updated] [1 not imported] [40 unchanged]   │
+├─────────────────────────────────────────────────────────────────────┤
+│ ▼ To check                                                          │
+│   Dune         same name, ISBN 978-0441172719 → 978-0441013593      │
+│                (• Update) ( Add as new ) ( Skip )                   │
+│ ▼ New                                                               │
+│   [✓] Neuromancien     ISBN 978-0441569595 · Original title         │
+│                        Neuromancer · wrote: + William Gibson (new)  │
+│   [✓] …                                                             │
+│ ▼ Updated                                                           │
+│   [✓] Fondation        Published: 1950 → 1951                       │
+│                        wrote: + Isaac Asimov                        │
+│   [✓] Les Dépossédés   found by Original title "The Dispossessed"   │
+│                        name: The Dispossessed → Les Dépossédés      │
+│   [ ] Hypérion         name: Hyperion → Hypérion                    │
+│ ▼ Not imported                                                      │
+│       record 17        no "title_fr" nor "title"                    │
+│       Solaris          2 Books with this name                       │
+│ ▶ Unchanged (40)                                                    │
+├─────────────────────────────────────────────────────────────────────┤
+│ 1 value not imported: Neuromancien · year "c. 1984"                 │
+│                                         [Import 15]   [Cancel]      │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+| Part | How it works |
+| --- | --- |
+| Counts | one per group; clicking one scrolls to it |
+| **To check** | same name, another match value ([Finding the node](#finding-the-node)): **Update** (default), **Add as new** or **Skip** |
+| **New** | each node with its fields and links; a linked node that does not exist yet says *(new Person)*; untick to leave it out |
+| **Updated** | only what differs: *old → new*, `+` for an added link, a rename; *found by …* when found through another name; untick to leave the node as it is |
+| **Not imported** | with its reason: no name, ambiguous; nothing to choose |
+| **Unchanged** | collapsed, for information |
+| Values not imported | a value that does not fit its field, or a field's extra values: listed at the bottom, the rest of the record is imported |
+| **Import *n*** | *n* = nodes that will be written (ticked new and updated, to check not skipped); writes them in one go, then a summary (*15 written*) |
+| **Cancel** | closes, writes nothing |
+
+The file is read and planned again on each **Import…**, so the preview always reflects the vault and the file as they are now.
 
 ## Code
 
 | Where | New | Role |
 | --- | --- | --- |
 | Core `Graph/` | `TypeCatalog.Mapping`, `MappingEdited` | the built-in type and its change |
-| Core `Imports/` | `MappingDefinition` | source, type, name key, match, field and link rules |
+| Core `Imports/` | `MappingDefinition` | source, type, name keys, match, other names, field and link rules |
 | | `JsonRecordReader` | a `.json` file → `Record`s: keys (dotted paths) → values |
-| | `ImportPlanner` | records + mapping + graph → `ImportPlan`: new, updated (with their differences), unchanged, not imported |
+| | `ImportPlanner` | records + mapping + graph → `ImportPlan`: new, updated (with their differences), to check, unchanged, not imported |
 | | `MappingPlanner` | loads and saves a mapping's versions, as `ViewPlanner` |
 | Core `Session/` | `VaultSession.ImportRecords` | writes the plan's changes |
 | App `Views/` | `ImportsWindow`, `MappingDialog`, `RecordImportDialog` | the list, the editor, the preview |
 
-`System.Text.Json` reads the file: no new dependency. Tests: reader, planner (new, updated, ambiguous, values that do not fit), mapping versions, the format 12 change read by a format 11 reader; Core coverage ≥ 95%.
+`System.Text.Json` reads the file: no new dependency. Tests: reader, planner (new, updated, found by another name, name key fallback, to check, ambiguous, values that do not fit), mapping versions, the format 12 change read by a format 11 reader; Core coverage ≥ 95%.
 
 ## Later
 - **vCard** (`.vcf`, 3.0 and 4.0) as a second source: `FN`/`N` → name, `EMAIL`, `TEL`, `ADR`, `URL`, `ORG`, `NOTE`, `BDAY` (without a year: not imported), `PHOTO` → an image field; match on `UID` or the name. vCard 2.1 refused.
