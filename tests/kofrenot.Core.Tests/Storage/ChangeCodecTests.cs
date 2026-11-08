@@ -265,6 +265,8 @@ public sealed partial class ChangeCodecTests
         new FlatDefinition("note"),
         new GraphDefinition(Guid.NewGuid(), 3, GraphLayoutKind.Network, [new("parent", GraphRole.Down), new("spouse", GraphRole.Beside), new("child", GraphRole.Up), new("friend", GraphRole.Free)], ["person"], ["Born"]),
         new GraphDefinition(Guid.NewGuid(), 1, GraphLayoutKind.Layered, [new("contains", GraphRole.Down)], [], []),
+        new QueryDefinition("book", "read", true, Guid.NewGuid(), [new("date", "2026"), new("format", "")], [new("wrote", true), new("relates-to", false)]),
+        new QueryDefinition(null, "contains", false, null, [], []),
     ];
 
     [Fact]
@@ -302,6 +304,33 @@ public sealed partial class ChangeCodecTests
     [InlineData("{" + GraphQuery + ",\"links\":[{\"type\":\"parent\",\"role\":\"down\"}],\"fields\":[\" \"]}")]
     public void AnIncompleteGraphView_IsRefused(string query) =>
         AnIncompleteViewVersion_IsRefused("{\"node\":\"" + Node + "\",\"display\":\"graph\",\"query\":" + query + ",\"replaces\":[]}");
+
+    [Fact]
+    public void AQueryView_HasTheDocumentedShape()
+    {
+        var node = Guid.NewGuid();
+        var definition = new QueryDefinition("book", "read", true, node, [new("date", "2026")], [new("wrote", true)]);
+        var change = new ViewEdited(Guid.NewGuid(), At, Guid.NewGuid(), definition, []);
+
+        var json = Encoding.UTF8.GetString(_keyed.Open(SealKind.Change, _codec.Encode(change), change.Id.ToByteArray()));
+
+        Assert.Contains(
+            $"\"display\":\"query\",\"query\":{{\"linkType\":\"read\",\"nodeType\":\"book\",\"reverse\":true,\"node\":\"{node}\",\"qualifiers\":[{{\"field\":\"date\",\"value\":\"2026\"}}],\"columns\":[{{\"type\":\"wrote\",\"reverse\":true}}]}}",
+            json);
+    }
+
+    [Theory]
+    [InlineData("{}")]
+    [InlineData("{\"linkType\":\"\"}")]
+    [InlineData("{\"linkType\":\"read\",\"nodeType\":\"\"}")]
+    [InlineData("{\"linkType\":\"read\",\"node\":\"00000000-0000-0000-0000-000000000000\"}")]
+    [InlineData("{\"linkType\":\"read\",\"qualifiers\":[null]}")]
+    [InlineData("{\"linkType\":\"read\",\"qualifiers\":[{\"field\":\"\",\"value\":\"2026\"}]}")]
+    [InlineData("{\"linkType\":\"read\",\"qualifiers\":[{\"field\":\"date\"}]}")]
+    [InlineData("{\"linkType\":\"read\",\"columns\":[null]}")]
+    [InlineData("{\"linkType\":\"read\",\"columns\":[{\"reverse\":true}]}")]
+    public void AnIncompleteQueryView_IsRefused(string query) =>
+        AnIncompleteViewVersion_IsRefused("{\"node\":\"" + Node + "\",\"display\":\"query\",\"query\":" + query + ",\"replaces\":[]}");
 
     [Fact]
     public void APlacement_RoundTrips()

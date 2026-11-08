@@ -8,13 +8,14 @@ public enum ViewDisplay
     Tree,
     Flat,
     Graph,
+    Query,
 }
 
 /// <summary>
 /// A view's definition as edited (on the creation screen, or later): a tree (from <see cref="Root"/>,
 /// through <see cref="LinkType"/>), a list (of <see cref="NodeType"/>), or a graph (from
 /// <see cref="Root"/>, as <see cref="Graph"/> says). A tree and a graph need their root; a graph,
-/// a link type too.
+/// a link type too; a query view (<see cref="Query"/>), a query that reads as one.
 /// </summary>
 public sealed record ViewDraft(ViewDisplay Display, Node? Root, LinkType LinkType, NodeType NodeType)
 {
@@ -28,11 +29,15 @@ public sealed record ViewDraft(ViewDisplay Display, Node? Root, LinkType LinkTyp
     /// <summary>The qualifier of <see cref="LinkType"/> a tree's children are sorted by (its field id); by name when null.</summary>
     public string? Order { get; init; }
 
-    /// <summary>The definition, or null while a tree or a graph has no root, or a graph no link type.</summary>
+    /// <summary>What a query view finds and shows, kept while another display is chosen.</summary>
+    public QueryDraft Query { get; init; } = QueryDraft.Default;
+
+    /// <summary>The definition, or null while a tree or a graph has no root, a graph no link type, or a query view no query.</summary>
     public ViewDefinition? Definition => Display switch
     {
         ViewDisplay.Tree => Root is null ? null : new TreeDefinition(Root.Id, LinkType.Id, Order),
         ViewDisplay.Graph => Root is null || Graph.Links.Count == 0 ? null : new GraphDefinition(Root.Id, Graph.Depth, Graph.Layout, Graph.Links, Graph.NodeTypes, Graph.Fields),
+        ViewDisplay.Query => Query.Definition,
         _ => new FlatDefinition(NodeType.Id),
     };
 
@@ -59,6 +64,11 @@ public sealed record ViewDraft(ViewDisplay Display, Node? Root, LinkType LinkTyp
             Root = graph.FindNode(shown.Root),
             Graph = new GraphDraft(shown.Depth, shown.Layout, shown.Links, shown.NodeTypes, shown.Fields),
         },
+        QueryDefinition query => Default with
+        {
+            Display = ViewDisplay.Query,
+            Query = QueryDraft.Of(query, graph),
+        },
         _ => Default,
     };
 
@@ -79,8 +89,20 @@ public sealed record ViewDraft(ViewDisplay Display, Node? Root, LinkType LinkTyp
         GraphDefinition shown => graph.FindNode(shown.Root) is { } root
             ? $"A graph from “{root.Name}” through {string.Join(", ", shown.Links.Select(link => $"“{LinkTypeName(graph, link.LinkType)}”"))}, {shown.Depth} {(shown.Depth == 1 ? "step" : "steps")} away"
             : "A graph from a node not here: removed, or not synced yet",
+        QueryDefinition query => DescribeQuery(query, graph),
         _ => "No definition yet",
     };
+
+    private static string DescribeQuery(QueryDefinition query, KnowledgeGraph graph)
+    {
+        if (query.Node is { } node && graph.FindNode(node) is null)
+        {
+            return "A query naming a node not here: removed, or not synced yet";
+        }
+
+        var columns = query.Columns.Count == 0 ? string.Empty : $", with {string.Join(", ", query.Columns.Select(column => $"“{QueryDraft.NameOf(column, graph)}”"))}";
+        return $"The nodes found by “{QueryDraft.TextOf(query, graph)}”{columns}";
+    }
 
     private static string OrderName(KnowledgeGraph graph, TreeDefinition tree) =>
         tree.Order is { } order && graph.LinkTypes.FieldsOf(tree.LinkType).FirstOrDefault(field => field.Id == order) is { } field ? $", by “{field.Name}”" : string.Empty;

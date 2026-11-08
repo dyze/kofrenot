@@ -3,7 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:local="clr-namespace:Kofrenot.UI.Views">
   <!-- A view's definition: a tree from a node found by name, through a link type; a list of the
-       nodes of a type; or a graph from a node, through link types each with its role. On the creation
+       nodes of a type; a graph from a node, through link types each with its role; or what a query finds. On the creation
        screen and in the view's edit dialog. -->
   <UserControl.Resources>
     <ResourceDictionary Source="SharedStyles.xaml" />
@@ -11,6 +11,8 @@
 
   <Grid>
     <Grid.RowDefinitions>
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="Auto" />
       <RowDefinition Height="Auto" />
       <RowDefinition Height="Auto" />
       <RowDefinition Height="Auto" />
@@ -33,6 +35,7 @@
       <ComboBoxItem Content="A tree" />
       <ComboBoxItem Content="A list" />
       <ComboBoxItem Content="A graph" />
+      <ComboBoxItem Content="What a query finds" />
     </ComboBox>
 
     <TextBlock x:Name="RootLabel" Grid.Row="1" Margin="0,10,0,0" VerticalAlignment="Top" Opacity="0.7" Text="From the node" />
@@ -117,5 +120,17 @@
              FontSize="{StaticResource BodyFontSize}"
              ToolTip="The fields whose values each card shows, separated by commas: Born, Died"
              TextChanged="FieldsBox_TextChanged" />
+
+    <!-- A query view (ViewDefinitionEditor.Query): the query typed as in the input box, then the columns its rows show. -->
+    <TextBlock x:Name="QueryLabel" Grid.Row="9" Margin="0,10,0,0" VerticalAlignment="Top" Opacity="0.7" Text="Query" />
+    <StackPanel x:Name="QueryPanel" Grid.Row="9" Grid.Column="1" Margin="0,10,0,0">
+      <local:ChipBox x:Name="QueryBox" FontSize="{StaticResource BodyFontSize}" Placeholder="?Book: read by Alice, Date 2026" PreviewKeyDown="QueryBox_PreviewKeyDown" />
+      <TextBlock x:Name="QueryProblem" Margin="2,4,0,0" Opacity="0.8" TextWrapping="Wrap" />
+    </StackPanel>
+
+    <TextBlock x:Name="ColumnsLabel" Grid.Row="10" Margin="0,10,0,0" VerticalAlignment="Top" Opacity="0.7" Text="Columns" />
+    <ScrollViewer x:Name="ColumnsPanel" Grid.Row="10" Grid.Column="1" MaxHeight="160" Margin="0,10,0,0" VerticalScrollBarVisibility="Auto" ToolTip="Each row shows the nodes its links of each checked phrase lead to">
+      <WrapPanel x:Name="ColumnBoxes" />
+    </ScrollViewer>
   </Grid>
 </UserControl>

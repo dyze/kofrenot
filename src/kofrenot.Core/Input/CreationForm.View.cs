@@ -15,8 +15,16 @@ public sealed partial class CreationForm
 
     public void SetView(Side side, ViewDraft view) => _views[side] = view;
 
-    /// <summary>The nodes a tree can start from (<see cref="ViewDraft.FindRoots"/>).</summary>
-    public IReadOnlyList<SearchHit> FindRoots(string text) => ViewDraft.FindRoots(_graph, text);
+    /// <summary>The graph a view's definition is read in: its roots found, its query read.</summary>
+    public KnowledgeGraph Graph => _graph;
+
+    /// <summary>A new view showing what a query typed in the input box finds; its name to type.</summary>
+    public static CreationForm QueryView(KnowledgeGraph graph, string query, TimeProvider? clock = null)
+    {
+        var form = NewNode(graph, TypeCatalog.View, clock: clock);
+        form.SetView(Side.Left, ViewDraft.Default with { Display = ViewDisplay.Query, Query = QueryDraft.Default.WithText(query.Trim(), graph) });
+        return form;
+    }
 
     /// <summary>False on a new view's step while its definition is not complete.</summary>
     public bool CanLeaveStep => Step.Side is not { } side || !IsView(side) || _views[side].Definition is not null;
@@ -30,7 +38,4 @@ public sealed partial class CreationForm
             .Where(pair => IsView(pair.Side) && _views[pair.Side].Definition is not null)
             .Select(pair => new ViewEdited(Guid.NewGuid(), _clock.GetUtcNow(), pair.Node.Id, _views[pair.Side].Definition!, []))
             .ToList();
-
-    /// <summary>The qualifiers a tree being defined can be sorted by (<see cref="ViewDraft.OrderChoices"/>).</summary>
-    public IReadOnlyList<Fields.FieldDefinition> OrderChoicesOf(ViewDraft draft) => draft.OrderChoices(_graph);
 }

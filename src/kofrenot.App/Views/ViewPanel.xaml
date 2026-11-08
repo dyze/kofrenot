@@ -204,6 +204,9 @@
         <TextBlock Grid.Column="3" Style="{StaticResource SecondaryText}" Text="Modified" />
       </Grid>
 
+      <!-- A query view: Name, then the link phrase of each column (ViewPanel.Query), aligned with its rows. -->
+      <Grid x:Name="QueryHeader" Margin="4,0,24,4" Visibility="Collapsed" />
+
       <TextBlock x:Name="MessageText"
                  Grid.Row="1"
                  MaxWidth="460"

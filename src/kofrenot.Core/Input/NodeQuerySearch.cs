@@ -80,28 +80,45 @@ public static class NodeQuerySearch
     // The nodes reading the link's verb to the node typed: those named so, else those whose names match; none typed, any.
     private static IEnumerable<Node> Linked(KnowledgeGraph graph, LinkQuery query)
     {
-        bool Reads(Link link, Guid from) =>
-            graph.Types.VerbOf(link, from) is { } verb && verb.Type.Id == query.Verb.Type.Id && verb.IsReverse == query.Verb.IsReverse;
-
         if (query.Node.Length == 0)
         {
-            return graph.Links
-                .SelectMany(link => new[] { link.From, link.To }.Where(end => Reads(link, end)))
-                .Distinct()
-                .Select(graph.FindNode)
-                .OfType<Node>();
+            return Linked(graph, query.Verb.Type.Id, query.Verb.IsReverse, null, query.Qualifiers);
         }
 
         var matches = GraphSearch.MatcherOf(query.Node);
         var targets = graph.NodesNamed(query.Node) is { Count: > 0 } named ? named : graph.Nodes.Where(node => matches(node.Name)).ToList();
-        return targets
-            .SelectMany(target => graph.LinksOf(target.Id)
+        return Linked(graph, query.Verb.Type.Id, query.Verb.IsReverse, targets, query.Qualifiers);
+    }
+
+    /// <summary>
+    /// The nodes reading a link type (<paramref name="reverse"/>: from its other end) to one of <paramref name="targets"/>
+    /// (to any node when null), through a link whose qualifiers match <paramref name="qualifiers"/>; each once, in no order.
+    /// </summary>
+    internal static IEnumerable<Node> Linked(KnowledgeGraph graph, string linkType, bool reverse, IReadOnlyList<Node>? targets, IReadOnlyList<QualifierFilter> qualifiers)
+    {
+        bool Reads(Link link, Guid from) =>
+            graph.Types.VerbOf(link, from) is { } verb && verb.Type.Id == linkType && verb.IsReverse == reverse
+            && HasQualifiers(graph, link, qualifiers);
+
+        var ends = targets is null
+            ? graph.Links.SelectMany(link => new[] { link.From, link.To }.Where(end => Reads(link, end)))
+            : targets.SelectMany(target => graph.LinksOf(target.Id)
                 .Select(link => (Link: link, Other: link.Other(target.Id)))
                 .Where(end => end.Other != target.Id && Reads(end.Link, end.Other))
-                .Select(end => end.Other))
-            .Distinct()
-            .Select(graph.FindNode)
-            .OfType<Node>();
+                .Select(end => end.Other));
+        return ends.Distinct().Select(graph.FindNode).OfType<Node>();
+    }
+
+    // Each qualifier asked for, its type's or the link's own, with a matching value.
+    private static bool HasQualifiers(KnowledgeGraph graph, Link link, IReadOnlyList<QualifierFilter> filters)
+    {
+        if (filters.Count == 0)
+        {
+            return true;
+        }
+
+        var fields = NodeFields.OfLink(graph, link);
+        return filters.All(filter => fields.Any(field => field.Field == filter.Field && ValueQuery.Matches(field, filter.Value)));
     }
 
     private static Func<Node, DateTimeOffset?> TimesOf(KnowledgeGraph graph, TimeKind kind, IReadOnlyList<OpenedNode> opened)

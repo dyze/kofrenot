@@ -21,13 +21,11 @@ public sealed record OrderChoice(string? Field, string Label)
 /// <summary>
 /// Edits a <see cref="ViewDraft"/>: a tree from a node found by name (Up/Down in the name choose
 /// among the nodes found, the first one by default), through a link type; a list of a node type; or a
-/// graph from such a node (its settings: ViewDefinitionEditor.Graph).
+/// graph from such a node (its settings: ViewDefinitionEditor.Graph); or what a query finds (ViewDefinitionEditor.Query). or what a query finds (ViewDefinitionEditor.Query).
 /// </summary>
 public partial class ViewDefinitionEditor : UserControl
 {
-    private TypeCatalog _types = TypeCatalog.BuiltIn;
-    private Func<string, IReadOnlyList<SearchHit>> _findRoots = _ => [];
-    private Func<ViewDraft, IReadOnlyList<FieldDefinition>> _orderChoices = _ => [];
+    private KnowledgeGraph _graph = new();
     private bool _showing;
 
     public ViewDefinitionEditor() => InitializeComponent();
@@ -37,16 +35,14 @@ public partial class ViewDefinitionEditor : UserControl
 
     public ViewDraft Draft { get; private set; } = ViewDraft.Default;
 
-    /// <param name="findRoots">Finds the nodes a tree can start from, by name.</param>
-    /// <param name="orderChoices">The qualifiers a tree can be sorted by.</param>
-    public void Setup(TypeCatalog types, Func<string, IReadOnlyList<SearchHit>> findRoots, Func<ViewDraft, IReadOnlyList<FieldDefinition>> orderChoices)
+    /// <summary>The graph the view is defined in: its roots found, its types listed, its query read.</summary>
+    public void Setup(KnowledgeGraph graph)
     {
-        _types = types;
-        _findRoots = findRoots;
-        _orderChoices = orderChoices;
-        LinkTypeBox.ItemsSource = types.LinkTypes;
-        NodeTypeBox.ItemsSource = types.NodeTypes;
-        SetupGraph(types);
+        _graph = graph;
+        LinkTypeBox.ItemsSource = graph.Types.LinkTypes;
+        NodeTypeBox.ItemsSource = graph.Types.NodeTypes;
+        SetupGraph(graph.Types);
+        SetupQuery();
     }
 
     /// <summary>Shows a draft to edit, its root's name in the box, a graph's fields in theirs.</summary>
@@ -56,6 +52,7 @@ public partial class ViewDefinitionEditor : UserControl
         _showing = true;
         RootBox.Text = draft.Root?.Name ?? string.Empty;
         FieldsBox.Text = string.Join(", ", draft.Graph.Fields);
+        LoadQuery(draft.Query);
         _showing = false;
         ShowDraft();
     }
@@ -63,7 +60,11 @@ public partial class ViewDefinitionEditor : UserControl
     /// <summary>Gives the keyboard to the first field to fill: the name of the root for a tree or a graph.</summary>
     public void FocusFirst()
     {
-        if (Draft.Display != ViewDisplay.Flat)
+        if (Draft.Display == ViewDisplay.Query)
+        {
+            QueryBox.FocusText();
+        }
+        else if (Draft.Display != ViewDisplay.Flat)
         {
             RootBox.Focus();
             RootBox.SelectAll();
@@ -82,12 +83,13 @@ public partial class ViewDefinitionEditor : UserControl
         var tree = Draft.Display == ViewDisplay.Tree;
         var flat = Draft.Display == ViewDisplay.Flat;
         DisplayBox.SelectedIndex = (int)Draft.Display;
-        RootLabel.Visibility = RootPanel.Visibility = flat ? Visibility.Collapsed : Visibility.Visible;
+        RootLabel.Visibility = RootPanel.Visibility = tree || Draft.Display == ViewDisplay.Graph ? Visibility.Visible : Visibility.Collapsed;
         ThroughLabel.Visibility = LinkTypeBox.Visibility = tree ? Visibility.Visible : Visibility.Collapsed;
         NodeTypeLabel.Visibility = NodeTypeBox.Visibility = flat ? Visibility.Visible : Visibility.Collapsed;
         ShowGraph(Draft.Display == ViewDisplay.Graph);
+        ShowQuery(Draft.Display == ViewDisplay.Query);
         LinkTypeBox.SelectedItem = Draft.LinkType;
-        var orders = _orderChoices(Draft).Select(field => new OrderChoice(field.Id, field.Name)).Prepend(new OrderChoice(null, "Name")).ToList();
+        var orders = Draft.OrderChoices(_graph).Select(field => new OrderChoice(field.Id, field.Name)).Prepend(new OrderChoice(null, "Name")).ToList();
         OrderBox.ItemsSource = orders;
         OrderBox.SelectedItem = orders.FirstOrDefault(order => order.Field == Draft.Order) ?? orders[0];
         OrderLabel.Visibility = OrderBox.Visibility = tree && orders.Count > 1 ? Visibility.Visible : Visibility.Collapsed;
@@ -111,8 +113,8 @@ public partial class ViewDefinitionEditor : UserControl
     /// <summary>The nodes found for the typed name; the first one is chosen when none of them is.</summary>
     private void RootBox_TextChanged(object sender, TextChangedEventArgs e)
     {
-        RootList.ItemsSource = _findRoots(RootBox.Text)
-            .Select(hit => new RootChoice(hit.Node, $"{hit.Node.Name}{hit.Mark} ({_types.NodeTypeName(hit.Node.Type)})", NodeVisual.OfType(hit.Node.Type)))
+        RootList.ItemsSource = ViewDraft.FindRoots(_graph, RootBox.Text)
+            .Select(hit => new RootChoice(hit.Node, $"{hit.Node.Name}{hit.Mark} ({_graph.Types.NodeTypeName(hit.Node.Type)})", NodeVisual.OfType(hit.Node.Type)))
             .ToList();
         Change(view => view with { Root = RootChoices.FirstOrDefault(choice => choice.Node.Id == view.Root?.Id)?.Node ?? RootChoices.FirstOrDefault()?.Node });
     }

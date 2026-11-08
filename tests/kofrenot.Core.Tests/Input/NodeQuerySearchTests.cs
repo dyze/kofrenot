@@ -112,7 +112,7 @@ public sealed class NodeQuerySearchTests
             Add($"Note {i:D3}", TypeCatalog.Note);
         }
 
-        var found = NodeQuerySearch.Find(_graph, QueryParser.Parse("?note:", _graph.Types)!, [], Now, TimeZoneInfo.Utc, int.MaxValue);
+        var found = NodeQuerySearch.Find(_graph, QueryParser.Parse("?note:", _graph)!, [], Now, TimeZoneInfo.Utc, int.MaxValue);
 
         Assert.Equal((NodeQuerySearch.Limit + 5, NodeQuerySearch.Limit + 5), (found.Hits.Count, found.Total));
     }
@@ -126,7 +126,7 @@ public sealed class NodeQuerySearchTests
     }
 
     private QueryResult Find(string text, IReadOnlyList<OpenedNode>? opened = null) =>
-        NodeQuerySearch.Find(_graph, QueryParser.Parse($"?{text}", _graph.Types)!, opened ?? [], Now, TimeZoneInfo.Utc);
+        NodeQuerySearch.Find(_graph, QueryParser.Parse($"?{text}", _graph)!, opened ?? [], Now, TimeZoneInfo.Utc);
 
     private static List<Node> Nodes(QueryResult found) => found.Hits.Select(hit => hit.Node).ToList();
 

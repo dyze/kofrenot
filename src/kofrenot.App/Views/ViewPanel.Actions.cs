@@ -26,12 +26,17 @@ public partial class ViewPanel
     {
         var isTree = Tree.Visibility == Visibility.Visible;
         var isList = _definition is null && _listType is not null;
+        var isQuery = _query is not null && List.Visibility == Visibility.Visible;
         var isGraph = GraphBoard.Visibility == Visibility.Visible;
-        ActionBar.Visibility = isTree || isList || isGraph ? Visibility.Visible : Visibility.Collapsed;
-        foreach (var nodeAction in new UIElement[] { NewButton, EditButton, RenameButton })
+        ActionBar.Visibility = isTree || isList || isQuery || isGraph ? Visibility.Visible : Visibility.Collapsed;
+        foreach (var nodeAction in new UIElement[] { EditButton, RenameButton })
         {
             nodeAction.Visibility = isGraph ? Visibility.Collapsed : Visibility.Visible;
         }
+
+        // A query view adds nothing: what a new node would need to be found is the query's.
+        NewButton.Visibility = isGraph || isQuery ? Visibility.Collapsed : Visibility.Visible;
+        QueryHeader.Visibility = isQuery ? Visibility.Visible : Visibility.Collapsed;
 
         foreach (var graphOnly in new UIElement[] { FitButton, ResetLayoutButton, LinkNamesButton })
         {
@@ -45,7 +50,7 @@ public partial class ViewPanel
             treeOnly.Visibility = isTree ? Visibility.Visible : Visibility.Collapsed;
         }
 
-        DeleteButton.Visibility = (isTree || isList) && !IsReadOnly() ? Visibility.Visible : Visibility.Collapsed;
+        DeleteButton.Visibility = (isTree || isList || isQuery) && !IsReadOnly() ? Visibility.Visible : Visibility.Collapsed;
         DeleteButton.ToolTip = isTree ? "Delete the node selected, with everything under it (Del)" : "Delete the node selected, with its links (Del)";
 
         UnlinkedButton.Visibility = isTree ? Visibility.Visible : Visibility.Collapsed;

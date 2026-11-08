@@ -15,6 +15,16 @@ public sealed record NodeQuery(NodeType? Type, string Name, LinkQuery? Link, Tim
 
 /// <summary>
 /// The nodes that read <see cref="Verb"/> to a node named <see cref="Node"/>: <c>written by Frank Herbert</c>. While no node has
-/// that name, those whose names match it; with none typed, any node.
+/// that name, those whose names match it; with none typed, any node. Through a link whose qualifiers match <see cref="Qualifiers"/>
+/// only: <c>read by Alice, Date 2026</c>.
 /// </summary>
-public sealed record LinkQuery(LinkVerb Verb, string Node);
+public sealed record LinkQuery(LinkVerb Verb, string Node)
+{
+    public IReadOnlyList<QualifierFilter> Qualifiers { get; init; } = [];
+
+    // By value, qualifiers included.
+    public bool Equals(LinkQuery? other) =>
+        other is not null && (Verb, Node) == (other.Verb, other.Node) && Qualifiers.SequenceEqual(other.Qualifiers);
+
+    public override int GetHashCode() => HashCode.Combine(Verb, Node, Qualifiers.Count);
+}

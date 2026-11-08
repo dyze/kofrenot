@@ -66,6 +66,9 @@ public sealed class InputPresenter
 
     public string Preview { get; private set; } = Hint;
 
+    /// <summary>The text is a query a view can show (<see cref="Views.QueryDraft.Read"/>): a link to a node named once, or to any.</summary>
+    public bool CanSaveAsView { get; private set; }
+
     public IReadOnlyList<ResultRow> Rows { get; private set; } = [];
 
     /// <summary>The first row of each column (<see cref="HomeColumns"/>): only the empty box's rows have more than one.</summary>
@@ -87,9 +90,10 @@ public sealed class InputPresenter
 
         _graph = graph;
         _text = text;
-        var query = QueryParser.Parse(text, graph.Types);
+        var query = QueryParser.Parse(text, graph);
         _queryStarts = query is { IsEmpty: true };
         _found = query is { IsEmpty: false } ? NodeQuerySearch.Find(graph, query, Recent, Clock.GetUtcNow(), Clock.LocalTimeZone) : null;
+        CanSaveAsView = query is { Link: not null } && Views.QueryDraft.Read(text, graph).Definition is not null;
         _linkHits = query is null ? LinkSearch.Find(graph, text) : null;
         Request = query is null && _linkHits is null ? InputParser.Parse(text, graph) : null;
         if (Request is LinkRequest link)

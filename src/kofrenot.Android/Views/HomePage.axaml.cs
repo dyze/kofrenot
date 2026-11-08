@@ -121,14 +121,14 @@ public sealed partial class HomePage : UserControl, IPage
         }
 
         // A query (person:, contained by Kitchen, changed: this week), as the input box on Windows.
-        if (QueryParser.Parse(text, graph.Types) is { IsEmpty: true })
+        if (QueryParser.Parse(text, graph) is { IsEmpty: true })
         {
             List.ItemsSource = QueryCompletion.Starts(graph).Select(start => new QueryStartRow(start.Insert.Trim(), start.Detail, start.Insert)).ToList();
             ShowMessage(QueryCompletion.Hint);
             return;
         }
 
-        if (QueryParser.Parse(text, graph.Types) is { } query)
+        if (QueryParser.Parse(text, graph) is { } query)
         {
             var found = NodeQuerySearch.Find(graph, query, _shell.Services.Recent.Of(vault.Id), DateTimeOffset.UtcNow, TimeZoneInfo.Local);
             List.ItemsSource = found.Hits.Select(hit => NodeRow.Of(graph, hit.Node, detail: hit.Detail)).ToList();
@@ -190,6 +190,13 @@ public sealed partial class HomePage : UserControl, IPage
             case GraphDefinition:
                 ShowMessage("A graph is shown in kofrenot on Windows.");
                 return [];
+            case QueryDefinition definition:
+                var query = new QueryView(graph, definition);
+                var queryRows = text.Length > 0 ? query.Find(text) : query.Rows;
+                ShowMessage(query.IsBroken ? "The node this query names is not there: removed, or not synced yet."
+                    : queryRows.Count == 0 ? (text.Length > 0 ? "No node of that name." : $"No node found by “{QueryDraft.TextOf(definition, graph)}”.")
+                    : null);
+                return [.. queryRows.Select(row => NodeRow.Of(graph, row.Node, query.LineOf(row)))];
             default:
                 ShowMessage("This view has no definition yet: it is set in kofrenot on Windows.");
                 return [];
@@ -223,7 +230,7 @@ public sealed partial class HomePage : UserControl, IPage
     // The search tab's text read as the input box reads it: what it adds, offered under the box.
     private void ShowAdd(KnowledgeGraph graph, string text)
     {
-        _adding = _tab.IsSearch && !_shell.Services.Session.IsReadOnly && QueryParser.Parse(text, graph.Types) is null
+        _adding = _tab.IsSearch && !_shell.Services.Session.IsReadOnly && QueryParser.Parse(text, graph) is null
             && InputParser.Parse(text, graph) is { } request
             ? new CreationForm(graph, request)
             : null;

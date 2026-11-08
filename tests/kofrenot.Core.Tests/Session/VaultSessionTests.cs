@@ -406,6 +406,25 @@ public sealed partial class VaultSessionTests : IDisposable
     }
 
     [Fact]
+    public void AQuery_IsSavedAsAView_NamedOnTheCreationScreen()
+    {
+        Assert.Null(Session.CreateQueryView(Ask, "?contained by Kitchen"));
+        _device.CreateFolderVault();
+        Session.Create(Ask, InputParser.Parse("Kitchen contains Knives")!);
+        var graph = _device.Vault.Graph;
+        Ask.Creation = form =>
+        {
+            form.Name = "In the kitchen";
+            return true;
+        };
+
+        var view = Session.CreateQueryView(Ask, " ?contained by Kitchen ")!.NewNodes.Single();
+
+        var definition = Assert.IsType<QueryDefinition>(graph.ViewVersionsOf(view.Id).Single().Definition);
+        Assert.Equal(("In the kitchen", graph.NodesNamed("Kitchen").Single().Id), (view.Name, definition.Node));
+    }
+
+    [Fact]
     public void ACreationCancelled_AddsNothing()
     {
         _device.CreateFolderVault();

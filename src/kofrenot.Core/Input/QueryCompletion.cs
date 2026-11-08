@@ -56,9 +56,14 @@ public static class QueryCompletion
             }
         }
 
-        if (QueryParser.LinkOf(rest, graph.Types) is { } link)
+        if (QueryParser.VerbOf(rest, graph.Types) is { } verb)
         {
-            var node = link.Node.Length > 0 && char.IsWhiteSpace(rest[^1]) ? $"{link.Node} " : link.Node;
+            if (verb.After.Contains(','))
+            {
+                return QualifierProposals(verb.After, graph.LinkTypes.FieldsOf(verb.Verb.Type.Id));
+            }
+
+            var node = verb.After.Length > 0 && char.IsWhiteSpace(rest[^1]) ? $"{verb.After} " : verb.After;
             return node.Length == 0 ? [] : AsQuery(InputCompletion.NodeProposals(graph, node));
         }
 
@@ -88,6 +93,14 @@ public static class QueryCompletion
                 .OrderBy(word => word.Length)
                 .ThenBy(word => word, StringComparer.OrdinalIgnoreCase)
                 .Select(word => new Proposal(word[typed.Length..], word, IsLinkType: false, IsQueryText: true));
+
+    // After a ",": the qualifiers of the link type whose name starts with the words typed, the rest of the name added as text.
+    private static IEnumerable<Proposal> QualifierProposals(string afterVerb, IReadOnlyList<Fields.FieldDefinition> fields)
+    {
+        var typed = string.Join(' ', InputParser.Words(afterVerb[(afterVerb.LastIndexOf(',') + 1)..]));
+        return QualifierText.Proposed(afterVerb, fields, nodeTyped: true)
+            .Select(field => new Proposal($"{field.Name[typed.Length..]} ", field.Name, IsLinkType: false, IsQueryText: true));
+    }
 
     private static IEnumerable<Proposal> AsQuery(IEnumerable<Proposal> proposals) => proposals.Select(proposal => proposal with { IsQueryText = true });
 }

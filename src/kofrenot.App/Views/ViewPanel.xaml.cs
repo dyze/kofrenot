@@ -83,6 +83,7 @@ public partial class ViewPanel : UserControl
         _definition = null;
         _listType = null;
         _list = null;
+        _query = null;
         _cardOrder = null;
         switch (new ViewPlanner(graph).Load(view).Definition)
         {
@@ -121,6 +122,9 @@ public partial class ViewPanel : UserControl
                 break;
             case GraphDefinition:
                 ShowMessage("The node this graph starts from is not there: removed, or not synced yet.");
+                break;
+            case QueryDefinition definition:
+                ShowQuery(graph, definition);
                 break;
             default:
                 ShowMessage("This view has no definition yet: ⚙ on its tab says what it shows.");
@@ -195,12 +199,19 @@ public partial class ViewPanel : UserControl
     /// <summary>A row's content: the node's picture and name, with Details its columns too (<see cref="WithDetails"/>).</summary>
     private FrameworkElement HeaderOf(Node node, bool isCut)
     {
-        var name = new StackPanel { Orientation = Orientation.Horizontal };
-        name.Children.Add(new NodeVisualView { Width = 24, Height = 24, Margin = new Thickness(0, 1, 10, 1), Visual = NodeVisual.Of(_graph!, node) });
-        name.Children.Add(new TextBlock { Text = node.Name, VerticalAlignment = VerticalAlignment.Center, TextTrimming = TextTrimming.CharacterEllipsis });
+        var name = NamePanelOf(node);
         FrameworkElement header = ShowsDetails ? WithDetails(node, name) : name;
         header.Opacity = isCut ? CutOpacity : 1;
         return header;
+    }
+
+    /// <summary>The node's picture and name.</summary>
+    private StackPanel NamePanelOf(Node node)
+    {
+        var name = new StackPanel { Orientation = Orientation.Horizontal };
+        name.Children.Add(new NodeVisualView { Width = 24, Height = 24, Margin = new Thickness(0, 1, 10, 1), Visual = NodeVisual.Of(_graph!, node) });
+        name.Children.Add(new TextBlock { Text = node.Name, VerticalAlignment = VerticalAlignment.Center, TextTrimming = TextTrimming.CharacterEllipsis });
+        return name;
     }
 
     /// <summary>A row of a list: the node pictured, as in a tree (no focus frame either).</summary>

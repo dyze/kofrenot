@@ -52,9 +52,9 @@ public sealed record NodeVisual(NodeIcon Icon, Guid? Thumbnail = null, NodeColor
         return new NodeVisual(IconOf(DatasetType.Of(file).Category), DatasetType.HasThumbnail(file) ? versions[^1].Id : ImageFieldOf(graph, node), color);
     }
 
-    // A view whose latest definition lists the nodes of a type.
+    // A view whose latest definition lists nodes: every one of a type, or those a query finds.
     private static bool IsFlatView(KnowledgeGraph graph, Node node) =>
-        node.Type == TypeCatalog.View.Id && graph.ViewVersionsOf(node.Id) is [.., { Definition: FlatDefinition }];
+        node.Type == TypeCatalog.View.Id && graph.ViewVersionsOf(node.Id) is [.., { Definition: FlatDefinition or QueryDefinition }];
 
     // The fields are ordered only for a node with an image: most have none, and every row asks.
     private static Guid? ImageFieldOf(KnowledgeGraph graph, Node node) =>

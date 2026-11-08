@@ -73,7 +73,7 @@ public sealed class QualifierShownTests
     {
         var form = CreationForm.NewNode(_graph, TypeCatalog.View);
 
-        Assert.Equal([Date], form.OrderChoicesOf(ViewDraft.Default with { LinkType = _graph.Types.FindLinkType("married-to")! }));
-        Assert.Empty(form.OrderChoicesOf(ViewDraft.Default));
+        Assert.Equal([Date], (ViewDraft.Default with { LinkType = _graph.Types.FindLinkType("married-to")! }).OrderChoices(form.Graph));
+        Assert.Empty(ViewDraft.Default.OrderChoices(form.Graph));
     }
 }

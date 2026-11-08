@@ -181,6 +181,10 @@ public sealed partial class VaultSession : IDisposable
     public AddPlan? CreateNode(ISessionQuestions ask, NodeType? type = null, ParentLink? under = null, string? file = null) =>
         Current is { } vault ? Create(ask, vault, CreationForm.NewNode(vault.Graph, type, under, file is null ? null : Path.GetFileName(file)), file) : null;
 
+    /// <summary>As <see cref="CreateNode"/>, for a new view showing what <paramref name="query"/> finds (<see cref="CreationForm.QueryView"/>).</summary>
+    public AddPlan? CreateQueryView(ISessionQuestions ask, string query) =>
+        Current is { } vault ? Create(ask, vault, CreationForm.QueryView(vault.Graph, query)) : null;
+
     private AddPlan? Create(ISessionQuestions ask, Vault vault, CreationForm form, string? file = null)
     {
         if (!CanWrite(ask))

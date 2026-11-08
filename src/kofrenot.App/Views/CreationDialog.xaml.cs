@@ -40,7 +40,7 @@ public partial class CreationDialog : Window
         NameBox.Visibility = form.IsNameEditable ? Visibility.Visible : Visibility.Collapsed;
         TypeBox.Visibility = form.IsTypeFixed ? Visibility.Collapsed : Visibility.Visible;
         NewText.Text = form.IsTypeFixed ? $"New node ({form.LeftType.Name})" : "New node";
-        ViewEditor.Setup(form.Types, form.FindRoots, form.OrderChoicesOf);
+        ViewEditor.Setup(form.Graph);
         ViewEditor.Changed += ViewEditor_Changed;
         ContentBox.Edited += ContentBox_Edited;
         Loaded += (_, _) =>

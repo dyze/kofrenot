@@ -193,7 +193,7 @@ public partial class MainWindow : Window
 
         var open = vault is not null;
         var view = vault is null ? null : SelectedView(vault);
-        foreach (var element in new UIElement[] { InputArea, PreviewText, ResultsArea })
+        foreach (var element in new UIElement[] { InputArea, PreviewArea, ResultsArea })
         {
             element.Visibility = open && !DetailsShown && view is null ? Visibility.Visible : Visibility.Collapsed;
         }
@@ -265,6 +265,7 @@ public partial class MainWindow : Window
     private void ShowPresented()
     {
         PreviewText.Text = _input.Preview;
+        SaveQueryViewButton.Visibility = _input.CanSaveAsView ? Visibility.Visible : Visibility.Collapsed;
         ColumnFlowPanel.SetStarts(ResultsList, _input.ColumnStarts);
         ResultsList.ItemsSource = _input.Rows;
         InputBox.ShowChips();

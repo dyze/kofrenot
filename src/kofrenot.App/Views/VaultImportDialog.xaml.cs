@@ -74,7 +74,7 @@ public partial class VaultImportDialog : Window
     private void RunQuery()
     {
         var text = QueryBox.Input.Text;
-        var query = _source is { } source && QueryParser.IsQuery(text) ? QueryParser.Parse(text, source.Graph.Types) : null;
+        var query = _source is { } source && QueryParser.IsQuery(text) ? QueryParser.Parse(text, source.Graph) : null;
         var result = query is { IsEmpty: false } ? NodeQuerySearch.Find(_source!.Graph, query, [], DateTimeOffset.UtcNow, TimeZoneInfo.Local, int.MaxValue) : null;
         _hits = result?.Problem is null ? result?.Hits.Select(hit => hit.Node).ToList() ?? [] : [];
         CountText.Text = _source is null ? "Choose a vault first."

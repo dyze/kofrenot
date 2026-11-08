@@ -200,19 +200,22 @@ internal sealed partial record ChangeData(
     /// <summary>
     /// <c>"view": { "node": "…", "display": "tree", "query": { "root": "…", "linkType": "contains" }, "replaces": ["…"] }</c>,
     /// a tree's <c>"order": { "field": "…" }</c> when its children are sorted by a qualifier (since format 11),
-    /// or <c>"display": "flat", "query": { "nodeType": "note" }</c>, or <c>"display": "graph"</c> (<see cref="GraphQueryData"/>).
+    /// or <c>"display": "flat", "query": { "nodeType": "note" }</c>, or <c>"display": "graph"</c> (<see cref="GraphQueryData"/>),
+    /// or <c>"display": "query"</c> (<see cref="QueryViewData"/>, since format 12).
     /// </summary>
     internal sealed record ViewData(Guid Node, string? Display, QueryData? Query, List<Guid>? Replaces, OrderData? Order = null)
     {
         private const string Tree = "tree";
         private const string Flat = "flat";
         private const string Graph = "graph";
+        private const string QueryDisplay = "query";
 
         public static ViewData From(ViewEdited view) => view.Definition switch
         {
             TreeDefinition tree => new(view.Node, Tree, new QueryData(tree.Root, tree.LinkType), [.. view.Replaces], tree.Order is { } order ? new OrderData(order) : null),
             FlatDefinition flat => new(view.Node, Flat, new QueryData(NodeType: flat.NodeType), [.. view.Replaces]),
             GraphDefinition graph => new(view.Node, Graph, GraphQueryData.From(graph), [.. view.Replaces]),
+            QueryDefinition query => new(view.Node, QueryDisplay, QueryViewData.From(query), [.. view.Replaces]),
             _ => throw new ArgumentOutOfRangeException(nameof(view), view.Definition.GetType().Name, "Unknown view definition"),
         };
 
@@ -223,6 +226,7 @@ internal sealed partial record ChangeData(
                 => new TreeDefinition(root, linkType, Order?.Field),
             (Flat, { NodeType: { } nodeType }) when nodeType.Length > 0 => new FlatDefinition(nodeType),
             (Graph, { } query) => GraphQueryData.ToDefinition(query),
+            (QueryDisplay, { } query) => QueryViewData.ToDefinition(query),
             _ => null,
         };
     }
@@ -260,6 +264,47 @@ internal sealed partial record ChangeData(
             where T : struct, Enum =>
             Enum.TryParse(text, ignoreCase: true, out value) && Enum.IsDefined(value) && !char.IsDigit(text![0]);
     }
+
+    /// <summary>
+    /// A query view's query: <c>{ "nodeType": "book", "linkType": "read", "reverse": true, "node": "…",
+    /// "qualifiers": [{ "field": "date", "value": "2026" }], "columns": [{ "type": "wrote", "reverse": true }] }</c>;
+    /// no node type for any, no node for any.
+    /// </summary>
+    internal static class QueryViewData
+    {
+        public static QueryData From(QueryDefinition query) => new(
+            LinkType: query.LinkType,
+            NodeType: query.NodeType,
+            Reverse: query.Reverse,
+            Node: query.Node,
+            Qualifiers: [.. query.Qualifiers.Select(qualifier => new QualifierData(qualifier.Field, qualifier.Value))],
+            Columns: [.. query.Columns.Select(column => new ColumnData(column.LinkType, column.Reverse))]);
+
+        /// <summary>The definition, or null when incomplete: no link type, or a qualifier or a column incomplete.</summary>
+        public static QueryDefinition? ToDefinition(QueryData query)
+        {
+            if (query is not { LinkType.Length: > 0 } || query.NodeType is { Length: 0 } || query.Node == Guid.Empty
+                || (query.Qualifiers ?? []).Any(qualifier => qualifier is not { Field.Length: > 0, Value: not null })
+                || (query.Columns ?? []).Any(column => column is not { Type.Length: > 0 }))
+            {
+                return null;
+            }
+
+            return new QueryDefinition(
+                query.NodeType,
+                query.LinkType,
+                query.Reverse ?? false,
+                query.Node,
+                [.. (query.Qualifiers ?? []).Select(qualifier => new QualifierFilter(qualifier!.Field!, qualifier.Value!))],
+                [.. (query.Columns ?? []).Select(column => new ViewColumn(column!.Type!, column.Reverse ?? false))]);
+        }
+    }
+
+    /// <summary><c>{ "field": "date", "value": "2026" }</c>: a qualifier a query view's links must match.</summary>
+    internal sealed record QualifierData(string? Field, string? Value);
+
+    /// <summary><c>{ "type": "wrote", "reverse": true }</c>: a query view's column.</summary>
+    internal sealed record ColumnData(string? Type, bool? Reverse);
 
     /// <summary><c>"order": { "field": "…" }</c>: the qualifier a tree's children are sorted by.</summary>
     internal sealed record OrderData(string? Field);
@@ -445,7 +490,11 @@ internal sealed partial record ChangeData(
         string? Layout = null,
         List<GraphLinkData>? Links = null,
         List<string>? NodeTypes = null,
-        List<string>? Fields = null);
+        List<string>? Fields = null,
+        bool? Reverse = null,
+        Guid? Node = null,
+        List<QualifierData?>? Qualifiers = null,
+        List<ColumnData?>? Columns = null);
 
     /// <summary><c>"file": { "name": "survey.csv", "size": 52430, "sha256": "9f86…08" }</c></summary>
     internal sealed record FileData(string? Name, long Size, string? Sha256)

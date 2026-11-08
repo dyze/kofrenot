@@ -294,11 +294,20 @@
                        PreviewKeyDown="InputBox_PreviewKeyDown" />
       </Grid>
 
-      <TextBlock x:Name="PreviewText"
-                 Grid.Row="2"
-                 Margin="2,8,0,0"
-                 Opacity="0.8"
-                 TextWrapping="Wrap" />
+      <!-- What Enter does; for a query a view can show, Save as a view… at its right. -->
+      <DockPanel x:Name="PreviewArea" Grid.Row="2" Margin="2,8,0,0">
+        <Button x:Name="SaveQueryViewButton"
+                DockPanel.Dock="Right"
+                Margin="12,0,0,0"
+                Padding="10,2"
+                VerticalAlignment="Top"
+                Content="Save as a view…"
+                Focusable="False"
+                ToolTip="A view showing what this query finds, in a tab"
+                Visibility="Collapsed"
+                Click="SaveQueryView_Click" />
+        <TextBlock x:Name="PreviewText" Opacity="0.8" TextWrapping="Wrap" />
+      </DockPanel>
 
       <!-- The nodes found, and the links of the exact matches; while the box is empty, the pinned
            nodes under a header. Each node has its picture (NodeVisualView). A row is highlighted

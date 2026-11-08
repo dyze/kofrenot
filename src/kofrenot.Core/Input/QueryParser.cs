@@ -1,3 +1,4 @@
+using Kofrenot.Core.Fields;
 using Kofrenot.Core.Graph;
 
 namespace Kofrenot.Core.Input;
@@ -18,8 +19,12 @@ public static class QueryParser
     /// <summary>The text after <c>?</c>, as typed.</summary>
     internal static string AfterMark(string text) => text.TrimStart()[1..];
 
+    /// <summary>The query, or null when the text is none; a link's qualifiers read from its type's (<see cref="CustomLinkTypes.FieldsOf"/>).</summary>
+    public static NodeQuery? Parse(string text, KnowledgeGraph graph) => Parse(text, graph.Types, graph.LinkTypes.FieldsOf);
+
     /// <summary>The query, or null when the text is none.</summary>
-    public static NodeQuery? Parse(string text, TypeCatalog types)
+    /// <param name="qualifiersOf">A link type's qualifiers, by its id; none read when null.</param>
+    public static NodeQuery? Parse(string text, TypeCatalog types, Func<string, IReadOnlyList<FieldDefinition>>? qualifiersOf = null)
     {
         if (!IsQuery(text))
         {
@@ -38,7 +43,7 @@ public static class QueryParser
             return new NodeQuery(type, string.Empty, null, time);
         }
 
-        return LinkOf(rest, types) is { } link
+        return LinkOf(rest, types, qualifiersOf) is { } link
             ? new NodeQuery(type, string.Empty, link, null)
             : new NodeQuery(type, rest, null, null);
     }
@@ -55,16 +60,37 @@ public static class QueryParser
             ? (type, parts.After)
             : null;
 
-    // A link phrase first, as whole words: the longest one; the node is the words after it.
-    internal static LinkQuery? LinkOf(string text, TypeCatalog types)
+    // A link phrase, the node after it, then its qualifiers (QualifierText): ", Date 2026", the node left out or not.
+    internal static LinkQuery? LinkOf(string text, TypeCatalog types, Func<string, IReadOnlyList<FieldDefinition>>? qualifiersOf = null)
     {
-        var words = InputParser.Words(text);
+        if (VerbOf(text, types) is not { } found)
+        {
+            return null;
+        }
+
+        var fields = qualifiersOf?.Invoke(found.Verb.Type.Id) ?? [];
+        var (node, qualifiers) = QualifierText.Split(found.After, fields, nodeTyped: true);
+        return new LinkQuery(found.Verb, string.Join(' ', InputParser.Words(node)))
+        {
+            Qualifiers = [.. qualifiers.Select(qualifier => new QualifierFilter(fields.First(field => field.Name == qualifier.Name).Id, qualifier.Value))],
+        };
+    }
+
+    /// <summary>
+    /// A link phrase first, as whole words before any <c>,</c>: the longest one; and what follows it, the node and its
+    /// qualifiers, as typed after the first <c>,</c>.
+    /// </summary>
+    internal static (LinkVerb Verb, string After)? VerbOf(string text, TypeCatalog types)
+    {
+        var comma = text.IndexOf(',');
+        var head = comma < 0 ? text : text[..comma];
+        var words = InputParser.Words(head);
         var keys = words.Select(NameKey.Of).ToArray();
         return types.Verbs
             .SelectMany(verb => verb.Phrases.Select(phrase => (Verb: verb, Words: NameKey.Of(phrase).Split(' '))))
             .Where(phrase => phrase.Words.Length <= keys.Length && phrase.Words.SequenceEqual(keys[..phrase.Words.Length]))
             .OrderByDescending(phrase => phrase.Words.Length)
-            .Select(phrase => new LinkQuery(phrase.Verb, string.Join(' ', words[phrase.Words.Length..])))
+            .Select(phrase => ((LinkVerb Verb, string After)?)(phrase.Verb, string.Join(' ', words[phrase.Words.Length..]) + (comma < 0 ? string.Empty : text[comma..])))
             .FirstOrDefault();
     }
 }

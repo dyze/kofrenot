@@ -12,6 +12,39 @@ public sealed record TreeDefinition(Guid Root, string LinkType, string? Order = 
 /// <summary>A list of every node of <see cref="NodeType"/>.</summary>
 public sealed record FlatDefinition(string NodeType) : ViewDefinition;
 
+/// <summary>
+/// The nodes a query finds (<c>?book: read by Alice, Date 2026</c>): those of <see cref="NodeType"/> (any type when null)
+/// that read <see cref="LinkType"/> (<see cref="Reverse"/>: from its other end) to <see cref="Node"/> (any node when null),
+/// through a link whose qualifiers match <see cref="Qualifiers"/>. Each row shows the nodes its links of each of
+/// <see cref="Columns"/> lead to: <c>written by</c> → <i>Frank Herbert</i>.
+/// </summary>
+public sealed record QueryDefinition(
+    string? NodeType,
+    string LinkType,
+    bool Reverse,
+    Guid? Node,
+    IReadOnlyList<QualifierFilter> Qualifiers,
+    IReadOnlyList<ViewColumn> Columns) : ViewDefinition
+{
+    // By value, lists included: an edit that changes nothing saves nothing (ViewPlanner.Save).
+    public bool Equals(QueryDefinition? other) =>
+        other is not null
+        && (NodeType, LinkType, Reverse, Node) == (other.NodeType, other.LinkType, other.Reverse, other.Node)
+        && Qualifiers.SequenceEqual(other.Qualifiers)
+        && Columns.SequenceEqual(other.Columns);
+
+    public override int GetHashCode() => HashCode.Combine(NodeType, LinkType, Reverse, Node, Qualifiers.Count, Columns.Count);
+}
+
+/// <summary>
+/// A qualifier a link must have (<see cref="Field"/>, a field id of its link type), with a value matching <see cref="Value"/>
+/// as <see cref="Input.ValueQuery"/> says (<c>2026</c>, <c>2026-01..2026-06</c>); any value when empty.
+/// </summary>
+public sealed record QualifierFilter(string Field, string Value);
+
+/// <summary>A column of a query view: the nodes a row's links of <see cref="LinkType"/> lead to, read from its other end when <see cref="Reverse"/>.</summary>
+public sealed record ViewColumn(string LinkType, bool Reverse);
+
 /// <summary>How a graph view places the nodes a link type joins.</summary>
 public enum GraphRole
 {

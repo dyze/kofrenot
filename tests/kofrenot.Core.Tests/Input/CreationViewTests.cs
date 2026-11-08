@@ -24,7 +24,7 @@ public sealed class CreationViewTests
         var projects = Add("Projects");
         var form = ViewForm(new NodeRequest("Files"));
 
-        var root = Assert.Single(form.FindRoots("proj")).Node;
+        var root = Assert.Single(ViewDraft.FindRoots(form.Graph, "proj")).Node;
         form.SetView(Side.Left, form.ViewOf(Side.Left) with { Root = root });
 
         Assert.True(form.CanAdd);

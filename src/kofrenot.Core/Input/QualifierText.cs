@@ -21,15 +21,20 @@ public sealed record QualifierInput(string Name, string Value)
 public static class QualifierText
 {
     /// <summary>The request with its qualifiers out of its second node's name; unchanged when none is typed.</summary>
-    public static LinkRequest Split(LinkRequest request, IReadOnlyList<FieldDefinition> fields)
+    public static LinkRequest Split(LinkRequest request, IReadOnlyList<FieldDefinition> fields) =>
+        Split(request.Right, fields) is ({ } right, { Count: > 0 } qualifiers) ? request with { Right = right, Qualifiers = qualifiers } : request;
+
+    /// <summary>What follows a link type, split into the second node (trimmed when qualifiers follow it) and its qualifiers.</summary>
+    /// <param name="nodeTyped">The second node may be left out: a qualifier may come first.</param>
+    internal static (string Node, List<QualifierInput> Qualifiers) Split(string afterLinkType, IReadOnlyList<FieldDefinition> fields, bool nodeTyped = false)
     {
-        if (fields.Count == 0 || FirstQualifier(request.Right, fields) is not { } start)
+        var qualifiers = new List<QualifierInput>();
+        if (fields.Count == 0 || FirstQualifier(afterLinkType, fields, nodeTyped: nodeTyped) is not { } start)
         {
-            return request;
+            return (afterLinkType, qualifiers);
         }
 
-        var qualifiers = new List<QualifierInput>();
-        foreach (var segment in request.Right[(start + 1)..].Split(','))
+        foreach (var segment in afterLinkType[(start + 1)..].Split(','))
         {
             if (NameAt(segment, fields) is { } field)
             {
@@ -41,7 +46,7 @@ public static class QualifierText
             }
         }
 
-        return request with { Right = request.Right[..start].Trim(), Qualifiers = qualifiers };
+        return (afterLinkType[..start].Trim(), qualifiers);
     }
 
     /// <summary>The qualifiers whose name starts with the last words typed after a <c>,</c>, longer than them, the shortest first.</summary>

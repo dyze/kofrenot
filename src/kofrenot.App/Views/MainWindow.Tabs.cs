@@ -204,6 +204,17 @@ public partial class MainWindow
         }
     }
 
+    /// <summary>Save as a view…: the creation screen for a view showing what the query typed finds; it then opens in a tab.</summary>
+    private void SaveQueryView_Click(object sender, RoutedEventArgs e)
+    {
+        _log.Info("Action", "Query saved as a view");
+        if (RecordRecent(_session.CreateQueryView(Ask, InputBox.Input.Text)) is { } added && added.NewNodes.FirstOrDefault() is { } view)
+        {
+            InputBox.Clear();
+            OpenTab(view);
+        }
+    }
+
     private void ViewContent_OpenNode(Node node) => OpenDetails(node, from: null);
 
     private void ViewContent_OpenLink(Link link)
