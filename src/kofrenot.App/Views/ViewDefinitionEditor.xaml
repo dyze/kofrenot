@@ -129,8 +129,8 @@
     </StackPanel>
 
     <TextBlock x:Name="ColumnsLabel" Grid.Row="10" Margin="0,10,0,0" VerticalAlignment="Top" Opacity="0.7" Text="Columns" />
-    <ScrollViewer x:Name="ColumnsPanel" Grid.Row="10" Grid.Column="1" MaxHeight="160" Margin="0,10,0,0" VerticalScrollBarVisibility="Auto" ToolTip="Each row shows the nodes its links of each checked phrase lead to">
-      <WrapPanel x:Name="ColumnBoxes" />
+    <ScrollViewer x:Name="ColumnsPanel" Grid.Row="10" Grid.Column="1" MaxHeight="220" Margin="0,10,0,0" VerticalScrollBarVisibility="Auto" ToolTip="Each row shows, in the order checked: the nodes its links lead to, a field of its node, or a qualifier of the link found">
+      <StackPanel x:Name="ColumnGroups" />
     </ScrollViewer>
   </Grid>
 </UserControl>

@@ -473,7 +473,7 @@ UTF-8 JSON before encryption:
 { "format": 12, "oldestReader": 10, "oldestWriter": 11, "at": "…", "op": "editView",
   "view": { "node": "<node id>", "display": "query",
             "query": { "linkType": "read", "nodeType": "<node type id>", "reverse": true, "node": "<node id>",
-                       "qualifiers": [{ "field": "<qualifier id>", "value": "2026" }], "columns": [{ "type": "wrote", "reverse": true }] }, "replaces": ["…"] } }
+                       "qualifiers": [{ "field": "<qualifier id>", "value": "2026" }], "columns": [{ "type": "wrote", "reverse": true }, { "owner": "<node type id>", "field": "<field id>" }, { "qualifier": "<qualifier id>" }] }, "replaces": ["…"] } }
 { "format": 4, "at": "…", "op": "remove", "removes": ["<node, link, alias, link or node type definition, pin or placement id>", "…"] }
 ```
 
@@ -694,7 +694,7 @@ A view is a node of type `view`. Its definition is in `editView` versions, as a 
 | `TreeDefinition(root, linkType, order)` | `tree` | `TreeView`: `Root`, then `ChildrenOf(item)`, read when asked; sorted by a qualifier of the links when `order` names one (`QualifierOrder`, since format 11) |
 | `FlatDefinition(nodeType)` | `flat` | `FlatView.Nodes` |
 | `GraphDefinition(root, depth, layout, links, nodeTypes, fields)` | `graph` | `GraphView.Read`: the whole graph at once, laid out by `GraphLayout` ([Graphs](#graphs)) |
-| `QueryDefinition(nodeType, linkType, reverse, node, qualifiers, columns)` | `query` | `QueryView.Rows`: the nodes reading the link type to `node` (to any when none) through a link whose qualifiers match (`ValueQuery`), of `nodeType` (any when none), by name; each row's cells the names of the nodes its links of each column lead to (since format 12) |
+| `QueryDefinition(nodeType, linkType, reverse, node, qualifiers, columns)` | `query` | `QueryView.Rows`: the nodes reading the link type to `node` (to any when none) through a link whose qualifiers match (`ValueQuery`), of `nodeType` (any when none), by name; each row's cells by column (`LinkColumn`: the names of the nodes its links lead to; `FieldColumn`: a field of the node; `QualifierColumn`: a qualifier of the links found, each value once), `QueryDraft.ColumnChoices` offering them (since format 12) |
 
 ```
 Projects ─contains─► Alpha ─contains─► Shared      TreeItem(node, path, canExpand)

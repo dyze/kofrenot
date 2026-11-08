@@ -110,7 +110,7 @@ public static class NodeQuerySearch
     }
 
     // Each qualifier asked for, its type's or the link's own, with a matching value.
-    private static bool HasQualifiers(KnowledgeGraph graph, Link link, IReadOnlyList<QualifierFilter> filters)
+    internal static bool HasQualifiers(KnowledgeGraph graph, Link link, IReadOnlyList<QualifierFilter> filters)
     {
         if (filters.Count == 0)
         {

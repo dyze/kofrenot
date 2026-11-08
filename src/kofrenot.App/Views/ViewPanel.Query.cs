@@ -43,6 +43,7 @@ public partial class ViewPanel
     private void FillQueryHeader(IReadOnlyList<string> headers)
     {
         QueryHeader.Children.Clear();
+        QueryHeader.ColumnDefinitions.Clear();
         AddColumns(QueryHeader, headers.Count);
         QueryHeader.Children.Add(new TextBlock { Text = "Name", Style = (Style)FindResource("SecondaryText") });
         for (var index = 0; index < headers.Count; index++)

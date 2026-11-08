@@ -15,8 +15,8 @@ public sealed record FlatDefinition(string NodeType) : ViewDefinition;
 /// <summary>
 /// The nodes a query finds (<c>?book: read by Alice, Date 2026</c>): those of <see cref="NodeType"/> (any type when null)
 /// that read <see cref="LinkType"/> (<see cref="Reverse"/>: from its other end) to <see cref="Node"/> (any node when null),
-/// through a link whose qualifiers match <see cref="Qualifiers"/>. Each row shows the nodes its links of each of
-/// <see cref="Columns"/> lead to: <c>written by</c> → <i>Frank Herbert</i>.
+/// through a link whose qualifiers match <see cref="Qualifiers"/>. Each row shows its <see cref="Columns"/>: the nodes its
+/// links lead to (<c>written by</c> → <i>Frank Herbert</i>), a field of its node, or a qualifier of the link found.
 /// </summary>
 public sealed record QueryDefinition(
     string? NodeType,
@@ -42,8 +42,17 @@ public sealed record QueryDefinition(
 /// </summary>
 public sealed record QualifierFilter(string Field, string Value);
 
-/// <summary>A column of a query view: the nodes a row's links of <see cref="LinkType"/> lead to, read from its other end when <see cref="Reverse"/>.</summary>
-public sealed record ViewColumn(string LinkType, bool Reverse);
+/// <summary>A column of a query view: what each row shows beside its node's name.</summary>
+public abstract record ViewColumn;
+
+/// <summary>The nodes a row's links of <see cref="LinkType"/> lead to, read from its other end when <see cref="Reverse"/>.</summary>
+public sealed record LinkColumn(string LinkType, bool Reverse) : ViewColumn;
+
+/// <summary>The value of a field of the node found: <see cref="Field"/>, a field id of its node type <see cref="Owner"/>.</summary>
+public sealed record FieldColumn(string Owner, string Field) : ViewColumn;
+
+/// <summary>The values of a qualifier (<see cref="Field"/>, a field id of the query's link type) on the links the query found the node through.</summary>
+public sealed record QualifierColumn(string Field) : ViewColumn;
 
 /// <summary>How a graph view places the nodes a link type joins.</summary>
 public enum GraphRole

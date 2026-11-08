@@ -1,3 +1,5 @@
+using Kofrenot.Core.Browse;
+using Kofrenot.Core.Fields;
 using Kofrenot.Core.Graph;
 using Kofrenot.Core.Input;
 
@@ -42,13 +44,64 @@ public sealed record QueryDraft(string Text, QueryDefinition? Parsed, string? Pr
         Columns = isShown ? [.. Columns.Where(shown => shown != column), column] : [.. Columns.Where(shown => shown != column)],
     };
 
-    /// <summary>The columns a query view can show: every link phrase, each way.</summary>
-    public static IReadOnlyList<ViewColumn> ColumnChoices(KnowledgeGraph graph) =>
-        [.. graph.Types.Verbs.Select(verb => new ViewColumn(verb.Type.Id, verb.IsReverse))];
+    /// <summary>
+    /// The columns this query can show: every link phrase, each way; the fields of its node type (of the types of the nodes
+    /// it finds when it names none), named <c>Born (Person)</c> when two have one name; the qualifiers of its link; then
+    /// any column shown but no longer among them, to take it off.
+    /// </summary>
+    public IReadOnlyList<ColumnChoice> ColumnChoices(KnowledgeGraph graph)
+    {
+        var links = graph.Types.Verbs.Select(verb => new ColumnChoice(new LinkColumn(verb.Type.Id, verb.IsReverse), verb.Name));
+        var choices = new List<ColumnChoice>([.. links, .. FieldChoices(graph), .. QualifierChoices(graph)]);
+        var offered = choices.Select(choice => choice.Column).ToHashSet();
+        choices.AddRange(Columns.Where(column => !offered.Contains(column)).Select(column => new ColumnChoice(column, NameOf(column, Parsed?.LinkType, graph))));
+        return choices;
+    }
 
-    /// <summary>A column's name: its link phrase (<c>written by</c>), or the link type's id when this version does not know it.</summary>
-    public static string NameOf(ViewColumn column, KnowledgeGraph graph) =>
-        graph.Types.FindLinkType(column.LinkType) is { } type ? new LinkVerb(type, column.Reverse && type.ReversePhrases is not null).Name : column.LinkType;
+    /// <summary>The name of the qualifiers' group: <c>Qualifiers of “read by”</c>.</summary>
+    public string QualifiersHeading(KnowledgeGraph graph) =>
+        Parsed is null ? "Qualifiers" : $"Qualifiers of “{VerbName(Parsed.LinkType, Parsed.Reverse, graph)}”";
+
+    private IEnumerable<ColumnChoice> FieldChoices(KnowledgeGraph graph)
+    {
+        if (Parsed is null)
+        {
+            return [];
+        }
+
+        var typeIds = Parsed.NodeType is { } type ? [type] : new QueryView(graph, Parsed).Nodes.SelectMany(node => graph.TypeIdsOf(node.Id)).Distinct();
+        var fields = typeIds.Select(graph.Types.FindNodeType).OfType<NodeType>().OrderBy(found => found.Name, StringComparer.CurrentCultureIgnoreCase)
+            .SelectMany(found => found.Fields.Where(IsShownInAColumn).Select(field => (Type: found, Field: field)))
+            .ToList();
+        var sameName = fields.GroupBy(field => NameKey.Of(field.Field.Name)).Where(names => names.Count() > 1).Select(names => names.Key).ToHashSet();
+        return fields.Select(field => new ColumnChoice(
+            new FieldColumn(field.Type.Id, field.Field.Id),
+            sameName.Contains(NameKey.Of(field.Field.Name)) ? $"{field.Field.Name} ({field.Type.Name})" : field.Field.Name));
+    }
+
+    private IEnumerable<ColumnChoice> QualifierChoices(KnowledgeGraph graph) =>
+        Parsed is null
+            ? []
+            : graph.LinkTypes.FieldsOf(Parsed.LinkType).Where(IsShownInAColumn).Select(field => new ColumnChoice(new QualifierColumn(field.Id), field.Name));
+
+    // A value read as text: not an image, nor content.
+    private static bool IsShownInAColumn(FieldDefinition field) => field.Kind != FieldKind.Image && !field.Kind.IsContent();
+
+    /// <summary>
+    /// A column's name: its link phrase (<c>written by</c>), its field's or its qualifier's (of <paramref name="linkType"/>,
+    /// the query's); an id when this version does not know it.
+    /// </summary>
+    public static string NameOf(ViewColumn column, string? linkType, KnowledgeGraph graph) => column switch
+    {
+        LinkColumn link => VerbName(link.LinkType, link.Reverse, graph),
+        FieldColumn field => graph.Types.FindNodeType(field.Owner)?.Fields.FirstOrDefault(found => found.Id == field.Field)?.Name ?? field.Field,
+        QualifierColumn qualifier => (linkType is null ? null : graph.LinkTypes.FieldsOf(linkType).FirstOrDefault(found => found.Id == qualifier.Field)?.Name) ?? qualifier.Field,
+        _ => string.Empty,
+    };
+
+    // A link phrase read one way (written by), or the link type's id when this version does not know it.
+    private static string VerbName(string linkType, bool reverse, KnowledgeGraph graph) =>
+        graph.Types.FindLinkType(linkType) is { } type ? new LinkVerb(type, reverse && type.ReversePhrases is not null).Name : linkType;
 
     /// <summary>
     /// The definition a query reads as (<c>?</c> optional), with no column; or why it is none: no link phrase, a time,
@@ -87,7 +140,7 @@ public sealed record QueryDraft(string Text, QueryDefinition? Parsed, string? Pr
     public static string TextOf(QueryDefinition definition, KnowledgeGraph graph)
     {
         var type = definition.NodeType is { } nodeType ? $"{graph.Types.NodeTypeName(nodeType)}: " : string.Empty;
-        var verb = NameOf(new ViewColumn(definition.LinkType, definition.Reverse), graph);
+        var verb = VerbName(definition.LinkType, definition.Reverse, graph);
         var node = definition.Node is { } id && graph.FindNode(id) is { } found ? $" {found.Name}" : string.Empty;
         var fields = graph.LinkTypes.FieldsOf(definition.LinkType);
         var qualifiers = definition.Qualifiers.Select(qualifier =>
@@ -95,3 +148,6 @@ public sealed record QueryDraft(string Text, QueryDefinition? Parsed, string? Pr
         return $"{QueryParser.Mark}{type}{verb}{node}{string.Concat(qualifiers)}";
     }
 }
+
+/// <summary>A column a query view can show, with the name its box shows.</summary>
+public sealed record ColumnChoice(ViewColumn Column, string Name);

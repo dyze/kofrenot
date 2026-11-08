@@ -100,7 +100,7 @@ public sealed record ViewDraft(ViewDisplay Display, Node? Root, LinkType LinkTyp
             return "A query naming a node not here: removed, or not synced yet";
         }
 
-        var columns = query.Columns.Count == 0 ? string.Empty : $", with {string.Join(", ", query.Columns.Select(column => $"“{QueryDraft.NameOf(column, graph)}”"))}";
+        var columns = query.Columns.Count == 0 ? string.Empty : $", with {string.Join(", ", query.Columns.Select(column => $"“{QueryDraft.NameOf(column, query.LinkType, graph)}”"))}";
         return $"The nodes found by “{QueryDraft.TextOf(query, graph)}”{columns}";
     }
 

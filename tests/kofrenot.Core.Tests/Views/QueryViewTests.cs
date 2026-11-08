@@ -5,10 +5,13 @@ public sealed class QueryViewTests
 {
     private static readonly DateTimeOffset Now = new(2026, 11, 8, 9, 0, 0, TimeSpan.Zero);
     private static readonly FieldDefinition Date = new("date", "Date", FieldKind.Date);
-    private static readonly NodeType Book = new("book", "Book");
-    private static readonly ViewColumn WrittenBy = new("wrote", true);
+    private static readonly FieldDefinition Published = new("published", "Published", FieldKind.Number);
+    private static readonly FieldDefinition Cover = new("cover", "Cover", FieldKind.Image);
+    private static readonly NodeType Book = new("book", "Book", [Published, Cover]);
+    private static readonly NodeType Article = new("article", "Article", [Published]);
+    private static readonly LinkColumn WrittenBy = new("wrote", true);
 
-    private readonly KnowledgeGraph _graph = new(new TypeCatalog([TypeCatalog.Generic, Book], [TypeCatalog.Contains, TypeCatalog.RelatesTo]));
+    private readonly KnowledgeGraph _graph = new(new TypeCatalog([TypeCatalog.Generic, Book, Article], [TypeCatalog.Contains, TypeCatalog.RelatesTo]));
     private readonly Node _alice;
     private readonly Node _dune;
     private readonly Node _foundation;
@@ -21,7 +24,7 @@ public sealed class QueryViewTests
         _alice = Add("Alice");
         _dune = Add("Dune", Book);
         _foundation = Add("Foundation", Book);
-        var article = Add("An article");
+        var article = Add("An article", Article);
         _herbert = Add("Frank Herbert");
         var brian = Add("Brian Herbert");
         Link("read", _alice, _dune, "2026-03-14");
@@ -75,27 +78,27 @@ public sealed class QueryViewTests
     [Fact]
     public void TheDraft_KeepsItsColumns_AsItsTextChanges()
     {
-        var draft = QueryDraft.Default.WithText("?read by Alice", _graph).WithColumn(WrittenBy, true).WithColumn(new("contains", false), true).WithColumn(new("contains", false), false);
+        var draft = QueryDraft.Default.WithText("?read by Alice", _graph).WithColumn(WrittenBy, true).WithColumn(new LinkColumn("contains", false), true).WithColumn(new LinkColumn("contains", false), false);
 
         Assert.Equal([WrittenBy], draft.Definition!.Columns);
         Assert.Equal([WrittenBy], draft.WithText("?book: read by Alice", _graph).Definition!.Columns);
         Assert.Null(draft.WithText("?read by", _graph).WithText("?nothing", _graph).Definition);
         Assert.Equal(draft.Definition, QueryDraft.Of(draft.Definition!, _graph).Definition);
-        Assert.Contains(WrittenBy, QueryDraft.ColumnChoices(_graph));
+        Assert.Contains(WrittenBy, draft.ColumnChoices(_graph).Select(choice => choice.Column));
     }
 
     [Fact]
     public void AColumnsName_IsItsLinkPhrase()
     {
-        Assert.Equal("written by", QueryDraft.NameOf(WrittenBy, _graph));
-        Assert.Equal("relates to", QueryDraft.NameOf(new("relates-to", true), _graph));
-        Assert.Equal("lent", QueryDraft.NameOf(new("lent", false), _graph));
+        Assert.Equal("written by", QueryDraft.NameOf(WrittenBy, "read", _graph));
+        Assert.Equal("relates to", QueryDraft.NameOf(new LinkColumn("relates-to", true), "read", _graph));
+        Assert.Equal("lent", QueryDraft.NameOf(new LinkColumn("lent", false), "read", _graph));
     }
 
     [Fact]
     public void TheRows_AreTheNodesFound_ByName_WithTheirColumns()
     {
-        var view = new QueryView(_graph, Definition("?book: read by Alice", WrittenBy, new("contains", false)));
+        var view = new QueryView(_graph, Definition("?book: read by Alice", WrittenBy, new LinkColumn("contains", false)));
 
         Assert.Equal(["written by", "contains"], view.Headers);
         Assert.Equal(
@@ -179,6 +182,78 @@ public sealed class QueryViewTests
 
         Assert.Equal(NodeIcon.List, NodeVisual.Of(_graph, view).Icon);
     }
+
+    [Fact]
+    public void AFieldColumn_ShowsTheValueOfTheNodeFound()
+    {
+        SetField(_dune, Book, Published, "1965");
+
+        var view = new QueryView(_graph, Definition("?book: read by Alice", new FieldColumn("book", "published")));
+
+        Assert.Equal(["Published"], view.Headers);
+        Assert.Equal([("Dune", "1965"), ("Foundation", "")], view.Rows.Select(row => (row.Node.Name, row.Cells[0])));
+    }
+
+    [Fact]
+    public void AQualifierColumn_ShowsTheValuesOfTheLinksFound_InOrder()
+    {
+        Link("read", Add("Bob"), _dune, "2024-05-05");
+        Link("read", Add("Carol"), _dune);
+        var date = new QualifierColumn("date");
+
+        var alices = new QueryView(_graph, Definition("?book: read by Alice", date));
+        var anyones = new QueryView(_graph, Definition("?book: read by", date));
+
+        Assert.Equal(["Date"], alices.Headers);
+        Assert.Equal([("Dune", "2026-03-14"), ("Foundation", "2025-07-01")], alices.Rows.Select(row => (row.Node.Name, row.Cells[0])));
+        Assert.Equal("Date 2024-05-05, 2026-03-14", anyones.LineOf(anyones.Rows[0]));
+        Assert.Equal(["2026-03-14"], new QueryView(_graph, Definition("?book: read by, Date 2026", date)).Rows.Select(row => row.Cells[0]));
+    }
+
+    [Fact]
+    public void TheChoices_AreTheFieldsOfItsType_AndTheQualifiersOfItsLink()
+    {
+        var draft = QueryDraft.Default.WithText("?book: read by Alice", _graph);
+
+        var choices = draft.ColumnChoices(_graph);
+
+        Assert.Contains(new ColumnChoice(WrittenBy, "written by"), choices);
+        Assert.Equal([new ColumnChoice(new FieldColumn("book", "published"), "Published")], choices.Where(choice => choice.Column is FieldColumn));
+        Assert.Equal([new ColumnChoice(new QualifierColumn("date"), "Date")], choices.Where(choice => choice.Column is QualifierColumn));
+        Assert.Equal("Qualifiers of “read by”", draft.QualifiersHeading(_graph));
+    }
+
+    [Fact]
+    public void WithNoType_TheFieldsAreThoseOfTheNodesFound_NamedByTypeWhenAlike()
+    {
+        var choices = QueryDraft.Default.WithText("?read by Alice", _graph).ColumnChoices(_graph);
+
+        Assert.Equal(["Published (Article)", "Published (Book)"], choices.Where(choice => choice.Column is FieldColumn).Select(choice => choice.Name));
+        Assert.DoesNotContain(QueryDraft.Default.ColumnChoices(_graph), choice => choice.Column is not LinkColumn);
+        Assert.Equal("Qualifiers", QueryDraft.Default.QualifiersHeading(_graph));
+    }
+
+    [Fact]
+    public void AColumnShown_ButNoLongerOffered_StaysToBeTakenOff()
+    {
+        var gone = new FieldColumn("book", "gone");
+
+        var choices = QueryDraft.Default.WithText("?book: read by Alice", _graph).WithColumn(gone, true).ColumnChoices(_graph);
+
+        Assert.Equal(new ColumnChoice(gone, "gone"), choices[^1]);
+    }
+
+    [Fact]
+    public void AFieldOrQualifierColumnsName_IsItsFields()
+    {
+        Assert.Equal("Published", QueryDraft.NameOf(new FieldColumn("article", "published"), null, _graph));
+        Assert.Equal("Date", QueryDraft.NameOf(new QualifierColumn("date"), "read", _graph));
+        Assert.Equal("date", QueryDraft.NameOf(new QualifierColumn("date"), "wrote", _graph));
+        Assert.Equal("date", QueryDraft.NameOf(new QualifierColumn("date"), null, _graph));
+    }
+
+    private void SetField(Node node, NodeType type, FieldDefinition field, string value) =>
+        _graph.Apply(new FieldSet(Guid.NewGuid(), Now, node, type.Id, field.Id, field.Name, field.Kind, value, []));
 
     private List<string> Names(string query) => [.. new QueryView(_graph, Definition(query)).Rows.Select(row => row.Node.Name)];
 

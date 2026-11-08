@@ -267,7 +267,7 @@ internal sealed partial record ChangeData(
 
     /// <summary>
     /// A query view's query: <c>{ "nodeType": "book", "linkType": "read", "reverse": true, "node": "…",
-    /// "qualifiers": [{ "field": "date", "value": "2026" }], "columns": [{ "type": "wrote", "reverse": true }] }</c>;
+    /// "qualifiers": [{ "field": "date", "value": "2026" }], "columns": [{ "type": "wrote", "reverse": true }, { "qualifier": "date" }] }</c>;
     /// no node type for any, no node for any.
     /// </summary>
     internal static class QueryViewData
@@ -278,14 +278,15 @@ internal sealed partial record ChangeData(
             Reverse: query.Reverse,
             Node: query.Node,
             Qualifiers: [.. query.Qualifiers.Select(qualifier => new QualifierData(qualifier.Field, qualifier.Value))],
-            Columns: [.. query.Columns.Select(column => new ColumnData(column.LinkType, column.Reverse))]);
+            Columns: [.. query.Columns.Select(DataOf)]);
 
         /// <summary>The definition, or null when incomplete: no link type, or a qualifier or a column incomplete.</summary>
         public static QueryDefinition? ToDefinition(QueryData query)
         {
+            var columns = (query.Columns ?? []).Select(ColumnOf).ToList();
             if (query is not { LinkType.Length: > 0 } || query.NodeType is { Length: 0 } || query.Node == Guid.Empty
                 || (query.Qualifiers ?? []).Any(qualifier => qualifier is not { Field.Length: > 0, Value: not null })
-                || (query.Columns ?? []).Any(column => column is not { Type.Length: > 0 }))
+                || columns.Any(column => column is null))
             {
                 return null;
             }
@@ -296,15 +297,35 @@ internal sealed partial record ChangeData(
                 query.Reverse ?? false,
                 query.Node,
                 [.. (query.Qualifiers ?? []).Select(qualifier => new QualifierFilter(qualifier!.Field!, qualifier.Value!))],
-                [.. (query.Columns ?? []).Select(column => new ViewColumn(column!.Type!, column.Reverse ?? false))]);
+                [.. columns.OfType<ViewColumn>()]);
         }
+
+        private static ColumnData DataOf(ViewColumn column) => column switch
+        {
+            LinkColumn link => new ColumnData(Type: link.LinkType, Reverse: link.Reverse),
+            FieldColumn field => new ColumnData(Owner: field.Owner, Field: field.Field),
+            QualifierColumn qualifier => new ColumnData(Qualifier: qualifier.Field),
+            _ => throw new ArgumentOutOfRangeException(nameof(column)),
+        };
+
+        // A column of one kind only, complete; null otherwise.
+        private static ViewColumn? ColumnOf(ColumnData? column) => column switch
+        {
+            { Type.Length: > 0, Owner: null, Field: null, Qualifier: null } => new LinkColumn(column.Type, column.Reverse ?? false),
+            { Owner.Length: > 0, Field.Length: > 0, Type: null, Qualifier: null } => new FieldColumn(column.Owner, column.Field),
+            { Qualifier.Length: > 0, Type: null, Owner: null, Field: null } => new QualifierColumn(column.Qualifier),
+            _ => null,
+        };
     }
 
     /// <summary><c>{ "field": "date", "value": "2026" }</c>: a qualifier a query view's links must match.</summary>
     internal sealed record QualifierData(string? Field, string? Value);
 
-    /// <summary><c>{ "type": "wrote", "reverse": true }</c>: a query view's column.</summary>
-    internal sealed record ColumnData(string? Type, bool? Reverse);
+    /// <summary>
+    /// A query view's column, of one kind: the nodes linked, <c>{ "type": "wrote", "reverse": true }</c>; a field of the node,
+    /// <c>{ "owner": "book", "field": "published" }</c>; a qualifier of the link found, <c>{ "qualifier": "date" }</c>.
+    /// </summary>
+    internal sealed record ColumnData(string? Type = null, bool? Reverse = null, string? Owner = null, string? Field = null, string? Qualifier = null);
 
     /// <summary><c>"order": { "field": "…" }</c>: the qualifier a tree's children are sorted by.</summary>
     internal sealed record OrderData(string? Field);
