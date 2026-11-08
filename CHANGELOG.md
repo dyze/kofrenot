@@ -20,6 +20,10 @@ It covers kofrenot on Windows and on Android; versions before 0.9 ran on Windows
   - **Import from another vault**: Imports > **From a vault…** runs a query on another of your vaults (`?Book:`, with completion), with each node's subtree by a link type if ticked, and imports what it finds through the import preview. A node keeps its id, so imported again it is updated (only what differs; a changed note or file as a new version), not added twice; one of the same name here is used as it is when nothing differs, else to check. Its types, colour, fields, images, latest note or file and links come with it; the node and link types missing here are copied; a link whose other node is not here is left out and counted. A mapping comes with its definition and the types it names; views are not imported. The other vault is only read; a server vault's notes, files and images not on this computer are downloaded on import; no new vault format ([README](README.md#imports)).
   - **Select all** and **Deselect all** in Settings > Node types and Link types > **Copy from…**: tick or untick every type copying would write ([README](README.md#node-types-and-fields)).
 
+### Fixed
+- **Windows**
+  - kofrenot no longer crashes when Settings is closed while a vault is being moved to the server (or another server action finishes): its message opens over the main window.
+
 ## [0.16] - 2026-11-07
 
 *Qualifiers: links that hold fields of their own, typed, searched and queried as sentences.*

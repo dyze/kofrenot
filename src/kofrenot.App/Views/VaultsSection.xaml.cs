@@ -60,7 +60,7 @@ public partial class VaultsSection : UserControl
         }
     }
 
-    private Window Owner => Window.GetWindow(this);
+    private Window Owner => DialogOwner.Of(Window.GetWindow(this));
 
     private ISessionQuestions Ask => new WpfQuestions(Owner);
 
