@@ -1,6 +1,7 @@
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
+using Avalonia.Media;
 using Kofrenot.Core;
 using Kofrenot.Core.Browse;
 using Kofrenot.Core.Graph;
@@ -16,15 +17,14 @@ namespace Kofrenot.Phone.Views;
 /// <summary>A place in a tree view: its node's row, how deep, and whether its children show.</summary>
 public sealed record TreeRow(TreeItem Item, NodeRow Row, int Depth, bool Expanded)
 {
-    private const double IndentStep = 20;
-    private const double ToggleWidth = 48;
+    private const double IndentStep = 16;
 
-    public string Toggle => Expanded ? "▾" : "▸";
+    public Geometry Toggle => PhoneTheme.Icon(Expanded ? "chevron-down" : "chevron-right");
 
     public Thickness Indent => new(Depth * IndentStep, 0, 0, 0);
 
     /// <summary>A place without children lines up with those that have a toggle.</summary>
-    public Thickness Shift => new(Item.CanExpand ? 0 : ToggleWidth, 0, 0, 0);
+    public Thickness Shift => new(Item.CanExpand ? 0 : PhoneTheme.Size("ToggleWidth"), 0, 0, 0);
 }
 
 /// <summary>

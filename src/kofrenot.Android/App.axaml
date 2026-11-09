@@ -11,7 +11,12 @@
     <x:Double x:Key="TouchTarget">48</x:Double>
     <x:Double x:Key="BarHeight">64</x:Double>
     <!-- A field row of the details: denser than a touch target, as the rows follow each other. -->
-    <x:Double x:Key="FieldRowHeight">40</x:Double>
+    <x:Double x:Key="FieldRowHeight">32</x:Double>
+    <!-- A node's row of a list or a tree: dense, as Android's dense lists. -->
+    <x:Double x:Key="RowHeight">40</x:Double>
+    <!-- A tree's ▸ / ▾, and an icon of the top bar: narrower than a touch target, to leave room beside them. -->
+    <x:Double x:Key="ToggleWidth">36</x:Double>
+    <x:Double x:Key="BarIconWidth">40</x:Double>
     <!-- Spacing, on a 4 dp grid: between the items of a panel, around a screen's content, around a form. -->
     <x:Double x:Key="GapS">4</x:Double>
     <x:Double x:Key="Gap">8</x:Double>
@@ -69,9 +74,9 @@
       </StackPanel>
     </DataTemplate>
     <DataTemplate DataType="views:NodeRow">
-      <Grid ColumnDefinitions="Auto,*" Margin="{Binding Indent}" MinHeight="{StaticResource TouchTarget}">
-        <views:NodePicture Item="{Binding}" Width="32" Height="32" VerticalAlignment="Center" />
-        <StackPanel Grid.Column="1" Margin="12,2,0,2" VerticalAlignment="Center">
+      <Grid ColumnDefinitions="Auto,*" Margin="{Binding Indent}" MinHeight="{StaticResource RowHeight}">
+        <views:NodePicture Item="{Binding}" Width="28" Height="28" VerticalAlignment="Center" />
+        <StackPanel Grid.Column="1" Margin="8,2,0,2" VerticalAlignment="Center">
           <TextBlock Text="{Binding Name}" FontSize="{StaticResource BodySize}" TextTrimming="CharacterEllipsis" />
           <TextBlock Classes="caption" Text="{Binding Detail}" IsVisible="{Binding HasDetail}" TextTrimming="CharacterEllipsis" />
         </StackPanel>
@@ -119,7 +124,15 @@
       <Setter Property="MinHeight" Value="0" />
     </Style>
     <Style Selector="Button.toggle">
-      <Setter Property="FontSize" Value="{StaticResource SectionSize}" />
+      <Setter Property="Width" Value="{StaticResource ToggleWidth}" />
+      <Setter Property="MinWidth" Value="0" />
+      <Setter Property="MinHeight" Value="{StaticResource RowHeight}" />
+      <Setter Property="Padding" Value="0" />
+      <Setter Property="HorizontalContentAlignment" Value="Center" />
+    </Style>
+    <Style Selector="Button.toggle > PathIcon">
+      <Setter Property="Width" Value="20" />
+      <Setter Property="Height" Value="20" />
     </Style>
     <!-- An icon alone (←, ⋮, ✕): a 48 dp square. -->
     <Style Selector="Button.icon">
@@ -129,6 +142,16 @@
       <Setter Property="Padding" Value="0" />
       <Setter Property="HorizontalContentAlignment" Value="Center" />
       <Setter Property="CornerRadius" Value="24" />
+    </Style>
+    <!-- After Button.icon, to narrow it: a field's action (a map, a link, an image opened), on the line of its label and value. -->
+    <Style Selector="Button.icon.fieldAction">
+      <Setter Property="MinHeight" Value="0" />
+      <Setter Property="Height" Value="{StaticResource FieldRowHeight}" />
+      <Setter Property="Width" Value="{StaticResource BarIconWidth}" />
+    </Style>
+    <!-- The top bar's ← and actions: narrower, for the title or trail beside them. -->
+    <Style Selector="views|TopBar Button.icon">
+      <Setter Property="Width" Value="{StaticResource BarIconWidth}" />
     </Style>
     <!-- The floating ＋ of Home, at its bottom right. -->
     <Style Selector="Button.fab">

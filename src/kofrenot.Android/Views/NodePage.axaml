@@ -111,10 +111,10 @@
                 </StackPanel>
                 <StackPanel Grid.Column="2" VerticalAlignment="Top">
                   <!-- A web address opened, a mail written, an address shown on a map (NodePage.Fields). -->
-                  <Button Classes="icon" Height="{StaticResource FieldRowHeight}" Tag="{Binding}" IsVisible="{Binding HasLink}" Click="OpenLink_Click">
+                  <Button Classes="icon fieldAction" Tag="{Binding}" IsVisible="{Binding HasLink}" Click="OpenLink_Click">
                     <PathIcon Data="{Binding LinkIcon}" />
                   </Button>
-                  <Button Classes="icon" Height="{StaticResource FieldRowHeight}" Tag="{Binding}" IsVisible="{Binding HasImage}" Click="OpenImage_Click">
+                  <Button Classes="icon fieldAction" Tag="{Binding}" IsVisible="{Binding HasImage}" Click="OpenImage_Click">
                     <PathIcon Data="{DynamicResource icon.open}" />
                   </Button>
                 </StackPanel>
@@ -203,7 +203,7 @@
           </StackPanel>
         </Button>
         <!-- Links, and + Link: a box typed after the node's name, as the Link box on Windows (NodePage.Link). -->
-        <Grid x:Name="LinksHeader" ColumnDefinitions="*,Auto" Margin="0,12,0,0">
+        <Grid x:Name="LinksHeader" ColumnDefinitions="*,Auto" Margin="0,8,0,0">
           <TextBlock Classes="caption" Text="Links" VerticalAlignment="Center" />
           <Button x:Name="AddLinkButton" Grid.Column="1" Classes="flat" Click="AddLink_Click">
             <StackPanel Classes="iconLabel">

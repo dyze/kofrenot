@@ -18,6 +18,7 @@ It covers kofrenot on Windows and on Android; versions before 0.9 ran on Windows
 ### Changed
 - **Android**
   - **The vaults are in Settings > Vault**, under the open vault: a tap opens one, ✕ removes it from the phone, *Add from the server* adds another. **☰** on the home keeps the open vault, *Sync now*, *Vaults* (that topic) and *Settings*, no longer the other vaults ([README](README.md#on-android)).
+  - **Denser lists and node page**: node rows 40 dp high with smaller pictures, a tree indented less with a larger chevron to expand or collapse, field rows 32 dp high with their actions (map, link, open) on the line of their label, and narrower top bar icons, leaving the trail room for its first screens.
 
 ### Fixed
 - **Android**

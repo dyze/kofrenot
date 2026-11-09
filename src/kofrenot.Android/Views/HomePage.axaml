@@ -45,8 +45,9 @@
         <ListBox.DataTemplates>
           <DataTemplate DataType="views:TreeRow">
             <Grid ColumnDefinitions="Auto,*" Margin="{Binding Indent}">
-              <Button Classes="flat toggle" Content="{Binding Toggle}" IsVisible="{Binding Item.CanExpand}" Tag="{Binding}"
-                      Click="Toggle_Click" Width="{StaticResource TouchTarget}" Padding="0" />
+              <Button Classes="flat toggle" IsVisible="{Binding Item.CanExpand}" Tag="{Binding}" Click="Toggle_Click">
+                <PathIcon Data="{Binding Toggle}" />
+              </Button>
               <ContentControl Grid.Column="1" Content="{Binding Row}" Margin="{Binding Shift}" />
             </Grid>
           </DataTemplate>
