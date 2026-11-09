@@ -8,6 +8,10 @@ It covers kofrenot on Windows and on Android; versions before 0.9 ran on Windows
 
 ## [Unreleased]
 
+## [0.17] - 2026-11-09
+
+*Imports and query views: records from JSON files and other vaults added as nodes, queries shown as tables.*
+
 > ⚠ **Vault format 12** (for mappings, which import a file's records as nodes, and query views). Consequences:
 > - Each vault asks once, when it opens, to be upgraded; until you agree, this kofrenot does not use it.
 > - Once upgraded, **kofrenot 0.16 still opens and changes it, on Windows and Android**: it shows a mapping as a node, without its definition, and a query view with no definition. **kofrenot 0.15 opens it read only; 0.14 and older no longer open it.** Update kofrenot on all your devices, and ask the members of a shared vault to update theirs, before upgrading.
@@ -498,7 +502,8 @@ It covers kofrenot on Windows and on Android; versions before 0.9 ran on Windows
 - **Update check** once a day against GitHub releases, switchable in About.
 - **Installer and portable zip** (`build\installer.cmd`), self-contained.
 
-[Unreleased]: https://github.com/dyze/kofrenot/compare/0.16...HEAD
+[Unreleased]: https://github.com/dyze/kofrenot/compare/0.17...HEAD
+[0.17]: https://github.com/dyze/kofrenot/compare/0.16...0.17
 [0.16]: https://github.com/dyze/kofrenot/compare/0.15...0.16
 [0.15]: https://github.com/dyze/kofrenot/compare/0.14...0.15
 [0.14]: https://github.com/dyze/kofrenot/compare/0.13...0.14
