@@ -5,7 +5,8 @@ namespace Kofrenot.Core.Input;
 /// <summary>
 /// The proposals shown in grey after the text of the input box, the first one first: the rest of each node's name
 /// starting with the side typed, the shortest first; then, on the first side, the rest of each link type starting
-/// with its last words. Case is ignored; a complete link type gets no proposal.
+/// with its last words. Case is ignored; a complete link type proposes only the longer ones of other link types
+/// starting with it ("read" proposes "read by"; "is a" not its other phrase "is an").
 /// </summary>
 public static class InputCompletion
 {
@@ -45,23 +46,21 @@ public static class InputCompletion
     private static IEnumerable<Proposal> LinkTypeProposals(TypeCatalog types, string typed, int? only = null)
     {
         var words = InputParser.Words(typed);
-        var phrases = types.Verbs.SelectMany(verb => verb.Phrases).ToList();
+        var verbs = types.Verbs;
         var space = char.IsWhiteSpace(typed[^1]) ? " " : string.Empty;
         for (var start = only ?? 1; start < words.Length && (only is null || start == only); start++)
         {
             var phrase = string.Join(' ', words[start..]) + space;
-            if (phrases.Any(candidate => candidate.Equals(phrase, StringComparison.OrdinalIgnoreCase)))
-            {
-                return [];
-            }
-
-            var matches = phrases
-                .Where(candidate => candidate.StartsWith(phrase, StringComparison.OrdinalIgnoreCase))
+            var complete = verbs.Where(verb => verb.Phrases.Contains(phrase, StringComparer.OrdinalIgnoreCase)).ToList();
+            var matches = verbs
+                .Except(complete)
+                .SelectMany(verb => verb.Phrases)
+                .Where(candidate => candidate.Length > phrase.Length && candidate.StartsWith(phrase, StringComparison.OrdinalIgnoreCase))
                 .Distinct(StringComparer.OrdinalIgnoreCase)
                 .OrderBy(candidate => candidate.Length)
                 .Select(match => new Proposal(match[phrase.Length..], match, IsLinkType: true, start))
                 .ToList();
-            if (matches.Count > 0)
+            if (matches.Count > 0 || complete.Count > 0)
             {
                 return matches;
             }

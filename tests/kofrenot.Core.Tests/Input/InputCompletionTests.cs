@@ -90,5 +90,26 @@ public sealed class InputCompletionTests
             ["contains", "contained by"],
             InputCompletion.LinkTypeProposalsAfter(_graph.Types, "Old map", "con").Select(proposal => proposal.Label));
 
+    [Theory]
+    [InlineData("read", " by")]
+    [InlineData("READ ", "by")]
+    public void ACompleteLinkType_ProposesTheLongerOnesStartingWithIt(string typed, string rest)
+    {
+        var types = new TypeCatalog([TypeCatalog.Generic], [new LinkType("read", ["read"], ["read by"])]);
+
+        Assert.Equal(
+            [new Proposal(rest, "read by", IsLinkType: true, WordsBefore: 1)],
+            InputCompletion.LinkTypeProposalsAfter(types, "Dune", typed));
+    }
+
+    [Fact]
+    public void ACompleteLinkType_WithNoLongerOne_IsNotCompletedFromItsLastWords()
+    {
+        var types = new TypeCatalog([TypeCatalog.Generic], [new LinkType("read", ["read"], ["read by"])]);
+
+        Assert.Empty(InputCompletion.Proposals(_graph, "Dune contained by", linkTypeTyped: false));
+        Assert.Empty(InputCompletion.LinkTypeProposalsAfter(types, "Dune", "read by"));
+    }
+
     private void Add(string name) => _graph.Add(new Node(Guid.NewGuid(), TypeCatalog.Generic.Id, name, Start));
 }

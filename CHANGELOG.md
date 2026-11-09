@@ -25,6 +25,8 @@ It covers kofrenot on Windows and on Android; versions before 0.9 ran on Windows
   - **Select all** and **Deselect all** in Settings > Node types and Link types > **Copy from…**: tick or untick every type copying would write ([README](README.md#node-types-and-fields)).
 
 ### Fixed
+- **Both**
+  - **A longer link type is still proposed** once a shorter one is typed in full: `read` proposes *read by*, no longer nothing.
 - **Windows**
   - kofrenot no longer crashes when Settings is closed while a vault is being moved to the server (or another server action finishes): its message opens over the main window.
 
