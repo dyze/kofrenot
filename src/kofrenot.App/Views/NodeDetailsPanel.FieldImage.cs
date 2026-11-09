@@ -16,7 +16,8 @@ namespace Kofrenot.UI.Views;
 /// An image field: its thumbnail (a click shows the image, as a dataset's), Choose… to set another
 /// (<see cref="FieldPlanner.SetImage"/>, its file written as a dataset version's), From a dataset… to
 /// take an image dataset's, not copied (<see cref="FieldPlanner.SetImageFrom"/>), Paste, while the
-/// clipboard holds an image, to set it once its preview is accepted, × to remove it, asked first.
+/// clipboard holds an image, to set it once its preview is accepted, × to remove it, asked first;
+/// the buttons wrap under the thumbnail when the column is narrow.
 /// </summary>
 public partial class NodeDetailsPanel
 {
@@ -34,39 +35,51 @@ public partial class NodeDetailsPanel
 
     private FrameworkElement ImageEditorOf(NodeField field, Thickness margin, bool canEdit, FieldHolder holder)
     {
-        var panel = new StackPanel { Margin = margin, Orientation = Orientation.Horizontal };
+        // Each item carries the top margin, not the panel, so a wrapped line keeps its distance from the one above.
+        var panel = new WrapPanel { Margin = margin with { Top = 0 } };
         if (field.Image?.Image is { } image)
         {
-            panel.Children.Add(ThumbnailOf(image, field.Display));
+            panel.Children.Add(Spaced(ThumbnailOf(image, field.Display), margin.Top, first: true));
         }
         else if (!canEdit)
         {
-            panel.Children.Add(new TextBlock { Opacity = 0.7, Text = "No image" });
+            panel.Children.Add(Spaced(new TextBlock { Opacity = 0.7, Text = "No image" }, margin.Top, first: true));
         }
 
         if (canEdit && SaveImage is not null)
         {
-            var choose = new Button { Margin = new Thickness(field.HasValue ? 8 : 0, 0, 0, 0), Padding = new Thickness(10, 2, 10, 2), Content = "Choose…", VerticalAlignment = VerticalAlignment.Center };
+            var choose = ImageButton("Choose…");
             choose.Click += (_, _) => _ = ChooseImage(field, holder);
-            panel.Children.Add(choose);
-            var fromDataset = new Button { Margin = new Thickness(8, 0, 0, 0), Padding = new Thickness(10, 2, 10, 2), Content = "From a dataset…", VerticalAlignment = VerticalAlignment.Center };
+            panel.Children.Add(Spaced(choose, margin.Top, first: panel.Children.Count == 0));
+            var fromDataset = ImageButton("From a dataset…");
             fromDataset.Click += (_, _) => ChooseImageDataset(field, holder);
-            panel.Children.Add(fromDataset);
+            panel.Children.Add(Spaced(fromDataset, margin.Top));
             if (Clipboard is { } clipboard)
             {
-                var paste = new Button { Margin = new Thickness(8, 0, 0, 0), Padding = new Thickness(10, 2, 10, 2), Content = "Paste", ToolTip = "Set the image copied: a screenshot, an image file", VerticalAlignment = VerticalAlignment.Center };
+                var paste = ImageButton("Paste");
+                paste.ToolTip = "Set the image copied: a screenshot, an image file";
                 paste.Click += (_, _) => _ = PasteImage(field, clipboard, holder);
                 PasteButtons.Follow(paste, clipboard, PasteOffer.FitsImage);
-                panel.Children.Add(paste);
+                panel.Children.Add(Spaced(paste, margin.Top));
             }
 
             if (field.HasValue)
             {
-                panel.Children.Add(FieldButton("delete", "Remove this image", () => RemoveImage(field, holder), focusable: true));
+                panel.Children.Add(Spaced(FieldButton("delete", "Remove this image", () => RemoveImage(field, holder), focusable: true), margin.Top));
             }
         }
 
         return panel;
+    }
+
+    private static Button ImageButton(string label) =>
+        new() { Padding = new Thickness(10, 2, 10, 2), Content = label, VerticalAlignment = VerticalAlignment.Center };
+
+    // An item of the image's line, 8 apart from the one before it.
+    private static FrameworkElement Spaced(FrameworkElement item, double top, bool first = false)
+    {
+        item.Margin = new Thickness(first ? 0 : 8, top, 0, 0);
+        return item;
     }
 
     // The thumbnail, read off the UI thread (a server vault downloads it); the file's name until it is here.

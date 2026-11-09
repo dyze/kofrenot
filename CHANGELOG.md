@@ -30,6 +30,7 @@ It covers kofrenot on Windows and on Android; versions before 0.9 ran on Windows
   - **A longer link type is still proposed** once a shorter one is typed in full: `read` proposes *read by*, no longer nothing.
 - **Windows**
   - kofrenot no longer crashes when Settings is closed while a vault is being moved to the server (or another server action finishes): its message opens over the main window.
+  - **An image field's buttons no longer overlap** the next column of a node's fields: they wrap under the image when the column is narrow.
 
 ## [0.16] - 2026-11-07
 
