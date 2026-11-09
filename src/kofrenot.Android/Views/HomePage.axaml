@@ -2,6 +2,15 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:views="using:Kofrenot.Phone.Views"
              x:Class="Kofrenot.Phone.Views.HomePage">
+  <UserControl.Styles>
+    <!-- A header of a query view's table: as wide as its column, its text where the column's starts. -->
+    <Style Selector="Button.column">
+      <Setter Property="MinWidth" Value="0" />
+      <Setter Property="Padding" Value="8,0" />
+      <Setter Property="CornerRadius" Value="0" />
+      <Setter Property="HorizontalContentAlignment" Value="Left" />
+    </Style>
+  </UserControl.Styles>
   <Grid>
     <DockPanel>
       <!-- ☰: the vault and its sync, the other vaults and Settings, in a sheet (its dot: where the sync stands); the search box. -->
@@ -40,19 +49,55 @@
         <TextBlock x:Name="AddText" TextWrapping="Wrap" Foreground="{StaticResource Accent}" />
       </Button>
       <TextBlock x:Name="Message" DockPanel.Dock="Top" Classes="caption" Margin="{StaticResource PageMargin}" TextWrapping="Wrap" IsVisible="False" />
-      <!-- Its last rows clear of ＋. -->
-      <ListBox x:Name="List" Padding="0,0,0,88" SelectionChanged="List_SelectionChanged">
-        <ListBox.DataTemplates>
-          <DataTemplate DataType="views:TreeRow">
-            <Grid ColumnDefinitions="Auto,*" Margin="{Binding Indent}">
-              <Button Classes="flat toggle" IsVisible="{Binding Item.CanExpand}" Tag="{Binding}" Click="Toggle_Click">
-                <PathIcon Data="{Binding Toggle}" />
-              </Button>
-              <ContentControl Grid.Column="1" Content="{Binding Row}" Margin="{Binding Shift}" />
-            </Grid>
-          </DataTemplate>
-        </ListBox.DataTemplates>
-      </ListBox>
+      <!-- Sideways only for a query view's table, its header staying over its rows (HomePage.Query). -->
+      <ScrollViewer x:Name="TableScroll" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Disabled">
+        <DockPanel>
+          <ItemsControl x:Name="TableHeader" DockPanel.Dock="Top" IsVisible="False">
+            <ItemsControl.ItemsPanel>
+              <ItemsPanelTemplate>
+                <StackPanel Orientation="Horizontal" />
+              </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+              <DataTemplate DataType="views:QueryColumnHeader">
+                <Button Classes="flat column" Width="{Binding Width}" Tag="{Binding}" Click="QueryHeader_Click">
+                  <TextBlock Classes="caption" Text="{Binding Text}" TextTrimming="CharacterEllipsis" />
+                </Button>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+          <!-- Its last rows clear of ＋. -->
+          <ListBox x:Name="List" Padding="0,0,0,88" SelectionChanged="List_SelectionChanged">
+            <ListBox.DataTemplates>
+              <DataTemplate DataType="views:TreeRow">
+                <Grid ColumnDefinitions="Auto,*" Margin="{Binding Indent}">
+                  <Button Classes="flat toggle" IsVisible="{Binding Item.CanExpand}" Tag="{Binding}" Click="Toggle_Click">
+                    <PathIcon Data="{Binding Toggle}" />
+                  </Button>
+                  <ContentControl Grid.Column="1" Content="{Binding Row}" Margin="{Binding Shift}" />
+                </Grid>
+              </DataTemplate>
+              <DataTemplate DataType="views:QueryTableRow">
+                <StackPanel Orientation="Horizontal">
+                  <ContentControl Content="{Binding Row}" Width="{Binding NameWidth}" />
+                  <ItemsControl ItemsSource="{Binding Cells}">
+                    <ItemsControl.ItemsPanel>
+                      <ItemsPanelTemplate>
+                        <StackPanel Orientation="Horizontal" />
+                      </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                      <DataTemplate DataType="views:QueryCell">
+                        <TextBlock Classes="body" Text="{Binding Text}" Width="{Binding Width}" Padding="8,0" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                      </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                  </ItemsControl>
+                </StackPanel>
+              </DataTemplate>
+            </ListBox.DataTemplates>
+          </ListBox>
+        </DockPanel>
+      </ScrollViewer>
     </DockPanel>
     <!-- ＋: files from the phone, or a photo or video taken now, from a sheet (HomePage.AddFiles). -->
     <Button x:Name="AddFilesButton" Classes="accent fab" Click="AddFiles_Click">

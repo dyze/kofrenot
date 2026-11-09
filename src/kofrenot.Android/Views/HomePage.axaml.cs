@@ -104,6 +104,7 @@ public sealed partial class HomePage : UserControl, IPage
         var graph = vault.Graph;
         var text = Chips.Text;
         Message.IsVisible = false;
+        ShowTableHeader(null);
         ShowAdd(graph, text);
         SearchBox.Refresh();
         if (_tab.View is { } view)
@@ -192,12 +193,7 @@ public sealed partial class HomePage : UserControl, IPage
                 ShowMessage("A graph is shown in kofrenot on Windows.");
                 return [];
             case QueryDefinition definition:
-                var query = new QueryView(graph, definition);
-                var queryRows = text.Length > 0 ? query.Find(text) : query.Rows;
-                ShowMessage(query.IsBroken ? "The node this query names is not there: removed, or not synced yet."
-                    : queryRows.Count == 0 ? (text.Length > 0 ? "No node of that name." : $"No node found by “{QueryDraft.TextOf(definition, graph)}”.")
-                    : null);
-                return [.. queryRows.Select(row => NodeRow.Of(graph, row.Node, query.LineOf(row)))];
+                return QueryRows(graph, view, definition, text);
             default:
                 ShowMessage("This view has no definition yet: it is set in kofrenot on Windows.");
                 return [];
@@ -262,6 +258,7 @@ public sealed partial class HomePage : UserControl, IPage
         {
             NodeRow row => row.Node,
             TreeRow row => row.Item.Node,
+            QueryTableRow row => row.Row.Node,
             _ => null,
         };
         List.SelectedItem = null;

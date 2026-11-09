@@ -33,6 +33,7 @@ public sealed class AppServices : IDisposable
         Session = new VaultSession(Settings, Files, new KeyMemory(Files.RememberedKeys, protector, log), new VaultNameMemory(Files.VaultNames, protector, log), Server, Sync, ui, new NothingToWatch(), new AndroidThumbnailMaker(), log, mode: ClientMode.Phone);
         Recent = new RecentNodes(Files.RecentNodes, log);
         ViewTabs = new ViewTabs(Files.ViewTabs, log);
+        ViewStates = new ViewStates(Files.ViewStates, log);
         ImportDestinations = new ImportDestinations(Files.ImportDestinations, log);
         log.Info("App", $"kofrenot {Version} for Android started");
         Chooser = chooser;
@@ -64,6 +65,9 @@ public sealed class AppServices : IDisposable
     public RecentNodes Recent { get; }
 
     public ViewTabs ViewTabs { get; }
+
+    /// <summary>How each view was left on this phone: a query view's sort.</summary>
+    public ViewStates ViewStates { get; }
 
     /// <summary>Where the last share or ＋ went, per vault.</summary>
     public ImportDestinations ImportDestinations { get; }

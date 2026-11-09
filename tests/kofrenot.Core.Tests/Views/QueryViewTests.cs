@@ -105,7 +105,6 @@ public sealed class QueryViewTests
             [("Dune", "Brian Herbert, Frank Herbert", ""), ("Foundation", "", "")],
             view.Rows.Select(row => (row.Node.Name, row.Cells[0], row.Cells[1])));
         Assert.Equal([_foundation], view.Find("found").Select(row => row.Node));
-        Assert.Equal(["written by Brian Herbert, Frank Herbert", ""], view.Rows.Select(view.LineOf));
     }
 
     [Fact]
@@ -206,7 +205,7 @@ public sealed class QueryViewTests
 
         Assert.Equal(["Date"], alices.Headers);
         Assert.Equal([("Dune", "2026-03-14"), ("Foundation", "2025-07-01")], alices.Rows.Select(row => (row.Node.Name, row.Cells[0])));
-        Assert.Equal("Date 2024-05-05, 2026-03-14", anyones.LineOf(anyones.Rows[0]));
+        Assert.Equal("2024-05-05, 2026-03-14", anyones.Rows[0].Cells[0]);
         Assert.Equal(["2026-03-14"], new QueryView(_graph, Definition("?book: read by, Date 2026", date)).Rows.Select(row => row.Cells[0]));
     }
 

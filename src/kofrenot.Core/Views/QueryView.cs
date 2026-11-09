@@ -64,10 +64,6 @@ public sealed class QueryView(KnowledgeGraph graph, QueryDefinition definition)
         return [.. sorted, .. rows.Where(row => row.Cells[cell].Length == 0)];
     }
 
-    /// <summary>A row's columns on one line, as a phone shows them: <c>written by Frank Herbert · Date 2026-03-14</c>; the empty ones left out.</summary>
-    public string LineOf(QueryRow row) =>
-        string.Join(" · ", Headers.Zip(row.Cells).Where(column => column.Second.Length > 0).Select(column => $"{column.First} {column.Second}"));
-
     /// <summary>The rows whose node's name matches <paramref name="text"/> (<see cref="GraphSearch.MatcherOf"/>), in <paramref name="sort"/>'s order (by name when none).</summary>
     public IReadOnlyList<QueryRow> Find(string text, QuerySort? sort = null)
     {
