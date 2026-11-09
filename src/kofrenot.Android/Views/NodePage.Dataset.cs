@@ -1,4 +1,5 @@
 using Avalonia.Controls;
+using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
 using Kofrenot.Core.Datasets;
@@ -87,16 +88,8 @@ public sealed partial class NodePage
         }
     }
 
-    // Decrypted into the cache, then handed to another app: the one the user picks to open it, or to share it with.
-    private async Task HandAsync(DatasetEdited version, Action<string> hand, string action)
-    {
-        _shell.Services.Log.Info("Action", action);
-        var path = _shell.Services.Opened.NewPath(version.File.Name);
-        if (await ExportAsync(answers => _shell.Services.Session.ExportDataset(answers, version, path)))
-        {
-            hand(path);
-        }
-    }
+    private Task HandAsync(DatasetEdited version, Action<string> hand, string action) =>
+        WhileBusy(() => _shell.HandAsync(version, hand, action));
 
     // Written where the user chooses; the file the picker made is deleted again when it cannot be.
     private async Task ExportFileAsync(DatasetEdited version)
@@ -111,7 +104,7 @@ public sealed partial class NodePage
         bool saved;
         await using (var target = await file.OpenWriteAsync())
         {
-            saved = await ExportAsync(answers => _shell.Services.Session.ExportDataset(answers, version, target));
+            saved = await WhileBusy(() => _shell.ExportAsync(answers => _shell.Services.Session.ExportDataset(answers, version, target)));
         }
 
         if (!saved)
@@ -120,21 +113,43 @@ public sealed partial class NodePage
         }
     }
 
-    // The file downloaded first when it is not here, the busy bar shown; what went wrong told.
-    private async Task<bool> ExportAsync(Func<PreparedAnswers, Task<bool>> export)
+    // The busy bar shown while the file is downloaded or written.
+    private async Task<bool> WhileBusy(Func<Task<bool>> work)
     {
-        var answers = new PreparedAnswers();
         Busy.IsVisible = true;
         Files.IsEnabled = false;
         try
         {
-            return await export(answers);
+            return await work();
         }
         finally
         {
             Busy.IsVisible = false;
             Files.IsEnabled = true;
-            _shell.Tell(answers.Told);
         }
+    }
+
+    // A tap on an image dataset's thumbnail: the image on a screen of its own, to zoom.
+    private void Thumbnail_Tapped(object? sender, TappedEventArgs e)
+    {
+        if (Vault?.Graph.DatasetVersionsOf(_nodeId) is [.., var latest])
+        {
+            ShowImage(latest);
+        }
+    }
+
+    // A tap on an image field's thumbnail.
+    private void FieldImage_Tapped(object? sender, TappedEventArgs e)
+    {
+        if ((sender as Control)?.Tag is FieldLine { Image: { } image })
+        {
+            ShowImage(image);
+        }
+    }
+
+    private void ShowImage(DatasetEdited image)
+    {
+        _shell.Services.Log.Info("Action", "Image shown");
+        _shell.Push(new ImagePage(_shell, image));
     }
 }

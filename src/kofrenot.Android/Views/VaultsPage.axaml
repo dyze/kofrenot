@@ -16,30 +16,24 @@
               HorizontalContentAlignment="Center" Click="Add_Click" />
       <ProgressBar x:Name="Busy" IsIndeterminate="True" IsVisible="False" />
     </StackPanel>
-    <ListBox x:Name="List" SelectionChanged="List_SelectionChanged">
-      <ListBox.DataTemplates>
-        <DataTemplate DataType="views:VaultRow">
-          <Grid ColumnDefinitions="Auto,*,Auto" MinHeight="56">
-            <Ellipse Width="10" Height="10" Fill="{Binding Dot}" VerticalAlignment="Center" Margin="8,0" />
-            <StackPanel Grid.Column="1" VerticalAlignment="Center">
-              <TextBlock Text="{Binding Name}" Classes="body" TextTrimming="CharacterEllipsis" />
-              <TextBlock Classes="caption" Text="{Binding Detail}" TextTrimming="CharacterEllipsis" />
-            </StackPanel>
-            <Button Grid.Column="2" Classes="icon" Tag="{Binding}" Click="Remove_Click">
-              <PathIcon Data="{DynamicResource icon.close}" />
-            </Button>
-          </Grid>
-        </DataTemplate>
-        <DataTemplate DataType="views:StoreRow">
-          <Grid ColumnDefinitions="Auto,*" MinHeight="56">
-            <PathIcon Data="{DynamicResource icon.cloud}" Width="20" Height="20" VerticalAlignment="Center" Margin="8,0,12,0" />
-            <StackPanel Grid.Column="1" VerticalAlignment="Center">
-              <TextBlock Text="{Binding Name}" Classes="body" />
-              <TextBlock Classes="caption" Text="{Binding Detail}" />
-            </StackPanel>
-          </Grid>
-        </DataTemplate>
-      </ListBox.DataTemplates>
-    </ListBox>
+    <Panel>
+      <ScrollViewer x:Name="VaultsScroller">
+        <views:VaultList x:Name="Vaults" />
+      </ScrollViewer>
+      <!-- Adding: the account's vaults not on the phone yet. -->
+      <ListBox x:Name="Stores" IsVisible="False" SelectionChanged="Stores_SelectionChanged">
+        <ListBox.DataTemplates>
+          <DataTemplate DataType="views:StoreRow">
+            <Grid ColumnDefinitions="Auto,*" MinHeight="56">
+              <PathIcon Data="{DynamicResource icon.cloud}" Width="20" Height="20" VerticalAlignment="Center" Margin="8,0,12,0" />
+              <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                <TextBlock Text="{Binding Name}" Classes="body" />
+                <TextBlock Classes="caption" Text="{Binding Detail}" />
+              </StackPanel>
+            </Grid>
+          </DataTemplate>
+        </ListBox.DataTemplates>
+      </ListBox>
+    </Panel>
   </DockPanel>
 </UserControl>

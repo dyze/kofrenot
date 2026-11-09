@@ -28,6 +28,8 @@ public sealed partial class SettingsPage : UserControl, IPage
             [SettingsCatalog.GeneralTab] = GeneralPanel,
             [SettingsCatalog.VaultTab] = VaultPanel,
             [SettingsCatalog.ServerTab] = ServerPanel,
+            [SettingsCatalog.NodeTypesTab] = NodeTypesPanel,
+            [SettingsCatalog.LinkTypesTab] = LinkTypesPanel,
             [SettingsCatalog.AppearanceTab] = AppearancePanel,
             [SettingsCatalog.LoggingTab] = LoggingPanel,
             [SettingsCatalog.AboutTab] = AboutPanel,
@@ -39,6 +41,8 @@ public sealed partial class SettingsPage : UserControl, IPage
             panel.IsVisible = name == topic;
         }
 
+        Vaults.Removed += VaultRemoved;
+
         ThemeBox.SelectedIndex = (int)shell.Services.Settings.Theme;
         PrivacyBox.IsChecked = shell.Services.Settings.PrivacyScreen;
         DebugBox.IsChecked = shell.Services.Settings.DebugLogging;
@@ -49,9 +53,7 @@ public sealed partial class SettingsPage : UserControl, IPage
 
     public bool GoBack() => false;
 
-    public void SyncChanged()
-    {
-    }
+    public void SyncChanged() => Vaults.SyncChanged();
 
     public void Refresh()
     {
@@ -63,6 +65,8 @@ public sealed partial class SettingsPage : UserControl, IPage
         MembersButton.IsVisible = services.Session.Current is not null && selected?.Location.IsOnServer == true;
         ExchangeDays.ItemsSource = services.Server.Exchanges.DayRows();
         ExchangeKinds.ItemsSource = services.Server.Exchanges.KindRows();
+        Vaults.Show(_shell);
+        ShowTypes();
         if (_topic is null)
         {
             ShowTopics();
@@ -78,6 +82,8 @@ public sealed partial class SettingsPage : UserControl, IPage
             SettingsCatalog.GeneralTab => settings.PrivacyScreen ? "Out of screenshots and the recent apps list" : "Screenshots allowed",
             SettingsCatalog.VaultTab => Vault.Text ?? string.Empty,
             SettingsCatalog.ServerTab => Account.Text ?? string.Empty,
+            SettingsCatalog.NodeTypesTab => CountOf(NodeTypes, "node type"),
+            SettingsCatalog.LinkTypesTab => CountOf(LinkTypes, "link type"),
             SettingsCatalog.AppearanceTab => (ThemeBox.SelectedItem as ComboBoxItem)?.Content as string ?? string.Empty,
             SettingsCatalog.LoggingTab => settings.DebugLogging ? "Debug details on" : "Debug details off",
             _ => $"kofrenot {AppServices.Version}",

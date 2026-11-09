@@ -6,6 +6,7 @@ using Kofrenot.Core.Browse;
 using Kofrenot.Core.Graph;
 using Kofrenot.Core.Input;
 using Kofrenot.Core.Logging;
+using Kofrenot.Core.Settings;
 using Kofrenot.Core.Storage;
 using Kofrenot.Core.Views;
 using CoreTreeView = Kofrenot.Core.Views.TreeView;
@@ -52,13 +53,13 @@ public sealed partial class HomePage : UserControl, IPage
 
     public bool GoBack()
     {
-        if (_tab.IsSearch && _chips.IsEmpty)
+        if (_tab.IsSearch && Chips.IsEmpty)
         {
             return false;
         }
 
         // Back clears the search, then goes to the search tab.
-        if (!_chips.IsEmpty)
+        if (!Chips.IsEmpty)
         {
             ClearSearch();
         }
@@ -94,17 +95,17 @@ public sealed partial class HomePage : UserControl, IPage
     {
         if (_shell.Services.Session.Selected?.Location.Store is { } store)
         {
-            SyncDot.Fill = VaultsPage.DotOf(_shell.Services.Sync.StatusOf(store).Level);
+            SyncDot.Fill = VaultList.DotOf(_shell.Services.Sync.StatusOf(store).Level);
         }
     }
 
     private void ShowList(Vault vault)
     {
         var graph = vault.Graph;
-        var text = _chips.Text;
+        var text = Chips.Text;
         Message.IsVisible = false;
         ShowAdd(graph, text);
-        ShowChips(graph);
+        SearchBox.Refresh();
         if (_tab.View is { } view)
         {
             var viewRows = ViewRows(graph, view, text);
@@ -248,7 +249,7 @@ public sealed partial class HomePage : UserControl, IPage
             return false;
         }
 
-        LabelAll(vault.Graph);
+        SearchBox.LabelAll();
         _shell.Services.Log.Info("Action", form.IsLink ? "Creation screen shown for a link" : "Creation screen shown for a node");
         _shell.Push(new CreationPage(_shell, form, added: ClearSearch));
         return true;
@@ -264,13 +265,11 @@ public sealed partial class HomePage : UserControl, IPage
             _ => null,
         };
         List.SelectedItem = null;
-        if (selected is QueryStartRow start && Vault is { } vault)
+        if (selected is QueryStartRow start && Vault is not null)
         {
             _shell.Services.Log.Info("Action", "Start a query from the list");
-            _chips.Replace(start.Insert);
-            SetSearchText(_chips.Tail);
-            ShowList(vault);
-            SearchBox.Focus();
+            SearchBox.Replace(start.Insert);
+            SearchBox.FocusText();
             return;
         }
 
@@ -293,7 +292,7 @@ public sealed partial class HomePage : UserControl, IPage
         }
     }
 
-    // ☰, as a drawer: the open vault and where its sync stands, the other vaults to open, the list of vaults, and Settings.
+    // ☰, as a drawer: the open vault and where its sync stands, and Settings (the vaults in Settings > Vault).
     private void Vault_Click(object? sender, RoutedEventArgs e)
     {
         var session = _shell.Services.Session;
@@ -303,14 +302,10 @@ public sealed partial class HomePage : UserControl, IPage
         }
 
         var status = _shell.Services.Sync.StatusOf(store);
-        var others = session.Vaults
-            .Where(vault => vault.Location.Store is { } other && vault != selected)
-            .Select(vault => new SheetChoice(session.NameOf(vault), () => _shell.Open(vault.Location), VaultsPage.DotOf(_shell.Services.Sync.StatusOf(vault.Location.Store!).Level)));
         _shell.ShowSheet($"{session.NameOf(selected)} · {status.Summary}",
         [
-            new("Sync now", () => _shell.Run(_shell.Services.Sync.SyncNowAsync), VaultsPage.DotOf(status.Level)),
-            .. others,
-            new("Vaults…", () => _shell.Push(new VaultsPage(_shell)), Icon: "vault"),
+            new("Sync now", () => _shell.Run(_shell.Services.Sync.SyncNowAsync), VaultList.DotOf(status.Level)),
+            new("Vaults", () => _shell.Push(new SettingsPage(_shell, SettingsCatalog.VaultTab)), Icon: "vault"),
             new("Settings", () => _shell.Push(new SettingsPage(_shell)), Icon: "settings"),
         ]);
     }

@@ -1,7 +1,9 @@
 using Avalonia.Controls;
 using Avalonia.Platform.Storage;
 using Kofrenot.Core.Datasets;
+using Kofrenot.Core.Graph;
 using Kofrenot.Core.Logging;
+using Kofrenot.Phone.Platform;
 
 namespace Kofrenot.Phone.Views;
 
@@ -28,6 +30,37 @@ public sealed partial class Shell
         }
 
         return files;
+    }
+
+    /// <summary>
+    /// A dataset's file decrypted into the cache (cache/open/, deleted at the next start), downloaded first when
+    /// it is not here, then handed to another app: the one the user picks to open it, or to share it with.
+    /// </summary>
+    public async Task<bool> HandAsync(DatasetEdited version, Action<string> hand, string action)
+    {
+        Services.Log.Info("Action", action);
+        var path = Services.Opened.NewPath(version.File.Name);
+        if (!await ExportAsync(answers => Services.Session.ExportDataset(answers, version, path)))
+        {
+            return false;
+        }
+
+        hand(path);
+        return true;
+    }
+
+    /// <summary>A dataset's file written out, downloaded first when it is not here; what went wrong told.</summary>
+    public async Task<bool> ExportAsync(Func<PreparedAnswers, Task<bool>> export)
+    {
+        var answers = new PreparedAnswers();
+        try
+        {
+            return await export(answers);
+        }
+        finally
+        {
+            Tell(answers.Told);
+        }
     }
 
     /// <summary>Takes a photo or video with the camera app, and hands it to <paramref name="use"/>; nothing when cancelled.</summary>

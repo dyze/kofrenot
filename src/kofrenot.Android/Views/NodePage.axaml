@@ -107,7 +107,7 @@
                           Tag="{Binding}" Click="Field_Click">
                     <TextBlock Text="{Binding Value}" TextWrapping="Wrap" />
                   </Button>
-                  <Image Source="{Binding Thumbnail}" MaxHeight="96" HorizontalAlignment="Left" IsVisible="{Binding HasThumbnail}" />
+                  <Image Source="{Binding Thumbnail}" MaxHeight="96" HorizontalAlignment="Left" IsVisible="{Binding HasThumbnail}" Tag="{Binding}" Tapped="FieldImage_Tapped" />
                 </StackPanel>
                 <StackPanel Grid.Column="2" VerticalAlignment="Top">
                   <!-- A web address opened, a mail written, an address shown on a map (NodePage.Fields). -->
@@ -149,7 +149,7 @@
         <TextBlock x:Name="ContentText" TextWrapping="Wrap" IsVisible="False" />
         <!-- An image dataset's thumbnail, as its header on Windows (NodePage.ShowThumbnail). -->
         <Border x:Name="ThumbnailFrame" CornerRadius="8" ClipToBounds="True" HorizontalAlignment="Left" IsVisible="False">
-          <Image x:Name="Thumbnail" MaxHeight="240" Stretch="Uniform" />
+          <Image x:Name="Thumbnail" MaxHeight="240" Stretch="Uniform" Tapped="Thumbnail_Tapped" />
         </Border>
         <ItemsControl x:Name="Files" IsVisible="False">
           <ItemsControl.ItemTemplate>
@@ -202,7 +202,25 @@
             <TextBlock Text="Open as a tab" />
           </StackPanel>
         </Button>
-        <TextBlock x:Name="LinksHeader" Classes="caption" Text="Links" Margin="0,12,0,0" />
+        <!-- Links, and + Link: a box typed after the node's name, as the Link box on Windows (NodePage.Link). -->
+        <Grid x:Name="LinksHeader" ColumnDefinitions="*,Auto" Margin="0,12,0,0">
+          <TextBlock Classes="caption" Text="Links" VerticalAlignment="Center" />
+          <Button x:Name="AddLinkButton" Grid.Column="1" Classes="flat" Click="AddLink_Click">
+            <StackPanel Classes="iconLabel">
+              <PathIcon Data="{DynamicResource icon.add}" />
+              <TextBlock Text="Link" />
+            </StackPanel>
+          </Button>
+        </Grid>
+        <StackPanel x:Name="LinkPanel" Spacing="{StaticResource GapS}" IsVisible="False">
+          <Grid ColumnDefinitions="*,Auto">
+            <views:ChipBox x:Name="LinkBox" Placeholder="relates to Frank Herbert" />
+            <Button Grid.Column="1" Classes="icon" Click="CloseLink_Click">
+              <PathIcon Data="{DynamicResource icon.close}" />
+            </Button>
+          </Grid>
+          <TextBlock x:Name="LinkPreview" Classes="caption" TextWrapping="Wrap" />
+        </StackPanel>
         <ItemsControl x:Name="Links">
           <ItemsControl.ItemTemplate>
             <DataTemplate DataType="views:NodeRow">

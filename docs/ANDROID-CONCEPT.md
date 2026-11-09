@@ -53,10 +53,12 @@ Before 0.12 the phone wrote content only (`ClientMode.Content`: notes and files)
                                          │ search box           │ links, tap ─► Node details (a screen each)
                                          │ pinned, recent       └ Back, ←: the screen before
                                          └ view tabs ─► View (flat / tree) ─► Node details
- Settings: a list of topics ─► a topic (General, Vault ─► Members, Server, Appearance, Logging, About)
+ Settings: a list of topics ─► a topic (General, Vault ─► Members, Server, Node types, Link types, Appearance, Logging, About)
+ Settings > Vault: the vaults on the phone (VaultList) · Add from the server ─► Vault list (adding)
  Home: the search box's text ─► Creation (types, a note's text) ─► Home (cleared, the nodes added first among the recent)
- Home: ☰ (vault, sync, other vaults, Settings) · search box · ＋ (node, files, photo, video)
+ Home: ☰ (vault, sync, Vaults, Settings) · search box (ChipBox: labels, proposals) · ＋ (node, files, photo, video)
  Node details: keep offline (icon) · ⋮ (history, rename, colour, pin, fields, types, delete) ─► History (versions, Restore)
+ Node details: + Link (ChipBox after its name) ─► Creation · an image's thumbnail ─► Image (ZoomImage: pinch, double tap)
 ```
 
 One window, navigation by back button; light and dark themes follow the phone, or the theme chosen in Settings > Appearance (what Android draws itself, the status bar and the splash, follows the phone).
@@ -71,6 +73,8 @@ One window, navigation by back button; light and dark themes follow the phone, o
 | Top bar | `TopBar` (a templated control, its look in `App.axaml`): ← when the `Shell` has a screen before, the title or the screen's own content (the search box, the trail), its actions (⋮); ← raises the same back as Android's Back |
 | Icons | The same as on Windows (`src/kofrenot.Core/Icons`), as resources `icon.{name}` (`IconResources`), shown with `PathIcon` |
 | Node pictures | `NodePicture` in the rows: the thumbnail of `NodeVisual` (an image dataset's, or its image field's) read through `ThumbnailCache` (off the UI thread, the latest 100 in memory, emptied when another vault opens), else its icon and a dot of its colour |
+| Typed boxes | `ChipBox`: the search box and + Link, typed as the input box on Windows (`ChipInput`): labels in a strip scrolled to its end (at most half the box), the text scrolling with the caret, the proposal in grey after it, several listed in a `Popup` under the box |
+| Images | `ImagePage`: the file decoded at most 4096 px on its longer side (`ScreenImage`, its size read from its header first), shown by `ZoomImage` (fingers tracked by pointer id: one moves, two pinch; a double tap zooms ×2.5 or back) |
 | Sheets | `Shell.ShowSheet(title, choices)`: a bottom sheet over the screen, instead of menus; a choice closes it, then runs; Back or a tap outside closes it |
 | Tabs | The home's tabs scroll within the screen's width, the selected one in sight; **▾**, always at their right, lists them all in a sheet, then *Open a view…*; a view tab has a bar under them (its rows, **⋮** with *Close view*), so closing one is not a tap away (`HomePage.Tabs`) |
 | Back stack | `Shell`: one stack of screens; a deep link (a share from another app) shows the home, then its node over it (`ShowOverHome`) |

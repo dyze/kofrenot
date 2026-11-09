@@ -2,6 +2,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:views="using:Kofrenot.Phone.Views"
              xmlns:server="using:Kofrenot.Core.Server"
+             xmlns:browse="using:Kofrenot.Core.Browse"
              x:Class="Kofrenot.Phone.Views.SettingsPage">
   <UserControl.Resources>
     <!-- A line of the exchanges' statistics: the day or kind, then its numbers, on two lines to fit the phone. -->
@@ -11,6 +12,16 @@
         <TextBlock Classes="caption">
           <Run Text="{Binding Requests}" /><Run Text=" requests, " /><Run Text="{Binding Failed}" /><Run Text=" failed · ↑ " /><Run Text="{Binding Up}" /><Run Text=" ↓ " /><Run Text="{Binding Down}" />
         </TextBlock>
+      </StackPanel>
+    </DataTemplate>
+    <!-- A node or link type: its name (built-in ones marked), then what it holds. -->
+    <DataTemplate x:Key="TypeLine" DataType="browse:TypeLine">
+      <StackPanel Margin="0,4">
+        <StackPanel Orientation="Horizontal" Spacing="{StaticResource Gap}">
+          <TextBlock Text="{Binding Name}" />
+          <TextBlock Classes="caption" Text="built-in" VerticalAlignment="Center" IsVisible="{Binding IsBuiltIn}" />
+        </StackPanel>
+        <TextBlock Classes="caption" Text="{Binding Detail}" TextWrapping="Wrap" />
       </StackPanel>
     </DataTemplate>
   </UserControl.Resources>
@@ -29,10 +40,26 @@
           </CheckBox>
         </StackPanel>
 
+        <!-- The open vault, then the vaults on the phone: a tap opens one, ✕ removes it; others added from the server. -->
         <StackPanel x:Name="VaultPanel" Spacing="{StaticResource Gap}">
+          <TextBlock Classes="caption" Text="Open vault" />
           <TextBlock x:Name="Vault" TextWrapping="Wrap" />
           <Button x:Name="MembersButton" Content="Members…" Click="Members_Click" />
           <Button x:Name="ForgetButton" Content="Forget its remembered pass phrase" Click="Forget_Click" />
+          <TextBlock Classes="caption" Text="Vaults on this phone" Margin="0,12,0,0" />
+          <views:VaultList x:Name="Vaults" />
+          <Button Content="Add from the server" Click="AddVault_Click" />
+        </StackPanel>
+
+        <!-- The open vault's types, to read: they are changed in kofrenot on Windows (SettingsPage.Types). -->
+        <StackPanel x:Name="NodeTypesPanel" Spacing="{StaticResource Gap}">
+          <TextBlock Classes="caption" TextWrapping="Wrap" Text="Your node types are created and changed in kofrenot on Windows." />
+          <ItemsControl x:Name="NodeTypes" ItemTemplate="{StaticResource TypeLine}" />
+        </StackPanel>
+
+        <StackPanel x:Name="LinkTypesPanel" Spacing="{StaticResource Gap}">
+          <TextBlock Classes="caption" TextWrapping="Wrap" Text="Your link types, their aliases and qualifiers are created and changed in kofrenot on Windows." />
+          <ItemsControl x:Name="LinkTypes" ItemTemplate="{StaticResource TypeLine}" />
         </StackPanel>
 
         <StackPanel x:Name="ServerPanel" Spacing="{StaticResource Gap}">

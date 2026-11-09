@@ -66,6 +66,7 @@ public sealed partial class NodePage : UserControl, IPage
         _nodeId = node.Id;
         InitializeComponent();
         TaskEditor.Changed += TaskEditor_Changed;
+        AttachLinkBox();
         if (Vault is { } vault)
         {
             _browser.Open(vault.Graph, node);
@@ -127,7 +128,8 @@ public sealed partial class NodePage : UserControl, IPage
         ShowConflicts(details);
         ShowContent(vault, details.Node, details.Color);
         Links.ItemsSource = details.Links.Select(link => NodeRow.Of(vault.Graph, link.OtherNode, link.Type + link.QualifierSuffix, link: link.Link) with { CanOpen = link.CanOpen }).ToList();
-        LinksHeader.IsVisible = details.Links.Count > 0;
+        LinksHeader.IsVisible = details.Links.Count > 0 || !IsReadOnly;
+        AddLinkButton.IsVisible = !IsReadOnly && !LinkPanel.IsVisible;
     }
 
     // The fields of its types and its own, empty ones of its types included, as on Windows.
@@ -202,7 +204,7 @@ public sealed partial class NodePage : UserControl, IPage
             .Where(shown => shown.Label is not null)
             .Select((shown, index) => new TrailChip(shown.Page, shown.Label!, index == 0, shown.Page == this))
             .ToList();
-        Dispatcher.UIThread.Post(TrailScroll.ScrollToEnd, DispatcherPriority.Background);
+        Dispatcher.UIThread.Post(() => HorizontalScroll.ToRight(TrailScroll), DispatcherPriority.Background);
     }
 
     private void TrailChip_Click(object? sender, RoutedEventArgs e)

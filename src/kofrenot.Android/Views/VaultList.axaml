@@ -1,0 +1,26 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:views="using:Kofrenot.Phone.Views"
+             x:Class="Kofrenot.Phone.Views.VaultList">
+  <!-- The server vaults on the phone: a tap opens one, ✕ removes it from the phone. -->
+  <ItemsControl x:Name="Rows">
+    <ItemsControl.ItemTemplate>
+      <DataTemplate DataType="views:VaultRow">
+        <Grid ColumnDefinitions="*,Auto" MinHeight="56">
+          <Button Classes="flat" Padding="0" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" Tag="{Binding}" Click="Open_Click">
+            <Grid ColumnDefinitions="Auto,*">
+              <Ellipse Width="10" Height="10" Fill="{Binding Dot}" VerticalAlignment="Center" Margin="8,0" />
+              <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                <TextBlock Text="{Binding Name}" Classes="body" FontWeight="{Binding Weight}" TextTrimming="CharacterEllipsis" />
+                <TextBlock Classes="caption" Text="{Binding Detail}" TextTrimming="CharacterEllipsis" />
+              </StackPanel>
+            </Grid>
+          </Button>
+          <Button Grid.Column="1" Classes="icon" Tag="{Binding}" Click="Remove_Click">
+            <PathIcon Data="{DynamicResource icon.close}" />
+          </Button>
+        </Grid>
+      </DataTemplate>
+    </ItemsControl.ItemTemplate>
+  </ItemsControl>
+</UserControl>

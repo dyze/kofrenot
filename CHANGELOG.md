@@ -8,6 +8,22 @@ It covers kofrenot on Windows and on Android; versions before 0.9 ran on Windows
 
 ## [Unreleased]
 
+### Added
+- **Android**
+  - **Several proposals** while typing, as on Windows: up to 5 listed under the search box, the one **Enter** accepts in bold (also in grey after the text); a tap accepts any ([README](README.md#on-android)).
+  - **+ Link** beside a node's *Links*: a box typed after the node's name, as the Link box on Windows (`relates to Frank Herbert`, `written by Frank Herbert, Date 1965`), with labels, proposals and what **Enter** does under it; **Enter** shows the link's creation screen, a link there typed again updated with its qualifiers ([README](README.md#on-android)).
+  - **Image viewer**: a tap on an image's thumbnail (a dataset's, or an image field's) shows it on the whole screen, downloaded first when not here; pinch or double tap to zoom, a finger to move it, **⋮** opens or shares it ([README](README.md#on-android)).
+  - **Settings > Node types and Link types**: the open vault's types, read only, built-in ones first: a node type with its fields, a link type with its reverse, aliases and qualifiers; they are changed on Windows ([README](README.md#on-android)).
+
+### Changed
+- **Android**
+  - **The vaults are in Settings > Vault**, under the open vault: a tap opens one, ✕ removes it from the phone, *Add from the server* adds another. **☰** on the home keeps the open vault, *Sync now*, *Vaults* (that topic) and *Settings*, no longer the other vaults ([README](README.md#on-android)).
+
+### Fixed
+- **Android**
+  - **What you type stays in sight** in the search box: its text scrolls with the caret, and its labels scroll within half the box, their last one in sight, instead of hiding the text.
+  - **A long trail shows its last screen**: the trail at the top of a node's page scrolls to its right end, the node shown in sight.
+
 ## [0.17] - 2026-11-09
 
 *Imports and query views: records from JSON files and other vaults added as nodes, queries shown as tables.*
