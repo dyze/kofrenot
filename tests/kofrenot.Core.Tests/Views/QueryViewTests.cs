@@ -252,6 +252,70 @@ public sealed class QueryViewTests
         Assert.Equal("date", QueryDraft.NameOf(new QualifierColumn("date"), null, _graph));
     }
 
+    [Fact]
+    public void Numbers_SortAsNumbers_EmptyCellsLast_EitherWay()
+    {
+        SetField(_dune, Book, Published, "1965");
+        SetField(_foundation, Book, Published, "200");
+        var view = new QueryView(_graph, Definition("?read by Alice", new FieldColumn("book", "published")));
+
+        Assert.Equal(["Foundation", "Dune", "An article"], SortedNames(view, new QuerySort(1, false)));
+        Assert.Equal(["Dune", "Foundation", "An article"], SortedNames(view, new QuerySort(1, true)));
+    }
+
+    [Fact]
+    public void Dates_SortInOrder()
+    {
+        var view = new QueryView(_graph, Definition("?read by Alice", new QualifierColumn("date")));
+
+        Assert.Equal(["Foundation", "An article", "Dune"], SortedNames(view, new QuerySort(1, false)));
+    }
+
+    [Fact]
+    public void Ties_StayByName_AndTheNameColumnSortsBothWays()
+    {
+        SetField(_dune, Book, Published, "1965");
+        SetField(_foundation, Book, Published, "1965");
+        var view = new QueryView(_graph, Definition("?book: read by Alice", new FieldColumn("book", "published")));
+
+        Assert.Equal(["Dune", "Foundation"], SortedNames(view, new QuerySort(1, false)));
+        Assert.Equal(["Dune", "Foundation"], SortedNames(view, new QuerySort(1, true)));
+        Assert.Equal(["Foundation", "Dune"], SortedNames(view, new QuerySort(QuerySort.NameColumn, true)));
+    }
+
+    [Fact]
+    public void Found_InTheOrderShown()
+    {
+        Link("read", _alice, Add("Dune Messiah", Book));
+        var view = new QueryView(_graph, Definition("?book: read by Alice"));
+
+        Assert.Equal(["Dune Messiah", "Dune"], view.Find("dune", new QuerySort(QuerySort.NameColumn, true)).Select(row => row.Node.Name));
+    }
+
+    [Theory]
+    [InlineData(2)]
+    [InlineData(-1)]
+    public void AColumnNotHere_SortsByName(int column) =>
+        Assert.Equal(["Dune", "Foundation"], SortedNames(new QueryView(_graph, Definition("?book: read by Alice", WrittenBy)), new QuerySort(column, true)));
+
+    [Theory]
+    [InlineData("200", "1965", -1)]
+    [InlineData("Éclair", "eclat", -1)]
+    [InlineData("abc", "ABC", 0)]
+    [InlineData("2025-07-01", "2026", -1)]
+    public void Cells_CompareAsWhatTheyAre(string first, string second, int sign) =>
+        Assert.Equal(sign, Math.Sign(QuerySort.CompareCells(first, second)));
+
+    [Fact]
+    public void AClickOnAHeader_SortsByIt_ThenTheOtherWay()
+    {
+        Assert.Equal(new QuerySort(0, true), QuerySort.ByName.ClickedOn(0));
+        Assert.Equal(new QuerySort(0, false), new QuerySort(0, true).ClickedOn(0));
+        Assert.Equal(new QuerySort(2, false), new QuerySort(1, true).ClickedOn(2));
+    }
+
+    private static List<string> SortedNames(QueryView view, QuerySort sort) => [.. view.RowsBy(sort).Select(row => row.Node.Name)];
+
     private void SetField(Node node, NodeType type, FieldDefinition field, string value) =>
         _graph.Apply(new FieldSet(Guid.NewGuid(), Now, node, type.Id, field.Id, field.Name, field.Kind, value, []));
 

@@ -35,6 +35,7 @@ public partial class ViewPanel : UserControl
         Tree.AddHandler(TreeViewItem.ExpandedEvent, new RoutedEventHandler(Tree_Expanded));
         Tree.AddHandler(TreeViewItem.CollapsedEvent, new RoutedEventHandler(Tree_Collapsed));
         List.AddHandler(ScrollViewer.ScrollChangedEvent, new ScrollChangedEventHandler((_, _) => ReadCardsInView()));
+        List.AddHandler(GridViewColumnHeader.ClickEvent, new RoutedEventHandler(QueryHeader_Click));
         Unlinked.OpenNode += node => OpenNode?.Invoke(node);
         GraphBoard.OpenNode += node => OpenNode?.Invoke(node);
         GraphBoard.OpenLink += link => OpenLink?.Invoke(link);
@@ -75,6 +76,11 @@ public partial class ViewPanel : UserControl
             _selectedNode = null;
             _marked.Clear();
             ClearSearch();
+            _queryWidths = [];
+        }
+        else if (List.View is GridView table)
+        {
+            _queryWidths = [.. table.Columns.Select(column => column.Width)];
         }
 
         _vault = vault;
@@ -84,6 +90,7 @@ public partial class ViewPanel : UserControl
         _listType = null;
         _list = null;
         _query = null;
+        List.View = null;
         _cardOrder = null;
         switch (new ViewPlanner(graph).Load(view).Definition)
         {
@@ -214,8 +221,8 @@ public partial class ViewPanel : UserControl
         return name;
     }
 
-    /// <summary>A row of a list: the node pictured, as in a tree (no focus frame either).</summary>
-    private ListBoxItem RowOf(Node node) =>
+    /// <summary>A row of a list: the node pictured, as in a tree (no focus frame either). A ListViewItem, the list being a ListView, so it is its own row.</summary>
+    private ListViewItem RowOf(Node node) =>
         new() { Content = HeaderOf(node, isCut: false), Tag = node, Style = (Style)FindResource("ListRowItem") };
 
     private static Node? NodeOf(object? row) => (row as ListBoxItem)?.Tag as Node;

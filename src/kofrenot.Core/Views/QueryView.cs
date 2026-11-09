@@ -40,17 +40,39 @@ public sealed class QueryView(KnowledgeGraph graph, QueryDefinition definition)
         }
     }
 
+    /// <summary>The rows by name.</summary>
     public IReadOnlyList<QueryRow> Rows => [.. Nodes.Select(node => new QueryRow(node, [.. definition.Columns.Select(column => CellOf(node, column))]))];
+
+    /// <summary>The rows in <paramref name="sort"/>'s order: by name when its column is not here (the view was edited); empty cells last; ties by name.</summary>
+    public IReadOnlyList<QueryRow> RowsBy(QuerySort sort)
+    {
+        var rows = Rows;
+        if (sort.Column == QuerySort.NameColumn)
+        {
+            return sort.Descending ? [.. rows.Reverse()] : rows;
+        }
+
+        if (sort.Column < 1 || sort.Column > definition.Columns.Count)
+        {
+            return rows;
+        }
+
+        var cell = sort.Column - 1;
+        var filled = rows.Where(row => row.Cells[cell].Length > 0);
+        var comparer = Comparer<string>.Create(QuerySort.CompareCells);
+        var sorted = sort.Descending ? filled.OrderByDescending(row => row.Cells[cell], comparer) : filled.OrderBy(row => row.Cells[cell], comparer);
+        return [.. sorted, .. rows.Where(row => row.Cells[cell].Length == 0)];
+    }
 
     /// <summary>A row's columns on one line, as a phone shows them: <c>written by Frank Herbert · Date 2026-03-14</c>; the empty ones left out.</summary>
     public string LineOf(QueryRow row) =>
         string.Join(" · ", Headers.Zip(row.Cells).Where(column => column.Second.Length > 0).Select(column => $"{column.First} {column.Second}"));
 
-    /// <summary>The rows whose node's name matches <paramref name="text"/> (<see cref="GraphSearch.MatcherOf"/>), in the order shown.</summary>
-    public IReadOnlyList<QueryRow> Find(string text)
+    /// <summary>The rows whose node's name matches <paramref name="text"/> (<see cref="GraphSearch.MatcherOf"/>), in <paramref name="sort"/>'s order (by name when none).</summary>
+    public IReadOnlyList<QueryRow> Find(string text, QuerySort? sort = null)
     {
         var matches = GraphSearch.MatcherOf(text);
-        return [.. Rows.Where(row => matches(row.Node.Name))];
+        return [.. RowsBy(sort ?? QuerySort.ByName).Where(row => matches(row.Node.Name))];
     }
 
     private string CellOf(Node node, ViewColumn column) => column switch

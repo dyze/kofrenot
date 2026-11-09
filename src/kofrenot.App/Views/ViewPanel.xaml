@@ -45,6 +45,13 @@
         <Setter Property="FocusVisualStyle" Value="{x:Null}" />
         <Setter Property="HorizontalContentAlignment" Value="Stretch" />
       </Style>
+
+      <!-- A row of a query view's table: the GridView's own row, which lays out its columns, as compact as a list's row. -->
+      <Style x:Key="QueryRowItem" TargetType="ListViewItem" BasedOn="{StaticResource {x:Static GridView.GridViewItemContainerStyleKey}}">
+        <Setter Property="MinHeight" Value="0" />
+        <Setter Property="Padding" Value="0,3" />
+        <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+      </Style>
     </ResourceDictionary>
   </UserControl.Resources>
 
@@ -204,9 +211,6 @@
         <TextBlock Grid.Column="3" Style="{StaticResource SecondaryText}" Text="Modified" />
       </Grid>
 
-      <!-- A query view: Name, then the link phrase of each column (ViewPanel.Query), aligned with its rows. -->
-      <Grid x:Name="QueryHeader" Margin="4,0,24,4" Visibility="Collapsed" />
-
       <TextBlock x:Name="MessageText"
                  Grid.Row="1"
                  MaxWidth="460"
@@ -245,7 +249,7 @@
         </TreeView.ContextMenu>
       </TreeView>
 
-      <ListBox x:Name="List"
+      <ListView x:Name="List"
                Grid.Row="1"
                FocusVisualStyle="{x:Null}"
                Background="Transparent"
@@ -266,11 +270,11 @@
                SelectionChanged="List_SelectionChanged"
                ContextMenuOpening="List_ContextMenuOpening">
         <!-- Filled when it opens: New…, Edit, Rename (ViewPanel.Actions). -->
-        <ListBox.ContextMenu>
+        <ListView.ContextMenu>
           <ContextMenu />
-        </ListBox.ContextMenu>
-        <!-- Its rows are built in code (ViewPanel.RowOf), as the tree's, or its cards (ViewPanel.CardOf). -->
-      </ListBox>
+        </ListView.ContextMenu>
+        <!-- Its rows are built in code (ViewPanel.RowOf), as the tree's, or its cards (ViewPanel.CardOf); a query view's are a table (ViewPanel.Query: its View a GridView). -->
+      </ListView>
 
       <!-- A graph: its own bar (Fit, Reset layout) over its cards. -->
       <local:GraphPanel x:Name="GraphBoard" Grid.Row="1" Visibility="Collapsed" />

@@ -36,7 +36,6 @@ public partial class ViewPanel
 
         // A query view adds nothing: what a new node would need to be found is the query's.
         NewButton.Visibility = isGraph || isQuery ? Visibility.Collapsed : Visibility.Visible;
-        QueryHeader.Visibility = isQuery ? Visibility.Visible : Visibility.Collapsed;
 
         foreach (var graphOnly in new UIElement[] { FitButton, ResetLayoutButton, LinkNamesButton })
         {

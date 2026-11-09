@@ -3,7 +3,7 @@ using Kofrenot.Core.Views;
 
 namespace Kofrenot.Core.Browse;
 
-/// <summary>How a view was left on this device: the nodes expanded in its tree, whether it shows details, a list's cards, a graph's link names.</summary>
+/// <summary>How a view was left on this device: the nodes expanded in its tree, whether it shows details, a list's cards, a graph's link names, a query view's sort.</summary>
 public sealed class ViewState
 {
     /// <summary>The <see cref="TreeItem.Key"/> of each node expanded.</summary>
@@ -20,6 +20,12 @@ public sealed class ViewState
 
     /// <summary>A graph writes the name of each link on its line.</summary>
     public bool ShowsLinkNames { get; set; }
+
+    /// <summary>The column a query view is sorted by (<see cref="QuerySort.NameColumn"/>, then its columns from 1).</summary>
+    public int SortColumn { get; set; }
+
+    /// <summary>A query view is sorted Z→A.</summary>
+    public bool SortDescending { get; set; }
 }
 
 /// <summary>
@@ -78,6 +84,17 @@ public sealed class ViewStates(string path, ILog? log = null)
     {
         var changed = state.ShowsLinkNames != showsLinkNames;
         state.ShowsLinkNames = showsLinkNames;
+        return changed;
+    });
+
+    /// <summary>How a query view is sorted (by name, A→Z, by default).</summary>
+    public QuerySort SortOf(Guid vault, Guid view) =>
+        Find(vault, view) is { } state ? new QuerySort(state.SortColumn, state.SortDescending) : QuerySort.ByName;
+
+    public void SetSort(Guid vault, Guid view, QuerySort sort) => Change(vault, view, state =>
+    {
+        var changed = (state.SortColumn, state.SortDescending) != (sort.Column, sort.Descending);
+        (state.SortColumn, state.SortDescending) = (sort.Column, sort.Descending);
         return changed;
     });
 

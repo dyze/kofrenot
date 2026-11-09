@@ -145,6 +145,21 @@ public sealed class ViewStatesTests : IDisposable
         Assert.False(States().ShowsLinkNames(_vault, _view));
     }
 
+    [Fact]
+    public void AQuerySort_IsByNameByDefault_AndKeptPerView()
+    {
+        var states = States();
+        Assert.Equal(QuerySort.ByName, states.SortOf(_vault, _view));
+
+        states.SetSort(_vault, _view, new QuerySort(2, Descending: true));
+
+        Assert.Equal(new QuerySort(2, true), States().SortOf(_vault, _view));
+        Assert.Equal(QuerySort.ByName, States().SortOf(_vault, Guid.NewGuid()));
+
+        states.SetSort(_vault, _view, QuerySort.ByName);
+        Assert.Equal(QuerySort.ByName, States().SortOf(_vault, _view));
+    }
+
     public void Dispose() => _temp.Dispose();
 
     private ViewStates States() => new(FilePath, _log);
