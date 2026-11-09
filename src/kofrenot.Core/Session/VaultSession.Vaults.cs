@@ -227,13 +227,14 @@ public sealed partial class VaultSession
         }
     }
 
-    /// <summary>Keeps the open vault's name on this computer, to show it while the vault is locked.</summary>
+    /// <summary>Keeps the open vault's name on this computer, to show it while the vault is locked, and a server vault's in its account.</summary>
     private void KeepName()
     {
         if (Current is { Graph.VaultName: { } name } vault && name != _keptName)
         {
             _names.Remember(vault.Id, name);
             _keptName = name;
+            _ = KeepNameInAccountAsync(name);
         }
     }
 

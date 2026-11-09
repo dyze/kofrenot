@@ -18,8 +18,8 @@ public sealed partial class VaultSession
 
     public SyncService Sync => _sync;
 
-    /// <summary>The stores of the account not registered here yet; null when there is none, when signed out or when the server failed (the user is told why).</summary>
-    public async Task<IReadOnlyList<ServerStore>?> StoresToAdd(ISessionQuestions ask)
+    /// <summary>The stores of the account not registered here yet, with their names when the account keeps them; null when there is none, when signed out or when the server failed (the user is told why).</summary>
+    public async Task<IReadOnlyList<StoreChoice>?> StoresToAdd(ISessionQuestions ask)
     {
         if (_server.Client is not { Session: not null } client)
         {
@@ -42,7 +42,7 @@ public sealed partial class VaultSession
         var toAdd = stores.Where(store => !registered.Contains(store.Id)).ToList();
         if (toAdd.Count > 0)
         {
-            return toAdd;
+            return await ChoicesOf(ask, toAdd);
         }
 
         ask.Tell(stores.Count == 0
@@ -68,9 +68,10 @@ public sealed partial class VaultSession
         CreateVault(ask, client, server, store: null);
     }
 
-    /// <summary>Adds a vault of the server: downloads it, then switches to it. An empty store becomes a new vault.</summary>
-    public async Task AddFromServer(ISessionQuestions ask, ServerStore store)
+    /// <summary>Adds a vault of the server: downloads it, then switches to it. An empty store becomes a new vault. Its name, when known, shows until it is opened.</summary>
+    public async Task AddFromServer(ISessionQuestions ask, StoreChoice choice)
     {
+        var store = choice.Store;
         if (_server.Client is not { Server: { } server } client)
         {
             ask.Tell(NotSignedIn);
@@ -95,8 +96,14 @@ public sealed partial class VaultSession
             return;
         }
 
+        var id = IdIn(_files.MirrorOf(store.Id));
+        if (choice.Name is { } name && id is { } known)
+        {
+            _names.Remember(known, name);
+        }
+
         var location = new VaultLocation(_files.MirrorOf(store.Id), address);
-        _settings.SetVaults(_settings.Vaults.Add(new RegisteredVault(location, Role: SharedRole(store.Role))));
+        _settings.SetVaults(_settings.Vaults.Add(new RegisteredVault(location, id, Role: SharedRole(store.Role))));
         _log.Info("Settings", $"Server vault added: store {store.Id}");
         SwitchTo(ask, location);
         _sync.Soon();
@@ -193,6 +200,11 @@ public sealed partial class VaultSession
 
         Unregister(ask, vault.Location);
         DeleteMirror(store.Id);
+        if (_server.Identity is { } account)
+        {
+            await NameInAccountAsync(account, store.Id, name: null);
+        }
+
         return true;
     }
 

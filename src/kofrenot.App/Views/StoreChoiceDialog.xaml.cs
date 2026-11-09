@@ -3,16 +3,19 @@ using System.Windows.Input;
 using System.Windows.Interop;
 using Kofrenot.Core.Datasets;
 using Kofrenot.Core.Server;
+using Kofrenot.Core.Session;
 using Kofrenot.UI.Platform;
 
 namespace Kofrenot.UI.Views;
 
-/// <summary>A row of the list: a store, by its id, whose it is, and its size.</summary>
-public sealed record StoreRow(ServerStore Store)
+/// <summary>A row of the list: a store, by its name (else its id), whose it is, and its size.</summary>
+public sealed record StoreRow(StoreChoice Choice)
 {
-    public string Text => $"Vault {Store.Id.ToString()[..8]} · {Whose} · " + (Store.Files == 0
+    public string Text => $"{Choice.Title} · {Whose} · " + (Store.Files == 0
         ? "empty"
         : $"{ByteSize.Format(Store.Bytes)} in {Store.Files} files");
+
+    private ServerStore Store => Choice.Store;
 
     private string Whose => Store.Role == StoreRole.Owner ? "yours" : $"shared with you, {Store.Role.ToString().ToLowerInvariant()}";
 }
@@ -20,7 +23,7 @@ public sealed record StoreRow(ServerStore Store)
 /// <summary>Chooses one of the server's vaults not listed here yet.</summary>
 public partial class StoreChoiceDialog : Window
 {
-    private StoreChoiceDialog(Window owner, IReadOnlyList<ServerStore> stores)
+    private StoreChoiceDialog(Window owner, IReadOnlyList<StoreChoice> stores)
     {
         InitializeComponent();
         Owner = owner;
@@ -30,10 +33,10 @@ public partial class StoreChoiceDialog : Window
     }
 
     /// <summary>The store chosen; null when cancelled.</summary>
-    public static ServerStore? Ask(Window owner, IReadOnlyList<ServerStore> stores)
+    public static StoreChoice? Ask(Window owner, IReadOnlyList<StoreChoice> stores)
     {
         var dialog = new StoreChoiceDialog(owner, stores);
-        return dialog.ShowDialog() == true ? (dialog.StoreList.SelectedItem as StoreRow)?.Store : null;
+        return dialog.ShowDialog() == true ? (dialog.StoreList.SelectedItem as StoreRow)?.Choice : null;
     }
 
     private void AddButton_Click(object sender, RoutedEventArgs e)

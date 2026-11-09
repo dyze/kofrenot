@@ -35,6 +35,7 @@ Both apps share the same vaults and the same core; each shows its own set of fea
 | --- | --- | --- |
 | **Vaults** | | |
 | Server vaults: add from the server, open, remove from the device | ✔ | ✔ |
+| Server vaults not added yet shown by name | ✔ | ✔ with the account's identity remembered on the phone |
 | Lock the open vault (padlock) | ✔ | — |
 | Privacy screen: the vault covered while hidden | ✔ | out of screenshots and recent apps, unless turned off in Settings > General |
 | Hide or lock the vault when the computer locks or sleeps; cover or lock it after a while without input | ✔ | — |
@@ -133,7 +134,7 @@ A vault holds your nodes, notes and files, encrypted. There are two kinds:
 | Backup | On the server, by its admin; your devices keep a copy | Yours to make |
 | Pass phrase | One for all your server vaults, the account's | One per vault |
 
-- **Add one** in Settings > Vault: *New vault on the server* (sign in first, in Settings > Server), *Vault from the server…*, or a folder (an empty one becomes a new vault). A folder vault can be moved to the server later (*Move to server…*).
+- **Add one** in Settings > Vault: *New vault on the server* (sign in first, in Settings > Server), *Vault from the server…*, or a folder (an empty one becomes a new vault). A folder vault can be moved to the server later (*Move to server…*). *Vault from the server…* lists a vault by its name once it was opened on a device of yours (its name is then kept in your account, encrypted so that only your account's pass phrase reads it: typed if not remembered here, Cancel shows them by id); before, by its id.
 - **Recovery key**: shown once when the vault (or the account's pass phrase) is created. Keep it with the pass phrase: **if both are lost, the vault cannot be read**.
 - **Several vaults**: one is open at a time, switched in the title bar (or **Ctrl+1** to **Ctrl+9**); each can have its own hotkey. The **padlock** (**Ctrl+L**) locks the open one until its pass phrase is typed again.
 - **Privacy screen** (on by default, Settings > General): when the window is hidden or minimized, the open vault is covered, also in the taskbar preview; shown again, it opens on a plain screen until you click **Show** (or press Enter), so nothing shows by mistake while sharing your screen. Unlike the padlock, no pass phrase is asked.

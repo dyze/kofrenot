@@ -5,6 +5,7 @@ using Avalonia.Media;
 using Kofrenot.Core.Datasets;
 using Kofrenot.Core.Logging;
 using Kofrenot.Core.Server;
+using Kofrenot.Core.Session;
 using Kofrenot.Core.Settings;
 using Kofrenot.Phone.Platform;
 
@@ -32,8 +33,8 @@ public sealed class VaultRow(RegisteredVault vault, string name) : INotifyProper
     }
 }
 
-/// <summary>A vault of the server not on the phone yet: its name is in the vault, so shown by its id, size and role.</summary>
-public sealed record StoreRow(ServerStore Store, string Name, string Detail);
+/// <summary>A vault of the server not on the phone yet: by the name its account keeps (else its id), size and role.</summary>
+public sealed record StoreRow(StoreChoice Choice, string Name, string Detail);
 
 /// <summary>
 /// The server vaults on the phone: a tap opens one, ✕ removes it from the phone (its copy here, not
@@ -108,7 +109,7 @@ public sealed partial class VaultsPage : UserControl, IPage
     {
         var answers = new PreparedAnswers();
         SetBusy(true);
-        IReadOnlyList<ServerStore>? stores;
+        IReadOnlyList<StoreChoice>? stores;
         try
         {
             stores = await _shell.Services.Session.StoresToAdd(answers);
@@ -126,11 +127,11 @@ public sealed partial class VaultsPage : UserControl, IPage
 
         _choosing = true;
         Bar.Title = "Add a vault";
-        Empty.Text = "Vaults are named inside them: a vault not added yet shows its size and your role. Back to cancel.";
+        Empty.Text = "A vault shows by its id until it is opened once on a device of yours. Back to cancel.";
         Empty.IsVisible = true;
         AddButton.IsVisible = false;
         SettingsButton.IsVisible = false;
-        List.ItemsSource = stores.Select(store => new StoreRow(store, $"Vault {store.Id.ToString()[..8]}", $"{ByteSize.Format(store.Bytes)}, {store.Files} files · {store.Role}")).ToList();
+        List.ItemsSource = stores.Select(choice => new StoreRow(choice, choice.Title, $"{ByteSize.Format(choice.Store.Bytes)}, {choice.Store.Files} files · {choice.Store.Role}")).ToList();
     }
 
     private void List_SelectionChanged(object? sender, SelectionChangedEventArgs e)
@@ -143,19 +144,19 @@ public sealed partial class VaultsPage : UserControl, IPage
                 _shell.Open(row.Vault.Location);
                 break;
             case StoreRow row:
-                _shell.Run(() => AddAsync(row.Store));
+                _shell.Run(() => AddAsync(row.Choice));
                 break;
         }
     }
 
     // Downloads it, then opens it: its pass phrase asked when needed.
-    private async Task AddAsync(ServerStore store)
+    private async Task AddAsync(StoreChoice choice)
     {
         var answers = new PreparedAnswers();
         SetBusy(true);
         try
         {
-            await _shell.Services.Session.AddFromServer(answers, store);
+            await _shell.Services.Session.AddFromServer(answers, choice);
         }
         finally
         {
@@ -163,7 +164,7 @@ public sealed partial class VaultsPage : UserControl, IPage
         }
 
         _choosing = false;
-        if (_shell.Services.Session.Vaults.FirstOrDefault(vault => vault.Location.Store?.Id == store.Id) is { } added)
+        if (_shell.Services.Session.Vaults.FirstOrDefault(vault => vault.Location.Store?.Id == choice.Store.Id) is { } added)
         {
             _shell.AfterOpening(answers, added.Location);
         }

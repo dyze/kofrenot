@@ -33,7 +33,7 @@ public sealed class ServerVaultSessionTests : IDisposable
 
         session.CreateOnServer(ask);
         Assert.Null(await session.StoresToAdd(ask));
-        await session.AddFromServer(ask, new ServerStore(Guid.NewGuid(), StoreRole.Owner, 1, 1));
+        await session.AddFromServer(ask, new StoreChoice(new ServerStore(Guid.NewGuid(), StoreRole.Owner, 1, 1), null));
         await session.MoveToServer(ask, new RegisteredVault(new VaultLocation(_laptop.Folder("vault"))));
         Assert.False(await session.DeleteFromServer(ask, new RegisteredVault(new VaultLocation("x", new StoreAddress(FakeKofre.Address, Guid.NewGuid()))), "x"));
         session.SetAccountPassPhrase(ask);
@@ -95,6 +95,60 @@ public sealed class ServerVaultSessionTests : IDisposable
     }
 
     [Fact]
+    public async Task AnotherDevice_ShowsTheVaultByItsName_KeptInTheAccount()
+    {
+        await CreateServerVaultAsync(_laptop);
+        await _desktop.SignInAsync();
+
+        var choice = Assert.Single((await _desktop.Session.StoresToAdd(_desktop.Ask))!);
+
+        Assert.Equal(("Personal", "Personal"), (choice.Name, choice.Title));
+        Assert.Contains(nameof(ISessionQuestions.AskAccount), _desktop.Ask.Asked);
+        _desktop.Ask.Cancels = true;
+        await _desktop.Session.AddFromServer(_desktop.Ask, choice);
+        Assert.Null(_desktop.Session.Current);
+        Assert.Equal("Personal", _desktop.Session.NameOf(_desktop.Session.Selected!));
+    }
+
+    [Fact]
+    public async Task WithoutTheAccountsPassPhrase_TheVaultShowsByItsId()
+    {
+        await CreateServerVaultAsync(_laptop);
+        await _desktop.SignInAsync();
+        _desktop.Ask.Cancels = true;
+
+        var choice = Assert.Single((await _desktop.Session.StoresToAdd(_desktop.Ask))!);
+
+        Assert.Null(choice.Name);
+        Assert.Equal($"Vault {choice.Store.Id.ToString()[..8]}", choice.Title);
+    }
+
+    [Fact]
+    public async Task TheAccountsIdentityUnlockedHere_ShowsNames_WithoutAsking()
+    {
+        await CreateServerVaultAsync(_desktop);
+        _desktop.Session.Name(_desktop.Ask, new VaultNamePlanner(_desktop.Vault.Graph).Plan("Work").Change!);
+        await CreateServerVaultAsync(_laptop);
+        _laptop.Ask.Asked.Clear();
+
+        var choice = Assert.Single((await _laptop.Session.StoresToAdd(_laptop.Ask))!);
+
+        Assert.Equal("Work", choice.Name);
+        Assert.DoesNotContain(nameof(ISessionQuestions.AskAccount), _laptop.Ask.Asked);
+    }
+
+    [Fact]
+    public async Task ANameThatCannotBeKept_IsLogged()
+    {
+        await CreateServerVaultAsync(_laptop);
+        _kofre.Offline = true;
+
+        _laptop.Session.Name(_laptop.Ask, new VaultNamePlanner(_laptop.Vault.Graph).Plan("Work").Change!);
+
+        Assert.Contains(_laptop.Log.Entries, entry => entry.Level == LogLevel.Warning && entry.Message.Contains("cannot be kept in the account"));
+    }
+
+    [Fact]
     public async Task AnEmptyStore_BecomesANewVault()
     {
         await _laptop.SignInAsync();
@@ -104,7 +158,8 @@ public sealed class ServerVaultSessionTests : IDisposable
         await _laptop.Session.AddFromServer(_laptop.Ask, store);
 
         Assert.Contains(nameof(ISessionQuestions.AskNewOnServer), _laptop.Ask.Asked);
-        Assert.Equal(store.Id, _laptop.Session.Selected!.Location.Store!.Id);
+        Assert.DoesNotContain(nameof(ISessionQuestions.AskAccount), _laptop.Ask.Asked);
+        Assert.Equal(store.Store.Id, _laptop.Session.Selected!.Location.Store!.Id);
     }
 
     [Fact]
@@ -113,7 +168,7 @@ public sealed class ServerVaultSessionTests : IDisposable
         await _laptop.SignInAsync();
         _kofre.Offline = true;
 
-        await _laptop.Session.AddFromServer(_laptop.Ask, new ServerStore(Guid.NewGuid(), StoreRole.Owner, 3, 100));
+        await _laptop.Session.AddFromServer(_laptop.Ask, new StoreChoice(new ServerStore(Guid.NewGuid(), StoreRole.Owner, 3, 100), null));
 
         Assert.Contains(_laptop.Ask.Told, told => told.StartsWith("The vault cannot be downloaded", StringComparison.Ordinal));
         Assert.Empty(_laptop.Session.Vaults);
@@ -158,6 +213,7 @@ public sealed class ServerVaultSessionTests : IDisposable
         Assert.True(await _laptop.Session.DeleteFromServer(_laptop.Ask, vault, Device.ServerPassword));
 
         Assert.True(Assert.Single(_kofre.Stores).IsTrashed);
+        Assert.Empty(_laptop.Server.Identity!.VaultNames);
         Assert.Empty(_laptop.Session.Vaults);
         Assert.False(Directory.Exists(vault.Location.Folder));
     }

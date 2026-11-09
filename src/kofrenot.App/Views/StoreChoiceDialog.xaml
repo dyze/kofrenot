@@ -9,8 +9,8 @@
         ShowInTaskbar="False"
         WindowStartupLocation="CenterOwner"
         SourceInitialized="Window_SourceInitialized">
-  <!-- Chooses a vault of the server not listed here yet. Its name is encrypted in it: the vault is
-       shown by its size until it is opened. Enter: Add, Esc: Cancel. -->
+  <!-- Chooses a vault of the server not listed here yet, by the name the account keeps for it,
+       else by its id. Enter: Add, Esc: Cancel. -->
   <Window.Resources>
     <ResourceDictionary Source="SharedStyles.xaml" />
   </Window.Resources>
@@ -20,7 +20,7 @@
     <TextBlock Margin="0,6,0,10"
                Opacity="0.7"
                TextWrapping="Wrap"
-               Text="A vault's name is encrypted in it: it shows once the vault is opened with its pass phrase. An empty one becomes a new vault." />
+               Text="A vault shows by its id until it is opened once on a device of yours: its name is then kept, encrypted, in your account. An empty one becomes a new vault." />
     <ListBox x:Name="StoreList" Height="180" DisplayMemberPath="Text" MouseDoubleClick="StoreList_MouseDoubleClick" />
 
     <StackPanel Margin="0,20,0,0" HorizontalAlignment="Right" Orientation="Horizontal">

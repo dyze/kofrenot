@@ -1,4 +1,5 @@
 using System.Net;
+using System.Text;
 using System.Text.Json;
 using static Kofrenot.Core.Tests.Server.StubHandler;
 
@@ -134,7 +135,103 @@ public sealed class AccountIdentitiesTests : IDisposable
         Assert.Contains(_log.Entries, entry => entry.Level == LogLevel.Warning);
     }
 
+    [Fact]
+    public async Task AVaultsName_IsSealedInThePrivatePart_ReadByAnyKofrenot()
+    {
+        var (account, unlocked) = await CreatedAsync();
+        var store = Guid.NewGuid();
+        var stub = new StubHandler(_ => Json(HttpStatusCode.OK, """{"version":2}"""));
+
+        var named = await Identities().NameVaultAsync(Client(stub), account, store, "Personal");
+
+        var privatePart = PrivatePartOf(stub.Requests[0].Body!);
+        Assert.DoesNotContain("Personal", Encoding.UTF8.GetString(privatePart));
+        Assert.Equal(account.Identity.Id, Identity.FromJson(privatePart).Id);
+        Assert.Equal((2L, "Personal"), (named.Version, named.NameOf(store, unlocked)));
+        Assert.Equal("Personal", Identities().Kept(Address, Email)?.NameOf(store, unlocked));
+        Assert.DoesNotContain(_log.Entries, entry => entry.Message.Contains("Personal"));
+
+        var read = new StubHandler(_ => Json(HttpStatusCode.OK, JsonSerializer.Serialize(new { version = 2, @public = new byte[] { 1 }, @private = privatePart })));
+        File.Delete(FilePath);
+        Assert.Equal("Personal", (await Identities().RefreshAsync(Client(read), Address, Email))?.NameOf(store, unlocked));
+    }
+
+    [Fact]
+    public async Task VaultNames_StayWhenThePassPhraseChanges_AndGoWhenTakenOut()
+    {
+        var (account, unlocked) = await CreatedAsync();
+        var store = Guid.NewGuid();
+        var stub = new StubHandler(_ => Json(HttpStatusCode.OK, """{"version":9}"""));
+        account = await Identities().NameVaultAsync(Client(stub), account, store, "Personal");
+
+        account = await Identities().ChangePassPhraseAsync(Client(stub), account, unlocked, "new phrase", Iterations);
+        Assert.Contains("vaultNames", Encoding.UTF8.GetString(PrivatePartOf(stub.Requests[^1].Body!)));
+        Assert.Equal("Personal", account.NameOf(store, unlocked));
+
+        account = await Identities().NameVaultAsync(Client(stub), account, store, null);
+        Assert.DoesNotContain("vaultNames", Encoding.UTF8.GetString(PrivatePartOf(stub.Requests[^1].Body!)));
+        Assert.Empty(account.VaultNames);
+
+        Assert.Same(account, await Identities().NameVaultAsync(Client(stub), account, store, null));
+        Assert.Equal(3, stub.Requests.Count);
+    }
+
+    [Fact]
+    public async Task ANameWrittenOverAnotherDevicesWrite_IsWrittenAgain_OverItsData()
+    {
+        var (account, unlocked) = await CreatedAsync();
+        var theirs = Guid.NewGuid();
+        var mine = Guid.NewGuid();
+        var desktop = new StubHandler(_ => Json(HttpStatusCode.OK, """{"version":5}"""));
+        await new AccountIdentities(_temp.Sub("desktop.json")).NameVaultAsync(Client(desktop), account, theirs, "Work");
+        var written = PrivatePartOf(desktop.Requests[0].Body!);
+        var put = 0;
+        var stub = new StubHandler(request => request.Method == HttpMethod.Get
+            ? Json(HttpStatusCode.OK, JsonSerializer.Serialize(new { version = 5, @public = new byte[] { 1 }, @private = written }))
+            : ++put == 1 ? Json(HttpStatusCode.Conflict, """{"error":"data-changed","version":5}""") : Json(HttpStatusCode.OK, """{"version":6}"""));
+
+        var named = await Identities().NameVaultAsync(Client(stub), account, mine, "Personal");
+
+        Assert.Equal(6, named.Version);
+        Assert.Equal(("Work", "Personal"), (named.NameOf(theirs, unlocked), named.NameOf(mine, unlocked)));
+        Assert.Contains("\"version\":5", stub.Requests[^1].Body);
+    }
+
+    [Fact]
+    public async Task ASecondConflict_Fails()
+    {
+        var (account, _) = await CreatedAsync();
+        var stub = new StubHandler(request => request.Method == HttpMethod.Get
+            ? Json(HttpStatusCode.OK, """{"version":0,"public":null,"private":null}""")
+            : Json(HttpStatusCode.Conflict, """{"error":"data-changed","version":5}"""));
+
+        var error = await Assert.ThrowsAsync<ServerException>(() => Identities().NameVaultAsync(Client(stub), account, Guid.NewGuid(), "Personal"));
+
+        Assert.Equal(ServerFailure.Conflict, error.Failure);
+    }
+
+    [Theory]
+    [InlineData("""{"vaultNames":[1]}""")]
+    [InlineData("""{"vaultNames":{"not a store":"AAAA","10a07177-0000-0000-0000-000000000000":5}}""")]
+    public async Task NamesThatCannotBeRead_AreLeftOut(string names)
+    {
+        var (identity, _, _) = Identity.Create("account phrase", Iterations);
+        var root = System.Text.Json.Nodes.JsonNode.Parse(identity.ToJson())!.AsObject();
+        root["vaultNames"] = System.Text.Json.Nodes.JsonNode.Parse(names)!["vaultNames"]!.DeepClone();
+        var stub = new StubHandler(_ => Json(HttpStatusCode.OK, JsonSerializer.Serialize(new { version = 1, @public = new byte[] { 1 }, @private = JsonSerializer.SerializeToUtf8Bytes(root) })));
+
+        Assert.Empty((await Identities().RefreshAsync(Client(stub), Address, Email))!.VaultNames);
+    }
+
     public void Dispose() => _temp.Dispose();
+
+    private static byte[] PrivatePartOf(string body) => JsonDocument.Parse(body).RootElement.GetProperty("private").GetBytesFromBase64();
+
+    private async Task<(AccountIdentity Account, UnlockedIdentity Unlocked)> CreatedAsync()
+    {
+        var (created, unlocked, _) = await Identities().CreateAsync(Client(new StubHandler(_ => Json(HttpStatusCode.OK, """{"version":1}"""))), Address, Email, "account phrase", Iterations);
+        return (created, unlocked);
+    }
 
     private AccountIdentities Identities() => new(FilePath, _log);
 

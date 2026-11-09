@@ -190,7 +190,7 @@ public sealed class PhoneSessionTests : IDisposable
         var store = await _phone.Server.Client!.CreateStoreAsync();
 
         session.CreateOnServer(_phone.Ask);
-        await session.AddFromServer(_phone.Ask, new ServerStore(store, StoreRole.Owner, 0, 0));
+        await session.AddFromServer(_phone.Ask, new StoreChoice(new ServerStore(store, StoreRole.Owner, 0, 0), null));
         await session.MoveToServer(_phone.Ask, new RegisteredVault(new VaultLocation(_phone.Folder("vault"))));
         Assert.False(await session.DeleteFromServer(_phone.Ask, new RegisteredVault(new VaultLocation("x", new StoreAddress(FakeKofre.Address, store))), Device.ServerPassword));
         session.SetAccountPassPhrase(_phone.Ask);
