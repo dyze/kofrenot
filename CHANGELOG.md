@@ -26,6 +26,8 @@ It covers kofrenot on Windows and on Android; versions before 0.9 ran on Windows
   - **Select all** and **Deselect all** in Settings > Node types and Link types > **Copy from…**: tick or untick every type copying would write ([README](README.md#node-types-and-fields)).
 
 ### Changed
+- **Both**
+  - **More colours**: red, orange and brown join the palette, now in rainbow order (red, orange, yellow, green, teal, blue, purple, pink, brown, grey). kofrenot 0.16 and older show a node given one of them with no colour.
 - **Windows**
   - **An image field's buttons are icons**, kept together beside its thumbnail: choose a file, take an image dataset, paste, and apart, remove; each says what it does in its tooltip ([README](README.md#node-types-and-fields)).
 

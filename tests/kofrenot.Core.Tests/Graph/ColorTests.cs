@@ -76,7 +76,7 @@ public sealed class ColorTests
     [Fact]
     public void AColourUnknownToThisVersion_IsKept_AndShownAsNone()
     {
-        var unknown = ColorDune("orange", 1);
+        var unknown = ColorDune("magenta", 1);
         _graph.Apply(unknown);
 
         Assert.Equal([new ColorVersion(unknown.Id, NodeColor.None, unknown.At)], _graph.ColorsOf(_dune.Id));
@@ -94,7 +94,10 @@ public sealed class ColorTests
 
     [Theory]
     [InlineData(NodeColor.None, null)]
+    [InlineData(NodeColor.Red, "red")]
+    [InlineData(NodeColor.Orange, "orange")]
     [InlineData(NodeColor.Yellow, "yellow")]
+    [InlineData(NodeColor.Brown, "brown")]
     [InlineData(NodeColor.Grey, "grey")]
     public void AColour_IsWrittenByItsName(NodeColor color, string? name)
     {
@@ -104,7 +107,7 @@ public sealed class ColorTests
 
     [Theory]
     [InlineData("Teal", NodeColor.Teal)]
-    [InlineData("orange", NodeColor.None)]
+    [InlineData("magenta", NodeColor.None)]
     [InlineData("1", NodeColor.None)]
     [InlineData("", NodeColor.None)]
     public void AName_IsReadIgnoringCase_AndAnUnknownOneIsNone(string name, NodeColor color) =>

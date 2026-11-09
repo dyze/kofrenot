@@ -575,7 +575,7 @@ removeNodeType ── takes out by the changes          owner "own", or a field 
 - A **link** keeps no history of its own, its qualifiers' values excepted (`NodeHistory.OfLink`, restored by `RestorePlanner.Plan(link, …)`): `LinkChangePlanner` changes its type or direction with a `remove` of the link and its copies, and a new `addLink` (separate if it was), with its qualifiers' values copied (an image keeping its file), those of its old type as its own. Changed on two devices before they synced, both new links show, as any two links.
 
 ### Colours
-Any node can have a colour of a fixed palette (`NodeColor`: none, yellow, green, blue, pink, purple, teal, grey), given by a `colorNode` change (`NodeColored`) that names it in lower case (null for none; `NodeColorNames`) and lists the colours it **replaces**, as a type change. A node has none until the first one, which replaces nothing.
+Any node can have a colour of a fixed palette (`NodeColor`: none, red, orange, yellow, green, teal, blue, purple, pink, brown, grey; a name this version does not know reads as none), given by a `colorNode` change (`NodeColored`) that names it in lower case (null for none; `NodeColorNames`) and lists the colours it **replaces**, as a type change. A node has none until the first one, which replaces nothing.
 
 ```
 c1 (yellow, replaces [])

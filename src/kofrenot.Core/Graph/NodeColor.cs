@@ -4,12 +4,15 @@ namespace Kofrenot.Core.Graph;
 public enum NodeColor
 {
     None,
+    Red,
+    Orange,
     Yellow,
     Green,
-    Blue,
-    Pink,
-    Purple,
     Teal,
+    Blue,
+    Purple,
+    Pink,
+    Brown,
     Grey,
 }
 

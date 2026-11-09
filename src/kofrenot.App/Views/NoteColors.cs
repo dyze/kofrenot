@@ -14,12 +14,15 @@ public static class NoteColors
 
     private static readonly Dictionary<NodeColor, Color> Shades = new()
     {
+        [NodeColor.Red] = Color.FromRgb(0xE0, 0x52, 0x4A),
+        [NodeColor.Orange] = Color.FromRgb(0xF0, 0x8A, 0x3C),
         [NodeColor.Yellow] = Color.FromRgb(0xF2, 0xC1, 0x3A),
         [NodeColor.Green] = Color.FromRgb(0x6F, 0xBF, 0x4A),
-        [NodeColor.Blue] = Color.FromRgb(0x4A, 0x90, 0xE2),
-        [NodeColor.Pink] = Color.FromRgb(0xE2, 0x6A, 0x9A),
-        [NodeColor.Purple] = Color.FromRgb(0x8E, 0x7C, 0xE0),
         [NodeColor.Teal] = Color.FromRgb(0x2B, 0xB5, 0x9A),
+        [NodeColor.Blue] = Color.FromRgb(0x4A, 0x90, 0xE2),
+        [NodeColor.Purple] = Color.FromRgb(0x8E, 0x7C, 0xE0),
+        [NodeColor.Pink] = Color.FromRgb(0xE2, 0x6A, 0x9A),
+        [NodeColor.Brown] = Color.FromRgb(0xA0, 0x78, 0x5A),
         [NodeColor.Grey] = Color.FromRgb(0x9A, 0x9A, 0x9A),
     };
 

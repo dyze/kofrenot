@@ -42,12 +42,15 @@ public static class NodeLook
 {
     private static readonly Dictionary<NodeColor, IBrush> Shades = new()
     {
+        [NodeColor.Red] = new SolidColorBrush(Color.FromRgb(0xE0, 0x52, 0x4A)),
+        [NodeColor.Orange] = new SolidColorBrush(Color.FromRgb(0xF0, 0x8A, 0x3C)),
         [NodeColor.Yellow] = new SolidColorBrush(Color.FromRgb(0xF2, 0xC1, 0x3A)),
         [NodeColor.Green] = new SolidColorBrush(Color.FromRgb(0x6F, 0xBF, 0x4A)),
-        [NodeColor.Blue] = new SolidColorBrush(Color.FromRgb(0x4A, 0x90, 0xE2)),
-        [NodeColor.Pink] = new SolidColorBrush(Color.FromRgb(0xE2, 0x6A, 0x9A)),
-        [NodeColor.Purple] = new SolidColorBrush(Color.FromRgb(0x8E, 0x7C, 0xE0)),
         [NodeColor.Teal] = new SolidColorBrush(Color.FromRgb(0x2B, 0xB5, 0x9A)),
+        [NodeColor.Blue] = new SolidColorBrush(Color.FromRgb(0x4A, 0x90, 0xE2)),
+        [NodeColor.Purple] = new SolidColorBrush(Color.FromRgb(0x8E, 0x7C, 0xE0)),
+        [NodeColor.Pink] = new SolidColorBrush(Color.FromRgb(0xE2, 0x6A, 0x9A)),
+        [NodeColor.Brown] = new SolidColorBrush(Color.FromRgb(0xA0, 0x78, 0x5A)),
         [NodeColor.Grey] = new SolidColorBrush(Color.FromRgb(0x9A, 0x9A, 0x9A)),
     };
 
