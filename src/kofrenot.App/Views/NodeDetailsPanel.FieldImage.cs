@@ -13,11 +13,11 @@ using Microsoft.Win32;
 namespace Kofrenot.UI.Views;
 
 /// <summary>
-/// An image field: its thumbnail (a click shows the image, as a dataset's), Choose… to set another
-/// (<see cref="FieldPlanner.SetImage"/>, its file written as a dataset version's), From a dataset… to
-/// take an image dataset's, not copied (<see cref="FieldPlanner.SetImageFrom"/>), Paste, while the
-/// clipboard holds an image, to set it once its preview is accepted, × to remove it, asked first;
-/// the buttons wrap under the thumbnail when the column is narrow.
+/// An image field: its thumbnail (a click shows the image, as a dataset's), then its buttons as icons:
+/// a file to set another (<see cref="FieldPlanner.SetImage"/>, its file written as a dataset version's),
+/// an image dataset's, not copied (<see cref="FieldPlanner.SetImageFrom"/>), Paste, while the clipboard
+/// holds an image, to set it once its preview is accepted, and apart, Remove, asked first; the buttons
+/// wrap under the thumbnail, together, when the column is narrow.
 /// </summary>
 public partial class NodeDetailsPanel
 {
@@ -48,32 +48,34 @@ public partial class NodeDetailsPanel
 
         if (canEdit && SaveImage is not null)
         {
-            var choose = ImageButton("Choose…");
-            choose.Click += (_, _) => _ = ChooseImage(field, holder);
-            panel.Children.Add(Spaced(choose, margin.Top, first: panel.Children.Count == 0));
-            var fromDataset = ImageButton("From a dataset…");
-            fromDataset.Click += (_, _) => ChooseImageDataset(field, holder);
-            panel.Children.Add(Spaced(fromDataset, margin.Top));
-            if (Clipboard is { } clipboard)
-            {
-                var paste = ImageButton("Paste");
-                paste.ToolTip = "Set the image copied: a screenshot, an image file";
-                paste.Click += (_, _) => _ = PasteImage(field, clipboard, holder);
-                PasteButtons.Follow(paste, clipboard, PasteOffer.FitsImage);
-                panel.Children.Add(Spaced(paste, margin.Top));
-            }
-
-            if (field.HasValue)
-            {
-                panel.Children.Add(Spaced(FieldButton("delete", "Remove this image", () => RemoveImage(field, holder), focusable: true), margin.Top));
-            }
+            panel.Children.Add(Spaced(ImageActionsOf(field, holder), margin.Top, first: panel.Children.Count == 0));
         }
 
         return panel;
     }
 
-    private static Button ImageButton(string label) =>
-        new() { Padding = new Thickness(10, 2, 10, 2), Content = label, VerticalAlignment = VerticalAlignment.Center };
+    // The image's buttons, as icons kept together: they wrap under the thumbnail as one.
+    private StackPanel ImageActionsOf(NodeField field, FieldHolder holder)
+    {
+        var actions = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center };
+        actions.Children.Add(FieldButton("file", "Choose an image file…", () => _ = ChooseImage(field, holder), focusable: true));
+        actions.Children.Add(FieldButton("data-object", "Use an image dataset of the vault… (not copied)", () => ChooseImageDataset(field, holder), focusable: true));
+        if (Clipboard is { } clipboard)
+        {
+            var paste = FieldButton("paste", "Set the image copied: a screenshot, an image file", () => _ = PasteImage(field, clipboard, holder), focusable: true);
+            PasteButtons.Follow(paste, clipboard, PasteOffer.FitsImage);
+            actions.Children.Add(paste);
+        }
+
+        if (field.HasValue)
+        {
+            var remove = FieldButton("delete", "Remove this image", () => RemoveImage(field, holder), focusable: true);
+            remove.Margin = new Thickness(8, 0, 0, 0);
+            actions.Children.Add(remove);
+        }
+
+        return actions;
+    }
 
     // An item of the image's line, 8 apart from the one before it.
     private static FrameworkElement Spaced(FrameworkElement item, double top, bool first = false)
