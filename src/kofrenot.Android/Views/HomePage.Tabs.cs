@@ -11,7 +11,7 @@ namespace Kofrenot.Phone.Views;
 
 /// <summary>
 /// The tabs: the search, then the views opened on this phone, as many as fit whole, the selected one
-/// always in sight (<see cref="TabStripPanel"/>), as on Windows. ▾, always at their right, lists the
+/// always in sight (<see cref="TabStripPanel"/>), as on Windows; a swipe across the list goes to the next or previous one (<see cref="TabSwipe"/>). ▾, always at their right, lists the
 /// tabs left out, then the views to open. A view tab has its bar under
 /// the tabs: how many nodes it shows, and ⋮ for its actions (move it, a tree's unlinked nodes, Close view).
 /// </summary>
@@ -96,6 +96,23 @@ public sealed partial class HomePage
     {
         _shell.Services.Log.Info("Action", "Unlinked nodes shown");
         _shell.Push(new UnlinkedPage(_shell, view));
+    }
+
+    // A swipe across the list (TabSwipe): the tab after (1) or before (-1) the selected one, in the strip's order; none past the ends.
+    private void SwipeTab(int step)
+    {
+        if (Vault is not { } vault)
+        {
+            return;
+        }
+
+        var tabs = new TabList(_shell.Services.ViewTabs).Of(vault.Graph, vault.Id);
+        var index = tabs.ToList().IndexOf(_tab) + step;
+        if (index >= 0 && index < tabs.Count)
+        {
+            _shell.Services.Log.Info("Action", "Tab switched by a swipe");
+            Select(tabs[index]);
+        }
     }
 
     private void Select(Tab tab)

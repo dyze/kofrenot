@@ -54,6 +54,7 @@ public sealed partial class HomePage : UserControl, IPage
         _tab = tab ?? Tab.Search;
         InitializeComponent();
         WatchSearchBox();
+        TabSwipe.Watch(TableScroll, SwipeTab);
         Refresh();
     }
 
