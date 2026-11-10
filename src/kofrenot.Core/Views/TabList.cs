@@ -36,11 +36,42 @@ public sealed class TabList(ViewTabs open)
         return tabs[(((index + step) % tabs.Count) + tabs.Count) % tabs.Count];
     }
 
+    /// <summary>
+    /// Whether the tab of <paramref name="view"/> can move <paramref name="step"/> tabs (-1 left, 1 right)
+    /// among the view tabs: Home stays first.
+    /// </summary>
+    public bool CanShift(KnowledgeGraph graph, Guid vault, Node view, int step) => NeighbourOf(graph, vault, view, step) is not null;
+
+    /// <summary>
+    /// Moves the tab of <paramref name="view"/> <paramref name="step"/> tabs among the view tabs shown, past
+    /// the views not known here (<see cref="ViewTabs"/>); nothing changes when it cannot (<see cref="CanShift"/>).
+    /// </summary>
+    public void Shift(KnowledgeGraph graph, Guid vault, Node view, int step)
+    {
+        if (NeighbourOf(graph, vault, view, step) is not { } neighbour)
+        {
+            return;
+        }
+
+        var before = step < 0
+            ? neighbour.Id
+            : open.Of(vault).SkipWhile(id => id != neighbour.Id).Skip(1).Cast<Guid?>().FirstOrDefault();
+        open.Move(vault, view.Id, before);
+    }
+
     /// <summary>The views not open as tabs, by name: what a new tab can show.</summary>
     public IReadOnlyList<Node> Closed(KnowledgeGraph graph, Guid vault)
     {
         var tabs = open.Of(vault);
         return NodeOrder.ByName(graph.Nodes.Where(node => IsView(node) && !tabs.Contains(node.Id)));
+    }
+
+    private Node? NeighbourOf(KnowledgeGraph graph, Guid vault, Node view, int step)
+    {
+        var views = Of(graph, vault).Skip(1).Select(tab => tab.View!).ToList();
+        var index = views.FindIndex(tab => tab.Id == view.Id);
+        var at = index + step;
+        return index >= 0 && step != 0 && at >= 0 && at < views.Count ? views[at] : null;
     }
 
     private static bool IsView(Node node) => node.Type == TypeCatalog.View.Id;

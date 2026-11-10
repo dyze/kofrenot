@@ -67,5 +67,44 @@ public sealed class TabListTests : IDisposable
     public void Next_WithTheSearchAlone_StaysOnIt() =>
         Assert.Equal(Tab.Search, _tabs.Next(_tree.Graph, _vault, current: null, step: -1));
 
+    [Fact]
+    public void Shift_MovesAViewTab_PastTheViewsNotKnownHere_AndIsKept()
+    {
+        var (memos, files, books) = (_tree.Add("Memos", TypeCatalog.View.Id), _tree.Add("Files", TypeCatalog.View.Id), _tree.Add("Books", TypeCatalog.View.Id));
+        var unknown = Guid.NewGuid();
+        _open.Open(_vault, memos.Id);
+        _open.Open(_vault, unknown);
+        _open.Open(_vault, files.Id);
+        _open.Open(_vault, books.Id);
+
+        _tabs.Shift(_tree.Graph, _vault, memos, step: 1);
+        Assert.Equal([unknown, files.Id, memos.Id, books.Id], _open.Of(_vault));
+
+        _tabs.Shift(_tree.Graph, _vault, memos, step: 1);
+        Assert.Equal([unknown, files.Id, books.Id, memos.Id], _open.Of(_vault));
+
+        _tabs.Shift(_tree.Graph, _vault, books, step: -1);
+        Assert.Equal([unknown, books.Id, files.Id, memos.Id], _open.Of(_vault));
+    }
+
+    [Fact]
+    public void Shift_StopsAtTheEnds_HomeStayingFirst()
+    {
+        var (memos, files, dune) = (_tree.Add("Memos", TypeCatalog.View.Id), _tree.Add("Files", TypeCatalog.View.Id), _tree.Add("Dune", TypeCatalog.View.Id));
+        _open.Open(_vault, memos.Id);
+        _open.Open(_vault, files.Id);
+
+        Assert.Equal((false, true), (_tabs.CanShift(_tree.Graph, _vault, memos, -1), _tabs.CanShift(_tree.Graph, _vault, memos, 1)));
+        Assert.Equal((true, false), (_tabs.CanShift(_tree.Graph, _vault, files, -1), _tabs.CanShift(_tree.Graph, _vault, files, 1)));
+        Assert.False(_tabs.CanShift(_tree.Graph, _vault, memos, 0));
+        Assert.False(_tabs.CanShift(_tree.Graph, _vault, dune, 1));
+
+        _tabs.Shift(_tree.Graph, _vault, memos, step: -1);
+        _tabs.Shift(_tree.Graph, _vault, files, step: 1);
+        _tabs.Shift(_tree.Graph, _vault, dune, step: -1);
+
+        Assert.Equal([memos.Id, files.Id], _open.Of(_vault));
+    }
+
     public void Dispose() => _temp.Dispose();
 }

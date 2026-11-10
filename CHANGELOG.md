@@ -14,11 +14,14 @@ It covers kofrenot on Windows and on Android; versions before 0.9 ran on Windows
   - **+ Link** beside a node's *Links*: a box typed after the node's name, as the Link box on Windows (`relates to Frank Herbert`, `written by Frank Herbert, Date 1965`), with labels, proposals and what **Enter** does under it; **Enter** shows the link's creation screen, a link there typed again updated with its qualifiers ([README](README.md#on-android)).
   - **Image viewer**: a tap on an image's thumbnail (a dataset's, or an image field's) shows it on the whole screen, downloaded first when not here; pinch or double tap to zoom, a finger to move it, **⋮** opens or shares it ([README](README.md#on-android)).
   - **Settings > Node types and Link types**: the open vault's types, read only, built-in ones first: a node type with its fields, a link type with its reverse, aliases and qualifiers; they are changed on Windows ([README](README.md#on-android)).
+  - **Cards** for list views, as on Windows: **▦** on a list's bar shows its nodes in columns (two on most phones), each as tall as its content: a note's lines, or its unchecked items and how many are checked, a file's kind and size or its thumbnail, in the node's colour, the pinned ones first, then as arranged on Windows; a card's preview is read once it comes into view. Kept per view on the phone ([README](README.md#on-android)).
+  - **Tabs reordered**: **⋮** of a view tab > *Move left* or *Move right*, as a tab dragged on Windows; Home stays first, the order is kept on the phone ([README](README.md#on-android)).
+  - **Switch vault from ☰**: the other vaults on the phone are listed under *Sync now*, each with its sync dot; a tap opens one, its pass phrase asked when not remembered ([README](README.md#on-android)).
   - **Query views as a table**, as on Windows: Name and the view's columns under a header that stays, each column as wide as its content (up to 200 dp), scrolled sideways when wider than the screen; a tap on a header sorts by it, again the other way, kept per view on the phone ([README](README.md#views)).
 
 ### Changed
 - **Android**
-  - **The vaults are in Settings > Vault**, under the open vault: a tap opens one, ✕ removes it from the phone, *Add from the server* adds another. **☰** on the home keeps the open vault, *Sync now*, *Vaults* (that topic) and *Settings*, no longer the other vaults ([README](README.md#on-android)).
+  - **The vaults are in Settings > Vault**, under the open vault: a tap opens one, ✕ removes it from the phone, *Add from the server* adds another. **☰** on the home keeps the open vault, *Sync now*, the other vaults (to switch to one), *Vaults* (that topic) and *Settings* ([README](README.md#on-android)).
   - **Denser lists and node page**: node rows 40 dp high with smaller pictures, a tree indented less with a larger chevron to expand or collapse, field rows 32 dp high with their actions (map, link, open) on the line of their label, and narrower top bar icons, leaving the trail room for its first screens.
 
 ### Fixed

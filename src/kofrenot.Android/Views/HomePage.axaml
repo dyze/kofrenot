@@ -10,7 +10,17 @@
       <Setter Property="CornerRadius" Value="0" />
       <Setter Property="HorizontalContentAlignment" Value="Left" />
     </Style>
+    <!-- ▦ while the list shows cards. -->
+    <Style Selector="PathIcon.on">
+      <Setter Property="Foreground" Value="{StaticResource Accent}" />
+    </Style>
   </UserControl.Styles>
+  <UserControl.Resources>
+    <!-- A list view's cards in columns (HomePage.Cards). -->
+    <ItemsPanelTemplate x:Key="CardsPanel">
+      <views:CardColumns Margin="8,4" />
+    </ItemsPanelTemplate>
+  </UserControl.Resources>
   <Grid>
     <DockPanel>
       <!-- ☰: the vault and its sync, the other vaults and Settings, in a sheet (its dot: where the sync stands); the search box. -->
@@ -36,10 +46,13 @@
           <PathIcon Data="{DynamicResource icon.chevron-down}" />
         </Button>
       </Grid>
-      <!-- A view tab's bar: how many rows it shows, ⋮ its actions (HomePage.Tabs). -->
-      <Grid x:Name="ViewBar" DockPanel.Dock="Top" ColumnDefinitions="*,Auto" Margin="16,0,4,0" IsVisible="False">
+      <!-- A view tab's bar: how many rows it shows, ▦ a list's cards (HomePage.Cards), ⋮ its actions (HomePage.Tabs). -->
+      <Grid x:Name="ViewBar" DockPanel.Dock="Top" ColumnDefinitions="*,Auto,Auto" Margin="16,0,4,0" IsVisible="False">
         <TextBlock x:Name="ViewCount" Classes="caption" VerticalAlignment="Center" />
-        <Button Grid.Column="1" Classes="icon" Click="ViewActions_Click">
+        <Button x:Name="CardsButton" Grid.Column="1" Classes="icon" Click="Cards_Click" IsVisible="False">
+          <PathIcon x:Name="CardsIcon" Data="{DynamicResource icon.view-cards}" />
+        </Button>
+        <Button Grid.Column="2" Classes="icon" Click="ViewActions_Click">
           <PathIcon Data="{DynamicResource icon.more}" />
         </Button>
       </Grid>
@@ -93,6 +106,9 @@
                     </ItemsControl.ItemTemplate>
                   </ItemsControl>
                 </StackPanel>
+              </DataTemplate>
+              <DataTemplate DataType="views:CardRow">
+                <views:CardView Card="{Binding}" />
               </DataTemplate>
             </ListBox.DataTemplates>
           </ListBox>

@@ -13,7 +13,7 @@ namespace Kofrenot.Phone.Views;
 /// The tabs: the search, then the views opened on this phone, as many as fit whole, the selected one
 /// always in sight (<see cref="TabStripPanel"/>), as on Windows. ▾, always at their right, lists the
 /// tabs left out, then the views to open. A view tab has its bar under
-/// the tabs: how many nodes it shows, and ⋮ for its actions (a tree's unlinked nodes, Close view).
+/// the tabs: how many nodes it shows, and ⋮ for its actions (move it, a tree's unlinked nodes, Close view).
 /// </summary>
 public sealed partial class HomePage
 {
@@ -61,20 +61,35 @@ public sealed partial class HomePage
         ]);
     }
 
-    private void ShowViewBar(int count) => ViewCount.Text = count == 1 ? "1 row" : $"{count} rows";
+    private void ShowViewBar(IReadOnlyList<object> rows)
+    {
+        var noun = rows is [CardRow, ..] ? "card" : "row";
+        ViewCount.Text = rows.Count == 1 ? $"1 {noun}" : $"{rows.Count} {noun}s";
+    }
 
-    // ⋮ of a view tab: its actions: a tree's unlinked nodes, to move into it; Close view.
+    // ⋮ of a view tab: its actions: move it left or right among the view tabs (Home stays first),
+    // as dragged on Windows; a tree's unlinked nodes, to move into it; Close view.
     private void ViewActions_Click(object? sender, RoutedEventArgs e)
     {
         if (Vault is { } vault && _tab.View is { } view)
         {
+            var tabs = new TabList(_shell.Services.ViewTabs);
             var isTree = ImportDestinations.TreeOf(vault.Graph, view) is not null;
             _shell.ShowSheet(_tab.Name,
             [
+                .. tabs.CanShift(vault.Graph, vault.Id, view, -1) ? [new SheetChoice("Move left", () => ShiftTab(vault, view, -1), Icon: "chevron-left")] : Array.Empty<SheetChoice>(),
+                .. tabs.CanShift(vault.Graph, vault.Id, view, 1) ? [new SheetChoice("Move right", () => ShiftTab(vault, view, 1), Icon: "chevron-right")] : Array.Empty<SheetChoice>(),
                 .. isTree ? [new SheetChoice("Unlinked nodes…", () => ShowUnlinked(view), Icon: "unlink")] : Array.Empty<SheetChoice>(),
                 new("Close view", () => CloseTab(vault, view), Icon: "close"),
             ]);
         }
+    }
+
+    private void ShiftTab(Vault vault, Node view, int step)
+    {
+        _shell.Services.Log.Info("Action", step < 0 ? "View tab moved left" : "View tab moved right");
+        new TabList(_shell.Services.ViewTabs).Shift(vault.Graph, vault.Id, view, step);
+        ShowTabs(vault);
     }
 
     private void ShowUnlinked(Node view)

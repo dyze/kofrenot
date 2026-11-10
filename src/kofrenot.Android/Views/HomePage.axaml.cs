@@ -105,13 +105,14 @@ public sealed partial class HomePage : UserControl, IPage
         var text = Chips.Text;
         Message.IsVisible = false;
         ShowTableHeader(null);
+        ShowCardsToggle(isList: false, showsCards: false);
         ShowAdd(graph, text);
         SearchBox.Refresh();
         if (_tab.View is { } view)
         {
-            var viewRows = ViewRows(graph, view, text);
+            var viewRows = ViewRows(vault, view, text);
             List.ItemsSource = viewRows;
-            ShowViewBar(viewRows.Count);
+            ShowViewBar(viewRows);
             return;
         }
 
@@ -165,16 +166,19 @@ public sealed partial class HomePage : UserControl, IPage
         }
     }
 
-    // A view's nodes: a flat list, or a tree expanded by hand; searched, the places found.
-    private List<object> ViewRows(KnowledgeGraph graph, Node view, string text)
+    // A view's nodes: a flat list, as rows or cards, or a tree expanded by hand; searched, the places found.
+    private List<object> ViewRows(Vault vault, Node view, string text)
     {
+        var graph = vault.Graph;
         switch (new ViewPlanner(graph).Load(view).Definition)
         {
             case FlatDefinition definition:
                 var flat = new FlatView(graph, definition);
                 var nodes = text.Length > 0 ? flat.Find(text) : flat.Nodes;
+                var showsCards = ShowsCards(vault, view);
+                ShowCardsToggle(isList: true, showsCards);
                 ShowMessage(nodes.Count == 0 ? (text.Length > 0 ? "No node of that name." : $"No node of type {graph.Types.NodeTypeName(definition.NodeType)} yet.") : null);
-                return [.. nodes.Select(node => NodeRow.Of(graph, node))];
+                return showsCards ? CardRows(vault, view, nodes) : [.. nodes.Select(node => NodeRow.Of(graph, node))];
             case TreeDefinition definition when new CoreTreeView(graph, definition) is { Root: { } root } tree:
                 if (text.Length > 0)
                 {
@@ -259,6 +263,7 @@ public sealed partial class HomePage : UserControl, IPage
             NodeRow row => row.Node,
             TreeRow row => row.Item.Node,
             QueryTableRow row => row.Row.Node,
+            CardRow row => row.Row.Node,
             _ => null,
         };
         List.SelectedItem = null;
@@ -289,7 +294,8 @@ public sealed partial class HomePage : UserControl, IPage
         }
     }
 
-    // ☰, as a drawer: the open vault and where its sync stands, and Settings (the vaults in Settings > Vault).
+    // ☰, as a drawer: the open vault and where its sync stands; the other vaults on the phone, a tap
+    // switching to one, as the vault list on Windows; the vaults in Settings > Vault, and Settings.
     private void Vault_Click(object? sender, RoutedEventArgs e)
     {
         var session = _shell.Services.Session;
@@ -299,11 +305,19 @@ public sealed partial class HomePage : UserControl, IPage
         }
 
         var status = _shell.Services.Sync.StatusOf(store);
+        var others = session.Vaults.Where(vault => vault.Location.Store is not null && vault != selected);
         _shell.ShowSheet($"{session.NameOf(selected)} · {status.Summary}",
         [
             new("Sync now", () => _shell.Run(_shell.Services.Sync.SyncNowAsync), VaultList.DotOf(status.Level)),
+            .. others.Select(vault => new SheetChoice(session.NameOf(vault), () => SwitchTo(vault), VaultList.DotOf(_shell.Services.Sync.StatusOf(vault.Location.Store!).Level))),
             new("Vaults", () => _shell.Push(new SettingsPage(_shell, SettingsCatalog.VaultTab)), Icon: "vault"),
             new("Settings", () => _shell.Push(new SettingsPage(_shell)), Icon: "settings"),
         ]);
+    }
+
+    private void SwitchTo(RegisteredVault vault)
+    {
+        _shell.Services.Log.Info("Action", "Vault switched from the menu");
+        _shell.Open(vault.Location);
     }
 }
