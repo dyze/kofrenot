@@ -37,6 +37,14 @@ public sealed partial class HomePage : UserControl, IPage
     private readonly HashSet<string> _expanded = [];
     private Tab _tab;
 
+    // The panel the list's items go in, by its key in the resources; null: stacked (the list's own).
+    private string? _itemsPanel;
+    private const string HomePanel = "HomePanel";
+
+    // Under the last rows of a list: the height ＋ takes, with its margins, and a gap.
+    private const double FabRoom = 88;
+    private ITemplate<Panel?>? _rowsPanel;
+
     // What the search box's text adds; null when it adds nothing.
     private CreationForm? _adding;
 
@@ -101,6 +109,24 @@ public sealed partial class HomePage : UserControl, IPage
 
     private void ShowList(Vault vault)
     {
+        _itemsPanel = null;
+        ShowRows(vault);
+        _rowsPanel ??= List.ItemsPanel;
+        var panel = _itemsPanel is { } key ? (ITemplate<Panel?>)Resources[key]! : _rowsPanel;
+        if (List.ItemsPanel != panel)
+        {
+            List.ItemsPanel = panel;
+        }
+
+        // The last rows clear of ＋; on the home, only those beside it are narrower (HomeColumnsPanel).
+        List.Padding = _itemsPanel == HomePanel ? default : new Thickness(0, 0, 0, FabRoom);
+    }
+
+    /// <summary>The list's items go in the panel of <paramref name="key"/> (HomePage.axaml) instead of stacking.</summary>
+    private void UseItemsPanel(string key) => _itemsPanel = key;
+
+    private void ShowRows(Vault vault)
+    {
         var graph = vault.Graph;
         var text = Chips.Text;
         Message.IsVisible = false;
@@ -147,23 +173,7 @@ public sealed partial class HomePage : UserControl, IPage
             return;
         }
 
-        // Pinned, then recent (opened on this phone or changed on any device), as the input box on Windows.
-        var start = StartNodes.Of(graph, _shell.Services.Recent.Of(vault.Id), DateTimeOffset.UtcNow);
-        var rows = new List<object>();
-        AddSection(rows, "Pinned", start.Pinned.Select(node => NodeRow.Of(graph, node)));
-        AddSection(rows, "Recent", start.Recent.Select(recent => NodeRow.Of(graph, recent.Node, detail: recent.Detail)));
-        List.ItemsSource = rows;
-        ShowMessage(rows.Count == 0 ? "Type a name to find a node, or what to add: Dune relates to Frank Herbert. Pinned and recent nodes show here." : null);
-    }
-
-    private static void AddSection(List<object> rows, string header, IEnumerable<NodeRow> section)
-    {
-        var nodes = section.ToList();
-        if (nodes.Count > 0)
-        {
-            rows.Add(new HeaderRow(header));
-            rows.AddRange(nodes);
-        }
+        ShowHome(vault);
     }
 
     // A view's nodes: a flat list, as rows or cards, or a tree expanded by hand; searched, the places found.

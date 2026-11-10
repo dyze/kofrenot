@@ -15,8 +15,6 @@ namespace Kofrenot.Phone.Views;
 /// </summary>
 public sealed partial class HomePage
 {
-    private ITemplate<Panel?>? _rowsPanel;
-
     private bool ShowsCards(Vault vault, Node view) => _shell.Services.ViewStates.ShowsCards(vault.Id, view.Id);
 
     private void Cards_Click(object? sender, RoutedEventArgs e)
@@ -30,16 +28,14 @@ public sealed partial class HomePage
         }
     }
 
-    /// <summary>Whether ▦ shows (a list view), and whether it is on; the list's items in columns or stacked.</summary>
+    /// <summary>Whether ▦ shows (a list view), and whether it is on: the list's items then in columns.</summary>
     private void ShowCardsToggle(bool isList, bool showsCards)
     {
         CardsButton.IsVisible = isList;
         CardsIcon.Classes.Set("on", showsCards);
-        _rowsPanel ??= List.ItemsPanel;
-        var panel = showsCards ? (ITemplate<Panel?>)Resources["CardsPanel"]! : _rowsPanel;
-        if (List.ItemsPanel != panel)
+        if (showsCards)
         {
-            List.ItemsPanel = panel;
+            UseItemsPanel("CardsPanel");
         }
     }
 

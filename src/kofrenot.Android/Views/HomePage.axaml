@@ -20,6 +20,10 @@
     <ItemsPanelTemplate x:Key="CardsPanel">
       <views:CardColumns Margin="8,4" />
     </ItemsPanelTemplate>
+    <!-- The home's rows in columns when the screen is wide (HomePage.Home). -->
+    <ItemsPanelTemplate x:Key="HomePanel">
+      <views:HomeColumnsPanel />
+    </ItemsPanelTemplate>
   </UserControl.Resources>
   <Grid>
     <DockPanel>
@@ -79,8 +83,8 @@
               </DataTemplate>
             </ItemsControl.ItemTemplate>
           </ItemsControl>
-          <!-- Its last rows clear of ＋. -->
-          <ListBox x:Name="List" Padding="0,0,0,88" SelectionChanged="List_SelectionChanged">
+          <!-- Its last rows clear of ＋ (HomePage.ShowList). -->
+          <ListBox x:Name="List" SelectionChanged="List_SelectionChanged" SizeChanged="List_SizeChanged">
             <ListBox.DataTemplates>
               <DataTemplate DataType="views:TreeRow">
                 <Grid ColumnDefinitions="Auto,*" Margin="{Binding Indent}">
