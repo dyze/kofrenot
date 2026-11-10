@@ -16,7 +16,7 @@ It covers kofrenot on Windows and on Android; versions before 0.9 ran on Windows
   - **Settings > Node types and Link types**: the open vault's types, read only, built-in ones first: a node type with its fields, a link type with its reverse, aliases and qualifiers; they are changed on Windows ([README](README.md#on-android)).
   - **Cards** for list views, as on Windows: **▦** on a list's bar shows its nodes in columns (two on most phones), each as tall as its content: a note's lines, or its unchecked items and how many are checked, a file's kind and size or its thumbnail, in the node's colour, the pinned ones first, then as arranged on Windows; a card's preview is read once it comes into view. Kept per view on the phone ([README](README.md#on-android)).
   - **Tabs reordered**: **⋮** of a view tab > *Move left* or *Move right*, as a tab dragged on Windows; Home stays first, the order is kept on the phone ([README](README.md#on-android)).
-  - **Switch vault from ☰**: the other vaults on the phone are listed under *Sync now*, each with its sync dot; a tap opens one, its pass phrase asked when not remembered ([README](README.md#on-android)).
+  - **Switch vault from ☰**: *Switch to …* each other vault on the phone, under *Sync now*, with its sync dot, its pass phrase asked when not remembered ([README](README.md#on-android)).
   - **Query views as a table**, as on Windows: Name and the view's columns under a header that stays, each column as wide as its content (up to 200 dp), scrolled sideways when wider than the screen; a tap on a header sorts by it, again the other way, kept per view on the phone ([README](README.md#views)).
 
 ### Changed

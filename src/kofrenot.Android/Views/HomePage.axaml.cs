@@ -309,7 +309,7 @@ public sealed partial class HomePage : UserControl, IPage
         _shell.ShowSheet($"{session.NameOf(selected)} · {status.Summary}",
         [
             new("Sync now", () => _shell.Run(_shell.Services.Sync.SyncNowAsync), VaultList.DotOf(status.Level)),
-            .. others.Select(vault => new SheetChoice(session.NameOf(vault), () => SwitchTo(vault), VaultList.DotOf(_shell.Services.Sync.StatusOf(vault.Location.Store!).Level))),
+            .. others.Select(vault => new SheetChoice($"Switch to {session.NameOf(vault)}",() => SwitchTo(vault), VaultList.DotOf(_shell.Services.Sync.StatusOf(vault.Location.Store!).Level))),
             new("Vaults", () => _shell.Push(new SettingsPage(_shell, SettingsCatalog.VaultTab)), Icon: "vault"),
             new("Settings", () => _shell.Push(new SettingsPage(_shell)), Icon: "settings"),
         ]);
