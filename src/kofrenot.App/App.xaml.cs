@@ -156,7 +156,11 @@ public partial class App : Application
             quit: () => Dispatcher.BeginInvoke(() => TryQuit("Quit from the tray")));
 
         // Once the window is on screen, so the pass phrase dialog has an owner to center on.
-        void OpenVault() => Dispatcher.BeginInvoke(() => session.Open(new WpfQuestions(window)), System.Windows.Threading.DispatcherPriority.ApplicationIdle);
+        void OpenVault() => Dispatcher.BeginInvoke(() =>
+        {
+            log.Debug("App", "Opening the vault");
+            session.Open(new WpfQuestions(window));
+        }, System.Windows.Threading.DispatcherPriority.ApplicationIdle);
 
         // Started by the user or by the installer: show the window. At sign-in, stay in the tray,
         // and open the vault (which may ask for its pass phrase) only when the window is first shown.

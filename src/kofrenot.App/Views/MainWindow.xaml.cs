@@ -73,6 +73,8 @@ public partial class MainWindow : Window
         FitMaximized();
         AttachPrivacyScreen();
         AttachAutoLock();
+        // Raised once: with "Shown", times the first drawing (black until then).
+        ContentRendered += (_, _) => _log.Debug("Window", "First drawn");
         DetailsPanel.Log = log;
         DetailsPanel.Rename = rename => _session.Rename(Ask, rename);
         DetailsPanel.Write = (change, action) => _session.Write(Ask, change, action);
