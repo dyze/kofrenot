@@ -10,8 +10,8 @@ namespace Kofrenot.Phone.Views;
 /// <summary>
 /// A finger swiped across a page's content, which follows it: the next tab (to the left) or the previous one (to the right),
 /// once past a third of the width or flicked, the content fading out then the new one in; otherwise it slides back.
-/// Its direction is decided over its first few pixels, the scrolls inside kept out meanwhile: sideways, it is a swipe,
-/// and no list scrolls; otherwise it scrolls. With no tab on that side, the content follows at a third and springs back.
+/// Its direction is decided over its first few pixels: sideways, it is a swipe, the content taking the finger
+/// from a list that began to scroll; otherwise the list scrolls. With no tab on that side, the content follows at a third and springs back.
 /// A table scrolled sideways swipes once at its edge; none from the screen's edges, where Android's back gesture starts.
 /// </summary>
 public sealed class TabSwipe
@@ -53,7 +53,7 @@ public sealed class TabSwipe
         _log = log;
         content.RenderTransform = _shift;
 
-        // Tunnelled, and when handled too: seen before the list inside, whose scroll then waits for the decision.
+        // Tunnelled, and when handled too: seen before the list inside, and while it scrolls.
         content.AddHandler(InputElement.PointerPressedEvent, Pressed, RoutingStrategies.Tunnel, handledEventsToo: true);
         content.AddHandler(InputElement.PointerMovedEvent, Moved, RoutingStrategies.Tunnel, handledEventsToo: true);
         content.AddHandler(InputElement.PointerReleasedEvent, Released, RoutingStrategies.Tunnel, handledEventsToo: true);
@@ -97,16 +97,20 @@ public sealed class TabSwipe
             var move = PositionOf(e) - _start;
             if (Math.Abs(move.X) < DecidingDistance && Math.Abs(move.Y) < DecidingDistance)
             {
-                e.PreventGestureRecognition();
                 return;
             }
 
             Decide(move);
+
+            // The content takes the finger: a scroll the list began ends there, and no row gets the release as a tap.
+            if (_phase is Phase.Swiping)
+            {
+                e.Pointer.Capture(_content);
+            }
         }
 
         if (_phase is Phase.Swiping)
         {
-            e.PreventGestureRecognition();
             var x = PositionOf(e).X - _start.X;
             Remember(e.Timestamp, x);
             _shift.X = Follow(x);
@@ -139,7 +143,6 @@ public sealed class TabSwipe
         }
 
         // Not a tap on the row the finger left from.
-        e.PreventGestureRecognition();
         e.Handled = true;
         var x = PositionOf(e).X - _start.X;
         Remember(e.Timestamp, x);
