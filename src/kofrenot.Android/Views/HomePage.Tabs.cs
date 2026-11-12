@@ -99,19 +99,24 @@ public sealed partial class HomePage
     }
 
     // A swipe across the list (TabSwipe): the tab after (1) or before (-1) the selected one, in the strip's order; none past the ends.
-    private void SwipeTab(int step)
+    private Tab? TabBeside(int step)
     {
         if (Vault is not { } vault)
         {
-            return;
+            return null;
         }
 
         var tabs = new TabList(_shell.Services.ViewTabs).Of(vault.Graph, vault.Id);
         var index = tabs.ToList().IndexOf(_tab) + step;
-        if (index >= 0 && index < tabs.Count)
+        return index >= 0 && index < tabs.Count ? tabs[index] : null;
+    }
+
+    private void SwipeTab(int step)
+    {
+        if (TabBeside(step) is { } tab)
         {
             _shell.Services.Log.Info("Action", "Tab switched by a swipe");
-            Select(tabs[index]);
+            Select(tab);
         }
     }
 
